@@ -29,7 +29,7 @@ dependencies = [
   ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["src/victron_mqtt"]
 exclude = [".github", ".vscode"]
 
 [project.urls]
