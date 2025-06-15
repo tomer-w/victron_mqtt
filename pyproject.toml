@@ -38,14 +38,14 @@ Issues = "https://github.com/tomer-w/victron_mqtt/issues"
 Source = "https://github.com/tomer-w/victron_mqtt"
 
 [tool.hatch.version]
-path = "src/__about__.py"
+path = "src/victron_mqtt/__about__.py"
 
 [tool.hatch.envs.types]
 extra-dependencies = [
   "mypy>=1.0.0",
 ]
 [tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src tests}"
+check = "mypy --install-types --non-interactive {args:src/victron_mqtt tests}"
 
 [tool.hatch.envs.test]
 dependencies = [
@@ -86,7 +86,7 @@ source_pkgs = ["victron_mqtt", "tests"]
 branch = true
 parallel = true
 omit = [
-  "src/__about__.py",
+  "src/victron_mqtt/__about__.py",
 ]
 
 [tool.coverage.paths]
@@ -113,5 +113,5 @@ packages = ["victron_mqtt"]
 
 [tool.setuptools.entry_points]
 console_scripts = [
-    "victron_mqttt-dump-mqtt=victron_mqtt.utils.dump_mqtt:main"
+    "victron_mqtt-dump-mqtt=victron_mqtt.utils.dump_mqtt:main"
 ]
