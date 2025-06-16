@@ -22,6 +22,7 @@ async def test_devices_and_metrics(config_host, config_port, config_username, co
         assert device.device_type != victron_mqtt.DeviceType.ANY
 
         for metric in device.metrics:
+            assert metric.short_id is not None
             assert len(metric.short_id) > 0
 
     await hub.disconnect()

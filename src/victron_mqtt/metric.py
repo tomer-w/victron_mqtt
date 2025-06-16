@@ -21,12 +21,21 @@ class Metric:
         self._unique_id = unique_id
         self._value = value
         self._generic_short_id = descriptor.short_id.replace(PLACEHOLDER_PHASE, "lx")
-
         self._phase = parsed_topic.phase
-        self._on_update: Callable = None
+        self._short_id = descriptor.short_id.replace(PLACEHOLDER_PHASE, parsed_topic.phase) if parsed_topic.phase is not None else None
+        self._on_update: Callable | None = None
 
-        if parsed_topic.phase is not None:
-            self._short_id = descriptor.short_id.replace(PLACEHOLDER_PHASE, parsed_topic.phase)
+    def __repr__(self) -> str:
+        """Return the string representation of the metric."""
+        return (
+            f"Metric(unique_id={self.unique_id}, "
+            f"descriptor={self._descriptor}, "
+            f"value={self.value}, "
+            f"generic_short_id={self.generic_short_id}, "
+            f"phase={self.phase}, "
+            f"device_type={self.device_type}, "
+            f"short_id={self.short_id})"
+            )
 
     def __str__(self) -> str:
         """Return the string representation of the metric."""
@@ -53,7 +62,7 @@ class Metric:
         return self._value
 
     @property
-    def short_id(self) -> str:
+    def short_id(self) -> str | None:
         """Returns the short id of the metric."""
         return self._short_id
 
@@ -68,7 +77,7 @@ class Metric:
         return self._phase
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> str | None:
         """Returns the unit of measurement of the metric."""
         return self._descriptor.unit_of_measurement
 
@@ -98,7 +107,7 @@ class Metric:
         return self._unique_id
 
     @property
-    def on_update(self) -> Callable:
+    def on_update(self) -> Callable | None:
         """Returns the on_update callback."""
         return self._on_update
 
@@ -110,5 +119,5 @@ class Metric:
     async def handle_message(self, parsed_topic, topic_desc, value):  # noqa: ARG002 pylint: disable=unused-argument
         """Handle a message."""
         self._value = value
-        if self.on_update is not None:
+        if callable(self._on_update):
             self._on_update(self)

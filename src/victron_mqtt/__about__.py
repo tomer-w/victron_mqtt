@@ -5,5 +5,5 @@
 Version information.
 """
 
-__version__ = "2025.6.6"
+__version__ = "2025.6.7"
 __author__ = "Johan du Plessis"

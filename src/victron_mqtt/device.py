@@ -48,7 +48,8 @@ class Device:
             f"model={self.model}, "
             f"manufacturer={self.manufacturer}, "
             f"serial_number={self.serial_number}, "
-            f"device_type={self.device_type})"
+            f"device_type={self.device_type}, "
+            f"device_id={self.device_id})"
         )
 
     def _set_device_property_from_topic(
