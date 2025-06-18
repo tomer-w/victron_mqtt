@@ -6,9 +6,12 @@ Support for Victron Venus sensors. The sensor itself has no logic,
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 
 from victron_mqtt.constants import PLACEHOLDER_PHASE
 from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Metric:
@@ -16,7 +19,10 @@ class Metric:
 
     def __init__(self, unique_id: str, descriptor: TopicDescriptor, parsed_topic: ParsedTopic, value) -> None:
         """Initialize the sensor."""
-
+        _LOGGER.debug(
+            "Creating new metric: unique_id=%s, type=%s, nature=%s",
+            unique_id, descriptor.metric_type, descriptor.metric_nature
+        )
         self._descriptor = descriptor
         self._unique_id = unique_id
         self._value = value
@@ -24,6 +30,7 @@ class Metric:
         self._phase = parsed_topic.phase
         self._short_id = descriptor.short_id.replace(PLACEHOLDER_PHASE, parsed_topic.phase) if parsed_topic.phase is not None else None
         self._on_update: Callable | None = None
+        _LOGGER.debug("Metric %s initialized with value %s", unique_id, value)
 
     def __repr__(self) -> str:
         """Return the string representation of the metric."""
@@ -118,6 +125,12 @@ class Metric:
 
     async def handle_message(self, parsed_topic, topic_desc, value):  # noqa: ARG002 pylint: disable=unused-argument
         """Handle a message."""
-        self._value = value
-        if callable(self._on_update):
-            self._on_update(self)
+        if value != self._value:
+            _LOGGER.debug(
+                "Metric %s value changed: %s -> %s %s",
+                self.unique_id, self._value, value,
+                self._descriptor.unit_of_measurement or ''
+            )
+            self._value = value
+            if callable(self._on_update):
+                self._on_update(self)

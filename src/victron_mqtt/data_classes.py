@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import TYPE_CHECKING, Optional
 
 from victron_mqtt.constants import DeviceType, MetricNature, MetricType
@@ -10,6 +11,7 @@ from victron_mqtt.constants import DeviceType, MetricNature, MetricType
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+_LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class TopicDescriptor:
@@ -48,6 +50,19 @@ class ParsedTopic:
     wildcards_with_device_type: str
     wildcards_without_device_type: str
 
+    def __repr__(self) -> str:
+        """Return a string representation of the parsed topic."""
+        return (
+            f"ParsedTopic("
+            f"installation_id={self.installation_id}, "
+            f"device_id={self.device_id}, "
+            f"device_type={self.device_type}, "
+            f"phase={self.phase}, "
+            f"wildcards_with_device_type={self.wildcards_with_device_type}, "
+            f"wildcards_without_device_type={self.wildcards_without_device_type}"
+            f")"
+        )
+    
     @classmethod
     def __get_index_and_phase(cls, topic_parts: list[str]) -> tuple[int, str]:
         """Get the index of the phase and the phase itself."""
@@ -70,9 +85,14 @@ class ParsedTopic:
 
         installation_id = topic_parts[1]
         wildcard_topic_parts[1] = "+"
-        device_type = topic_parts[2]
-        if device_type == "platform":  # platform is not a device type
-            device_type = "system"
+        device_type_str = topic_parts[2]
+        if device_type_str == "platform":  # platform is not a device type
+            device_type_str = "system"
+        try:
+            device_type = DeviceType(device_type_str)
+        except ValueError as e:
+            _LOGGER.error("Error parsing device type '%s': %s", device_type_str, e)
+            return None
         device_id = topic_parts[3]
         wildcard_topic_parts[3] = "+"
 

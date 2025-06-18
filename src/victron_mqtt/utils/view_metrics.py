@@ -3,9 +3,11 @@ to connect to a Venus OS device and display the metrics."""
 
 import asyncio
 import inspect
+import logging
+import argparse
 from logging import getLogger
 import tkinter as tk
-from tkinter import simpledialog
+from tkinter import simpledialog, messagebox
 import tkinter.ttk as ttk
 from victron_mqtt import Hub, Device, Metric
 from victron_mqtt.constants import DEFAULT_HOST, DEFAULT_PORT
@@ -163,22 +165,32 @@ class App:
             if str(self.info_button["state"]) == tk.DISABLED:
                 self.info_button.config(state=tk.NORMAL)
 
-    async def _async_connect(self, server: str, port: int, username: str, password: str, use_ssl: bool) -> bool:
+    async def _async_connect(self, server: str, port: int, username: str | None, password: str | None, use_ssl: bool) -> bool:
         try:
-            self._client = Hub(server, port, username, password, use_ssl)
+            # Convert None to empty string for Hub constructor
+            hub_username = username if username is not None else ""
+            hub_password = password if password is not None else ""
+            
+            self._client = Hub(server, port, hub_username, hub_password, use_ssl)
             await self._client.connect()
             await self._client.initialize_devices_and_metrics()
             self._fill_tree()
             self.disconnect_button.config(state=tk.NORMAL)
+            return True
         except Exception as e:  # pylint: disable=broad-except
             message = str(e)
             if message == "":
                 message = type(e).__name__
-            simpledialog.messagebox.showerror("Error", f"Error connecting: {message}")
-            await self._client.disconnect()
+            messagebox.showerror("Error", f"Error connecting: {message}")
+            if self._client:
+                await self._client.disconnect()
             self.connect_button.config(state=tk.NORMAL)
+            return False
 
     def _fill_tree(self):
+        if not self._client:
+            return
+            
         for device in self._client.devices:
             device_item = self.tree.insert(
                 "",
@@ -188,18 +200,21 @@ class App:
                 iid="D" + device.unique_id,
             )
             metrics = device.metrics
-            metrics.sort(key=lambda x: (x.phase if len(x.phase) > 0 else "L0") + x.short_id)
+            metrics.sort(key=lambda x: (x.phase if x.phase and len(x.phase) > 0 else "L0") + (x.short_id or ""))
             for metric in metrics:
                 metric_item = self.tree.insert(
                     device_item,
                     "end",
-                    text=metric.short_id,
+                    text=metric.short_id or "",
                     values=(metric.formatted_value,),
                     iid="M" + metric.unique_id,
                 )
                 self._metric_containers.append(MetricContainer(metric, self.tree, metric_item))
 
     def _info(self):
+        if not self._client:
+            return
+            
         item = self.tree.selection()[0]
         unique_id = item[1:]
         if item[0] == "D":
@@ -252,6 +267,17 @@ class App:
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Victron Venus Client Metric Viewer')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Enable debug logging')
+    args = parser.parse_args()
+
+    # Configure logging
+    log_level = logging.DEBUG if args.verbose else logging.WARNING
+    logging.basicConfig(
+        level=log_level,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
     app = App()
 
     async def main_loop():

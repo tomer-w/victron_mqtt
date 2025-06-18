@@ -42,10 +42,12 @@ class DeviceType(Enum):
 
     ANY = "any"
     SYSTEM = "system"
-    SOLAR_CHARGER = "solar_charger"
+    SOLAR_CHARGER = "solarcharger"
     INVERTER = "inverter"
     BATTERY = "battery"
     GRID = "grid"
+    GENERATOR = "generator"
+    VEBOS = "vebus"
 
 
 PLACEHOLDER_PHASE = "{phase}"

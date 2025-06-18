@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from logging import getLogger
+import logging
 from typing import TYPE_CHECKING, Optional
 
 from victron_mqtt.constants import DeviceType, PLACEHOLDER_PHASE, MessageType
@@ -11,8 +12,7 @@ from victron_mqtt.metric import Metric
 if TYPE_CHECKING:
     from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor
 
-_LOGGER = getLogger(__name__)
-
+_LOGGER = logging.getLogger(__name__)
 
 class Device:
     """Class to represent a Victron device."""
@@ -26,6 +26,10 @@ class Device:
         device_id: str,
     ) -> None:
         """Initialize."""
+        _LOGGER.debug(
+            "Creating new device: unique_id=%s, device_type=%s, device_id=%s",
+            unique_id, native_device_type, device_id
+        )
         self._descriptor = descriptor
         self._unique_id = unique_id
         self._metrics: dict[str, Metric] = {}
@@ -39,6 +43,7 @@ class Device:
         self._manufacturer = ""
         self._serial_number = ""
         self._firmware_version = ""
+        _LOGGER.debug("Device %s initialized", unique_id)
 
     def __repr__(self) -> str:
         """Return a string representation of the device."""
@@ -56,27 +61,27 @@ class Device:
         self,
         parsed_topic: ParsedTopic,
         topic_desc: TopicDescriptor,
-        payload: str,  # noqa: ARG002 pylint: disable=unused-argument
+        payload: str,
     ) -> None:
         """Set a device property from a topic."""
         short_id = topic_desc.short_id
         if topic_desc.unwrapper is not None:
             payload = str(topic_desc.unwrapper(payload))
 
-        if payload is None:
+        if payload is None or payload == "None" or len(payload) == 0:
+            _LOGGER.debug("Ignoring empty/None payload for device %s property %s", self.unique_id, short_id)
             return
 
-        if payload == "None":
-            return
-
-        if len(payload) == 0:
-            return
+        _LOGGER.debug("Setting device %s property %s = %s", self.unique_id, short_id, payload)
 
         if short_id == "victron_productid":
             return  # ignore for now
 
         if short_id == "model":
             self._model = payload
+            if self._device_name == "":
+                self._device_name = payload
+                _LOGGER.debug("Using model as device name: %s", payload)
         elif short_id == "serial_number":
             self._serial_number = payload
         elif short_id == "manufacturer":
@@ -86,17 +91,16 @@ class Device:
         else:
             _LOGGER.warning("Unhandled device property %s for %s", short_id, self.unique_id)
 
-        # if we get a model message and we don't have a name yet, we use the model as name
-
-        if short_id == "model" and self._device_name == "":
-            self._device_name = payload
-
     async def handle_message(self, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str) -> None:
         """Handle a message."""
+        _LOGGER.debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 
-        # if we created the device on a generic topic we need to fix the device type as soon
-        #  as we get a more specific topic
+        # Update device type if needed
         if self.device_type == DeviceType.ANY and topic_desc.device_type != DeviceType.ANY:
+            _LOGGER.info(
+                "Updating device %s type from %s to %s", 
+                self.unique_id, self.device_type, topic_desc.device_type
+            )
             self._device_type = topic_desc.device_type
 
         if topic_desc.message_type == MessageType.ATTRIBUTE:
@@ -106,7 +110,11 @@ class Device:
             if topic_desc.unwrapper is not None:
                 value = topic_desc.unwrapper(payload)
             if value is None:
-                return  # don't try to create or update metric if we don't have valid values for it.
+                _LOGGER.debug(
+                    "Ignoring null metric value for device %s metric %s", 
+                    self.unique_id, topic_desc.short_id
+                )
+                return
 
             short_id = topic_desc.short_id
             if PLACEHOLDER_PHASE in short_id:
@@ -114,7 +122,6 @@ class Device:
             metric_id = f"{self.unique_id}_{short_id}"
 
             metric = self._get_or_create_metric(metric_id, short_id, parsed_topic, topic_desc, payload)
-
             await metric.handle_message(parsed_topic, topic_desc, value)
 
     def _get_or_create_metric(
@@ -134,7 +141,7 @@ class Device:
         self._root_device_name = name
         self._device_name = name
 
-    def get_metric_from_unique_id(self, unique_id: str) -> Metric:
+    def get_metric_from_unique_id(self, unique_id: str) -> Metric | None:
         """Get a metric from a unique id."""
         return self._metrics.get(unique_id)
 
