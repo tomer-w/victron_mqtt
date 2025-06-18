@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "victron_mqtt"
-dynamic = ["version"]
-description = 'An async MQTT Victron Venus OS client library.'
+version = "2025.6.9"
+description = "Python library for communicating with Victron Venus OS MQTT interface"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
-keywords = []
+keywords = ["victron", "mqtt", "venus os"]
 authors = [
   { name = "Johan du Plessis", email = "johan@epicwin.co.za" },
   { name = "Tomer", email = "57483589+tomer-w@users.noreply.github.com" },
@@ -20,13 +20,12 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "gmqtt>=0.7.0"
-  ]
+  "paho-mqtt>=1.6.1",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/victron_mqtt"]
@@ -36,9 +35,6 @@ exclude = [".github", ".vscode"]
 Documentation = "https://github.com/tomer-w/victron_mqtt#readme"
 Issues = "https://github.com/tomer-w/victron_mqtt/issues"
 Source = "https://github.com/tomer-w/victron_mqtt"
-
-[tool.hatch.version]
-path = "src/victron_mqtt/__about__.py"
 
 [tool.hatch.envs.types]
 extra-dependencies = [

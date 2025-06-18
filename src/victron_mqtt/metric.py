@@ -123,7 +123,7 @@ class Metric:
         """Sets the on_update callback."""
         self._on_update = value
 
-    async def handle_message(self, parsed_topic, topic_desc, value):  # noqa: ARG002 pylint: disable=unused-argument
+    def handle_message(self, parsed_topic, topic_desc, value):  # noqa: ARG002 pylint: disable=unused-argument
         """Handle a message."""
         if value != self._value:
             _LOGGER.debug(
@@ -131,6 +131,10 @@ class Metric:
                 self.unique_id, self._value, value,
                 self._descriptor.unit_of_measurement or ''
             )
-            self._value = value
+        self._value = value
+
+        try:
             if callable(self._on_update):
                 self._on_update(self)
+        except Exception as exc:
+            _LOGGER.error("Error calling callback %s", exc, exc_info=True)

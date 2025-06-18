@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: 2024-present Johan du Plessis https://github.com/johanslab
-#
-# SPDX-License-Identifier: MIT
 """Configuration for tests, mostly Victron Venus device connection settings.
 
 Can be overridden by environment variables:
@@ -13,7 +10,13 @@ VENUS_TEST_USE_SSL - Whether to use SSL for the connection. Default False
 """
 
 import os
+import logging
 import pytest
+
+
+# Configure logging for the victron_mqtt package
+victron_logger = logging.getLogger('victron_mqtt')
+victron_logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

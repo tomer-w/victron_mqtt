@@ -17,7 +17,7 @@ LOGGER = getLogger(__name__)
 
 """Dialog to prompt for connection information"""
 
-
+asyncio_loop: asyncio.AbstractEventLoop | None = None
 class ConnectionDialog(simpledialog.Dialog):
     """Dialog to prompt for connection information."""
 
@@ -104,6 +104,10 @@ class MetricContainer:
         self._parent_item = parent_item
 
     def _update(self, metric: Metric):  # pylint: disable=unused-argument
+        assert asyncio_loop is not None
+        asyncio.run_coroutine_threadsafe(self._update_task(metric), asyncio_loop)
+
+    async def _update_task(self, metric: Metric):  # pylint: disable=unused-argument
         formatted = self._metric.formatted_value
         self._tree_view.item(self._parent_item, values=(formatted,))
 
@@ -173,7 +177,6 @@ class App:
             
             self._client = Hub(server, port, hub_username, hub_password, use_ssl)
             await self._client.connect()
-            await self._client.initialize_devices_and_metrics()
             self._fill_tree()
             self.disconnect_button.config(state=tk.NORMAL)
             return True
@@ -248,10 +251,13 @@ class App:
         if password == "":
             password = None
 
-        asyncio.run_coroutine_threadsafe(
-            self._async_connect(server, port, username, password, use_ssl),
-            asyncio.get_event_loop(),
-        )
+        async def connect():
+            success = await self._async_connect(server, port, username, password, use_ssl)
+            if not success:
+                self.connect_button.config(state=tk.NORMAL)
+
+        # Use asyncio.create_task to schedule the coroutine in the existing event loop
+        asyncio.create_task(connect())
 
     def _disconnect(self):
         self.disconnect_button.config(state=tk.DISABLED)
@@ -264,6 +270,14 @@ class App:
             self._client = None
 
         self.connect_button.config(state=tk.NORMAL)
+
+async def run_app():
+    app = App()
+    global asyncio_loop
+    asyncio_loop = asyncio.get_running_loop()
+    while not app.to_quit:
+        app.update()
+        await asyncio.sleep(0.01)
 
 
 def main():
@@ -278,14 +292,7 @@ def main():
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
 
-    app = App()
-
-    async def main_loop():
-        while not app.to_quit:
-            app.update()
-            await asyncio.sleep(0.01)
-
-    asyncio.run(main_loop())
+    asyncio.run(run_app())
 
 
 if __name__ == "__main__":

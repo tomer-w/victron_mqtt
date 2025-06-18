@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from victron_mqtt.constants import DeviceType, MetricNature, MetricType
+from .constants import DeviceType, MessageType, MetricNature, MetricType
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -17,13 +17,13 @@ _LOGGER = logging.getLogger(__name__)
 class TopicDescriptor:
     """Describes the topic, how to map it and how to parse it."""
 
-    message_type: str  # 'device', 'sensor', or 'system'
+    message_type: MessageType  # 'device', 'sensor', or 'system'
     short_id: str  # short id of the attribute/value (also translation key)
     unit_of_measurement: Optional[str] = None
     metric_type: MetricType = MetricType.NONE
     metric_nature: MetricNature = MetricNature.NONE
     device_type: DeviceType = DeviceType.ANY
-    precision: int = 2
+    precision: int | None = 2
     unwrapper: Optional[Callable] = None
 
     def __repr__(self) -> str:
@@ -91,7 +91,7 @@ class ParsedTopic:
         try:
             device_type = DeviceType(device_type_str)
         except ValueError as e:
-            _LOGGER.error("Error parsing device type '%s': %s", device_type_str, e)
+            _LOGGER.warning("Error parsing device type '%s': %s", device_type_str, e)
             return None
         device_id = topic_parts[3]
         wildcard_topic_parts[3] = "+"

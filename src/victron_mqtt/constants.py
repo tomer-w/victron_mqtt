@@ -47,7 +47,7 @@ class DeviceType(Enum):
     BATTERY = "battery"
     GRID = "grid"
     GENERATOR = "generator"
-    VEBOS = "vebus"
+    VEBUS = "vebus"
 
 
 PLACEHOLDER_PHASE = "{phase}"

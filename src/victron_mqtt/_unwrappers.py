@@ -7,6 +7,8 @@ def unwrap_int(json_str):
     """Unwrap an integer value from a JSON string."""
     try:
         data = json.loads(json_str)
+        if data["value"] is None:
+            return None
         return int(data["value"])
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
@@ -28,7 +30,7 @@ def unwrap_float(json_str):
     try:
         data = json.loads(json_str)
         if data["value"] is None:
-            return 0.0
+            return None
         return float(data["value"])
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
