@@ -171,11 +171,7 @@ class App:
 
     async def _async_connect(self, server: str, port: int, username: str | None, password: str | None, use_ssl: bool) -> bool:
         try:
-            # Convert None to empty string for Hub constructor
-            hub_username = username if username is not None else ""
-            hub_password = password if password is not None else ""
-            
-            self._client = Hub(server, port, hub_username, hub_password, use_ssl)
+            self._client = Hub(server, port, username, password, use_ssl)
             await self._client.connect()
             self._fill_tree()
             self.disconnect_button.config(state=tk.NORMAL)

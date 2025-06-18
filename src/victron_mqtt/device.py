@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from logging import getLogger
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from victron_mqtt.constants import DeviceType, PLACEHOLDER_PHASE, MessageType
 from victron_mqtt.metric import Metric

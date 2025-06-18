@@ -1,9 +1,8 @@
 name: Build and Publish to PyPI
 
 on:
-  push:
-    tags:
-      - 'v*'  # This means any tag starting with 'v', like v1.0.0, v1.1.0, etc.
+  release:
+    types: [published]
 
 jobs:
   build-and-publish:

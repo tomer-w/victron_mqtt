@@ -9,9 +9,11 @@ from typing import Any, Optional
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import Client as MQTTClient
 from paho.mqtt.enums import CallbackAPIVersion
+from paho.mqtt.reasoncodes import ReasonCode
+from paho.mqtt.properties import Properties
 
 from victron_mqtt._topic_map import topic_map
-from victron_mqtt.constants import TOPIC_INSTALLATION_ID, DeviceType
+from victron_mqtt.constants import TOPIC_INSTALLATION_ID
 from victron_mqtt.data_classes import ParsedTopic
 from victron_mqtt.device import Device
 from victron_mqtt.metric import Metric
@@ -25,8 +27,8 @@ class Hub:
         self,
         host: str,
         port: int,
-        username: str,
-        password: str,
+        username: str | None,
+        password: str | None,
         use_ssl: bool,
         installation_id: str | None = None,
         model_name: str | None = None,
@@ -53,6 +55,7 @@ class Hub:
         self._snapshot = {}
         self._keep_alive_task = None
         self._connected_event = asyncio.Event()
+        self._connected_failed = False
         _LOGGER.debug("Hub initialized")
 
     async def connect(self) -> None:
@@ -60,7 +63,7 @@ class Hub:
         _LOGGER.debug("Connecting to MQTT broker at %s:%d", self.host, self.port)
         self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2)
         
-        if self.username not in {None, ""}:
+        if self.username is not None:
             _LOGGER.debug("Setting auth credentials for user: %s", self.username)
             self._client.username_pw_set(self.username, self.password)
         
@@ -73,12 +76,17 @@ class Hub:
             
         self._client.on_connect = self._on_connect
         self._client._on_disconnect = self._on_disconnect
-        self._client.on_message = self._on_message_callback
+        self._client.on_message = self.on_message
+        self._client.on_connect_fail = self.on_connect_fail
+        self._connected_failed = False
         
         try:
             self._client.connect_async(self.host, self.port)
             self._client.loop_start()
             await self._connected_event.wait()
+            if self._connected_failed:
+                _LOGGER.error("Failed to connect to MQTT broker")
+                raise CannotConnectError("Failed to connect to MQTT broker")
             _LOGGER.info("Successfully connected to MQTT broker at %s:%d", self.host, self.port)
             if self._installation_id is None:
                 _LOGGER.debug("No installation ID provided, attempting to read from device")
@@ -88,7 +96,7 @@ class Hub:
             _LOGGER.info("Devices and metrics initialized. Found %d devices", len(self._devices))
         except Exception as exc:
             _LOGGER.error("Failed to connect to MQTT broker: %s", exc)
-            raise ConnectionError(f"Failed to connect to MQTT broker: {exc}") from exc
+            raise CannotConnectError(f"Failed to connect to MQTT broker: {exc}") from exc
 
     def _on_connect(self, client: MQTTClient, userdata: Any, flags: dict, rc: int, properties: Optional[dict] = None) -> None:
         """Handle connection callback."""
@@ -99,14 +107,14 @@ class Hub:
         else:
             _LOGGER.error("Failed to connect with error code: %s. flags: %s", rc, flags)
 
-    def _on_disconnect(self, client, userdata: Any, disconnect_flags: dict, reason_code, properties: Optional[dict] = None) -> None:
+    def _on_disconnect(self, client: MQTTClient, userdata: Any, disconnect_flags: mqtt.DisconnectFlags, reason_code: ReasonCode, properties: Optional[Properties] = None) -> None:
         """Handle disconnection callback."""
         if reason_code != 0:
             _LOGGER.warning("Unexpected disconnection from MQTT broker. Error: %s. flags: %s, Reconnecting...", reason_code, disconnect_flags)
         else:
             _LOGGER.info("Disconnected from MQTT broker.")
 
-    def _on_message_callback(self, client: MQTTClient, userdata: Any, message: mqtt.MQTTMessage) -> None:
+    def on_message(self, client: MQTTClient, userdata: Any, message: mqtt.MQTTMessage) -> None:
         """Process MQTT message asynchronously."""
         topic = message.topic
         payload = message.payload
@@ -373,6 +381,17 @@ class Hub:
         if self._client is None:
             return False
         return self._client.is_connected()
+
+
+    def on_connect_fail(self, client: MQTTClient, userdata: Any) -> None:
+        """Handle connection failure callback."""
+        _LOGGER.error("Connection to MQTT broker failed")
+        self._connected_failed = True
+        self._connected_event.set()
+
+
+class CannotConnectError(Exception):
+    """Error to indicate we cannot connect."""
 
 
 class ProgrammingError(Exception):

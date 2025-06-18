@@ -17,7 +17,6 @@ async def main():
 
     # Connect and initialize
     await hub.connect()
-    await hub.initialize_devices_and_metrics()
 
     # Access devices and metrics
     for device in hub.devices:
