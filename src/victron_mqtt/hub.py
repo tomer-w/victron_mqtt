@@ -14,11 +14,25 @@ from paho.mqtt.properties import Properties
 
 from victron_mqtt._topic_map import topic_map
 from victron_mqtt.constants import TOPIC_INSTALLATION_ID
-from victron_mqtt.data_classes import ParsedTopic
+from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor
 from victron_mqtt.device import Device
 from victron_mqtt.metric import Metric
 
 _LOGGER = logging.getLogger(__name__)
+
+# class TracedTask(asyncio.Task):
+#     def __init__(self, coro, *, loop=None, name=None):
+#         super().__init__(coro, loop=loop, name=name)
+#         print(f"[TASK START] {self.get_name()} - {coro}")
+#         self.add_done_callback(self._on_done)
+
+#     def _on_done(self, fut):
+#         try:
+#             result = fut.result()
+#         except Exception as e:
+#             print(f"[TASK ERROR] {self.get_name()} - {e}")
+#         else:
+#             print(f"[TASK DONE] {self.get_name()} - Result: {result}")
 
 class Hub:
     """Class to communicate with the Venus OS hub."""
@@ -56,19 +70,19 @@ class Hub:
         self._keep_alive_task = None
         self._connected_event = asyncio.Event()
         self._connected_failed = False
-        _LOGGER.debug("Hub initialized")
+        _LOGGER.info("Hub initialized")
 
     async def connect(self) -> None:
         """Connect to the hub."""
-        _LOGGER.debug("Connecting to MQTT broker at %s:%d", self.host, self.port)
+        _LOGGER.info("Connecting to MQTT broker at %s:%d", self.host, self.port)
         self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2)
         
         if self.username is not None:
-            _LOGGER.debug("Setting auth credentials for user: %s", self.username)
+            _LOGGER.info("Setting auth credentials for user: %s", self.username)
             self._client.username_pw_set(self.username, self.password)
         
         if self.use_ssl:
-            _LOGGER.debug("Setting up SSL context")
+            _LOGGER.info("Setting up SSL context")
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.VerifyMode.CERT_NONE
@@ -76,22 +90,28 @@ class Hub:
             
         self._client.on_connect = self._on_connect
         self._client._on_disconnect = self._on_disconnect
-        self._client.on_message = self.on_message
+        self._client.on_message = self._on_message
         self._client.on_connect_fail = self.on_connect_fail
         self._connected_failed = False
-        
+        self._loop = asyncio.get_event_loop()
+        #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop))
+
         try:
-            self._client.connect_async(self.host, self.port)
+            _LOGGER.info("Starting paho mqtt")
             self._client.loop_start()
-            await self._connected_event.wait()
+            _LOGGER.info("Connecting")
+            self._client.connect_async(self.host, self.port)
+            _LOGGER.info("Waiting for connection event")
+            await self._wait_for_connect()
             if self._connected_failed:
                 _LOGGER.error("Failed to connect to MQTT broker")
                 raise CannotConnectError("Failed to connect to MQTT broker")
             _LOGGER.info("Successfully connected to MQTT broker at %s:%d", self.host, self.port)
             if self._installation_id is None:
-                _LOGGER.debug("No installation ID provided, attempting to read from device")
+                _LOGGER.info("No installation ID provided, attempting to read from device")
                 self._installation_id = await self._read_installation_id()
             self._start_keep_alive_loop()
+            _LOGGER.info("Waiting for first refresh")
             await self._wait_for_first_refresh()
             _LOGGER.info("Devices and metrics initialized. Found %d devices", len(self._devices))
         except Exception as exc:
@@ -103,7 +123,7 @@ class Hub:
         if rc == 0:
             _LOGGER.info("Connected to MQTT broker successfully")
             self._setup_subscriptions()
-            self._connected_event.set()
+            self._loop.call_soon_threadsafe(self._connected_event.set)
         else:
             _LOGGER.error("Failed to connect with error code: %s. flags: %s", rc, flags)
 
@@ -114,7 +134,7 @@ class Hub:
         else:
             _LOGGER.info("Disconnected from MQTT broker.")
 
-    def on_message(self, client: MQTTClient, userdata: Any, message: mqtt.MQTTMessage) -> None:
+    def _on_message(self, client: MQTTClient, userdata: Any, message: mqtt.MQTTMessage) -> None:
         """Process MQTT message asynchronously."""
         topic = message.topic
         payload = message.payload
@@ -123,7 +143,7 @@ class Hub:
             _LOGGER.info("Full publish completed, unsubscribing from notification")
             if self._client is not None and self._client.is_connected():
                 self._client.unsubscribe("N/+/full_publish_completed")
-            self._first_refresh_event.set()
+            self._loop.call_soon_threadsafe(self._first_refresh_event.set)
             return
 
         if not self._installation_id_event.is_set():
@@ -140,7 +160,7 @@ class Hub:
             self._installation_id = payload_json.get("value")
             _LOGGER.info("Installation ID received: %s", self._installation_id)
             if self._installation_id_event:
-                self._installation_id_event.set()
+                 self._loop.call_soon_threadsafe(self._installation_id_event.set)
 
     def _handle_normal_message(self, topic: str, payload: bytes) -> None:
         """Handle regular MQTT message."""
@@ -162,7 +182,7 @@ class Hub:
 
     async def disconnect(self) -> None:
         """Disconnect from the hub."""
-        _LOGGER.debug("Disconnecting from MQTT broker")
+        _LOGGER.info("Disconnecting from MQTT broker")
         self._stop_keep_alive_loop()
         if self._client is None:
             _LOGGER.debug("No client to disconnect")
@@ -189,18 +209,22 @@ class Hub:
 
     async def _keep_alive_loop(self) -> None:
         """Run keep_alive every 30 seconds."""
-        _LOGGER.debug("Starting keepalive loop")
-        while True:
-            try:
-                await self._keep_alive()
-                await asyncio.sleep(30)
-            except Exception as exc:
-                _LOGGER.error("Error in keepalive loop: %s", exc, exc_info=True)
-                await asyncio.sleep(5)  # Short delay before retrying
+        _LOGGER.info("Starting keepalive loop")
+        try:
+            while True:
+                try:
+                    await self._keep_alive()
+                    await asyncio.sleep(30)
+                except Exception as exc:
+                    _LOGGER.error("Error in keepalive loop: %s", exc, exc_info=True)
+                    await asyncio.sleep(5)  # Short delay before retrying
+        except asyncio.CancelledError:
+            _LOGGER.info("Keepalive loop canceled")
+            raise
 
     def _start_keep_alive_loop(self) -> None:
         """Start the keep_alive loop."""
-        _LOGGER.debug("Creating keepalive task")
+        _LOGGER.info("Creating keepalive task")
         if self._keep_alive_task is None or self._keep_alive_task.done():
             self._keep_alive_task = asyncio.create_task(self._keep_alive_loop())
         else:
@@ -209,7 +233,7 @@ class Hub:
     def _stop_keep_alive_loop(self) -> None:
         """Stop the keep_alive loop."""
         if self._keep_alive_task is not None:
-            _LOGGER.debug("Cancelling keepalive task")
+            _LOGGER.info("Cancelling keepalive task")
             self._keep_alive_task.cancel()
             self._keep_alive_task = None
 
@@ -223,9 +247,10 @@ class Hub:
             _LOGGER.debug("No installation ID, reading from device")
             self._installation_id = await self._read_installation_id()
         assert self._client is not None
+        self._first_refresh_event.clear()
         self._client.on_message = self._on_snapshot_message
         self._client.subscribe("#")
-        _LOGGER.debug("Subscribed to all topics for snapshot")
+        _LOGGER.info("Subscribed to all topics for snapshot")
         await self._keep_alive()
         await self._wait_for_first_refresh()
         _LOGGER.info("Snapshot complete with %d top-level entries", len(self._snapshot))
@@ -248,7 +273,7 @@ class Hub:
                 _LOGGER.info("Full publish completed, unsubscribing from notification")
                 if self._client is not None:
                     self._client.unsubscribe("N/+/full_publish_completed")
-                self._first_refresh_event.set()
+                self._loop.call_soon_threadsafe(self._first_refresh_event.set)
                 return
 
             topic_parts = message.topic.split("/")
@@ -271,7 +296,7 @@ class Hub:
                 self._installation_id = payload_json.get("value")
                 _LOGGER.info("Installation ID received: %s", self._installation_id)
                 if self._installation_id_event is not None:
-                    self._installation_id_event.set()
+                    self._loop.call_soon_threadsafe(self._installation_id_event.set)
         except Exception as exc:
             _LOGGER.error("Error processing installation ID message: %s", exc)
 
@@ -312,11 +337,23 @@ class Hub:
         self._client.subscribe("N/+/full_publish_completed")
         _LOGGER.debug("Subscribed to full_publish_completed notification")
 
+    async def _wait_for_connect(self) -> None:
+        """Wait for the first connection to complete."""
+        try:
+            await asyncio.wait_for(self._connected_event.wait(), timeout=25)
+        except asyncio.TimeoutError:
+            _LOGGER.error("Timeout waiting for first first connection")
+            raise CannotConnectError("Timeout waiting for first connection")
+
     async def _wait_for_first_refresh(self) -> None:
         """Wait for the first full refresh to complete."""
-        await asyncio.wait_for(self._first_refresh_event.wait(), timeout=60)
+        try:
+            await asyncio.wait_for(self._first_refresh_event.wait(), timeout=60)
+        except asyncio.TimeoutError:
+            _LOGGER.error("Timeout waiting for first full refresh")
+            raise CannotConnectError("Timeout waiting for first full refresh")
 
-    def _get_or_create_device(self, parsed_topic: ParsedTopic, desc: Any) -> Device:
+    def _get_or_create_device(self, parsed_topic: ParsedTopic, desc: TopicDescriptor) -> Device:
         """Get or create a device based on topic."""
         unique_id = self._create_device_unique_id(
             parsed_topic.installation_id,
@@ -331,10 +368,8 @@ class Hub:
             )
             device = Device(
                 unique_id,
+                parsed_topic,
                 desc,
-                parsed_topic.installation_id,
-                str(parsed_topic.device_type),
-                parsed_topic.device_id,
             )
             self._devices[unique_id] = device
         return device
@@ -387,7 +422,7 @@ class Hub:
         """Handle connection failure callback."""
         _LOGGER.error("Connection to MQTT broker failed")
         self._connected_failed = True
-        self._connected_event.set()
+        self._loop.call_soon_threadsafe(self._connected_event.set)
 
 
 class CannotConnectError(Exception):

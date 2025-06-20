@@ -16,31 +16,24 @@ _LOGGER = logging.getLogger(__name__)
 class Device:
     """Class to represent a Victron device."""
 
-    def __init__(
-        self,
-        unique_id: str,
-        descriptor: TopicDescriptor,
-        installation_id: str,
-        native_device_type: str,
-        device_id: str,
-    ) -> None:
+    def __init__(self, unique_id: str, parsed_topic: ParsedTopic, descriptor: TopicDescriptor) -> None:
         """Initialize."""
         _LOGGER.debug(
-            "Creating new device: unique_id=%s, device_type=%s, device_id=%s",
-            unique_id, native_device_type, device_id
+            "Creating new device: unique_id=%s, parsed_topic=%s, descriptor=%s",
+            unique_id, parsed_topic, descriptor
         )
         self._descriptor = descriptor
         self._unique_id = unique_id
         self._metrics: dict[str, Metric] = {}
-        self._native_device_type = native_device_type
-        self._device_type = descriptor.device_type
-        self._device_id = device_id
-        self._installation_id = installation_id
-        self._device_name = ""
-        self._model = ""
-        self._manufacturer = ""
-        self._serial_number = ""
-        self._firmware_version = ""
+        self._device_type = parsed_topic.device_type
+        self._native_device_type = parsed_topic.native_device_type
+        self._device_id = parsed_topic.device_id
+        self._installation_id = parsed_topic.installation_id
+        self._device_name = None
+        self._model = None
+        self._manufacturer = None
+        self._serial_number = None
+        self._firmware_version = None
         if self._device_type == DeviceType.SYSTEM:
             self._device_name = "Victron Venus"
 
@@ -96,14 +89,6 @@ class Device:
         """Handle a message."""
         _LOGGER.debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 
-        # Update device type if needed
-        if self.device_type == DeviceType.ANY and topic_desc.device_type != DeviceType.ANY:
-            _LOGGER.info(
-                "Updating device %s type from %s to %s", 
-                self.unique_id, self.device_type, topic_desc.device_type
-            )
-            self._device_type = topic_desc.device_type
-
         if topic_desc.message_type == MessageType.ATTRIBUTE:
             self._set_device_property_from_topic(parsed_topic, topic_desc, payload)
         elif topic_desc.message_type == MessageType.METRIC:
@@ -157,17 +142,17 @@ class Device:
         return self._device_name
 
     @property
-    def model(self) -> str:
+    def model(self) -> str | None:
         """Return the model of the device."""
         return self._model
 
     @property
-    def manufacturer(self) -> str:
+    def manufacturer(self) -> str | None:
         """Return the manufacturer of the device."""
         return self._manufacturer
 
     @property
-    def serial_number(self) -> str:
+    def serial_number(self) -> str | None:
         """Return the serial number of the device."""
         return self._serial_number
 
@@ -178,11 +163,11 @@ class Device:
 
     @property
     def native_device_type(self) -> str:
-        """Return the native device type."""
+        """Return the device type."""
         return self._native_device_type
 
     @property
-    def firmware_version(self) -> str:
+    def firmware_version(self) -> str | None:
         """Return the firmware version of the device."""
         return self._firmware_version
 

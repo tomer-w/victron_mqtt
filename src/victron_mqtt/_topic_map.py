@@ -6,7 +6,7 @@ from victron_mqtt._unwrappers import unwrap_float, unwrap_int, unwrap_int_defaul
 from victron_mqtt.constants import DeviceType, MessageType, MetricNature, MetricType
 from victron_mqtt.data_classes import TopicDescriptor
 
-topic_map = {
+topic_map: dict[str, TopicDescriptor] = {
     # generic device attributes
     "N/+/+/+/ProductName": TopicDescriptor(
         message_type=MessageType.ATTRIBUTE,

@@ -10,13 +10,8 @@ VENUS_TEST_USE_SSL - Whether to use SSL for the connection. Default False
 """
 
 import os
-import logging
 import pytest
 
-
-# Configure logging for the victron_mqtt package
-victron_logger = logging.getLogger('victron_mqtt')
-victron_logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

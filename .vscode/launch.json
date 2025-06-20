@@ -11,7 +11,8 @@
             "module": "victron_mqtt.utils.dump_mqtt",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/src"  // Include src in PYTHONPATH so Python can find the module
-            }
+            },
+            "args": ["--host", "192.168.0.159", "--port", "1884", "--verbose"]
         },
         {
             "name": "Debug view_metrics",

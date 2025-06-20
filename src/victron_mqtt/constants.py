@@ -46,7 +46,6 @@ class DeviceType(Enum):
     INVERTER = "inverter"
     BATTERY = "battery"
     GRID = "grid"
-    GENERATOR = "generator"
     VEBUS = "vebus"
 
 

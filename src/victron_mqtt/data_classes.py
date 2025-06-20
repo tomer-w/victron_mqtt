@@ -46,6 +46,7 @@ class ParsedTopic:
     installation_id: str
     device_id: str
     device_type: DeviceType
+    native_device_type: str
     phase: str
     wildcards_with_device_type: str
     wildcards_without_device_type: str
@@ -85,14 +86,13 @@ class ParsedTopic:
 
         installation_id = topic_parts[1]
         wildcard_topic_parts[1] = "+"
-        device_type_str = topic_parts[2]
-        if device_type_str == "platform":  # platform is not a device type
-            device_type_str = "system"
+        native_device_type = topic_parts[2]
+        if native_device_type == "platform":  # platform is not a device type
+            native_device_type = "system"
         try:
-            device_type = DeviceType(device_type_str)
+            device_type = DeviceType(native_device_type)
         except ValueError as e:
-            _LOGGER.warning("Error parsing device type '%s': %s", device_type_str, e)
-            return None
+            device_type = DeviceType.ANY
         device_id = topic_parts[3]
         wildcard_topic_parts[3] = "+"
 
@@ -110,6 +110,7 @@ class ParsedTopic:
             installation_id,
             device_id,
             device_type,
+            native_device_type,
             phase,
             wildcards_with_device_type,
             wildcards_without_device_type,

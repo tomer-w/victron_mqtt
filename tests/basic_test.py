@@ -1,4 +1,3 @@
-
 """Tests basic connectivity functionality. Does require a running Venus OS instance to connect to."""
 
 import pytest
@@ -6,9 +5,7 @@ import victron_mqtt  # pylint: disable=import-error
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
 
 @pytest.mark.asyncio
 async def test_connect(config_host, config_port, config_username, config_password, config_use_ssl):
@@ -20,7 +17,6 @@ async def test_connect(config_host, config_port, config_username, config_passwor
     assert hub.connected
     await hub.disconnect()
     logger.debug("Disconnected from hub")
-
 
 @pytest.mark.asyncio
 async def test_create_full_raw_snapshot(config_host, config_port, config_username, config_password, config_use_ssl):

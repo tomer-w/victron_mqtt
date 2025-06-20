@@ -177,6 +177,7 @@ class App:
             self.disconnect_button.config(state=tk.NORMAL)
             return True
         except Exception as e:  # pylint: disable=broad-except
+            LOGGER.error("Error connecting to Venus device: %s", e, exc_info=True)
             message = str(e)
             if message == "":
                 message = type(e).__name__
@@ -194,7 +195,7 @@ class App:
             device_item = self.tree.insert(
                 "",
                 "end",
-                text=device.model,
+                text=device.model or "",
                 values=(device.serial_number, ""),
                 iid="D" + device.unique_id,
             )
@@ -282,10 +283,10 @@ def main():
     args = parser.parse_args()
 
     # Configure logging
-    log_level = logging.DEBUG if args.verbose else logging.WARNING
+    log_level = logging.INFO if args.verbose else logging.WARNING
     logging.basicConfig(
         level=log_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format='%(asctime)s - %(name)s - %(levelname)s - [%(thread)d] - %(message)s'
     )
 
     asyncio.run(run_app())
