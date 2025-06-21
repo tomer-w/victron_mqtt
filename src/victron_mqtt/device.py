@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -35,7 +36,7 @@ class Device:
         self._serial_number = None
         self._firmware_version = None
         if self._device_type == DeviceType.SYSTEM:
-            self._device_name = "Victron Venus"
+            self._model = self._device_name = "Victron Venus"
 
         _LOGGER.debug("Device %s initialized", unique_id)
 
@@ -73,7 +74,7 @@ class Device:
 
         if short_id == "model":
             self._model = payload
-            if self._device_name == "" and self._model != "":
+            if self._device_name is None and self._model is not None:
                 self._device_name = payload
                 _LOGGER.debug("Using model as device name: %s", payload)
         elif short_id == "serial_number":
@@ -85,7 +86,7 @@ class Device:
         else:
             _LOGGER.warning("Unhandled device property %s for %s", short_id, self.unique_id)
 
-    def handle_message(self, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str) -> None:
+    def handle_message(self, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop) -> None:
         """Handle a message."""
         _LOGGER.debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 
@@ -108,7 +109,7 @@ class Device:
             metric_id = f"{self.unique_id}_{short_id}"
 
             metric = self._get_or_create_metric(metric_id, short_id, parsed_topic, topic_desc, payload)
-            metric.handle_message(parsed_topic, topic_desc, value)
+            metric.handle_message(parsed_topic, topic_desc, value, event_loop)
 
     def _get_or_create_metric(
         self, metric_id: str, short_id: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str
@@ -137,7 +138,7 @@ class Device:
         return self._unique_id
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the device."""
         return self._device_name
 

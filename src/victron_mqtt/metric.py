@@ -5,6 +5,7 @@ Support for Victron Venus sensors. The sensor itself has no logic,
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 import logging
 
@@ -123,7 +124,7 @@ class Metric:
         """Sets the on_update callback."""
         self._on_update = value
 
-    def handle_message(self, parsed_topic, topic_desc, value):  # noqa: ARG002 pylint: disable=unused-argument
+    def handle_message(self, parsed_topic, topic_desc, value, event_loop: asyncio.AbstractEventLoop):  # noqa: ARG002 pylint: disable=unused-argument
         """Handle a message."""
         if value != self._value:
             _LOGGER.debug(
@@ -135,6 +136,9 @@ class Metric:
 
         try:
             if callable(self._on_update):
-                self._on_update(self)
+                if event_loop.is_running():
+                    # If the event loop is running, schedule the callback
+                    _LOGGER.debug("Scheduling on_update callback for metric %s", self.unique_id)
+                    event_loop.call_soon_threadsafe(self._on_update, self)
         except Exception as exc:
             _LOGGER.error("Error calling callback %s", exc, exc_info=True)

@@ -104,13 +104,10 @@ class MetricContainer:
         self._parent_item = parent_item
 
     def _update(self, metric: Metric):  # pylint: disable=unused-argument
-        assert asyncio_loop is not None
-        asyncio.run_coroutine_threadsafe(self._update_task(metric), asyncio_loop)
-
-    async def _update_task(self, metric: Metric):  # pylint: disable=unused-argument
         formatted = self._metric.formatted_value
-        self._tree_view.item(self._parent_item, values=(formatted,))
-
+        if self._tree_view.exists(self._parent_item):
+            self._tree_view.item(self._parent_item, values=(formatted,))
+        
 
 class App:
     def __init__(self):

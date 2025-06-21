@@ -178,7 +178,7 @@ class Hub:
             return
 
         device = self._get_or_create_device(parsed_topic, desc)
-        device.handle_message(parsed_topic, desc, payload.decode())
+        device.handle_message(parsed_topic, desc, payload.decode(), self._loop)
 
     async def disconnect(self) -> None:
         """Disconnect from the hub."""
