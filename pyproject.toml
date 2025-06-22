@@ -1,0 +1,113 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "victron_mqtt"
+version = "2025.6.12"
+description = "Python library for communicating with Victron Venus OS MQTT interface"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+keywords = ["victron", "mqtt", "venus os"]
+authors = [
+  { name = "Johan du Plessis", email = "johan@epicwin.co.za" },
+  { name = "Tomer", email = "57483589+tomer-w@users.noreply.github.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+  "paho-mqtt>=1.6.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/victron_mqtt"]
+exclude = [".github", ".vscode"]
+
+[project.urls]
+Documentation = "https://github.com/tomer-w/victron_mqtt#readme"
+Issues = "https://github.com/tomer-w/victron_mqtt/issues"
+Source = "https://github.com/tomer-w/victron_mqtt"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/victron_mqtt tests}"
+
+[tool.hatch.envs.test]
+dependencies = [
+    "pytest",
+    "pytest-mock",
+    "pytest-asyncio",
+    "victron_mqtt",
+    "coverage"
+]
+
+commands = [
+    "pytest --cov=victron_mqtt",  # Example command for running tests with coverage
+]
+
+[tool.hatch.envs.hatch-test]
+extra-dependencies = [
+  "pyfakefs",
+  "pytest-asyncio",
+  "pytest-benchmark",
+  "pytest-memray",
+  "pytest-playwright",
+  "pytest-print",
+]
+
+[tool.hatch.envs.docs]
+dependencies = [
+    "sphinx",
+    "sphinx-autodoc-typehints",  # Optional: for type hints in docs
+    "sphinx-rtd-theme",         # Optional: for a clean, professional theme
+]
+
+[tool.hatch.envs.docs.scripts]
+build = "sphinx-build -b html docs docs/_build/html"
+
+
+[tool.coverage.run]
+source_pkgs = ["victron_mqtt", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/victron_mqtt/__about__.py",
+]
+
+[tool.coverage.paths]
+victron_mqtt = ["src"]
+tests = ["tests", "*/victron_mqtt/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.ruff]
+exclude = [".git", "__pycache__", "node_modules", "public", "venv"]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.lint]
+ignore = [  "UP007" ]
+
+[tool.setuptools]
+packages = ["victron_mqtt"]
+
+[tool.setuptools.entry_points]
+console_scripts = [
+    "victron_mqtt-dump-mqtt=victron_mqtt.utils.dump_mqtt:main"
+]

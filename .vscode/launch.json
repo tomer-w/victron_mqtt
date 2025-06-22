@@ -1,0 +1,29 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug dump_mqtt",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "victron_mqtt.utils.dump_mqtt",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"  // Include src in PYTHONPATH so Python can find the module
+            },
+            "args": ["--host", "192.168.0.159", "--port", "1884", "--verbose"]
+        },
+        {
+            "name": "Debug view_metrics",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "victron_mqtt.utils.view_metrics",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"  // Include src in PYTHONPATH so Python can find the module
+            },
+            "args": ["--verbose"]
+        }
+    ]
+}
+

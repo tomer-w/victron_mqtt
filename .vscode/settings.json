@@ -1,0 +1,35 @@
+{
+    "cSpell.words": [
+        "CCGX",
+        "Cerbo",
+        "Ekrano",
+        "fullvictrondump",
+        "gmqtt",
+        "Johan",
+        "mqtt",
+        "Plessis",
+        "productid",
+        "pylint",
+        "unwrapper",
+        "unwrappers",
+        "VEBUS",
+        "Victron",
+        "victron_mqtt"
+    ],
+
+    "python.autoComplete.extraPaths": [
+        "./src/victron_mqtt"  // Add this to make sure VS Code sees sub-modules
+    ],
+    "pylint.interpreter": [
+        "venv/bin/python3"
+    ],
+    "python.analysis.diagnosticSeverityOverrides": {
+
+    },
+    "python.defaultInterpreterPath": "venv/bin/python",
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
