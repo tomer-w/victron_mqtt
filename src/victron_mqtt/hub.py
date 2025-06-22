@@ -158,7 +158,7 @@ class Hub:
         if len(topic_parts) == 5 and topic_parts[2:5] == ["system", "0", "Serial"]:
             payload_json = json.loads(payload.decode())
             self._installation_id = payload_json.get("value")
-            _LOGGER.info("Installation ID received: %s", self._installation_id)
+            _LOGGER.info("Installation ID received: %s. Original topic: %s", self._installation_id, topic)
             if self._installation_id_event:
                  self._loop.call_soon_threadsafe(self._installation_id_event.set)
 
@@ -302,7 +302,7 @@ class Hub:
 
     async def _read_installation_id(self) -> str:
         """Read the installation id for the Victron installation."""
-        _LOGGER.debug("Reading installation ID")
+        _LOGGER.info("Reading installation ID")
         if self._client is None:
             _LOGGER.error("Cannot read installation ID - no MQTT client")
             raise ProgrammingError
@@ -318,24 +318,23 @@ class Hub:
             raise
         if self._client is not None:
             self._client.unsubscribe(TOPIC_INSTALLATION_ID)
-        _LOGGER.debug("Installation ID read successfully: %s", self.installation_id)
+        _LOGGER.info("Installation ID read successfully: %s", self.installation_id)
         return str(self.installation_id)
 
     def _setup_subscriptions(self) -> None:
         """Subscribe to list of topics."""
-        _LOGGER.debug("Setting up MQTT subscriptions")
+        _LOGGER.info("Setting up MQTT subscriptions")
         if self._client is None:
             raise ProgrammingError
         if not self._client.is_connected():
             raise NotConnectedError
 
-        _LOGGER.debug("Subscribing to topic map topics")
         for topic in topic_map:
             self._client.subscribe(topic)
             _LOGGER.debug("Subscribed to: %s", topic)
 
         self._client.subscribe("N/+/full_publish_completed")
-        _LOGGER.debug("Subscribed to full_publish_completed notification")
+        _LOGGER.info("Subscribed to full_publish_completed notification")
 
     async def _wait_for_connect(self) -> None:
         """Wait for the first connection to complete."""
