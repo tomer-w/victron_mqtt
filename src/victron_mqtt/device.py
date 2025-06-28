@@ -3,14 +3,20 @@
 from __future__ import annotations
 
 import asyncio
+from enum import Enum
 import logging
 from typing import TYPE_CHECKING
 
-from victron_mqtt.constants import DeviceType, PLACEHOLDER_PHASE, MessageType
-from victron_mqtt.metric import Metric
+if TYPE_CHECKING:
+    from .hub import Hub
+
+from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_enum
+from .constants import DeviceType, PLACEHOLDER_PHASE, MessageType
+from .metric import Metric
+from .switch import Switch
 
 if TYPE_CHECKING:
-    from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor
+    from .data_classes import ParsedTopic, TopicDescriptor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,64 +66,78 @@ class Device:
     ) -> None:
         """Set a device property from a topic."""
         short_id = topic_desc.short_id
-        if topic_desc.unwrapper is not None:
-            payload = str(topic_desc.unwrapper(payload))
+        value = Device._unwrap_payload(topic_desc, payload)
 
-        if payload is None or payload == "None" or len(payload) == 0:
+        if value is None:
             _LOGGER.debug("Ignoring empty/None payload for device %s property %s", self.unique_id, short_id)
             return
+        value = str(value)
 
-        _LOGGER.debug("Setting device %s property %s = %s", self.unique_id, short_id, payload)
+        _LOGGER.debug("Setting device %s property %s = %s", self.unique_id, short_id, value)
 
         if short_id == "victron_productid":
             return  # ignore for now
 
         if short_id == "model":
-            self._model = payload
+            self._model = value
             if self._device_name is None and self._model is not None:
-                self._device_name = payload
-                _LOGGER.debug("Using model as device name: %s", payload)
+                self._device_name = value
+                _LOGGER.debug("Using model as device name: %s", value)
         elif short_id == "serial_number":
-            self._serial_number = payload
+            self._serial_number = value
         elif short_id == "manufacturer":
-            self._manufacturer = payload
+            self._manufacturer = value
         elif short_id == "firmware_version":
-            self._firmware_version = payload
+            self._firmware_version = value
         else:
             _LOGGER.warning("Unhandled device property %s for %s", short_id, self.unique_id)
 
-    def handle_message(self, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop) -> None:
+    
+    def handle_message(self, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop, hub: Hub) -> None:
         """Handle a message."""
         _LOGGER.debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 
         if topic_desc.message_type == MessageType.ATTRIBUTE:
             self._set_device_property_from_topic(parsed_topic, topic_desc, payload)
-        elif topic_desc.message_type == MessageType.METRIC:
-            value = payload
-            if topic_desc.unwrapper is not None:
-                value = topic_desc.unwrapper(payload)
-            if value is None:
-                _LOGGER.debug(
-                    "Ignoring null metric value for device %s metric %s", 
-                    self.unique_id, topic_desc.short_id
-                )
-                return
+            return
+        
+        # It is metric or switch
+        value = Device._unwrap_payload(topic_desc, payload)
+        if value is None:
+            _LOGGER.debug(
+                "Ignoring null metric value for device %s metric %s", 
+                self.unique_id, topic_desc.short_id
+            )
+            return
 
-            short_id = topic_desc.short_id
-            if PLACEHOLDER_PHASE in short_id:
-                short_id = short_id.replace(PLACEHOLDER_PHASE, parsed_topic.phase)
-            metric_id = f"{self.unique_id}_{short_id}"
+        short_id = topic_desc.short_id
+        if PLACEHOLDER_PHASE in short_id:
+            short_id = short_id.replace(PLACEHOLDER_PHASE, parsed_topic.phase)
+        metric_id = f"{self.unique_id}_{short_id}"
 
-            metric = self._get_or_create_metric(metric_id, short_id, parsed_topic, topic_desc, payload)
-            metric.handle_message(parsed_topic, topic_desc, value, event_loop)
+        metric = self._get_or_create_metric(metric_id, short_id, topic, parsed_topic, topic_desc, payload, hub)
+        metric.handle_message(parsed_topic, topic_desc, value, event_loop)
+
+    @staticmethod
+    def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | type[Enum] | None:
+        assert topic_desc.value_type is not None
+        unwrapper = VALUE_TYPE_UNWRAPPER[topic_desc.value_type]
+        if unwrapper == unwrap_enum:
+            return unwrapper(payload, topic_desc.enum)
+        else:
+            return unwrapper(payload)
 
     def _get_or_create_metric(
-        self, metric_id: str, short_id: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str
+        self, metric_id: str, short_id: str, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, hub: Hub
     ) -> Metric:
         """Get or create a metric."""
         metric = self._metrics.get(metric_id)
         if metric is None:
-            metric = Metric(metric_id, topic_desc, parsed_topic, payload)
+            _LOGGER.info("Creating new metric: metric_id=%s, short_id=%s", metric_id, short_id)
+            if topic_desc.message_type == MessageType.SWITCH:
+                metric = Switch(metric_id, topic_desc, topic, parsed_topic, payload, hub)
+            else:
+                metric = Metric(metric_id, topic_desc, parsed_topic, payload)
             self._metrics[metric_id] = metric
             setattr(self, short_id, metric)
 

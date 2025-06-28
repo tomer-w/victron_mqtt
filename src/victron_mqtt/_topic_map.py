@@ -2,9 +2,17 @@
 Maps all the MQTT topics to either attributes or metrics.
 """
 
-from victron_mqtt._unwrappers import unwrap_float, unwrap_int, unwrap_int_default_0, unwrap_string
-from victron_mqtt.constants import DeviceType, MessageType, MetricNature, MetricType
+from enum import Enum
+from victron_mqtt.constants import DeviceType, MessageType, MetricNature, MetricType, ValueType
 from victron_mqtt.data_classes import TopicDescriptor
+
+
+class InverterMode(Enum):
+    """Inverter Mode Enum"""
+    ChargerOnly = 1
+    InverterOnly = 2
+    On = 3
+    Off = 4
 
 topic_map: dict[str, TopicDescriptor] = {
     # generic device attributes
@@ -14,8 +22,7 @@ topic_map: dict[str, TopicDescriptor] = {
         unit_of_measurement=None,
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.NONE,
-        precision=None,
-        unwrapper=unwrap_string,
+        value_type=ValueType.STRING,
     ),
     "N/+/+/+/Serial": TopicDescriptor(
         message_type=MessageType.ATTRIBUTE,
@@ -23,8 +30,7 @@ topic_map: dict[str, TopicDescriptor] = {
         unit_of_measurement=None,
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.NONE,
-        precision=None,
-        unwrapper=unwrap_string,
+        value_type=ValueType.STRING,
     ),
     # inverter hides its serial number away in a different topic
     "N/+/vebus/+/Devices/0/SerialNumber": TopicDescriptor(
@@ -33,8 +39,7 @@ topic_map: dict[str, TopicDescriptor] = {
         unit_of_measurement=None,
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.NONE,
-        precision=None,
-        unwrapper=unwrap_string,
+        value_type=ValueType.STRING,
     ),
     "N/+/+/+/Manufacturer": TopicDescriptor(
         message_type=MessageType.ATTRIBUTE,
@@ -42,8 +47,7 @@ topic_map: dict[str, TopicDescriptor] = {
         unit_of_measurement=None,
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.NONE,
-        precision=None,
-        unwrapper=unwrap_string,
+        value_type=ValueType.STRING,
     ),
     "N/+/+/+/ProductId": TopicDescriptor(
         message_type=MessageType.ATTRIBUTE,
@@ -51,8 +55,8 @@ topic_map: dict[str, TopicDescriptor] = {
         unit_of_measurement=None,
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.NONE,
+        value_type=ValueType.INT,
         precision=0,
-        unwrapper=unwrap_int,
     ),
     "N/+/+/+/FirmwareVersion": TopicDescriptor(
         message_type=MessageType.ATTRIBUTE,
@@ -60,8 +64,7 @@ topic_map: dict[str, TopicDescriptor] = {
         unit_of_measurement=None,
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.NONE,
-        precision=None,
-        unwrapper=unwrap_string,
+        value_type=ValueType.STRING,
     ),
     # grid
     "N/+/system/+/Ac/Grid/NumberOfPhases": TopicDescriptor(
@@ -71,8 +74,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.GRID,
+        value_type=ValueType.INT_DEFAULT_0,
         precision=0,
-        unwrapper=unwrap_int_default_0,
     ),
     # individual grid phases
     "N/+/grid/+/Ac/+/Voltage": TopicDescriptor(
@@ -82,8 +85,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.VOLTAGE,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.GRID,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/grid/+/Ac/+/Current": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -92,8 +95,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.CURRENT,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.GRID,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/grid/+/Ac/+/Power": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -102,8 +105,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.GRID,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     # total grid
     "N/+/grid/+/Ac/Voltage": TopicDescriptor(
@@ -113,8 +116,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.VOLTAGE,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.GRID,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/grid/+/Ac/Current": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -123,8 +126,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.CURRENT,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.GRID,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/grid/+/Ac/Power": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -133,8 +136,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.GRID,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/grid/+/Ac/Energy/Forward": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -143,8 +146,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.ENERGY,
         metric_nature=MetricNature.CUMULATIVE,
         device_type=DeviceType.GRID,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/grid/+/Ac/Energy/Reverse": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -153,8 +156,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.ENERGY,
         metric_nature=MetricNature.CUMULATIVE,
         device_type=DeviceType.GRID,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     #  cspell:ignore solarcharger MPPT
     # solar / MPPT  """ cspell:ignore  """
@@ -165,8 +168,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.VOLTAGE,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/solarcharger/+/Dc/0/Current": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -175,8 +178,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.CURRENT,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/solarcharger/+/Yield/Power": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -185,8 +188,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/solarcharger/+/Yield/User": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -195,8 +198,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.ENERGY,
         metric_nature=MetricNature.CUMULATIVE,
         device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/solarcharger/+/History/Daily/0/MaxPower": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -205,8 +208,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     # batteries
     "N/+/battery/+/Dc/0/Voltage": TopicDescriptor(
@@ -216,8 +219,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.VOLTAGE,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.BATTERY,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/battery/+/Dc/0/Current": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -226,8 +229,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.CURRENT,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.BATTERY,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/battery/+/Dc/0/Power": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -236,8 +239,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.BATTERY,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/battery/+/Dc/0/Temperature": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -246,8 +249,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.TEMPERATURE,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.BATTERY,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/battery/+/History/DischargedEnergy": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -256,8 +259,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.ENERGY,
         metric_nature=MetricNature.CUMULATIVE,
         device_type=DeviceType.BATTERY,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/battery/+/History/ChargedEnergy": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -266,8 +269,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.ENERGY,
         metric_nature=MetricNature.CUMULATIVE,
         device_type=DeviceType.BATTERY,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/battery/+/Capacity": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -276,8 +279,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.BATTERY,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/battery/+/InstalledCapacity": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -286,8 +289,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.BATTERY,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/battery/+/Soc": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -296,10 +299,19 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.PERCENTAGE,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.BATTERY,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     # inverter
+    "N/+/vebus/+/Mode": TopicDescriptor(
+        message_type=MessageType.SWITCH,
+        short_id="Mode",
+        metric_type=MetricType.NONE,
+        metric_nature=MetricNature.NONE,
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=InverterMode,
+    ),
     "N/+/vebus/+/Ac/ActiveIn/+/P": TopicDescriptor(
         message_type=MessageType.METRIC,
         short_id="inverter_input_power_{phase}",
@@ -307,8 +319,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.INVERTER,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/vebus/+/Ac/ActiveIn/+/F": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -317,8 +329,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.FREQUENCY,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.INVERTER,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/vebus/+/Ac/ActiveIn/+/S": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -327,8 +339,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.INVERTER,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/vebus/+/Ac/Out/+/P": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -337,8 +349,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.INVERTER,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/vebus/+/Ac/Out/+/F": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -347,8 +359,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.FREQUENCY,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.INVERTER,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/vebus/+/Ac/Out/+/S": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -357,8 +369,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.INVERTER,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     # integrated system. Note that this might not be currently accurate for all systems
     #  as there are different physical configurations
@@ -370,8 +382,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.SYSTEM,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
     "N/+/system/+/Ac/ConsumptionOnInput/+/Power": TopicDescriptor(
         message_type=MessageType.METRIC,
@@ -380,7 +392,7 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.SYSTEM,
+        value_type=ValueType.FLOAT,
         precision=1,
-        unwrapper=unwrap_float,
     ),
 }

@@ -11,6 +11,7 @@ from tkinter import simpledialog, messagebox
 import tkinter.ttk as ttk
 from victron_mqtt import Hub, Device, Metric
 from victron_mqtt.constants import DEFAULT_HOST, DEFAULT_PORT
+import os
 
 
 LOGGER = getLogger(__name__)
@@ -27,12 +28,14 @@ class ConnectionDialog(simpledialog.Dialog):
         tk.Label(master, text="Username:").grid(row=2)
         tk.Label(master, text="Password:").grid(row=3)
         tk.Label(master, text="Use SSL:").grid(row=4)
+        host = os.environ.get("VICTRON_MQTT_SERVER", DEFAULT_HOST)
+        port = os.environ.get("VICTRON_MQTT_PORT", DEFAULT_PORT)
 
         self.server_entry = tk.Entry(master)
-        self.server_entry.insert(0, DEFAULT_HOST)
+        self.server_entry.insert(0, host)
 
         self.port_entry = tk.Entry(master)
-        self.port_entry.insert(0, str(DEFAULT_PORT))
+        self.port_entry.insert(0, str(port))
 
         self.username_entry = tk.Entry(master)
 
@@ -280,7 +283,7 @@ def main():
     args = parser.parse_args()
 
     # Configure logging
-    log_level = logging.INFO if args.verbose else logging.WARNING
+    log_level = logging.DEBUG if args.verbose else logging.WARNING
     logging.basicConfig(
         level=log_level,
         format='%(asctime)s - %(name)s - %(levelname)s - [%(thread)d] - %(message)s'

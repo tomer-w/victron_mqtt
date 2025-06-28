@@ -1,6 +1,9 @@
 """Functions to unwrap the data from the JSON string."""
 
+from enum import Enum
 import json
+
+from victron_mqtt.constants import ValueType
 
 
 def unwrap_int(json_str):
@@ -45,3 +48,56 @@ def unwrap_string(json_str):
         return str(data["value"])
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
+
+
+def unwrap_enum(json_str, enum: type[Enum]):
+    """Unwrap a string value from a JSON string."""
+    try:
+        data = json.loads(json_str)
+        if data["value"] is None:
+            return None
+        return enum((data["value"]))
+    except (json.JSONDecodeError, KeyError, ValueError, TypeError):
+        return None
+
+
+def wrap_enum(enum: Enum) -> str:
+    """Wrap an Enum value into a JSON string with a 'value' key."""
+    return json.dumps({"value": enum.value})
+
+
+def wrap_int(value: int | None) -> str:
+    """Wrap an integer value into a JSON string with a 'value' key."""
+    return json.dumps({"value": value})
+
+
+def wrap_int_default_0(value: int | None) -> str:
+    """Wrap an integer value into a JSON string with a 'value' key, defaulting to 0 if None."""
+    return json.dumps({"value": value if value is not None else 0})
+
+
+def wrap_float(value: float | None) -> str:
+    """Wrap a float value into a JSON string with a 'value' key."""
+    return json.dumps({"value": value})
+
+
+def wrap_string(value: str | None) -> str:
+    """Wrap a string value into a JSON string with a 'value' key."""
+    return json.dumps({"value": value})
+
+
+VALUE_TYPE_UNWRAPPER = {
+    ValueType.INT: unwrap_int,
+    ValueType.INT_DEFAULT_0: unwrap_int_default_0,
+    ValueType.FLOAT: unwrap_float,
+    ValueType.STRING: unwrap_string,
+    ValueType.ENUM: unwrap_enum,
+}
+
+VALUE_TYPE_WRAPPER = {
+    ValueType.INT: wrap_int,
+    ValueType.INT_DEFAULT_0: wrap_int_default_0,
+    ValueType.FLOAT: wrap_float,
+    ValueType.STRING: wrap_string,
+    ValueType.ENUM: wrap_enum,
+}

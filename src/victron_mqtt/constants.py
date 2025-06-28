@@ -10,6 +10,7 @@ class MessageType(Enum):
 
     ATTRIBUTE = "attribute"
     METRIC = "metric"
+    SWITCH = "switch"
 
 
 class MetricNature(Enum):
@@ -48,6 +49,15 @@ class DeviceType(Enum):
     GRID = "grid"
     VEBUS = "vebus"
 
+
+class ValueType(Enum):
+    """Value types."""
+
+    INT = "int"
+    INT_DEFAULT_0 = "int_0"
+    FLOAT = "float"
+    STRING = "str"
+    ENUM = "enum"
 
 PLACEHOLDER_PHASE = "{phase}"
 

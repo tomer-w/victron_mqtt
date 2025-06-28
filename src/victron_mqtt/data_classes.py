@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Optional
 
-from .constants import DeviceType, MessageType, MetricNature, MetricType
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
+from .constants import DeviceType, MessageType, MetricNature, MetricType, ValueType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,12 +16,13 @@ class TopicDescriptor:
 
     message_type: MessageType  # 'device', 'sensor', or 'system'
     short_id: str  # short id of the attribute/value (also translation key)
-    unit_of_measurement: Optional[str] = None
+    unit_of_measurement: str | None = None
     metric_type: MetricType = MetricType.NONE
     metric_nature: MetricNature = MetricNature.NONE
     device_type: DeviceType = DeviceType.ANY
+    value_type: ValueType | None = None
     precision: int | None = 2
-    unwrapper: Optional[Callable] = None
+    enum: type[Enum] | None = None
 
     def __repr__(self) -> str:
         """Return a string representation of the topic."""
@@ -35,8 +33,9 @@ class TopicDescriptor:
             f"metric_type={self.metric_type}, "
             f"metric_nature={self.metric_nature}, "
             f"device_type={self.device_type}, "
+            f"precision={self.value_type}, "
             f"precision={self.precision}, "
-            f"unwrapper={self.unwrapper})"
+            f"unwrapper={self.enum})"
         )
 
 @dataclass
@@ -73,7 +72,7 @@ class ParsedTopic:
         return -1, ""
 
     @classmethod
-    def from_topic(cls, topic: str) -> Optional[ParsedTopic]:
+    def from_topic(cls, topic: str) -> ParsedTopic | None:
         """Create a ParsedTopic from a topic and payload."""
 
         # example : N/123456789012/grid/30/Ac/L1/Energy/Forward

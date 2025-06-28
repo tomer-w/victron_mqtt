@@ -7,7 +7,7 @@ import ssl
 from typing import Any, Optional
 
 import paho.mqtt.client as mqtt
-from paho.mqtt.client import Client as MQTTClient
+from paho.mqtt.client import Client as MQTTClient, PayloadType
 from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.reasoncodes import ReasonCode
 from paho.mqtt.properties import Properties
@@ -178,7 +178,7 @@ class Hub:
             return
 
         device = self._get_or_create_device(parsed_topic, desc)
-        device.handle_message(parsed_topic, desc, payload.decode(), self._loop)
+        device.handle_message(topic, parsed_topic, desc, payload.decode(), self._loop, self)
 
     async def disconnect(self) -> None:
         """Disconnect from the hub."""
@@ -205,7 +205,11 @@ class Hub:
             _LOGGER.warning("Cannot send keepalive - client is not connected")
             return
         _LOGGER.debug("Sending keepalive message to topic: %s", keep_alive_topic)
-        self._client.publish(keep_alive_topic, b"1")
+        self.publish(keep_alive_topic, b"1")
+
+    def publish(self, topic: str, value: PayloadType) -> None:
+        assert self._client is not None
+        self._client.publish(topic, value)
 
     async def _keep_alive_loop(self) -> None:
         """Run keep_alive every 30 seconds."""
