@@ -3,16 +3,9 @@ Maps all the MQTT topics to either attributes or metrics.
 """
 
 from enum import Enum
-from victron_mqtt.constants import DeviceType, MessageType, MetricNature, MetricType, ValueType
+from victron_mqtt.constants import DeviceType, MessageType, MetricNature, MetricType, ValueType, InverterMode
 from victron_mqtt.data_classes import TopicDescriptor
 
-
-class InverterMode(Enum):
-    """Inverter Mode Enum"""
-    ChargerOnly = 1
-    InverterOnly = 2
-    On = 3
-    Off = 4
 
 topic_map: dict[str, TopicDescriptor] = {
     # generic device attributes

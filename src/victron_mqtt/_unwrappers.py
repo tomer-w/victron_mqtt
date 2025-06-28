@@ -61,9 +61,17 @@ def unwrap_enum(json_str, enum: type[Enum]):
         return None
 
 
-def wrap_enum(enum: Enum) -> str:
+def wrap_enum(enum_val: Enum | str, enum_expected: type[Enum]) -> str:
     """Wrap an Enum value into a JSON string with a 'value' key."""
-    return json.dumps({"value": enum.value})
+    if isinstance(enum_val, Enum):
+        return json.dumps({"value": enum_val.value})
+    elif isinstance(enum_val, str):
+        try:
+            return json.dumps({"value": enum_expected[enum_val].value})
+        except ValueError:
+            raise ValueError(f"Invalid enum value: {enum_val}")
+    else:
+        raise TypeError(f"Expected Enum or str, got {type(enum_val).__name__}")
 
 
 def wrap_int(value: int | None) -> str:

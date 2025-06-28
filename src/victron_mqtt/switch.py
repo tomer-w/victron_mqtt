@@ -31,6 +31,18 @@ class Switch(Metric):
         assert topic.startswith("N")
         self._write_topic = "W" + topic[1:]
     
+    def __repr__(self) -> str:
+        """Return the string representation of the Switch."""
+        return (
+            f"Switch(unique_id={self.unique_id}, "
+            f"descriptor={self._descriptor}, "
+            f"value={self.value}, "
+            f"generic_short_id={self.generic_short_id}, "
+            f"phase={self.phase}, "
+            f"device_type={self.device_type}, "
+            f"short_id={self.short_id})"
+            )
+
     def set(self, value) -> None:
         payload = Switch._wrap_payload(self._descriptor, value)
         self._hub.publish(self._write_topic, payload)
@@ -40,8 +52,18 @@ class Switch(Metric):
         assert topic_desc.value_type is not None
         wrapper = VALUE_TYPE_WRAPPER[topic_desc.value_type]
         if wrapper == wrap_enum:
-            if type(value) is not topic_desc.enum:
-                raise Exception(f"Type of value ({type(value)}) is unexpected. Expected: {topic_desc.enum}")
             return wrapper(value, topic_desc.enum)
         else:
             return wrapper(value)
+
+    @property
+    def enum_values(self):
+        return [e.name for e in self._descriptor.enum] if self._descriptor.enum else []
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, new_value):
+        self.set(new_value)

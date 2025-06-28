@@ -143,12 +143,12 @@ class Device:
 
         return metric
 
-    def get_metric_from_unique_id(self, unique_id: str) -> Metric | None:
+    def get_metric_from_unique_id(self, unique_id: str) -> Metric | Switch | None:
         """Get a metric from a unique id."""
         return self._metrics.get(unique_id)
 
     @property
-    def metrics(self) -> list[Metric]:
+    def metrics(self) -> list[Metric | Switch]:
         """Returns the list of metrics on this device."""
         return list(self._metrics.values())
 

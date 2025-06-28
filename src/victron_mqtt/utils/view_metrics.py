@@ -10,9 +10,12 @@ import tkinter as tk
 from tkinter import simpledialog, messagebox
 import tkinter.ttk as ttk
 from victron_mqtt import Hub, Device, Metric
-from victron_mqtt.constants import DEFAULT_HOST, DEFAULT_PORT
 import os
 
+from victron_mqtt.switch import Switch
+
+DEFAULT_HOST = "venus.local."
+DEFAULT_PORT = 1883
 
 LOGGER = getLogger(__name__)
 
@@ -83,19 +86,18 @@ class AttributeViewerDialog(simpledialog.Dialog):
             except AttributeError:
                 continue
 
+        if isinstance(self.instance, Switch):
+            ttk.Label(master, text="State:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
+            self.switch_var = tk.StringVar(value=self.instance.value)
+            self.switch_dropdown = ttk.Combobox(master, textvariable=self.switch_var, values=self.instance.enum_values)
+            self.switch_dropdown.grid(row=row, column=1, sticky=tk.W, padx=5, pady=5)
+            row += 1
+
         return master
 
-    def buttonbox(self):
-        box = ttk.Frame(self)
-
-        w = ttk.Button(box, text="OK", width=10, command=self.ok, default=tk.ACTIVE)
-        w.pack(side=tk.LEFT, padx=5, pady=5)
-
-        self.bind("<Return>", self.ok)
-        self.bind("<Escape>", self.cancel)
-
-        box.pack()
-
+    def apply(self):
+        if isinstance(self.instance, Switch):
+            self.instance.set(self.switch_var.get())
 
 class MetricContainer:
     """A UI orientated container for a metric. Updates the item in the tree view when the metric changes."""

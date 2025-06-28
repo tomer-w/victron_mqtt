@@ -61,5 +61,9 @@ class ValueType(Enum):
 
 PLACEHOLDER_PHASE = "{phase}"
 
-DEFAULT_HOST = "venus.local."
-DEFAULT_PORT = 1883
+class InverterMode(Enum):
+    """Inverter Mode Enum"""
+    ChargerOnly = 1
+    InverterOnly = 2
+    On = 3
+    Off = 4
