@@ -23,6 +23,8 @@ class TopicDescriptor:
     value_type: ValueType | None = None
     precision: int | None = 2
     enum: type[Enum] | None = None
+    min: int | None = None
+    max: int | None = None
 
     def __repr__(self) -> str:
         """Return a string representation of the topic."""
@@ -35,7 +37,9 @@ class TopicDescriptor:
             f"device_type={self.device_type}, "
             f"precision={self.value_type}, "
             f"precision={self.precision}, "
-            f"unwrapper={self.enum})"
+            f"min={self.min}, "
+            f"max={self.max}, "
+            f"enum={self.enum})"
         )
     
     def __post_init__(self):

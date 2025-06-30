@@ -9,8 +9,11 @@ class MessageType(Enum):
     """Type of MQTT message."""
 
     ATTRIBUTE = "attribute"
-    METRIC = "metric"
+    SENSOR = "sensor"
+    BINARY_SENSOR = "binary_sensor"
     SWITCH = "switch"
+    SELECT = "select"
+    NUMBER = "number"
 
 
 class MetricNature(Enum):
@@ -48,6 +51,7 @@ class DeviceType(Enum):
     BATTERY = "battery"
     GRID = "grid"
     VEBUS = "vebus"
+    EVCHARGER = "evcharger"
 
 
 class ValueType(Enum):
@@ -61,9 +65,20 @@ class ValueType(Enum):
 
 PLACEHOLDER_PHASE = "{phase}"
 
+class GenericOnOff(Enum):
+    """On/Off  Enum"""
+    Off = 0
+    On = 1
+
 class InverterMode(Enum):
     """Inverter Mode Enum"""
     ChargerOnly = 1
     InverterOnly = 2
     On = 3
     Off = 4
+
+class EvChargerMode(Enum):
+    """EVCharger Mode Enum"""
+    Manual = 0
+    Auto = 1
+    ScheduledCharge = 2

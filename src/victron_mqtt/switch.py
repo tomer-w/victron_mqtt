@@ -55,11 +55,7 @@ class Switch(Metric):
             return wrapper(value, topic_desc.enum)
         else:
             return wrapper(value)
-
-    @property
-    def enum_values(self):
-        return [e.name for e in self._descriptor.enum] if self._descriptor.enum else []
-
+    
     @property
     def value(self):
         return self._value

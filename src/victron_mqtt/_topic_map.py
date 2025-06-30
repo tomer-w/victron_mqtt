@@ -3,7 +3,7 @@ Maps all the MQTT topics to either attributes or metrics.
 """
 
 from enum import Enum
-from victron_mqtt.constants import DeviceType, MessageType, MetricNature, MetricType, ValueType, InverterMode
+from victron_mqtt.constants import DeviceType, EvChargerMode, GenericOnOff, MessageType, MetricNature, MetricType, ValueType, InverterMode
 from victron_mqtt.data_classes import TopicDescriptor
 
 
@@ -61,7 +61,7 @@ topic_map: dict[str, TopicDescriptor] = {
     ),
     # grid
     "N/+/system/+/Ac/Grid/NumberOfPhases": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="system_grid_phases",  # system attribute
         unit_of_measurement=None,
         metric_type=MetricType.NONE,
@@ -72,7 +72,7 @@ topic_map: dict[str, TopicDescriptor] = {
     ),
     # individual grid phases
     "N/+/grid/+/Ac/+/Voltage": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="grid_voltage_{phase}",
         unit_of_measurement="V",
         metric_type=MetricType.VOLTAGE,
@@ -82,7 +82,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/grid/+/Ac/+/Current": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="grid_current_{phase}",
         unit_of_measurement="A",
         metric_type=MetricType.CURRENT,
@@ -92,7 +92,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/grid/+/Ac/+/Power": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="grid_power_{phase}",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -103,7 +103,7 @@ topic_map: dict[str, TopicDescriptor] = {
     ),
     # total grid
     "N/+/grid/+/Ac/Voltage": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="grid_voltage",
         unit_of_measurement="V",
         metric_type=MetricType.VOLTAGE,
@@ -113,7 +113,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/grid/+/Ac/Current": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="grid_current",
         unit_of_measurement="A",
         metric_type=MetricType.CURRENT,
@@ -123,7 +123,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/grid/+/Ac/Power": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="grid_power",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -133,7 +133,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/grid/+/Ac/Energy/Forward": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="grid_energy_forward",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
@@ -143,7 +143,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/grid/+/Ac/Energy/Reverse": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="grid_energy_reverse",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
@@ -155,7 +155,7 @@ topic_map: dict[str, TopicDescriptor] = {
     #  cspell:ignore solarcharger MPPT
     # solar / MPPT  """ cspell:ignore  """
     "N/+/solarcharger/+/Dc/0/Voltage": TopicDescriptor(  # """ cspell:ignore  """
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="solar_voltage",
         unit_of_measurement="V",
         metric_type=MetricType.VOLTAGE,
@@ -165,7 +165,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/solarcharger/+/Dc/0/Current": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="solar_current",
         unit_of_measurement="A",
         metric_type=MetricType.CURRENT,
@@ -175,7 +175,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/solarcharger/+/Yield/Power": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="solar_power",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -185,7 +185,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/solarcharger/+/Yield/User": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="solar_yield",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
@@ -195,7 +195,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/solarcharger/+/History/Daily/0/MaxPower": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="solar_max_power",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -206,7 +206,7 @@ topic_map: dict[str, TopicDescriptor] = {
     ),
     # batteries
     "N/+/battery/+/Dc/0/Voltage": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="battery_voltage",
         unit_of_measurement="V",
         metric_type=MetricType.VOLTAGE,
@@ -216,7 +216,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/battery/+/Dc/0/Current": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="battery_current",
         unit_of_measurement="A",
         metric_type=MetricType.CURRENT,
@@ -226,7 +226,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/battery/+/Dc/0/Power": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="battery_power",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -236,7 +236,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/battery/+/Dc/0/Temperature": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="battery_temperature",
         unit_of_measurement="°C",
         metric_type=MetricType.TEMPERATURE,
@@ -246,7 +246,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/battery/+/History/DischargedEnergy": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="battery_discharged_energy",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
@@ -256,7 +256,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/battery/+/History/ChargedEnergy": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="battery_charged_energy",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
@@ -266,7 +266,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/battery/+/Capacity": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="battery_capacity",
         unit_of_measurement="Ah",
         metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
@@ -276,7 +276,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/battery/+/InstalledCapacity": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="battery_installed_capacity",
         unit_of_measurement="Ah",
         metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
@@ -286,7 +286,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/battery/+/Soc": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="battery_soc",
         unit_of_measurement="%",
         metric_type=MetricType.PERCENTAGE,
@@ -297,8 +297,8 @@ topic_map: dict[str, TopicDescriptor] = {
     ),
     # inverter
     "N/+/vebus/+/Mode": TopicDescriptor(
-        message_type=MessageType.SWITCH,
-        short_id="Mode",
+        message_type=MessageType.SELECT,
+        short_id="inverter_mode",
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.NONE,
         device_type=DeviceType.INVERTER,
@@ -306,7 +306,7 @@ topic_map: dict[str, TopicDescriptor] = {
         enum=InverterMode,
     ),
     "N/+/vebus/+/Ac/ActiveIn/+/P": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="inverter_input_power_{phase}",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -316,7 +316,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/vebus/+/Ac/ActiveIn/+/F": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="inverter_input_frequency_{phase}",
         unit_of_measurement="Hz",
         metric_type=MetricType.FREQUENCY,
@@ -326,7 +326,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/vebus/+/Ac/ActiveIn/+/S": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="inverter_input_apparent_power_{phase}",
         unit_of_measurement="VA",
         metric_type=MetricType.POWER,
@@ -336,7 +336,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/vebus/+/Ac/Out/+/P": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="inverter_output_power_{phase}",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -346,7 +346,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/vebus/+/Ac/Out/+/F": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="inverter_output_frequency_{phase}",
         unit_of_measurement="Hz",
         metric_type=MetricType.FREQUENCY,
@@ -356,7 +356,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/vebus/+/Ac/Out/+/S": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="inverter_output_apparent_power_{phase}",
         unit_of_measurement="VA",
         metric_type=MetricType.POWER,
@@ -369,7 +369,7 @@ topic_map: dict[str, TopicDescriptor] = {
     #  as there are different physical configurations
     # and don't have access to any other for testing or feedback.
     "N/+/system/+/Ac/ConsumptionOnOutput/+/Power": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="system_critical_loads_{phase}",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -379,7 +379,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     "N/+/system/+/Ac/ConsumptionOnInput/+/Power": TopicDescriptor(
-        message_type=MessageType.METRIC,
+        message_type=MessageType.SENSOR,
         short_id="system_ac_loads_{phase}",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -387,5 +387,65 @@ topic_map: dict[str, TopicDescriptor] = {
         device_type=DeviceType.SYSTEM,
         value_type=ValueType.FLOAT,
         precision=1,
+    ),
+    # evcharger
+    "/N/+/evcharger/+/Mode": TopicDescriptor(
+        message_type=MessageType.SELECT,
+        short_id="evcharger_mode",
+        metric_type=MetricType.NONE,
+        metric_nature=MetricNature.NONE,
+        device_type=DeviceType.EVCHARGER,
+        value_type=ValueType.ENUM,
+        enum=EvChargerMode,
+    ),
+    "/N/+/evcharger/+/StartStop": TopicDescriptor(
+        message_type=MessageType.SWITCH,
+        short_id="evcharger_charge",
+        metric_type=MetricType.NONE,
+        metric_nature=MetricNature.NONE,
+        device_type=DeviceType.EVCHARGER,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    "/N/+/evcharger/+/Connected": TopicDescriptor(
+        message_type=MessageType.BINARY_SENSOR,
+        short_id="evcharger_connected",
+        metric_type=MetricType.NONE,
+        metric_nature=MetricNature.NONE,
+        device_type=DeviceType.EVCHARGER,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    "/N/+/evcharger/+/Current": TopicDescriptor(
+        message_type=MessageType.SENSOR,
+        short_id="evcharger_current",
+        unit_of_measurement="A",
+        metric_type=MetricType.CURRENT,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.EVCHARGER,
+        value_type=ValueType.FLOAT,
+        precision=1
+    ),
+    "/N/+/evcharger/+/Ac/+/Power": TopicDescriptor(
+        message_type=MessageType.SENSOR,
+        short_id="evcharger_power_{phase}",
+        unit_of_measurement="W",
+        metric_type=MetricType.POWER,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.EVCHARGER,
+        value_type=ValueType.FLOAT,
+        precision=1
+    ),
+    "/N/+/evcharger/+/SetCurrent": TopicDescriptor(
+        message_type=MessageType.NUMBER,
+        short_id="evcharger_set_current",
+        unit_of_measurement="A",
+        metric_type=MetricType.CURRENT,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.EVCHARGER,
+        value_type=ValueType.FLOAT,
+        precision=0,
+        min=0,
+        max=0,
     ),
 }

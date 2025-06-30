@@ -110,6 +110,18 @@ class Metric:
         return self._descriptor.precision
 
     @property
+    def min_value(self):
+        return self._descriptor.min
+
+    @property
+    def max_value(self):
+        return self._descriptor.max
+
+    @property
+    def enum_values(self):
+        return [e.name for e in self._descriptor.enum] if self._descriptor.enum else None
+
+    @property
     def unique_id(self) -> str:
         """Return the unique id of the metric."""
         return self._unique_id

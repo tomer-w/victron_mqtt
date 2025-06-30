@@ -134,7 +134,7 @@ class Device:
         metric = self._metrics.get(metric_id)
         if metric is None:
             _LOGGER.info("Creating new metric: metric_id=%s, short_id=%s", metric_id, short_id)
-            if topic_desc.message_type == MessageType.SWITCH:
+            if topic_desc.message_type in [MessageType.SWITCH, MessageType.NUMBER, MessageType.SELECT]:
                 metric = Switch(metric_id, topic_desc, topic, parsed_topic, payload, hub)
             else:
                 metric = Metric(metric_id, topic_desc, parsed_topic, payload)
