@@ -377,7 +377,6 @@ class Hub:
     def _create_device_unique_id(self, installation_id: str, device_type: str, device_id: str) -> str:
         """Create a unique ID for a device."""
         unique_id = f"{installation_id}_{device_type}_{device_id}"
-        _LOGGER.debug("Created device unique ID: %s", unique_id)
         return unique_id
 
     def get_device_from_unique_id(self, unique_id: str) -> Device:

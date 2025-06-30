@@ -155,7 +155,6 @@ class Metric:
             if callable(self._on_update):
                 if event_loop.is_running():
                     # If the event loop is running, schedule the callback
-                    _LOGGER.debug("Scheduling on_update callback for metric %s", self.unique_id)
                     event_loop.call_soon_threadsafe(self._on_update, self)
         except Exception as exc:
             _LOGGER.error("Error calling callback %s", exc, exc_info=True)

@@ -52,6 +52,7 @@ class DeviceType(Enum):
     GRID = "grid"
     VEBUS = "vebus"
     EVCHARGER = "evcharger"
+    PVINVERTER = "pvinverter"
 
 
 class ValueType(Enum):
