@@ -37,6 +37,10 @@ class TopicDescriptor:
             f"precision={self.precision}, "
             f"unwrapper={self.enum})"
         )
+    
+    def __post_init__(self):
+        if self.value_type in [ValueType.STRING, ValueType.ENUM]:
+            self.precision = None
 
 @dataclass
 class ParsedTopic:
