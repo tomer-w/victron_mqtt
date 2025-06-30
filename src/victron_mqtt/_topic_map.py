@@ -364,6 +364,27 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
+    "/N/+/vebus/+/Connected": TopicDescriptor(
+        message_type=MetricKind.BINARY_SENSOR,
+        short_id="inverter_connected",
+        metric_type=MetricType.NONE,
+        metric_nature=MetricNature.NONE,
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    "N/+/vebus/+/Ac/ActiveIn/CurrentLimit": TopicDescriptor(
+        message_type=MetricKind.NUMBER,
+        short_id="inverter_current_limit",
+        unit_of_measurement="A",
+        metric_type=MetricType.CURRENT,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.INT,
+        precision=0,
+        min=0,
+        max=16,
+    ),
     # integrated system. Note that this might not be currently accurate for all systems
     #  as there are different physical configurations
     # and don't have access to any other for testing or feedback.
@@ -442,9 +463,9 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_type=MetricType.CURRENT,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.EVCHARGER,
-        value_type=ValueType.FLOAT,
+        value_type=ValueType.INT,
         precision=0,
         min=0,
-        max=0,
+        max=16,
     ),
 }

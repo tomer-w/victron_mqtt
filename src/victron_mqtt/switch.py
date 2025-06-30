@@ -43,12 +43,12 @@ class Switch(Metric):
             f"short_id={self.short_id})"
             )
 
-    def set(self, value) -> None:
+    def set(self, value: str | float | int | bool | Enum) -> None:
         payload = Switch._wrap_payload(self._descriptor, value)
         self._hub.publish(self._write_topic, payload)
 
     @staticmethod
-    def _wrap_payload(topic_desc: TopicDescriptor, value: str | float | int | type[Enum] | None) -> str:
+    def _wrap_payload(topic_desc: TopicDescriptor, value: str | float | int | bool | Enum) -> str:
         assert topic_desc.value_type is not None
         wrapper = VALUE_TYPE_WRAPPER[topic_desc.value_type]
         if wrapper == wrap_enum:
