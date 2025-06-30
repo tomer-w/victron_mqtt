@@ -364,7 +364,7 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "/N/+/vebus/+/Connected": TopicDescriptor(
+    "N/+/vebus/+/Connected": TopicDescriptor(
         message_type=MetricKind.BINARY_SENSOR,
         short_id="inverter_connected",
         metric_type=MetricType.NONE,
@@ -409,7 +409,7 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     # evcharger
-    "/N/+/evcharger/+/Mode": TopicDescriptor(
+    "N/+/evcharger/+/Mode": TopicDescriptor(
         message_type=MetricKind.SELECT,
         short_id="evcharger_mode",
         metric_type=MetricType.NONE,
@@ -418,7 +418,7 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=EvChargerMode,
     ),
-    "/N/+/evcharger/+/StartStop": TopicDescriptor(
+    "N/+/evcharger/+/StartStop": TopicDescriptor(
         message_type=MetricKind.SWITCH,
         short_id="evcharger_charge",
         metric_type=MetricType.NONE,
@@ -427,7 +427,7 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
-    "/N/+/evcharger/+/Connected": TopicDescriptor(
+    "N/+/evcharger/+/Connected": TopicDescriptor(
         message_type=MetricKind.BINARY_SENSOR,
         short_id="evcharger_connected",
         metric_type=MetricType.NONE,
@@ -436,7 +436,7 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
-    "/N/+/evcharger/+/Current": TopicDescriptor(
+    "N/+/evcharger/+/Current": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="evcharger_current",
         unit_of_measurement="A",
@@ -446,7 +446,7 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1
     ),
-    "/N/+/evcharger/+/Ac/+/Power": TopicDescriptor(
+    "N/+/evcharger/+/Ac/+/Power": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="evcharger_power_{phase}",
         unit_of_measurement="W",
@@ -456,7 +456,7 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1
     ),
-    "/N/+/evcharger/+/SetCurrent": TopicDescriptor(
+    "N/+/evcharger/+/SetCurrent": TopicDescriptor(
         message_type=MetricKind.NUMBER,
         short_id="evcharger_set_current",
         unit_of_measurement="A",

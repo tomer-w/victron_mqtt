@@ -365,10 +365,7 @@ class Hub:
         )
         device = self._devices.get(unique_id)
         if device is None:
-            _LOGGER.info(
-                "Creating new device: unique_id=%s, type=%s, id=%s",
-                unique_id, parsed_topic.device_type, parsed_topic.device_id
-            )
+            _LOGGER.info("Creating new device: unique_id=%s, parsed_topic=%s", unique_id, parsed_topic)
             device = Device(
                 unique_id,
                 parsed_topic,
