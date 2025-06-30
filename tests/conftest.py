@@ -16,12 +16,12 @@ import pytest
 
 @pytest.fixture
 def config_host():
-    return os.getenv("VENUS_TEST_HOST", "venus.local.")
+    return os.getenv("VICTRON_MQTT_SERVER", "venus.local.")
 
 
 @pytest.fixture
 def config_port():
-    return int(os.getenv("VENUS_TEST_PORT", "1883"))
+    return int(os.getenv("VICTRON_MQTT_PORT", "1883"))
 
 
 @pytest.fixture

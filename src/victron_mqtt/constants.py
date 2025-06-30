@@ -5,7 +5,7 @@ from enum import Enum
 TOPIC_INSTALLATION_ID = "N/+/system/0/Serial"
 
 
-class MessageType(Enum):
+class MetricKind(Enum):
     """Type of MQTT message."""
 
     ATTRIBUTE = "attribute"

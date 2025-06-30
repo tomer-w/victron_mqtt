@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .hub import Hub
 
 from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_enum
-from .constants import DeviceType, PLACEHOLDER_PHASE, MessageType
+from .constants import DeviceType, PLACEHOLDER_PHASE, MetricKind
 from .metric import Metric
 from .switch import Switch
 
@@ -97,7 +97,7 @@ class Device:
         """Handle a message."""
         _LOGGER.debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 
-        if topic_desc.message_type == MessageType.ATTRIBUTE:
+        if topic_desc.message_type == MetricKind.ATTRIBUTE:
             self._set_device_property_from_topic(parsed_topic, topic_desc, payload)
             return
         
@@ -116,7 +116,7 @@ class Device:
         metric_id = f"{self.unique_id}_{short_id}"
 
         metric = self._get_or_create_metric(metric_id, short_id, topic, parsed_topic, topic_desc, payload, hub)
-        metric.handle_message(parsed_topic, topic_desc, value, event_loop)
+        metric._handle_message(parsed_topic, topic_desc, value, event_loop)
 
     @staticmethod
     def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | type[Enum] | None:
@@ -134,7 +134,7 @@ class Device:
         metric = self._metrics.get(metric_id)
         if metric is None:
             _LOGGER.info("Creating new metric: metric_id=%s, short_id=%s", metric_id, short_id)
-            if topic_desc.message_type in [MessageType.SWITCH, MessageType.NUMBER, MessageType.SELECT]:
+            if topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
                 metric = Switch(metric_id, topic_desc, topic, parsed_topic, payload, hub)
             else:
                 metric = Metric(metric_id, topic_desc, parsed_topic, payload)

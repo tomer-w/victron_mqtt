@@ -9,7 +9,7 @@ import asyncio
 from collections.abc import Callable
 import logging
 
-from victron_mqtt.constants import PLACEHOLDER_PHASE
+from victron_mqtt.constants import PLACEHOLDER_PHASE, MetricKind
 from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,6 +100,11 @@ class Metric:
         return self._descriptor.metric_nature
 
     @property
+    def metric_kind(self) -> MetricKind:
+        """Returns the device type."""
+        return self._descriptor.message_type
+
+    @property
     def device_type(self):
         """Returns the device type."""
         return self._descriptor.device_type
@@ -136,7 +141,7 @@ class Metric:
         """Sets the on_update callback."""
         self._on_update = value
 
-    def handle_message(self, parsed_topic, topic_desc, value, event_loop: asyncio.AbstractEventLoop):  # noqa: ARG002 pylint: disable=unused-argument
+    def _handle_message(self, parsed_topic, topic_desc, value, event_loop: asyncio.AbstractEventLoop):  # noqa: ARG002 pylint: disable=unused-argument
         """Handle a message."""
         if value != self._value:
             _LOGGER.debug(

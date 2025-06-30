@@ -12,6 +12,7 @@ import tkinter.ttk as ttk
 from victron_mqtt import Hub, Device, Metric
 import os
 
+from victron_mqtt.constants import MetricKind
 from victron_mqtt.switch import Switch
 
 DEFAULT_HOST = "venus.local."
@@ -86,7 +87,8 @@ class AttributeViewerDialog(simpledialog.Dialog):
             except AttributeError:
                 continue
 
-        if isinstance(self.instance, Switch):
+        if isinstance(self.instance, Switch) and self.instance.metric_kind == MetricKind.SELECT:
+            assert self.instance.enum_values is not None
             ttk.Label(master, text="State:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
             self.switch_var = tk.StringVar(value=self.instance.value)
             self.switch_dropdown = ttk.Combobox(master, textvariable=self.switch_var, values=self.instance.enum_values)

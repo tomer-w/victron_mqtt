@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 import logging
 
-from .constants import DeviceType, MessageType, MetricNature, MetricType, ValueType
+from .constants import DeviceType, MetricKind, MetricNature, MetricType, ValueType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 class TopicDescriptor:
     """Describes the topic, how to map it and how to parse it."""
 
-    message_type: MessageType  # 'device', 'sensor', or 'system'
+    message_type: MetricKind
     short_id: str  # short id of the attribute/value (also translation key)
     unit_of_measurement: str | None = None
     metric_type: MetricType = MetricType.NONE
