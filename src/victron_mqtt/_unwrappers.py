@@ -3,7 +3,7 @@
 from enum import Enum
 import json
 
-from victron_mqtt.constants import ValueType
+from victron_mqtt.constants import ValueType, VictronEnum
 
 
 def unwrap_int(json_str):
@@ -50,24 +50,24 @@ def unwrap_string(json_str):
         return None
 
 
-def unwrap_enum(json_str, enum: type[Enum]):
+def unwrap_enum(json_str, enum: type[VictronEnum]):
     """Unwrap a string value from a JSON string."""
     try:
         data = json.loads(json_str)
         if data["value"] is None:
             return None
-        return enum((data["value"]))
+        return enum.from_code((data["value"]))
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
 
 
-def wrap_enum(enum_val: Enum | str, enum_expected: type[Enum]) -> str:
+def wrap_enum(enum_val: Enum | str, enum_expected: type[VictronEnum]) -> str:
     """Wrap an Enum value into a JSON string with a 'value' key."""
-    if isinstance(enum_val, Enum):
-        return json.dumps({"value": enum_val.value})
+    if isinstance(enum_val, VictronEnum):
+        return json.dumps({"value": enum_val.code})
     elif isinstance(enum_val, str):
         try:
-            return json.dumps({"value": enum_expected[enum_val].value})
+            return json.dumps({"value": enum_expected.from_string(enum_val).code})
         except ValueError:
             raise ValueError(f"Invalid enum value: {enum_val}")
     else:

@@ -66,20 +66,42 @@ class ValueType(Enum):
 
 PLACEHOLDER_PHASE = "{phase}"
 
-class GenericOnOff(Enum):
-    """On/Off  Enum"""
-    Off = 0
-    On = 1
+class VictronEnum(Enum):
+    def __init__(self, code, string):
+        self._value_ = (code, string)
+        self.code = code
+        self.string = string
 
-class InverterMode(Enum):
-    """Inverter Mode Enum"""
-    ChargerOnly = 1
-    InverterOnly = 2
-    On = 3
-    Off = 4
+    def __repr__(self):
+        return f"{self.__class__.__name__}.{self.name}(code={self.code}, string={self.string})"
+    
+    def __str__(self) -> str:
+        return self.string
 
-class EvChargerMode(Enum):
-    """EVCharger Mode Enum"""
-    Manual = 0
-    Auto = 1
-    ScheduledCharge = 2
+    @classmethod
+    def _build_code_lookup(cls):
+        if not hasattr(cls, '_lookup_by_code'):
+            cls._lookup_by_code = {member.code: member for member in cls}
+        return cls._lookup_by_code
+
+    @classmethod
+    def from_code(cls, value: int):
+        lookup = cls._build_code_lookup()
+        try:
+            return lookup[value]
+        except KeyError:
+            raise ValueError(f"No enum member found with code={value}")
+
+    @classmethod
+    def _build_string_lookup(cls):
+        if not hasattr(cls, '_lookup_by_string'):
+            cls._lookup_by_string = {member.string: member for member in cls}
+        return cls._lookup_by_string
+
+    @classmethod
+    def from_string(cls, value: str):
+        lookup = cls._build_string_lookup()
+        try:
+            return lookup[value]
+        except KeyError:
+            raise ValueError(f"No enum member found with string={value}")

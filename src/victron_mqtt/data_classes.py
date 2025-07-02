@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 import logging
 
-from .constants import DeviceType, MetricKind, MetricNature, MetricType, ValueType
+from .constants import DeviceType, MetricKind, MetricNature, MetricType, ValueType, VictronEnum
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class TopicDescriptor:
     device_type: DeviceType = DeviceType.ANY
     value_type: ValueType | None = None
     precision: int | None = 2
-    enum: type[Enum] | None = None
+    enum: type[VictronEnum] | None = None
     min: int | None = None
     max: int | None = None
 

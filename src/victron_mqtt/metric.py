@@ -133,7 +133,7 @@ class Metric:
 
     @property
     def enum_values(self):
-        return [e.name for e in self._descriptor.enum] if self._descriptor.enum else None
+        return [e.string for e in self._descriptor.enum] if self._descriptor.enum else None
 
     @property
     def unique_id(self) -> str:
