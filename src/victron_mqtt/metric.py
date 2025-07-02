@@ -29,7 +29,10 @@ class Metric:
         self._value = value
         self._generic_short_id = descriptor.short_id.replace(PLACEHOLDER_PHASE, "lx")
         self._phase = parsed_topic.phase
-        self._short_id = descriptor.short_id.replace(PLACEHOLDER_PHASE, parsed_topic.phase) if parsed_topic.phase is not None else None
+        assert self._phase is not None, "Phase must be set for metric"
+        self._short_id = descriptor.short_id.replace(PLACEHOLDER_PHASE, parsed_topic.phase)
+        assert descriptor.name is not None, "name must be set for metric"
+        self._name = descriptor.name.replace(PLACEHOLDER_PHASE, parsed_topic.phase)
         self._on_update: Callable | None = None
         _LOGGER.debug("Metric %s initialized with value %s", unique_id, value)
 
@@ -42,7 +45,8 @@ class Metric:
             f"generic_short_id={self.generic_short_id}, "
             f"phase={self.phase}, "
             f"device_type={self.device_type}, "
-            f"short_id={self.short_id})"
+            f"short_id={self.short_id}, "
+            f"short_id={self.name})"
             )
 
     def __str__(self) -> str:
@@ -70,9 +74,14 @@ class Metric:
         return self._value
 
     @property
-    def short_id(self) -> str | None:
+    def short_id(self) -> str:
         """Returns the short id of the metric."""
         return self._short_id
+
+    @property
+    def name(self) -> str:
+        """Returns the short id of the metric."""
+        return self._name
 
     @property
     def generic_short_id(self) -> str:

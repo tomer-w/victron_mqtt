@@ -15,7 +15,8 @@ class TopicDescriptor:
     """Describes the topic, how to map it and how to parse it."""
 
     message_type: MetricKind
-    short_id: str  # short id of the attribute/value (also translation key)
+    short_id: str  # Unique short id of the attribute/value
+    name: str | None  = None # More user friendly name, doesnt have to be unique
     unit_of_measurement: str | None = None
     metric_type: MetricType = MetricType.NONE
     metric_nature: MetricNature = MetricNature.NONE
@@ -31,6 +32,7 @@ class TopicDescriptor:
         return (
             f"TopicDescriptor(message_type={self.message_type}, "
             f"short_id={self.short_id}, "
+            f"name={self.name}, "
             f"unit_of_measurement={self.unit_of_measurement}, "
             f"metric_type={self.metric_type}, "
             f"metric_nature={self.metric_nature}, "
@@ -43,6 +45,7 @@ class TopicDescriptor:
         )
     
     def __post_init__(self):
+        assert self.message_type == MetricKind.ATTRIBUTE or self.name is not None
         if self.value_type in [ValueType.STRING, ValueType.ENUM]:
             self.precision = None
 
