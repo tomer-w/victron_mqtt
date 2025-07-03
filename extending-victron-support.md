@@ -105,7 +105,7 @@ PVINVERTER     # PV inverters
 
 ### Step 1: Identify the MQTT Topic Structure
 
-First, determine the exact MQTT topic pattern. Use tools like [mqtt expolorer](https://mqtt-explorer.com/) or the included `dump_mqtt.py` scripts to monitor MQTT traffic. I also recommend [mqtt explorer add-on](https://github.com/adamoutler/mqtt-explorer) if your boat is away and have internet connectivity.
+First, determine the exact MQTT topic pattern. Use tools like [mqtt explorer](https://mqtt-explorer.com/) or the included `dump_mqtt.py` scripts to monitor MQTT traffic. I also recommend [mqtt explorer add-on](https://github.com/adamoutler/mqtt-explorer) if your boat is away and have internet connectivity.
 
 
 ### Step 2: Create the TopicDescriptor
@@ -285,7 +285,7 @@ For metrics that can be controlled (switches, selects, numbers), use appropriate
 1. **Validate topic patterns**: Ensure your MQTT topic patterns match actual Venus OS output
 2. **Test with real data**: Use the included `view_metric.py` scripts to verify your mappings work
 3. **Check for conflicts**: Ensure your `short_id` values are unique
-4. **Run tests**: Execute the test suite to verify no regressions. This require you to specify connection parameters (see `conftest.py`)
+4. **Run tests**: Execute the test suite to verify no regressions. This requires you to specify connection parameters (see `conftest.py`)
 
 ```bash
 # Run the test suite
