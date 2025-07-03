@@ -2,9 +2,9 @@
 Maps all the MQTT topics to either attributes or metrics.
 """
 
-from victron_mqtt.constants import DeviceType, MetricKind, MetricNature, MetricType, ValueType
-from victron_mqtt.data_classes import TopicDescriptor
-from victron_mqtt.victron_enums import *  # noqa: F403
+from .constants import DeviceType, MetricKind, MetricNature, MetricType, ValueType
+from .data_classes import TopicDescriptor
+from ._victron_enums import *  # noqa: F403
 
 topic_map: dict[str, TopicDescriptor] = {
     # generic device attributes

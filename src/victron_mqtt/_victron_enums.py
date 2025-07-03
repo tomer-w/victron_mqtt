@@ -1,4 +1,4 @@
-from victron_mqtt.constants import VictronEnum
+from .constants import VictronEnum
 
 
 class GenericOnOff(VictronEnum):

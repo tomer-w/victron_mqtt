@@ -53,6 +53,9 @@ python3 -m victron_mqtt.utils.dump_mqtt > fullvictrondump.txt
 python3 -m victron_mqtt.utils.dump_mqtt --help
 ```
 
+## Help Needed!!
+Please help with extending the library with more topics. See instructions [here](extending-victron-support.md) for how to contribute.
+
 ## ⚠️ Limitations and Known Issues
 
 - **🧪 Limited Testing:** The library has been tested with a single configuration of a Victron installation. It may not include all metrics relevant to other setups.

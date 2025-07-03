@@ -7,7 +7,7 @@ from .device import Device
 from .hub import Hub, CannotConnectError, ProgrammingError, NotConnectedError
 from .metric import Metric
 from .switch import Switch
-from .victron_enums import InverterMode, GenericOnOff, EvChargerMode
+from ._victron_enums import InverterMode, GenericOnOff, EvChargerMode
 
 __all__ = [
     "Hub",

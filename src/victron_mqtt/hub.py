@@ -12,11 +12,11 @@ from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.reasoncodes import ReasonCode
 from paho.mqtt.properties import Properties
 
-from victron_mqtt._topic_map import topic_map
-from victron_mqtt.constants import TOPIC_INSTALLATION_ID
-from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor
-from victron_mqtt.device import Device
-from victron_mqtt.metric import Metric
+from ._victron_topics import topic_map
+from .constants import TOPIC_INSTALLATION_ID
+from .data_classes import ParsedTopic, TopicDescriptor
+from .device import Device
+from .metric import Metric
 
 _LOGGER = logging.getLogger(__name__)
 
