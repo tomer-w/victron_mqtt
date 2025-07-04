@@ -165,7 +165,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/solarcharger/+/Dc/0/Voltage": TopicDescriptor(  # """ cspell:ignore  """
         message_type=MetricKind.SENSOR,
         short_id="solar_voltage",
-        name="PV voltage",
+        name="DC Bus voltage",
         unit_of_measurement="V",
         metric_type=MetricType.VOLTAGE,
         metric_nature=MetricNature.INSTANTANEOUS,
@@ -176,7 +176,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/solarcharger/+/Dc/0/Current": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="solar_current",
-        name="PV current",
+        name="DC current",
         unit_of_measurement="A",
         metric_type=MetricType.CURRENT,
         metric_nature=MetricNature.INSTANTANEOUS,
@@ -187,7 +187,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/solarcharger/+/Yield/Power": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="solar_power",
-        name="PV power",
+        name="Power",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
@@ -198,7 +198,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/solarcharger/+/Yield/User": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="solar_yield",
-        name="PV yield",
+        name="Yield",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
         metric_nature=MetricNature.CUMULATIVE,
@@ -209,7 +209,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/solarcharger/+/History/Daily/0/MaxPower": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="solar_max_power",
-        name="PV max power today",
+        name="max power today",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
@@ -265,7 +265,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/battery/+/History/DischargedEnergy": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="battery_discharged_energy",
-        name="Battery discharged energy",
+        name="Discharged energy",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
         metric_nature=MetricNature.CUMULATIVE,
@@ -276,7 +276,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/battery/+/History/ChargedEnergy": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="battery_charged_energy",
-        name="Battery charged energy",
+        name="Charged energy",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
         metric_nature=MetricNature.CUMULATIVE,
@@ -309,7 +309,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/battery/+/Soc": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="battery_soc",
-        name="Battery level",
+        name="SOC",
         unit_of_measurement="%",
         metric_type=MetricType.PERCENTAGE,
         metric_nature=MetricNature.INSTANTANEOUS,
@@ -512,7 +512,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/pvinverter/+/Ac/+/Voltage": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="solar_voltage_{phase}",
-        name="PV voltage",
+        name="Voltage {phase}",
         unit_of_measurement="V",
         metric_type=MetricType.VOLTAGE,
         metric_nature=MetricNature.INSTANTANEOUS,
@@ -523,7 +523,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/pvinverter/+/Ac/+/Current": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="solar_current_{phase}",
-        name="PV current {phase}",
+        name="Current {phase}",
         unit_of_measurement="A",
         metric_type=MetricType.CURRENT,
         metric_nature=MetricNature.INSTANTANEOUS,
@@ -534,7 +534,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/pvinverter/+/Ac/Power": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="solar_power_total",
-        name="PV total power {phase}",
+        name="Power Total",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
@@ -544,8 +544,8 @@ topic_map: dict[str, TopicDescriptor] = {
     ),
     "N/+/pvinverter/+/Ac/+/Power": TopicDescriptor(
         message_type=MetricKind.SENSOR,
-        short_id="solar_power_{phase}",
-        name="PV power {phase}",
+        short_id="solar_power_{phase]",
+        name="Power {phase}",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
@@ -556,7 +556,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/pvinverter/+/Ac/Energy/Forward": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="solar_yield_total",
-        name="PV total yield {phase}",
+        name="Total Yield",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
         metric_nature=MetricNature.CUMULATIVE,
@@ -567,7 +567,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/pvinverter/+/Ac/+/Energy/Forward": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="solar_yield_{phase}",
-        name="PV yield {phase}",
+        name="Yield {phase}",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
         metric_nature=MetricNature.CUMULATIVE,
