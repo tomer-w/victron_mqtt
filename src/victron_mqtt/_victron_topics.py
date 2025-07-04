@@ -209,7 +209,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/solarcharger/+/History/Daily/0/MaxPower": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="solar_max_power",
-        name="max power today",
+        name="Max Power Today",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
