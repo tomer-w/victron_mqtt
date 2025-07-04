@@ -24,15 +24,14 @@ class Metric:
             "Creating new metric: unique_id=%s, type=%s, nature=%s",
             unique_id, descriptor.metric_type, descriptor.metric_nature
         )
+        assert descriptor.name is not None, "name must be set for metric"
         self._descriptor = descriptor
         self._unique_id = unique_id
         self._value = value
         self._generic_short_id = descriptor.short_id.replace(PLACEHOLDER_PHASE, "lx")
         self._phase = parsed_topic.phase
-        assert self._phase is not None, "Phase must be set for metric"
-        self._short_id = descriptor.short_id.replace(PLACEHOLDER_PHASE, parsed_topic.phase)
-        assert descriptor.name is not None, "name must be set for metric"
-        self._name = descriptor.name.replace(PLACEHOLDER_PHASE, parsed_topic.phase)
+        self._short_id = descriptor.short_id.replace(PLACEHOLDER_PHASE, parsed_topic.phase) if parsed_topic.phase is not None else descriptor.short_id
+        self._name = descriptor.name.replace(PLACEHOLDER_PHASE, parsed_topic.phase) if parsed_topic.phase is not None else descriptor.name
         self._on_update: Callable | None = None
         _LOGGER.debug("Metric %s initialized with value %s", unique_id, value)
 
@@ -89,8 +88,8 @@ class Metric:
         return self._generic_short_id
 
     @property
-    def phase(self) -> str:
-        """Returns the phase of the metric if referring to a specific AC phase."""
+    def phase(self) -> str | None:
+        """Returns the phase of the metric if referring to a specific AC phase. None if not relevant"""
         return self._phase
 
     @property

@@ -57,7 +57,7 @@ class ParsedTopic:
     device_id: str
     device_type: DeviceType
     native_device_type: str
-    phase: str
+    phase: str | None
     wildcards_with_device_type: str
     wildcards_without_device_type: str
 
@@ -75,12 +75,12 @@ class ParsedTopic:
         )
     
     @classmethod
-    def __get_index_and_phase(cls, topic_parts: list[str]) -> tuple[int, str]:
+    def __get_index_and_phase(cls, topic_parts: list[str]) -> tuple[int, str | None]:
         """Get the index of the phase and the phase itself."""
         for i, part in enumerate(topic_parts):
             if part in {"L1", "L2", "L3"}:
                 return i, part
-        return -1, ""
+        return -1, None
 
     @classmethod
     def from_topic(cls, topic: str) -> ParsedTopic | None:

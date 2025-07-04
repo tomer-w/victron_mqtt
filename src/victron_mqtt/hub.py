@@ -138,6 +138,7 @@ class Hub:
         """Process MQTT message asynchronously."""
         topic = message.topic
         payload = message.payload
+        _LOGGER.debug("Message received: topic=%s, payload=%s", topic, payload)
         
         if "full_publish_completed" in topic:
             _LOGGER.info("Full publish completed, unsubscribing from notification")
