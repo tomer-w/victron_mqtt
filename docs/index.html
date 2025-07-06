@@ -1,0 +1,34 @@
+---
+layout: default
+title: Victron MQTT Topics
+---
+
+<h1>Victron MQTT Topics</h1>
+<ul>
+{% for topic in site.data.victron_mqtt.topics %}
+  <li>
+    <strong>{{ topic.topic }}</strong>
+    <ul>
+      {% for key in topic %}
+        {% unless key == "topic" %}
+          <li>{{ key }}: {{ topic[key] }}</li>
+        {% endunless %}
+      {% endfor %}
+    </ul>
+  </li>
+{% endfor %}
+</ul>
+
+<h2>Enums</h2>
+<ul>
+{% for enum_name in site.data.victron_mqtt.enums %}
+  <li>
+    <strong>{{ enum_name }}</strong>
+    <ul>
+      {% for member, value in site.data.victron_mqtt.enums[enum_name] %}
+        <li>{{ member }}: value={{ value.value }}, name={{ value.name }}</li>
+      {% endfor %}
+    </ul>
+  </li>
+{% endfor %}
+</ul>
