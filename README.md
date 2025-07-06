@@ -10,7 +10,8 @@
 Are you ready to unlock the full potential of your Victron devices? `victron_mqtt` is here to make your Venus OS experience smoother, faster, and way more fun! Whether you're a seasoned developer or just starting your journey, this library is your gateway to seamless communication with Victron's Venus OS devices like the CCGX, Cerbo GX, and Ekrano GX.
 This package is the backend for the Home Assistant [Victron Venus MQTT](https://github.com/tomer-w/ha-victron-mqtt) custom integration.
 
-The source code is available on [GitHub](https://github.com/tomer-w/victron_mqtt).
+If you just want to browse the Victron MQTT defenitions, please go to the [documentation page](https://tomer-w.github.io/victron_mqtt/).
+If you want to consume the Victron MQTT defenitions, you can find them [here](https://raw.githubusercontent.com/tomer-w/victron_mqtt/refs/heads/main/victron_mqtt.json)
 
 > **Disclaimer:** This is a third-party library and is not affiliated with Victron Energy.
 

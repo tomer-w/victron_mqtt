@@ -4,14 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "victron_mqtt"
-version = "2025.7.3"
+version = "2025.7.4"
 description = "Python library for communicating with Victron Venus OS MQTT interface"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 keywords = ["victron", "mqtt", "venus os"]
 authors = [
-  { name = "Johan du Plessis", email = "johan@epicwin.co.za" },
   { name = "Tomer", email = "57483589+tomer-w@users.noreply.github.com" },
 ]
 classifiers = [

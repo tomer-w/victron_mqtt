@@ -1,3 +1,4 @@
+
 """
 Command-line tool to dump all data from topic_map and enums in _victron_enums.py to JSON.
 """
@@ -35,6 +36,7 @@ def get_all_enums(module):
     return enums
 
 
+
 def main():
     parser = argparse.ArgumentParser(description="Dump topic_map and enums to JSON.")
     parser.add_argument("output_file", help="Output JSON file name")
@@ -46,7 +48,18 @@ def main():
             d["enum"] = d["enum"].__name__
         return d
 
+    # Metadata block similar to canboat.json
+    metadata = {
+        "SchemaVersion": "1.0.0",
+        "Comment": "See https://github.com/tomer-w/victron_mqtt for the full source code",
+        "CreatorCode": "dump_victron_mqtt.py",
+        "License": "Apache License Version 2.0",
+        "Version": "1.0.0",
+        "Copyright": "victron_mqtt (C) 2025, Tomer-w (https://github.com/tomer-w).\nFor more information see https://github.com/tomer-w/victron_mqtt\n\nThis file is part of victron_mqtt.\n\nLicensed under the Apache License, Version 2.0 (the 'License'); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software distributed under the License is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License."
+    }
+
     data = {
+        **metadata,
         "topics": [
             topic_dict_with_enum_name(k, v)
             for k, v in topic_map.items()
