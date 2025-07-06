@@ -149,21 +149,23 @@ tr:nth-child(even) {
   {% for enum_name in site.data.victron_mqtt.enums %}
     <button class="collapsible">{{ enum_name }}</button>
     <div class="content">
-      <table>
-        <thead>
-          <tr><th>Key</th><th>Value</th><th>Name</th></tr>
-        </thead>
-        <tbody>
-        {% assign enum = site.data.victron_mqtt.enums[enum_name] %}
-        {% for member in enum %}
-          <tr>
-            <td>{{ member[0] }}</td>
-            <td>{{ member[1].value }}</td>
-            <td>{{ member[1].name }}</td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr><th>Key</th><th>Value</th><th>Name</th></tr>
+          </thead>
+          <tbody>
+          {% assign enum = site.data.victron_mqtt.enums[enum_name] %}
+          {% for member in enum %}
+            <tr>
+              <td>{{ member[0] }}</td>
+              <td>{{ member[1].value }}</td>
+              <td>{{ member[1].name }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   {% endfor %}
 </div>
