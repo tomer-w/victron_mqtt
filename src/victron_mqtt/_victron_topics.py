@@ -544,7 +544,7 @@ topic_map: dict[str, TopicDescriptor] = {
     ),
     "N/+/pvinverter/+/Ac/+/Power": TopicDescriptor(
         message_type=MetricKind.SENSOR,
-        short_id="solar_power_{phase]",
+        short_id="solar_power_{phase}",
         name="Power {phase}",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
