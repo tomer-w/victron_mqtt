@@ -5,6 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug dump_victron_mqtt",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "victron_mqtt.utils.dump_victron_mqtt",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"  // Include src in PYTHONPATH so Python can find the module
+            },
+            "args": ["victron_mqtt.json"]
+        },
+        {
             "name": "Debug dump_mqtt",
             "type": "debugpy",
             "request": "launch",

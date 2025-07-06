@@ -1,0 +1,174 @@
+---
+layout: default
+title: Victron MQTT Topics
+---
+
+
+<style>
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f8f9fa;
+  margin: 0;
+  padding: 0;
+}
+.navbar {
+  background: #003366;
+  color: #fff;
+  padding: 1rem 2rem;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 2rem;
+}
+h1, h2 {
+  color: #003366;
+  margin-top: 0;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+th, td {
+  border: 1px solid #dee2e6;
+  padding: 0.75rem;
+  text-align: left;
+}
+th {
+  background: #e9ecef;
+}
+tr:nth-child(even) {
+  background: #f2f6fa;
+}
+.collapsible {
+  background: #e9ecef;
+  color: #003366;
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+}
+.active, .collapsible:hover {
+  background: #d0d8e0;
+}
+.content {
+  padding: 0 1rem;
+  display: none;
+  overflow: hidden;
+  background: #f8f9fa;
+  border-radius: 0 0 4px 4px;
+  margin-bottom: 1rem;
+}
+.footer {
+  text-align: center;
+  color: #888;
+  font-size: 0.95rem;
+  margin: 2rem 0 1rem 0;
+}
+</style>
+
+<div class="navbar">Victron MQTT Documentation</div>
+<div class="container">
+  <h1>Victron MQTT Protocol Overview</h1>
+  <p>
+    The <strong>Victron MQTT protocol</strong> is used by Victron Energy devices to publish and subscribe to real-time data over an MQTT broker. This protocol enables seamless integration of Victron devices—such as inverters, chargers, battery monitors, and solar controllers—into home automation, monitoring, and energy management systems.
+  </p>
+  <h2>How It Works</h2>
+  <ul>
+    <li><strong>MQTT Broker:</strong> Victron devices connect to a central MQTT broker (such as Venus OS MQTT or a third-party broker).</li>
+    <li><strong>Topics:</strong> Each device publishes its data (voltages, currents, states, alarms, etc.) to specific MQTT topics, usually under a common prefix (e.g., <code>victron/</code>).</li>
+    <li><strong>Payloads:</strong> Data is typically sent as simple values (numbers, strings) or JSON objects, depending on the topic.</li>
+    <li><strong>Discovery:</strong> Devices and their metrics can be discovered by subscribing to wildcard topics (e.g., <code>victron/+/+/...</code>).</li>
+  </ul>
+  <h2>Supported Victron Devices</h2>
+  <p>
+    <strong>Note:</strong> To use the Victron MQTT protocol, you must have a <strong>Cerbo GX</strong>, <strong>Venus GX</strong>, or <strong>Color Control GX</strong> device (collectively known as GX devices). These GX devices act as gateways, exposing data from connected Victron products via MQTT. Other Victron devices (such as inverters, solar controllers, and battery monitors) do <em>not</em> expose MQTT directly—they must be connected to a GX device, which then publishes their data to the MQTT broker.
+  </p>
+  <ul>
+    <li><strong>Cerbo GX / Venus GX / Color Control GX</strong> <span style="color:#003366; font-size:0.95em;">(required for MQTT access)</span></li>
+    <li><strong>MultiPlus / Quattro Inverter-Chargers</strong> <span style="color:#888; font-size:0.95em;">(via GX device)</span></li>
+    <li><strong>BlueSolar / SmartSolar MPPT Solar Charge Controllers</strong> <span style="color:#888; font-size:0.95em;">(via GX device)</span></li>
+    <li><strong>BMV / SmartShunt Battery Monitors</strong> <span style="color:#888; font-size:0.95em;">(via GX device)</span></li>
+    <li><strong>Lynx Shunt / Power Distribution Systems</strong> <span style="color:#888; font-size:0.95em;">(via GX device)</span></li>
+    <li><strong>Other compatible Victron devices</strong> <span style="color:#888; font-size:0.95em;">(via GX device)</span></li>
+  </ul>
+  <h2>Common MQTT Topics</h2>
+  <p>
+    Each device type publishes to a set of standardized topics. For example:
+  </p>
+  <ul>
+    <li><code>victron/+/Dc/0/Voltage</code> – DC voltage readings</li>
+    <li><code>victron/+/Ac/ActiveIn/L1/Power</code> – AC input power</li>
+    <li><code>victron/+/Soc</code> – State of charge</li>
+    <li><code>victron/+/Alarms/LowVoltage</code> – Low voltage alarm status</li>
+    <li>...and many more, as detailed in the table below.</li>
+  </ul>
+  <hr>
+  <h1>MQTT Topics</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Topic</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for topic in site.data.victron_mqtt.topics %}
+      <tr>
+        <td><strong>{{ topic.topic }}</strong></td>
+        <td>
+          <ul style="margin:0; padding-left:1.2em;">
+            {% for key in topic %}
+              {% unless key == "topic" %}
+                <li><strong>{{ key }}</strong>: {{ topic[key] }}</li>
+              {% endunless %}
+            {% endfor %}
+          </ul>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Enums</h2>
+  <p>
+    <strong>Enums</strong> represent the possible states or values for certain device properties, such as operational modes, alarm states, or relay statuses. These are useful for interpreting numeric codes in MQTT payloads.
+  </p>
+  {% for enum_name in site.data.victron_mqtt.enums %}
+    <h3 style="margin-bottom:0.5em; color:#003366;">{{ enum_name }}</h3>
+    <div style="overflow-x:auto; margin-bottom:1.5em;">
+      <table>
+        <thead>
+          <tr><th>Key</th><th>Value</th><th>Name</th></tr>
+        </thead>
+        <tbody>
+        {% assign enum = site.data.victron_mqtt.enums[enum_name] %}
+        {% for member in enum %}
+          <tr>
+            <td>{{ member[0] }}</td>
+            <td>{{ member[1].value }}</td>
+            <td>{{ member[1].name }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endfor %}
+</div>
+<div class="footer">Generated by <a href="https://www.victronenergy.com/live/" target="_blank">victron-mqtt project</a> &copy; {{ site.time | date: '%Y' }}<br>
+  <span style="font-size:0.9em;">Not affiliated with Victron Energy. For official documentation, visit <a href="https://www.victronenergy.com/live/" target="_blank">Victron Energy Live</a>.</span>
+</div>
+
+
