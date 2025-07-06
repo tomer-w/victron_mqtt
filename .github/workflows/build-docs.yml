@@ -1,0 +1,39 @@
+name: Build Jekyll Docs
+
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
+      - name: Install Jekyll and Bundler
+        run: |
+          gem install bundler jekyll
+
+      - name: Copy victron_mqtt.json to docs/_data
+        run: |
+          mkdir -p docs/_data
+          cp victron_mqtt.json docs/_data/victron_mqtt.json
+
+      - name: Build Jekyll site
+        run: |
+          cd docs
+          jekyll build
+
+      - name: Upload built site as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jekyll-site
+          path: docs/_site
