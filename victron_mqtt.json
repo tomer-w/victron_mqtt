@@ -691,48 +691,66 @@
       "max": null
     }
   ],
-  "enums": {
-    "EvChargerMode": {
-      "Manual": {
-        "value": 0,
-        "name": "Manual"
-      },
-      "Auto": {
-        "value": 1,
-        "name": "Auto"
-      },
-      "ScheduledCharge": {
-        "value": 2,
-        "name": "Scheduled Charge"
-      }
+  "enums": [
+    {
+      "name": "EvChargerMode",
+      "EnumValues": [
+        {
+          "id": "Manual",
+          "name": "Manual",
+          "value": 0
+        },
+        {
+          "id": "Auto",
+          "name": "Auto",
+          "value": 1
+        },
+        {
+          "id": "ScheduledCharge",
+          "name": "Scheduled Charge",
+          "value": 2
+        }
+      ]
     },
-    "GenericOnOff": {
-      "Off": {
-        "value": 0,
-        "name": "Off"
-      },
-      "On": {
-        "value": 1,
-        "name": "On"
-      }
+    {
+      "name": "GenericOnOff",
+      "EnumValues": [
+        {
+          "id": "Off",
+          "name": "Off",
+          "value": 0
+        },
+        {
+          "id": "On",
+          "name": "On",
+          "value": 1
+        }
+      ]
     },
-    "InverterMode": {
-      "ChargerOnly": {
-        "value": 1,
-        "name": "Charger Only"
-      },
-      "InverterOnly": {
-        "value": 2,
-        "name": "Inverter Only"
-      },
-      "On": {
-        "value": 3,
-        "name": "On"
-      },
-      "Off": {
-        "value": 4,
-        "name": "Off"
-      }
+    {
+      "name": "InverterMode",
+      "EnumValues": [
+        {
+          "id": "ChargerOnly",
+          "name": "Charger Only",
+          "value": 1
+        },
+        {
+          "id": "InverterOnly",
+          "name": "Inverter Only",
+          "value": 2
+        },
+        {
+          "id": "On",
+          "name": "On",
+          "value": 3
+        },
+        {
+          "id": "Off",
+          "name": "Off",
+          "value": 4
+        }
+      ]
     }
-  }
+  ]
 }

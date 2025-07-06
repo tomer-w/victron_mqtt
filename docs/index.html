@@ -147,25 +147,23 @@ tr:nth-child(even) {
     <strong>Enums</strong> represent the possible states or values for certain device properties, such as operational modes, alarm states, or relay statuses. These are useful for interpreting numeric codes in MQTT payloads.
   </p>
   {% for enum_name in site.data.victron_mqtt.enums %}
-    <button class="collapsible">{{ enum_name }}</button>
-    <div class="content">
-      <div style="overflow-x:auto;">
-        <table>
-          <thead>
-            <tr><th>Key</th><th>Value</th><th>Name</th></tr>
-          </thead>
-          <tbody>
-          {% assign enum = site.data.victron_mqtt.enums[enum_name] %}
-          {% for member in enum %}
-            <tr>
-              <td>{{ member[0] }}</td>
-              <td>{{ member[1].value }}</td>
-              <td>{{ member[1].name }}</td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
+    <h3 style="margin-bottom:0.5em; color:#003366;">{{ enum_name }}</h3>
+    <div style="overflow-x:auto; margin-bottom:1.5em;">
+      <table>
+        <thead>
+          <tr><th>Key</th><th>Value</th><th>Name</th></tr>
+        </thead>
+        <tbody>
+        {% assign enum = site.data.victron_mqtt.enums[enum_name] %}
+        {% for member in enum %}
+          <tr>
+            <td>{{ member[0] }}</td>
+            <td>{{ member[1].value }}</td>
+            <td>{{ member[1].name }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
     </div>
   {% endfor %}
 </div>
@@ -173,20 +171,4 @@ tr:nth-child(even) {
   <span style="font-size:0.9em;">Not affiliated with Victron Energy. For official documentation, visit <a href="https://www.victronenergy.com/live/" target="_blank">Victron Energy Live</a>.</span>
 </div>
 
-<script>
-// Collapsible enums
-document.addEventListener('DOMContentLoaded', function() {
-  var coll = document.getElementsByClassName('collapsible');
-  for (var i = 0; i < coll.length; i++) {
-    coll[i].addEventListener('click', function() {
-      this.classList.toggle('active');
-      var content = this.nextElementSibling;
-      if (content.style.display === 'block') {
-        content.style.display = 'none';
-      } else {
-        content.style.display = 'block';
-      }
-    });
-  }
-});
-</script>
+

@@ -12,16 +12,18 @@ from ..constants import VictronEnum
 
 def enum_to_dict(enum_cls):
     # Handles both Enum and IntEnum, flattening tuple values if present
-    if hasattr(enum_cls, "__members__"):
-        result = {}
-        for k, v in enum_cls.__members__.items():
-            val = v.value
-            result[k] = {"value": val[0], "name": val[1]}
-        return result
-    return str(enum_cls)
+    result = {"name": enum_cls.__name__, "EnumValues": []}
+    for k, v in enum_cls.__members__.items():
+        val = v.value
+        result["EnumValues"].append({
+            "id": k,
+            "name": val[1],
+            "value": val[0],
+        })
+    return result
 
 def get_all_enums(module):
-    enums = {}
+    enums = []
     for name in dir(module):
         obj = getattr(module, name)
         if (
@@ -29,7 +31,7 @@ def get_all_enums(module):
             and issubclass(obj, VictronEnum)
             and obj is not VictronEnum
         ):
-            enums[name] = enum_to_dict(obj)
+            enums.append(enum_to_dict(obj))
     return enums
 
 
