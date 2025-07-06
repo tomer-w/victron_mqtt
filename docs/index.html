@@ -146,20 +146,19 @@ tr:nth-child(even) {
   <p>
     <strong>Enums</strong> represent the possible states or values for certain device properties, such as operational modes, alarm states, or relay statuses. These are useful for interpreting numeric codes in MQTT payloads.
   </p>
-  {% for enum_name in site.data.victron_mqtt.enums %}
-    <h3 style="margin-bottom:0.5em; color:#003366;">{{ enum_name }}</h3>
+  {% for enum in site.data.victron_mqtt.enums %}
+    <h3 style="margin-bottom:0.5em; color:#003366;">{{ enum.name }}</h3>
     <div style="overflow-x:auto; margin-bottom:1.5em;">
       <table>
         <thead>
-          <tr><th>Key</th><th>Value</th><th>Name</th></tr>
+          <tr><th>Id</th><th>Value</th><th>Display Name</th></tr>
         </thead>
         <tbody>
-        {% assign enum = site.data.victron_mqtt.enums[enum_name] %}
-        {% for member in enum %}
+        {% for member in enum.EnumValues %}
           <tr>
-            <td>{{ member[0] }}</td>
-            <td>{{ member[1].value }}</td>
-            <td>{{ member[1].name }}</td>
+            <td>{{ member.id }}</td>
+            <td>{{ member.value }}</td>
+            <td>{{ member.name }}</td>
           </tr>
         {% endfor %}
         </tbody>
