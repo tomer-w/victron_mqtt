@@ -20,11 +20,14 @@ body {
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 .container {
-  margin: 2rem 0;
+  width: 100vw;
+  max-width: 100vw;
+  margin: 0;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  padding: 2rem;
+  padding: 2rem 0.5rem;
+  overflow-x: auto;
 }
 h1, h2 {
   color: #003366;
@@ -34,11 +37,18 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 2rem;
+  table-layout: fixed;
+  min-width: 1200px;
+  max-width: 100vw;
+  overflow-x: auto;
+  display: table;
 }
 th, td {
   border: 1px solid #dee2e6;
   padding: 0.75rem;
   text-align: left;
+  box-sizing: border-box;
+  word-break: break-word;
 }
 th {
   background: #e9ecef;
@@ -79,6 +89,46 @@ tr:nth-child(even) {
 .legal-notice {
   font-size: 0.85em;
   color: #666;
+}
+th.topic-col, td.topic-col {
+  width: 200px;
+  max-width: 200px;
+  text-align: left;
+}
+th.short-id-col, td.short-id-col {
+  width: 250px;
+  max-width: 250px;
+  text-align: left;
+}
+th.name-col, td.name-col {
+  width: 250px;
+  max-width: 250px;
+  text-align: left;
+}
+th.unit-col, td.unit-col, th.min-col, td.min-col, th.max-col, td.max-col, th.precision-col, td.precision-col {
+  width: 60px;
+  max-width: 60px;
+  text-align: right;
+}
+th.message-type-col, td.message-type-col {
+  width: 120px;
+  max-width: 120px;
+  text-align: left;
+}
+th.metric-type-col, td.metric-type-col {
+  width: 200px;
+  max-width: 200px;
+  text-align: left;
+}
+th.metric-nature-col, td.metric-nature-col, th.device-type-col, td.device-type-col {
+  width: 150px;
+  max-width: 150px;
+  text-align: left;
+}
+th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
+  width: 100px;
+  max-width: 100px;
+  text-align: left;
 }
 </style>
 
@@ -126,100 +176,106 @@ tr:nth-child(even) {
   <table>
     <thead>
       <tr>
-        <th>Topic</th>
-        <th>Short ID</th>
-        <th>Name</th>
-        <th>Unit</th>
-        <th>Message Type</th>
-        <th>Metric Type</th>
-        <th>Metric Nature</th>
-        <th>Device Type</th>
-        <th>Value Type</th>
-        <th>Precision</th>
-        <th>Enum</th>
-        <th>Min</th>
-        <th>Max</th>
+        <th class="topic-col">Topic</th>
+        <th class="short-id-col">Short ID</th>
+        <th class="name-col">Name</th>
+        <th class="unit-col">Unit</th>
+        <th class="message-type-col">Message Type</th>
+        <th class="metric-type-col">Metric Type</th>
+        <th class="metric-nature-col">Metric Nature</th>
+        <th class="device-type-col">Device Type</th>
+        <th class="value-type-col">Value Type</th>
+        <th class="precision-col">Precision</th>
+        <th class="enum-col">Enum</th>
+        <th class="min-col">Min</th>
+        <th class="max-col">Max</th>
       </tr>
       <tr>
-        <td><input type="text" class="col-filter" data-col="0" placeholder="Filter Topic" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td><input type="text" class="col-filter" data-col="1" placeholder="Short ID" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td><input type="text" class="col-filter" data-col="2" placeholder="Name" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td><input type="text" class="col-filter" data-col="3" placeholder="Unit" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td>
+        <td class="topic-col"><input type="text" class="col-filter" data-col="0" placeholder="Filter Topic" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="short-id-col"><input type="text" class="col-filter" data-col="1" placeholder="Short ID" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="name-col"><input type="text" class="col-filter" data-col="2" placeholder="Name" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="unit-col"><input type="text" class="col-filter" data-col="3" placeholder="Unit" style="padding:0.5em; width:60px; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="message-type-col">
           <select class="col-filter" data-col="4" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">Message Type</option>
+            <option value="">&lt;ALL&gt;</option>
             {% assign message_type_values = site.data.victron_mqtt.topics | map: 'message_type' | compact | uniq | sort %}
             {% for val in message_type_values %}
-              <option value="{{ val }}">{{ val }}</option>
+              {% assign val_last = val | split: '.' | last %}
+              <option value="{{ val_last }}">{{ val_last }}</option>
             {% endfor %}
           </select>
         </td>
-        <td>
+        <td class="metric-type-col">
           <select class="col-filter" data-col="5" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">Metric Type</option>
+            <option value="">&lt;ALL&gt;</option>
             {% assign metric_type_values = site.data.victron_mqtt.topics | map: 'metric_type' | compact | uniq | sort %}
             {% for val in metric_type_values %}
-              <option value="{{ val }}">{{ val }}</option>
+              {% assign val_last = val | split: '.' | last %}
+              <option value="{{ val_last }}">{{ val_last }}</option>
             {% endfor %}
           </select>
         </td>
-        <td>
+        <td class="metric-nature-col">
           <select class="col-filter" data-col="6" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">Metric Nature</option>
+            <option value="">&lt;ALL&gt;</option>
             {% assign metric_nature_values = site.data.victron_mqtt.topics | map: 'metric_nature' | compact | uniq | sort %}
             {% for val in metric_nature_values %}
-              <option value="{{ val }}">{{ val }}</option>
+              {% assign val_last = val | split: '.' | last %}
+              <option value="{{ val_last }}">{{ val_last }}</option>
             {% endfor %}
           </select>
         </td>
-        <td>
+        <td class="device-type-col">
           <select class="col-filter" data-col="7" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">Device Type</option>
+            <option value="">&lt;ALL&gt;</option>
             {% assign device_type_values = site.data.victron_mqtt.topics | map: 'device_type' | compact | uniq | sort %}
             {% for val in device_type_values %}
-              <option value="{{ val }}">{{ val }}</option>
+              {% assign val_last = val | split: '.' | last %}
+              <option value="{{ val_last }}">{{ val_last }}</option>
             {% endfor %}
           </select>
         </td>
-        <td>
+        <td class="value-type-col">
           <select class="col-filter" data-col="8" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">Value Type</option>
+            <option value="">&lt;ALL&gt;</option>
             {% assign value_type_values = site.data.victron_mqtt.topics | map: 'value_type' | compact | uniq | sort %}
             {% for val in value_type_values %}
-              <option value="{{ val }}">{{ val }}</option>
+              {% assign val_last = val | split: '.' | last %}
+              <option value="{{ val_last }}">{{ val_last }}</option>
             {% endfor %}
           </select>
         </td>
-        <td><input type="text" class="col-filter" data-col="9" placeholder="Precision" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td>
+        <td class="precision-col"><input type="text" class="col-filter" data-col="9" placeholder="Precision" style="padding:0.5em; width:60px; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="enum-col">
           <select class="col-filter" data-col="10" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">Enum</option>
+            <option value="">&lt;ALL&gt;</option>
             {% assign enum_values = site.data.victron_mqtt.topics | map: 'enum' | compact | uniq | sort %}
             {% for val in enum_values %}
-              <option value="{{ val }}">{{ val }}</option>
+              {% assign val_last = val | split: '.' | last %}
+              <option value="{{ val_last }}">{{ val_last }}</option>
             {% endfor %}
           </select>
         </td>
-        <td><input type="text" class="col-filter" data-col="11" placeholder="Min" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td><input type="text" class="col-filter" data-col="12" placeholder="Max" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="min-col"><input type="text" class="col-filter" data-col="11" placeholder="Min" style="padding:0.5em; width:60px; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="max-col"><input type="text" class="col-filter" data-col="12" placeholder="Max" style="padding:0.5em; width:60px; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
       </tr>
     </thead>
   <tbody>
   {% for topic in site.data.victron_mqtt.topics %}
     <tr>
-      <td><strong>{{ topic.topic }}</strong></td>
-      <td>{{ topic.short_id }}</td>
-      <td>{{ topic.name }}</td>
-      <td>{{ topic.unit_of_measurement }}</td>
-      <td>{{ topic.message_type }}</td>
-      <td>{{ topic.metric_type }}</td>
-      <td>{{ topic.metric_nature }}</td>
-      <td>{{ topic.device_type }}</td>
-      <td>{{ topic.value_type }}</td>
-      <td>{{ topic.precision }}</td>
-      <td>{% if topic.enum %}{{ topic.enum }}{% endif %}</td>
-      <td>{% if topic.min != nil %}{{ topic.min }}{% endif %}</td>
-      <td>{% if topic.max != nil %}{{ topic.max }}{% endif %}</td>
+      <td class="topic-col"><strong>{{ topic.topic }}</strong></td>
+      <td class="short-id-col">{{ topic.short_id }}</td>
+      <td class="name-col">{{ topic.name }}</td>
+      <td class="unit-col">{{ topic.unit_of_measurement }}</td>
+      <td class="message-type-col">{% if topic.message_type %}{{ topic.message_type | split: '.' | last }}{% endif %}</td>
+      <td class="metric-type-col">{% if topic.metric_type %}{{ topic.metric_type | split: '.' | last }}{% endif %}</td>
+      <td class="metric-nature-col">{% if topic.metric_nature %}{{ topic.metric_nature | split: '.' | last }}{% endif %}</td>
+      <td class="device-type-col">{% if topic.device_type %}{{ topic.device_type | split: '.' | last }}{% endif %}</td>
+      <td class="value-type-col">{% if topic.value_type %}{{ topic.value_type | split: '.' | last }}{% endif %}</td>
+      <td class="precision-col">{{ topic.precision }}</td>
+      <td class="enum-col">{% if topic.enum %}{{ topic.enum | split: '.' | last }}{% endif %}</td>
+      <td class="min-col">{% if topic.min != nil %}{{ topic.min }}{% endif %}</td>
+      <td class="max-col">{% if topic.max != nil %}{{ topic.max }}{% endif %}</td>
     </tr>
   {% endfor %}
   </tbody>
