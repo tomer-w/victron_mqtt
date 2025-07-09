@@ -53,20 +53,23 @@ body {
   margin: 0; /* Remove unnecessary margins */
 }
 
-/* Add a container for the table to ensure proper margins */
+/* Update table container for better centering and spacing */
 .table-container {
-  margin: 0 2rem; /* Add left and right margins */
-  overflow-x: hidden; /* Prevent horizontal scrolling */
+  margin: 0 auto; /* Center the table horizontally */
+  padding: 1rem; /* Add padding around the table */
+  max-width: 90%; /* Limit the container width to 90% of the viewport */
+  overflow-x: auto; /* Allow horizontal scrolling if necessary */
 }
 
-/* Remove redundant padding from the table */
+/* Update table styles for better width */
 table {
-  width: 100%; /* Make the table take up the full width of the container */
-  max-width: 100%; /* Ensure the table does not exceed the container width */
+  width: 100%; /* Set table width to fill the container */
+  max-width: 100%; /* Limit the table width to 90% of the viewport */
+  margin: 0 auto; /* Center the table within the container */
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: fixed; /* Ensure consistent column widths */
   min-width: 1100px;
-  display: table;
+
   border: 1px solid #dee2e6;
   border-radius: 4px;
 }
@@ -283,7 +286,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
             {% endfor %}
           </select>
         </td>
-        <td class="precision-col"><input type="text" class="col-filter" data-col="9" placeholder="Precision" style="padding:0.5em; width:60px; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="precision-col"><input type="text" class="col-filter" data-col="9" placeholder="Precision" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
         <td class="enum-col">
           <select class="col-filter" data-col="10" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
             <option value="">&lt;ALL&gt;</option>
@@ -294,8 +297,8 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
             {% endfor %}
           </select>
         </td>
-        <td class="min-col"><input type="text" class="col-filter" data-col="11" placeholder="Min" style="padding:0.5em; width:60px; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="max-col"><input type="text" class="col-filter" data-col="12" placeholder="Max" style="padding:0.5em; width:60px; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="min-col"><input type="text" class="col-filter" data-col="11" placeholder="Min" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="max-col"><input type="text" class="col-filter" data-col="12" placeholder="Max" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
       </tr>
     </thead>
   <tbody>
