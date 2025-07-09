@@ -3,13 +3,29 @@ layout: default
 title: Victron MQTT open source specification
 ---
 
-
 <style>
+/* Override Jekyll default theme constraints */
+.main-content, .page-header + .main-content, .container-lg {
+  max-width: none !important;
+  width: 100% !important;
+  margin: 10px !important;
+  padding: 0 !important;
+}
+
+/* Reset any theme containers */
+body .container, body .container-fluid, body .wrapper {
+  max-width: none !important;
+  width: 100% !important;
+  margin: 10px !important;
+  padding: 0 !important;
+}
+
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
   background: #f8f9fa;
   margin: 0;
   padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 .navbar {
   background: #003366;
@@ -21,33 +37,33 @@ body {
 }
 /* Responsive container: uses full width with margins, centered, with padding */
 .container {
-  width: calc(100% - 4rem);
-  max-width: none;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  padding: 2rem 1.5rem;
-  overflow-x: visible;
+  padding: 2rem; /* Increased padding for better spacing */
+  overflow-x: hidden;
 }
 
-/* Add responsive padding for smaller screens */
-@media (max-width: 768px) {
-  .container {
-    width: calc(100% - 1rem);
-    padding: 1rem 0.75rem;
-  }
-}
-h1, h2 {
-  color: #003366;
-  margin-top: 0;
+/* Add consistent padding to all sections */
+.container > * {
+  padding: 1rem; /* Ensure proper spacing for all child elements */
+  margin: 0; /* Remove unnecessary margins */
 }
 
-/* Table styling - no wrapper, uses page scroll */
+/* Add a container for the table to ensure proper margins */
+.table-container {
+  margin: 0 2rem; /* Add left and right margins */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Remove redundant padding from the table */
 table {
-  width: 100%;
+  width: 100%; /* Make the table take up the full width of the container */
+  max-width: 100%; /* Ensure the table does not exceed the container width */
   border-collapse: collapse;
-  margin-bottom: 2rem;
   table-layout: fixed;
   min-width: 1100px;
   display: table;
@@ -56,7 +72,7 @@ table {
 }
 th, td {
   border: 1px solid #dee2e6;
-  padding: 0.75rem;
+  padding: 1rem; /* Increased padding for better spacing */
   text-align: left;
   box-sizing: border-box;
   word-break: break-word;
@@ -101,6 +117,12 @@ tr:nth-child(even) {
   font-size: 0.85em;
   color: #666;
 }
+
+/* Ensure proper alignment for list items */
+.container ul, .container ol {
+  padding-left: 2rem; /* Add padding to align bullets within the container */
+}
+
 th.topic-col, td.topic-col {
   width: 200px;
   max-width: 200px;
@@ -146,22 +168,6 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
   max-width: 110px;
   text-align: left;
 }
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .navbar {
-    padding: 1rem;
-    font-size: 1.2rem;
-  }
-  
-  table {
-    font-size: 0.9rem;
-  }
-  
-  th, td {
-    padding: 0.5rem;
-  }
-}
 </style>
 
 <div class="navbar">Victron MQTT Documentation</div>
@@ -203,8 +209,8 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
     <li><code>victron/+/Alarms/LowVoltage</code> – Low voltage alarm status</li>
     <li>...and many more, as detailed in the table below.</li>
   </ul>
-  <hr>
   <h1>MQTT Topics</h1>
+  <div class="table-container">
   <table>
     <thead>
       <tr>
@@ -312,6 +318,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
   {% endfor %}
   </tbody>
   </table>
+  </div>
   <script>
   // Per-column table filter for MQTT Topics, with dropdown for Enum
   document.addEventListener('DOMContentLoaded', function() {
