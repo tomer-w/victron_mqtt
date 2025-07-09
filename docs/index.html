@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Victron MQTT Topics
+title: Victron MQTT open source specification
 ---
 
 
@@ -20,8 +20,7 @@ body {
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 .container {
-  max-width: 1000px;
-  margin: 2rem auto;
+  margin: 2rem 0;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
@@ -77,10 +76,17 @@ tr:nth-child(even) {
   font-size: 0.95rem;
   margin: 2rem 0 1rem 0;
 }
+.legal-notice {
+  font-size: 0.85em;
+  color: #666;
+}
 </style>
 
 <div class="navbar">Victron MQTT Documentation</div>
 <div class="container">
+  <p class="legal-notice">
+    victron_mqtt (C) 2025, tomer-w (https://github.com/tomer-w). For more information see https://github.com/tomer-w/victron_mqtt. This file is part of victron_mqtt. Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+  </p>
   <h1>Victron MQTT Protocol Overview</h1>
   <p>
     The <strong>Victron MQTT protocol</strong> is used by Victron Energy devices to publish and subscribe to real-time data over an MQTT broker. This protocol enables seamless integration of Victron devices—such as inverters, chargers, battery monitors, and solar controllers—into home automation, monitoring, and energy management systems.
@@ -121,26 +127,130 @@ tr:nth-child(even) {
     <thead>
       <tr>
         <th>Topic</th>
-        <th>Details</th>
+        <th>Short ID</th>
+        <th>Name</th>
+        <th>Unit</th>
+        <th>Message Type</th>
+        <th>Metric Type</th>
+        <th>Metric Nature</th>
+        <th>Device Type</th>
+        <th>Value Type</th>
+        <th>Precision</th>
+        <th>Enum</th>
+        <th>Min</th>
+        <th>Max</th>
+      </tr>
+      <tr>
+        <td><input type="text" class="col-filter" data-col="0" placeholder="Filter Topic" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td><input type="text" class="col-filter" data-col="1" placeholder="Short ID" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td><input type="text" class="col-filter" data-col="2" placeholder="Name" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td><input type="text" class="col-filter" data-col="3" placeholder="Unit" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td>
+          <select class="col-filter" data-col="4" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+            <option value="">Message Type</option>
+            {% assign message_type_values = site.data.victron_mqtt.topics | map: 'message_type' | compact | uniq | sort %}
+            {% for val in message_type_values %}
+              <option value="{{ val }}">{{ val }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td>
+          <select class="col-filter" data-col="5" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+            <option value="">Metric Type</option>
+            {% assign metric_type_values = site.data.victron_mqtt.topics | map: 'metric_type' | compact | uniq | sort %}
+            {% for val in metric_type_values %}
+              <option value="{{ val }}">{{ val }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td>
+          <select class="col-filter" data-col="6" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+            <option value="">Metric Nature</option>
+            {% assign metric_nature_values = site.data.victron_mqtt.topics | map: 'metric_nature' | compact | uniq | sort %}
+            {% for val in metric_nature_values %}
+              <option value="{{ val }}">{{ val }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td>
+          <select class="col-filter" data-col="7" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+            <option value="">Device Type</option>
+            {% assign device_type_values = site.data.victron_mqtt.topics | map: 'device_type' | compact | uniq | sort %}
+            {% for val in device_type_values %}
+              <option value="{{ val }}">{{ val }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td>
+          <select class="col-filter" data-col="8" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+            <option value="">Value Type</option>
+            {% assign value_type_values = site.data.victron_mqtt.topics | map: 'value_type' | compact | uniq | sort %}
+            {% for val in value_type_values %}
+              <option value="{{ val }}">{{ val }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td><input type="text" class="col-filter" data-col="9" placeholder="Precision" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td>
+          <select class="col-filter" data-col="10" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+            <option value="">Enum</option>
+            {% assign enum_values = site.data.victron_mqtt.topics | map: 'enum' | compact | uniq | sort %}
+            {% for val in enum_values %}
+              <option value="{{ val }}">{{ val }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td><input type="text" class="col-filter" data-col="11" placeholder="Min" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td><input type="text" class="col-filter" data-col="12" placeholder="Max" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
       </tr>
     </thead>
-    <tbody>
-    {% for topic in site.data.victron_mqtt.topics %}
-      <tr>
-        <td><strong>{{ topic.topic }}</strong></td>
-        <td>
-          <ul style="margin:0; padding-left:1.2em;">
-            {% for key in topic %}
-              {% unless key == "topic" %}
-                <li><strong>{{ key }}</strong>: {{ topic[key] }}</li>
-              {% endunless %}
-            {% endfor %}
-          </ul>
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
+  <tbody>
+  {% for topic in site.data.victron_mqtt.topics %}
+    <tr>
+      <td><strong>{{ topic.topic }}</strong></td>
+      <td>{{ topic.short_id }}</td>
+      <td>{{ topic.name }}</td>
+      <td>{{ topic.unit_of_measurement }}</td>
+      <td>{{ topic.message_type }}</td>
+      <td>{{ topic.metric_type }}</td>
+      <td>{{ topic.metric_nature }}</td>
+      <td>{{ topic.device_type }}</td>
+      <td>{{ topic.value_type }}</td>
+      <td>{{ topic.precision }}</td>
+      <td>{% if topic.enum %}{{ topic.enum }}{% endif %}</td>
+      <td>{% if topic.min != nil %}{{ topic.min }}{% endif %}</td>
+      <td>{% if topic.max != nil %}{{ topic.max }}{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
   </table>
+  <script>
+  // Per-column table filter for MQTT Topics, with dropdown for Enum
+  document.addEventListener('DOMContentLoaded', function() {
+    var filters = document.querySelectorAll('.col-filter');
+    var table = document.querySelector('table');
+    if (!filters.length || !table) return;
+    filters.forEach(function(input) {
+      var eventType = input.tagName === 'SELECT' ? 'change' : 'input';
+      input.addEventListener(eventType, filterTable);
+    });
+    function filterTable() {
+      var rows = table.querySelectorAll('tbody tr');
+      rows.forEach(function(row) {
+        var show = true;
+        filters.forEach(function(input) {
+          var col = parseInt(input.getAttribute('data-col'));
+          var val = (input.tagName === 'SELECT' ? input.value : input.value.trim()).toLowerCase();
+          var cell = row.cells[col];
+          if (val && cell && cell.innerText.toLowerCase().indexOf(val) === -1) {
+            show = false;
+          }
+        });
+        row.style.display = show ? '' : 'none';
+      });
+    }
+  });
+  </script>
 
   <h2>Enums</h2>
   <p>
