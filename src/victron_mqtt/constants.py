@@ -53,6 +53,7 @@ class DeviceType(Enum):
     VEBUS = "vebus"
     EVCHARGER = "evcharger"
     PVINVERTER = "pvinverter"
+    TEMPERATURE = "temperature"
 
 
 class ValueType(Enum):
