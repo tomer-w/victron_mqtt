@@ -120,6 +120,9 @@ class Hub:
 
     def _on_connect(self, client: MQTTClient, userdata: Any, flags: dict, rc: int, properties: Optional[dict] = None) -> None:
         """Handle connection callback."""
+        if self._client is None:
+            _LOGGER.warning("Got new connection while self._client is None, ignoring")
+            return
         if rc == 0:
             _LOGGER.info("Connected to MQTT broker successfully")
             self._setup_subscriptions()
@@ -329,8 +332,7 @@ class Hub:
     def _setup_subscriptions(self) -> None:
         """Subscribe to list of topics."""
         _LOGGER.info("Setting up MQTT subscriptions")
-        if self._client is None:
-            raise ProgrammingError
+        assert self._client is not None
         if not self._client.is_connected():
             raise NotConnectedError
 
@@ -361,7 +363,7 @@ class Hub:
         """Get or create a device based on topic."""
         unique_id = self._create_device_unique_id(
             parsed_topic.installation_id,
-            str(parsed_topic.device_type),
+            parsed_topic.device_type.code,
             parsed_topic.device_id,
         )
         device = self._devices.get(unique_id)
