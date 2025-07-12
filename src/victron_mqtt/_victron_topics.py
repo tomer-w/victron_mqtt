@@ -2,9 +2,9 @@
 Maps all the MQTT topics to either attributes or metrics.
 """
 
-from .constants import DeviceType, MetricKind, MetricNature, MetricType, ValueType
+from .constants import MetricKind, MetricNature, MetricType, ValueType
 from .data_classes import TopicDescriptor
-from ._victron_enums import *  # noqa: F403
+from ._victron_enums import DeviceType, InverterMode, GenericOnOff, EvChargerMode
 
 topic_map: dict[str, TopicDescriptor] = {
     # generic device attributes
@@ -160,9 +160,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    #  cspell:ignore solarcharger MPPT
-    # solar / MPPT  """ cspell:ignore  """
-    "N/+/solarcharger/+/Dc/0/Voltage": TopicDescriptor(  # """ cspell:ignore  """
+    # solar / MPPT
+    "N/+/solarcharger/+/Dc/0/Voltage": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="solar_voltage",
         name="DC Bus voltage",

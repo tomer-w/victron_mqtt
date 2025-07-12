@@ -11,8 +11,9 @@ if TYPE_CHECKING:
     from .hub import Hub
 
 from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_enum
-from .constants import DeviceType, PLACEHOLDER_PHASE, MetricKind
+from .constants import PLACEHOLDER_PHASE, MetricKind
 from .metric import Metric
+from ._victron_enums import DeviceType
 from .switch import Switch
 
 if TYPE_CHECKING:
@@ -112,6 +113,7 @@ class Device:
 
         short_id = topic_desc.short_id
         if PLACEHOLDER_PHASE in short_id:
+            assert parsed_topic.phase is not None
             short_id = short_id.replace(PLACEHOLDER_PHASE, parsed_topic.phase)
         metric_id = f"{self.unique_id}_{short_id}"
 

@@ -1,5 +1,17 @@
 from .constants import VictronEnum
 
+class DeviceType(VictronEnum):
+    """Type of device."""
+
+    UNKNOWN = ("unknown", "Unknown Device")
+    SYSTEM = ("system", "System")
+    SOLAR_CHARGER = ("solarcharger", "Solar Charger")
+    INVERTER = ("inverter", "Inverter")
+    BATTERY = ("battery", "Battery")
+    GRID = ("grid", "Grid")
+    VEBUS = ("vebus", "VE.Bus")
+    EVCHARGER = ("evcharger", "EV Charging Station")
+    PVINVERTER = ("pvinverter", "PV Inverter")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""
