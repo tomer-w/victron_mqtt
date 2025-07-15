@@ -4,7 +4,7 @@ Maps all the MQTT topics to either attributes or metrics.
 
 from .constants import MetricKind, MetricNature, MetricType, ValueType
 from .data_classes import TopicDescriptor
-from ._victron_enums import DeviceType, InverterMode, GenericOnOff, EvChargerMode
+from ._victron_enums import DeviceType, InverterMode, GenericOnOff, EvChargerMode, InverterState
 
 topic_map: dict[str, TopicDescriptor] = {
     # generic device attributes
@@ -349,6 +349,16 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=InverterMode,
     ),
+    "N/+/vebus/+State": TopicDescriptor(
+        message_type=MetricKind.SENSOR,
+        short_id="inverter_state",
+        name="Inverter state",
+        metric_type=MetricType.NONE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=InverterState,
+    ),
     "N/+/vebus/+/Ac/ActiveIn/+/P": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="inverter_input_power_{phase}",
@@ -462,6 +472,37 @@ topic_map: dict[str, TopicDescriptor] = {
         device_type=DeviceType.SYSTEM,
         value_type=ValueType.FLOAT,
         precision=1,
+    ),
+    "N/+/system/+/Dc/System/Power": TopicDescriptor(
+        message_type=MetricKind.SENSOR,
+        short_id="system_ac_loads_{phase}",
+        name="DC Consumption",
+        unit_of_measurement="W",
+        metric_type=MetricType.POWER,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    "N/+/system/+/Relay/0/State": TopicDescriptor(
+        message_type=MetricKind.SWITCH,
+        short_id="system_relay_1",
+        name="Relay 1 state",
+        metric_type=MetricType.NONE,
+        metric_nature=MetricNature.NONE,
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    "N/+/system/+/Relay/1/State": TopicDescriptor(
+        message_type=MetricKind.SWITCH,
+        short_id="system_relay_2",
+        name="Relay 2 state",
+        metric_type=MetricType.NONE,
+        metric_nature=MetricNature.NONE,
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
     ),
     # evcharger
     "N/+/evcharger/+/Mode": TopicDescriptor(
