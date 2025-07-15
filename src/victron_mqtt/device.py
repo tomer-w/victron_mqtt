@@ -41,10 +41,7 @@ class Device:
         self._manufacturer = None
         self._serial_number = None
         self._firmware_version = None
-        
-        # Temperature-specific properties
-        self._temperature_custom_name = None
-        self._temperature_type = None
+        self._custom_name = None
         
         if self._device_type == DeviceType.SYSTEM:
             self._model = self._device_name = "Victron Venus"
@@ -94,10 +91,8 @@ class Device:
             self._manufacturer = value
         elif short_id == "firmware_version":
             self._firmware_version = value
-        elif short_id == "temperature_custom_name":
-            self._temperature_custom_name = value
-        elif short_id == "temperature_type":
-            self._temperature_type = value
+        elif short_id == "custom_name":
+            self._custom_name = value
         else:
             _LOGGER.warning("Unhandled device property %s for %s", short_id, self.unique_id)
 
@@ -207,11 +202,6 @@ class Device:
         return self._device_id
 
     @property
-    def temperature_custom_name(self) -> str | None:
-        """Return the custom name for temperature devices."""
-        return self._temperature_custom_name
-
-    @property
-    def temperature_type(self) -> str | None:
-        """Return the temperature type for temperature devices."""
-        return self._temperature_type
+    def custom_name(self) -> str | None:
+        """Return the custom name for devices."""
+        return self._custom_name
