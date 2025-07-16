@@ -42,6 +42,8 @@ class Device:
         self._manufacturer = None
         self._serial_number = None
         self._firmware_version = None
+        self._custom_name = None
+        
         if self._device_type == DeviceType.SYSTEM:
             self._model = self._device_name = "Victron Venus"
 
@@ -90,6 +92,8 @@ class Device:
             self._manufacturer = value
         elif short_id == "firmware_version":
             self._firmware_version = value
+        elif short_id == "custom_name":
+            self._custom_name = value
         else:
             _LOGGER.warning("Unhandled device property %s for %s", short_id, self.unique_id)
 
@@ -198,3 +202,8 @@ class Device:
     def device_id(self) -> str:
         """Return the device id of the device."""
         return self._device_id
+
+    @property
+    def custom_name(self) -> str | None:
+        """Return the custom name for devices."""
+        return self._custom_name
