@@ -2,10 +2,11 @@
 
 import pytest
 import victron_mqtt
+import logging
 
 
 @pytest.mark.asyncio
-async def test_devices_and_metrics(config_host, config_port, config_username, config_password, config_use_ssl):
+async def test_devices_and_metrics(config_host, config_port, config_username, config_password, config_use_ssl, caplog):
     hub = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl)
     await hub.connect()
 
@@ -22,3 +23,7 @@ async def test_devices_and_metrics(config_host, config_port, config_username, co
             assert len(metric.short_id) > 0
 
     await hub.disconnect()
+    
+    # Check that no error logs were emitted
+    error_logs = [record for record in caplog.records if record.levelno >= logging.ERROR]
+    assert len(error_logs) == 0, f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"

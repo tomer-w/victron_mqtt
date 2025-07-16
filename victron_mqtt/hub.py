@@ -92,6 +92,7 @@ class Hub:
         self._client._on_disconnect = self._on_disconnect
         self._client.on_message = self._on_message
         self._client.on_connect_fail = self.on_connect_fail
+        #self._client.on_log = self._on_log
         self._connected_failed = False
         self._loop = asyncio.get_event_loop()
         #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop))
@@ -118,6 +119,9 @@ class Hub:
             _LOGGER.error("Failed to connect to MQTT broker: %s", exc)
             raise CannotConnectError(f"Failed to connect to MQTT broker: {exc}") from exc
 
+    def _on_log(self, client: MQTTClient, userdata: Any, level:int, buf:str) -> None:
+        _LOGGER.log(level, buf)
+
     def _on_connect(self, client: MQTTClient, userdata: Any, flags: dict, rc: int, properties: Optional[dict] = None) -> None:
         """Handle connection callback."""
         if self._client is None:
@@ -138,6 +142,12 @@ class Hub:
             _LOGGER.info("Disconnected from MQTT broker.")
 
     def _on_message(self, client: MQTTClient, userdata: Any, message: mqtt.MQTTMessage) -> None:
+        try:
+            self._on_message_internal(client, userdata, message)
+        except Exception as exc:
+            _LOGGER.error("Exception %s on message handling: %s", type(exc), exc)
+
+    def _on_message_internal(self, client: MQTTClient, userdata: Any, message: mqtt.MQTTMessage) -> None:
         """Process MQTT message asynchronously."""
         topic = message.topic
         payload = message.payload
@@ -335,7 +345,7 @@ class Hub:
         assert self._client is not None
         if not self._client.is_connected():
             raise NotConnectedError
-
+        #topic_list = [(topic, 0) for topic in topic_map]
         for topic in topic_map:
             self._client.subscribe(topic)
             _LOGGER.debug("Subscribed to: %s", topic)
@@ -354,7 +364,7 @@ class Hub:
     async def _wait_for_first_refresh(self) -> None:
         """Wait for the first full refresh to complete."""
         try:
-            await asyncio.wait_for(self._first_refresh_event.wait(), timeout=60)
+            await asyncio.wait_for(self._first_refresh_event.wait(), timeout=95)
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout waiting for first full refresh")
             raise CannotConnectError("Timeout waiting for first full refresh")

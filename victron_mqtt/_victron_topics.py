@@ -446,7 +446,7 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=InverterMode,
     ),
-    "N/+/vebus/+State": TopicDescriptor(
+    "N/+/vebus/+/State": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="inverter_state",
         name="Inverter state",
@@ -514,7 +514,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/vebus/+/Ac/Out/+/S": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="inverter_output_apparent_power_{phase}",
-        name="Inverter output frequency {phase}",
+        name="Inverter output apparent power {phase}",
         unit_of_measurement="VA",
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
@@ -572,7 +572,7 @@ topic_map: dict[str, TopicDescriptor] = {
     ),
     "N/+/system/+/Dc/System/Power": TopicDescriptor(
         message_type=MetricKind.SENSOR,
-        short_id="system_ac_loads_{phase}",
+        short_id="system_dc_consumption",
         name="DC Consumption",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -646,7 +646,7 @@ topic_map: dict[str, TopicDescriptor] = {
     "N/+/evcharger/+/Ac/+/Power": TopicDescriptor(
         message_type=MetricKind.SENSOR,
         short_id="evcharger_power_{phase}",
-        name="EV charger power",
+        name="EV charger power on {phase}",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
