@@ -1,6 +1,7 @@
 """Constants for the victron venus OS client."""
 
 from enum import Enum
+from typing import TypeVar, cast
 
 TOPIC_INSTALLATION_ID = "N/+/system/0/Serial"
 
@@ -41,21 +42,6 @@ class MetricType(Enum):
     ELECTRIC_STORAGE_CAPACITY = "electric_storage_capacity"
 
 
-class DeviceType(Enum):
-    """Type of device."""
-
-    ANY = "any"
-    SYSTEM = "system"
-    SOLAR_CHARGER = "solarcharger"
-    INVERTER = "inverter"
-    BATTERY = "battery"
-    GRID = "grid"
-    VEBUS = "vebus"
-    EVCHARGER = "evcharger"
-    PVINVERTER = "pvinverter"
-    TEMPERATURE = "temperature"
-
-
 class ValueType(Enum):
     """Value types."""
 
@@ -67,6 +53,7 @@ class ValueType(Enum):
 
 PLACEHOLDER_PHASE = "{phase}"
 
+T = TypeVar("T", bound="VictronEnum")
 class VictronEnum(Enum):
     def __init__(self, code, string):
         self._value_ = (code, string)
@@ -86,12 +73,10 @@ class VictronEnum(Enum):
         return cls._lookup_by_code
 
     @classmethod
-    def from_code(cls, value: int):
+    def from_code(cls: type[T], value: int | str, default_value: T | None = None) -> T | None:
         lookup = cls._build_code_lookup()
-        try:
-            return lookup[value]
-        except KeyError:
-            raise ValueError(f"No enum member found with code={value}")
+        result = lookup.get(value, default_value)
+        return cast(T, result) if result is not None else None
 
     @classmethod
     def _build_string_lookup(cls):

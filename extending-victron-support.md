@@ -284,6 +284,10 @@ For metrics that can be controlled (switches, selects, numbers), use appropriate
 
 1. **Validate topic patterns**: Ensure your MQTT topic patterns match actual Venus OS output
 2. **Test with real data**: Use the included `view_metric.py` scripts to verify your mappings work
+   ```bash
+   cd src
+   python -m victron_mqtt.utils.view_metrics
+   ```
 3. **Check for conflicts**: Ensure your `short_id` values are unique
 4. **Run tests**: Execute the test suite to verify no regressions. This requires you to specify connection parameters (see `conftest.py`)
 

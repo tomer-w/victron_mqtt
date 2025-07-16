@@ -54,11 +54,10 @@ def unwrap_enum(json_str, enum: type[VictronEnum]):
     """Unwrap a string value from a JSON string."""
     try:
         data = json.loads(json_str)
-        if data["value"] is None:
-            return None
-        return enum.from_code((data["value"]))
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
+    val = data["value"]
+    return enum.from_code(val) if val is not None else None
 
 
 def wrap_enum(enum_val: Enum | str, enum_expected: type[VictronEnum]) -> str:
@@ -66,10 +65,7 @@ def wrap_enum(enum_val: Enum | str, enum_expected: type[VictronEnum]) -> str:
     if isinstance(enum_val, VictronEnum):
         return json.dumps({"value": enum_val.code})
     elif isinstance(enum_val, str):
-        try:
-            return json.dumps({"value": enum_expected.from_string(enum_val).code})
-        except ValueError:
-            raise ValueError(f"Invalid enum value: {enum_val}")
+        return json.dumps({"value": enum_expected.from_string(enum_val).code})
     else:
         raise TypeError(f"Expected Enum or str, got {type(enum_val).__name__}")
 

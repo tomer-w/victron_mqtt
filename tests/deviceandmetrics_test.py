@@ -13,7 +13,7 @@ async def test_devices_and_metrics(config_host, config_port, config_username, co
 
     for device in hub.devices:
         assert device.device_type is not None
-        if device.device_type == victron_mqtt.DeviceType.ANY:
+        if device.device_type == victron_mqtt.DeviceType.UNKNOWN:
             continue
         assert len(device.metrics) > 0
 

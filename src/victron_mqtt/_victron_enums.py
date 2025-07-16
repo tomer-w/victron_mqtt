@@ -1,5 +1,17 @@
 from .constants import VictronEnum
 
+class DeviceType(VictronEnum):
+    """Type of device."""
+
+    UNKNOWN = ("unknown", "Unknown Device")
+    SYSTEM = ("system", "System")
+    SOLAR_CHARGER = ("solarcharger", "Solar Charger")
+    INVERTER = ("inverter", "Inverter")
+    BATTERY = ("battery", "Battery")
+    GRID = ("grid", "Grid")
+    VEBUS = ("vebus", "VE.Bus")
+    EVCHARGER = ("evcharger", "EV Charging Station")
+    PVINVERTER = ("pvinverter", "PV Inverter")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""
@@ -12,6 +24,23 @@ class InverterMode(VictronEnum):
     InverterOnly = (2, "Inverter Only")
     On = (3, "On")
     Off = (4, "Off")
+
+class InverterState(VictronEnum):
+    """Inverter State Enum"""
+    Off = (0, "Off")
+    LowPower = (1, "Low Power")
+    Fault = (2, "Fault")
+    Bulk = (3, "Bulk")
+    Absorption = (4, "Absorption")
+    Float = (5, "Float")
+    Storage = (6, "Storage")
+    Equalize = (7, "Equalize")
+    Passthrough = (8, "Passthrough")
+    Inverting = (9, "Inverting")
+    PowerAssist = (10, "Power Assist")
+    PowerSupply = (11, "Power Supply")
+    Sustain = (244, "Sustain")
+    ExternalControl = (252, "External Control")
 
 class EvChargerMode(VictronEnum):
     """EVCharger Mode Enum"""

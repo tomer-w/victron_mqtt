@@ -2,12 +2,12 @@
 A Asynchronous Python API client for the Victron Venus OS.
 """
 
-from .constants import DeviceType, MetricNature, MetricType, MetricKind, VictronEnum
+from .constants import MetricNature, MetricType, MetricKind, VictronEnum, PLACEHOLDER_PHASE
 from .device import Device
 from .hub import Hub, CannotConnectError, ProgrammingError, NotConnectedError
 from .metric import Metric
 from .switch import Switch
-from ._victron_enums import InverterMode, GenericOnOff, EvChargerMode
+from ._victron_enums import DeviceType, InverterMode, GenericOnOff, EvChargerMode
 
 __all__ = [
     "Hub",
@@ -25,4 +25,5 @@ __all__ = [
     "GenericOnOff",
     "EvChargerMode",
     "MetricKind",
+    "PLACEHOLDER_PHASE",
 ]

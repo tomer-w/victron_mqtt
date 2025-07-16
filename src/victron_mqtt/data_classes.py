@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 import logging
 
-from .constants import DeviceType, MetricKind, MetricNature, MetricType, ValueType, VictronEnum
+from ._victron_enums import DeviceType
+from .constants import MetricKind, MetricNature, MetricType, ValueType, VictronEnum
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class TopicDescriptor:
     unit_of_measurement: str | None = None
     metric_type: MetricType = MetricType.NONE
     metric_nature: MetricNature = MetricNature.NONE
-    device_type: DeviceType = DeviceType.ANY
+    device_type: DeviceType = DeviceType.UNKNOWN
     value_type: ValueType | None = None
     precision: int | None = 2
     enum: type[VictronEnum] | None = None
@@ -99,10 +99,8 @@ class ParsedTopic:
         native_device_type = topic_parts[2]
         if native_device_type == "platform":  # platform is not a device type
             native_device_type = "system"
-        try:
-            device_type = DeviceType(native_device_type)
-        except ValueError as e:
-            device_type = DeviceType.ANY
+        device_type = DeviceType.from_code(native_device_type, DeviceType.UNKNOWN)
+        assert device_type is not None
         device_id = topic_parts[3]
         wildcard_topic_parts[3] = "+"
 
@@ -111,9 +109,7 @@ class ParsedTopic:
             wildcard_topic_parts[phase_index] = "+"
 
         wildcards_with_device_type = "/".join(wildcard_topic_parts)
-
         wildcard_topic_parts[2] = "+"
-
         wildcards_without_device_type = "/".join(wildcard_topic_parts)
 
         return cls(
