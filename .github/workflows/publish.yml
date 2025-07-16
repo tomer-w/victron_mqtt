@@ -11,13 +11,14 @@ permissions:
   contents: read
   pages: write
   id-token: write
-  
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
     permissions:
       id-token: write  # Required for OIDC
       contents: read
+      pages: write
     environment:
       name: pypi
       # OPTIONAL: uncomment and update to include your PyPI project URL in the deployment status:
