@@ -1,4 +1,4 @@
-name: Build and Publish to PyPI
+name: Build and Publish to PyPI and Github Pages
 
 on:
   release:
@@ -34,6 +34,30 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install hatch
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      - name: Generate victron_mqtt.json
+        run: python -m victron_mqtt.utils.dump_victron_mqtt victron_mqtt.json
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Copy victron_mqtt.json to docs/_data
+        run: |
+          mkdir -p docs/_data
+          cp victron_mqtt.json docs/_data/victron_mqtt.json
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       - name: Build distribution
         run: hatch build
