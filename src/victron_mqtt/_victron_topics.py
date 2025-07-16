@@ -4,7 +4,7 @@ Maps all the MQTT topics to either attributes or metrics.
 
 from .constants import MetricKind, MetricNature, MetricType, ValueType
 from .data_classes import TopicDescriptor
-from ._victron_enums import DeviceType, InverterMode, GenericOnOff, EvChargerMode, InverterState
+from ._victron_enums import DeviceType, InverterMode, GenericOnOff, EvChargerMode, InverterState, TemperatureStatus, TemperatureType
 
 topic_map: dict[str, TopicDescriptor] = {
     # generic device attributes
@@ -737,7 +737,7 @@ topic_map: dict[str, TopicDescriptor] = {
     # temperature devices
     "N/+/temperature/+/Temperature": TopicDescriptor(
         message_type=MetricKind.SENSOR,
-        short_id="temperature",
+        short_id="temperature_temperature",
         name="Temperature",
         unit_of_measurement="°C",
         metric_type=MetricType.TEMPERATURE,
@@ -750,7 +750,6 @@ topic_map: dict[str, TopicDescriptor] = {
         message_type=MetricKind.SENSOR,
         short_id="temperature_status",
         name="Temperature sensor status",
-        unit_of_measurement=None,
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.TEMPERATURE,
@@ -761,7 +760,6 @@ topic_map: dict[str, TopicDescriptor] = {
         message_type=MetricKind.SENSOR,
         short_id="temperature_type",
         name="Temperature sensor type",
-        unit_of_measurement=None,
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.TEMPERATURE,

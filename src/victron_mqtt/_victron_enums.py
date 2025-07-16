@@ -12,6 +12,7 @@ class DeviceType(VictronEnum):
     VEBUS = ("vebus", "VE.Bus")
     EVCHARGER = ("evcharger", "EV Charging Station")
     PVINVERTER = ("pvinverter", "PV Inverter")
+    TEMPERATURE = ("temperature", "Temperature")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""
