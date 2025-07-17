@@ -52,6 +52,7 @@ class ValueType(Enum):
     ENUM = "enum"
 
 PLACEHOLDER_PHASE = "{phase}"
+PLACEHOLDER_PHASE = "{next_phase}"
 
 T = TypeVar("T", bound="VictronEnum")
 class VictronEnum(Enum):

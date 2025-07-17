@@ -114,6 +114,13 @@ def test_topics():
             if descriptor.name and '{phase}' not in descriptor.name:
                 errors.append(f"Topic '{topic}' has {plus_count} plus signs but name '{descriptor.name}' missing {{phase}} placeholder")
     
+    # Check that no topic contains L1, L2, or L3 as literal parts
+    for topic, descriptor in topic_map.items():
+        topic_parts = topic.split('/')
+        for part in topic_parts:
+            if part in ['L1', 'L2', 'L3']:
+                errors.append(f"Topic '{topic}' contains literal phase identifier '{part}' - use '+' placeholder instead")
+    
     # Report all errors
     if errors:
         error_message = "\n".join([f"  - {error}" for error in errors])
