@@ -2,13 +2,15 @@
 Maps all the MQTT topics to either attributes or metrics.
 """
 
+from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType
 from .data_classes import TopicDescriptor
 from ._victron_enums import DeviceType, InverterMode, GenericOnOff, EvChargerMode, InverterState, TemperatureStatus, TemperatureType
 
-topic_map: dict[str, TopicDescriptor] = {
+topics: List[TopicDescriptor] = [
     # generic device attributes
-    "N/+/+/+/ProductName": TopicDescriptor(
+    TopicDescriptor(
+        topic = "N/+/+/+/ProductName",
         message_type=MetricKind.ATTRIBUTE,
         short_id="model",
         unit_of_measurement=None,
@@ -16,7 +18,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_nature=MetricNature.NONE,
         value_type=ValueType.STRING,
     ),
-    "N/+/+/+/Serial": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/+/+/Serial",
         message_type=MetricKind.ATTRIBUTE,
         short_id="serial_number",
         unit_of_measurement=None,
@@ -25,7 +28,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.STRING,
     ),
     # inverter hides its serial number away in a different topic
-    "N/+/vebus/+/Devices/0/SerialNumber": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/vebus/+/Devices/0/SerialNumber",
         message_type=MetricKind.ATTRIBUTE,
         short_id="serial_number",
         unit_of_measurement=None,
@@ -33,7 +37,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_nature=MetricNature.NONE,
         value_type=ValueType.STRING,
     ),
-    "N/+/+/+/Manufacturer": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/+/+/Manufacturer",
         message_type=MetricKind.ATTRIBUTE,
         short_id="manufacturer",
         unit_of_measurement=None,
@@ -41,7 +46,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_nature=MetricNature.NONE,
         value_type=ValueType.STRING,
     ),
-    "N/+/+/+/ProductId": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/+/+/ProductId",
         message_type=MetricKind.ATTRIBUTE,
         short_id="victron_productid",
         unit_of_measurement=None,
@@ -50,7 +56,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.INT,
         precision=0,
     ),
-    "N/+/+/+/FirmwareVersion": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/+/+/FirmwareVersion",
         message_type=MetricKind.ATTRIBUTE,
         short_id="firmware_version",
         unit_of_measurement=None,
@@ -58,7 +65,8 @@ topic_map: dict[str, TopicDescriptor] = {
         metric_nature=MetricNature.NONE,
         value_type=ValueType.STRING,
     ),
-    "N/+/+/+/CustomName": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/+/+/CustomName",
         message_type=MetricKind.ATTRIBUTE,
         short_id="custom_name",
         unit_of_measurement=None,
@@ -67,7 +75,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.STRING,
     ),
     # grid
-    "N/+/system/+/Ac/Grid/NumberOfPhases": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/system/+/Ac/Grid/NumberOfPhases",
         message_type=MetricKind.SENSOR,
         short_id="system_grid_phases",  # system attribute
         name="Grid phases",
@@ -79,7 +88,8 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=0,
     ),
     # individual grid phases
-    "N/+/grid/+/Ac/+/Voltage": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/{phase}/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="grid_voltage_{phase}",
         name="Grid voltage on {phase}",
@@ -90,7 +100,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/grid/+/Ac/+/Current": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/{phase}/Current",
         message_type=MetricKind.SENSOR,
         short_id="grid_current_{phase}",
         name="Grid current on {phase}",
@@ -101,7 +112,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/grid/+/Ac/+/Power": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="grid_power_{phase}",
         name="Grid power on {phase}",
@@ -113,7 +125,8 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     # VM-3P75CT
-    "N/+/grid/+/Ac/+/Energy/Forward": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/{phase}/Energy/Forward",
         message_type=MetricKind.SENSOR,
         short_id="grid_energy_forward_{phase}",
         name="Grid consumption on {phase}",
@@ -124,7 +137,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/grid/+/Ac/+/Energy/Reverse": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/{phase}/Energy/Reverse",
         message_type=MetricKind.SENSOR,
         short_id="grid_energy_reverse_{phase}",
         name="Grid feed-in on {phase}",
@@ -135,7 +149,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/grid/+/Ac/PENVoltage": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/PENVoltage", 
         message_type=MetricKind.SENSOR,
         short_id="grid_voltage_PEN",
         name="Grid voltage on PEN",
@@ -146,7 +161,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/grid/+/Ac/N/Current": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/N/Current",
         message_type=MetricKind.SENSOR,
         short_id="grid_current_N",
         name="Grid current on N",
@@ -157,7 +173,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/grid/+/Ac/Frequency": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/Frequency",
         message_type=MetricKind.SENSOR,
         short_id="grid_frequency",
         name="Grid frequency",
@@ -168,7 +185,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=2,
     ),
-    "N/+/grid/+/Ac/+/VoltageLineToLine": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/{phase}/VoltageLineToLine",
         message_type=MetricKind.SENSOR,
         short_id="grid_voltage_{phase}_{next_phase}",
         name="Grid voltage {phase} to {next_phase}",
@@ -180,7 +198,8 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     # total grid
-    "N/+/grid/+/Ac/Voltage": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="grid_voltage",
         name="Grid voltage",
@@ -191,7 +210,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/grid/+/Ac/Current": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/Current",
         message_type=MetricKind.SENSOR,
         short_id="grid_current",
         name="Grid current",
@@ -202,7 +222,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/grid/+/Ac/Power": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/Power",
         message_type=MetricKind.SENSOR,
         short_id="grid_power",
         name="Grid power",
@@ -213,7 +234,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/grid/+/Ac/Energy/Forward": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/Energy/Forward",
         message_type=MetricKind.SENSOR,
         short_id="grid_energy_forward",
         name="Grid consumption",
@@ -224,7 +246,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/grid/+/Ac/Energy/Reverse": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/grid/+/Ac/Energy/Reverse",
         message_type=MetricKind.SENSOR,
         short_id="grid_energy_reverse",
         name="Grid feed-in",
@@ -236,7 +259,8 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     # solar / MPPT
-    "N/+/solarcharger/+/Dc/0/Voltage": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/Dc/0/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="solar_voltage",
         name="DC Bus voltage",
@@ -247,7 +271,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/solarcharger/+/Dc/0/Current": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/Dc/0/Current",
         message_type=MetricKind.SENSOR,
         short_id="solar_current",
         name="DC current",
@@ -258,7 +283,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/solarcharger/+/Yield/Power": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/Yield/Power",
         message_type=MetricKind.SENSOR,
         short_id="solar_power",
         name="Power",
@@ -269,7 +295,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/solarcharger/+/Yield/User": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/Yield/User",
         message_type=MetricKind.SENSOR,
         short_id="solar_yield",
         name="Yield",
@@ -280,7 +307,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/solarcharger/+/History/Daily/0/MaxPower": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/History/Daily/0/MaxPower",
         message_type=MetricKind.SENSOR,
         short_id="solar_max_power",
         name="Max Power Today",
@@ -292,7 +320,8 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     # batteries
-    "N/+/battery/+/Dc/0/Voltage": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/battery/+/Dc/0/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="battery_voltage",
         name="Battery voltage",
@@ -303,7 +332,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/battery/+/Dc/0/Current": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/battery/+/Dc/0/Current",
         message_type=MetricKind.SENSOR,
         short_id="battery_current",
         name="Battery current",
@@ -314,7 +344,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/battery/+/Dc/0/Power": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/battery/+/Dc/0/Power",
         message_type=MetricKind.SENSOR,
         short_id="battery_power",
         name="Battery power",
@@ -325,7 +356,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/battery/+/Dc/0/Temperature": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/battery/+/Dc/0/Temperature",
         message_type=MetricKind.SENSOR,
         short_id="battery_temperature",
         name="Battery temperature",
@@ -336,7 +368,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/battery/+/History/DischargedEnergy": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/battery/+/History/DischargedEnergy",
         message_type=MetricKind.SENSOR,
         short_id="battery_discharged_energy",
         name="Discharged energy",
@@ -347,7 +380,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/battery/+/History/ChargedEnergy": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/battery/+/History/ChargedEnergy",
         message_type=MetricKind.SENSOR,
         short_id="battery_charged_energy",
         name="Charged energy",
@@ -358,7 +392,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/battery/+/Capacity": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/battery/+/Capacity",
         message_type=MetricKind.SENSOR,
         short_id="battery_capacity",
         name="Battery capacity",
@@ -369,7 +404,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/battery/+/InstalledCapacity": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/battery/+/InstalledCapacity",
         message_type=MetricKind.SENSOR,
         short_id="battery_installed_capacity",
         name="Battery installed capacity",
@@ -380,7 +416,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/battery/+/Soc": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/battery/+/Soc",
         message_type=MetricKind.SENSOR,
         short_id="battery_soc",
         name="Battery charge",
@@ -391,7 +428,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/battery/+/System/MinCellVoltage": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/battery/+/System/MinCellVoltage",
         message_type=MetricKind.SENSOR,
         short_id="battery_min_cell_voltage",
         name="Battery minimum cell voltage",
@@ -402,7 +440,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=3,
     ),
-    "N/+/battery/+/System/MaxCellVoltage": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/battery/+/System/MaxCellVoltage",
         message_type=MetricKind.SENSOR,
         short_id="battery_max_cell_voltage",
         name="Battery maximum cell voltage",
@@ -414,7 +453,8 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=3,
     ),
     # inverter
-    "N/+/vebus/+/Mode": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/vebus/+/Mode",
         message_type=MetricKind.SELECT,
         short_id="inverter_mode",
         name="Inverter mode",
@@ -424,7 +464,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=InverterMode,
     ),
-    "N/+/vebus/+/State": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/vebus/+/State",
         message_type=MetricKind.SENSOR,
         short_id="inverter_state",
         name="Inverter state",
@@ -434,7 +475,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=InverterState,
     ),
-    "N/+/vebus/+/Ac/ActiveIn/+/P": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/vebus/+/Ac/ActiveIn/{phase}/P",
         message_type=MetricKind.SENSOR,
         short_id="inverter_input_power_{phase}",
         name="Inverter input power {phase}",
@@ -445,7 +487,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/vebus/+/Ac/ActiveIn/+/F": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/vebus/+/Ac/ActiveIn/{phase}/F",
         message_type=MetricKind.SENSOR,
         short_id="inverter_input_frequency_{phase}",
         name="Inverter input frequency {phase}",
@@ -456,7 +499,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/vebus/+/Ac/ActiveIn/+/S": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/vebus/+/Ac/ActiveIn/{phase}/S",
         message_type=MetricKind.SENSOR,
         short_id="inverter_input_apparent_power_{phase}",
         name="Inverter input apparent power {phase}",
@@ -467,7 +511,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/vebus/+/Ac/Out/+/P": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/vebus/+/Ac/Out/{phase}/P",
         message_type=MetricKind.SENSOR,
         short_id="inverter_output_power_{phase}",
         name="Inverter output power {phase}",
@@ -478,7 +523,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/vebus/+/Ac/Out/+/F": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/vebus/+/Ac/Out/{phase}/F",
         message_type=MetricKind.SENSOR,
         short_id="inverter_output_frequency_{phase}",
         name="Inverter output frequency {phase}",
@@ -489,7 +535,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/vebus/+/Ac/Out/+/S": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/vebus/+/Ac/Out/{phase}/S",
         message_type=MetricKind.SENSOR,
         short_id="inverter_output_apparent_power_{phase}",
         name="Inverter output apparent power {phase}",
@@ -500,7 +547,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/vebus/+/Connected": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/vebus/+/Connected",
         message_type=MetricKind.BINARY_SENSOR,
         short_id="inverter_connected",
         name="Inverter connected",
@@ -510,7 +558,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
-    "N/+/vebus/+/Ac/ActiveIn/CurrentLimit": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/vebus/+/Ac/ActiveIn/CurrentLimit",
         message_type=MetricKind.NUMBER,
         short_id="inverter_current_limit",
         name="Inverter current limit",
@@ -526,7 +575,8 @@ topic_map: dict[str, TopicDescriptor] = {
     # integrated system. Note that this might not be currently accurate for all systems
     #  as there are different physical configurations
     # and don't have access to any other for testing or feedback.
-    "N/+/system/+/Ac/ConsumptionOnOutput/+/Power": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/system/+/Ac/ConsumptionOnOutput/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="system_critical_loads_{phase}",
         name="Critical loads on {phase}",
@@ -537,7 +587,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/system/+/Ac/ConsumptionOnInput/+/Power": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/system/+/Ac/ConsumptionOnInput/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="system_ac_loads_{phase}",
         name="AC loads on {phase}",
@@ -548,7 +599,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/system/+/Dc/System/Power": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/system/+/Dc/System/Power",
         message_type=MetricKind.SENSOR,
         short_id="system_dc_consumption",
         name="DC Consumption",
@@ -559,7 +611,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/system/+/Relay/0/State": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/system/+/Relay/0/State",
         message_type=MetricKind.SWITCH,
         short_id="system_relay_1",
         name="Relay 1 state",
@@ -569,7 +622,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
-    "N/+/system/+/Relay/1/State": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/system/+/Relay/1/State",
         message_type=MetricKind.SWITCH,
         short_id="system_relay_2",
         name="Relay 2 state",
@@ -580,7 +634,8 @@ topic_map: dict[str, TopicDescriptor] = {
         enum=GenericOnOff,
     ),
     # evcharger
-    "N/+/evcharger/+/Mode": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/evcharger/+/Mode",
         message_type=MetricKind.SELECT,
         short_id="evcharger_mode",
         name="EV charger mode",
@@ -590,7 +645,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=EvChargerMode,
     ),
-    "N/+/evcharger/+/StartStop": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/evcharger/+/StartStop",
         message_type=MetricKind.SWITCH,
         short_id="evcharger_charge",
         name="EV charger charge",
@@ -600,7 +656,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
-    "N/+/evcharger/+/Connected": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/evcharger/+/Connected",
         message_type=MetricKind.BINARY_SENSOR,
         short_id="evcharger_connected",
         name="EV charger connected",
@@ -610,7 +667,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
-    "N/+/evcharger/+/Current": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/evcharger/+/Current",
         message_type=MetricKind.SENSOR,
         short_id="evcharger_current",
         name="EV charger current",
@@ -621,10 +679,11 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1
     ),
-    "N/+/evcharger/+/Ac/+/Power": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/evcharger/+/Ac/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="evcharger_power_{phase}",
-        name="EV charger power on {phase}",
+        name="EV charger power {phase}",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
@@ -632,7 +691,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1
     ),
-    "N/+/evcharger/+/SetCurrent": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/evcharger/+/SetCurrent",
         message_type=MetricKind.NUMBER,
         short_id="evcharger_set_current",
         name="EV charger set current",
@@ -646,7 +706,8 @@ topic_map: dict[str, TopicDescriptor] = {
         max=16,
     ),
     #pvinverter
-    "N/+/pvinverter/+/Ac/+/Voltage": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/pvinverter/+/Ac/{phase}/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="solar_voltage_{phase}",
         name="Voltage {phase}",
@@ -657,7 +718,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/pvinverter/+/Ac/+/Current": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/pvinverter/+/Ac/{phase}/Current",
         message_type=MetricKind.SENSOR,
         short_id="solar_current_{phase}",
         name="Current {phase}",
@@ -668,7 +730,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/pvinverter/+/Ac/Power": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/pvinverter/+/Ac/Power",
         message_type=MetricKind.SENSOR,
         short_id="solar_power_total",
         name="Power Total",
@@ -679,7 +742,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/pvinverter/+/Ac/+/Power": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/pvinverter/+/Ac/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="solar_power_{phase}",
         name="Power {phase}",
@@ -690,7 +754,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/pvinverter/+/Ac/Energy/Forward": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/pvinverter/+/Ac/Energy/Forward",
         message_type=MetricKind.SENSOR,
         short_id="solar_yield_total",
         name="Total Yield",
@@ -701,7 +766,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/pvinverter/+/Ac/+/Energy/Forward": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/pvinverter/+/Ac/{phase}/Energy/Forward",
         message_type=MetricKind.SENSOR,
         short_id="solar_yield_{phase}",
         name="Yield {phase}",
@@ -713,7 +779,8 @@ topic_map: dict[str, TopicDescriptor] = {
         precision=1,
     ),
     # temperature devices
-    "N/+/temperature/+/Temperature": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/temperature/+/Temperature",
         message_type=MetricKind.SENSOR,
         short_id="temperature_temperature",
         name="Temperature",
@@ -724,7 +791,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.INT,
         precision=1,
     ),
-    "N/+/temperature/+/Status": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/temperature/+/Status",
         message_type=MetricKind.SENSOR,
         short_id="temperature_status",
         name="Temperature sensor status",
@@ -734,7 +802,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=TemperatureStatus,
     ),
-    "N/+/temperature/+/TemperatureType": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/temperature/+/TemperatureType",
         message_type=MetricKind.SENSOR,
         short_id="temperature_type",
         name="Temperature sensor type",
@@ -744,7 +813,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.ENUM,
         enum=TemperatureType,
     ),
-    "N/+/temperature/+/Offset": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/temperature/+/Offset",
         message_type=MetricKind.NUMBER,
         short_id="temperature_offset",
         name="Temperature offset",
@@ -755,7 +825,8 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=1,
     ),
-    "N/+/temperature/+/Scale": TopicDescriptor(
+    TopicDescriptor(
+        topic="N/+/temperature/+/Scale",
         message_type=MetricKind.NUMBER,
         short_id="temperature_scale",
         name="Temperature scale factor",
@@ -766,4 +837,4 @@ topic_map: dict[str, TopicDescriptor] = {
         value_type=ValueType.FLOAT,
         precision=2,
     ),
-}
+]

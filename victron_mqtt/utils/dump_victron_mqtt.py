@@ -1,13 +1,14 @@
 
 """
-Command-line tool to dump all data from topic_map and enums in _victron_enums.py to JSON.
+Command-line tool to dump all data from topics list and enums in _victron_enums.py to JSON.
 """
 
 
 import json
 import argparse
 
-from .._victron_topics import topic_map, MetricKind
+from .._victron_topics import topics
+from ..constants import MetricKind
 from .. import _victron_enums
 from ..constants import VictronEnum
 
@@ -38,12 +39,12 @@ def get_all_enums(module):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Dump topic_map and enums to JSON.")
+    parser = argparse.ArgumentParser(description="Dump topics and enums to JSON.")
     parser.add_argument("output_file", help="Output JSON file name")
     args = parser.parse_args()
 
-    def topic_dict_with_enum_name(k, v):
-        d = {"topic": k, **v.__dict__}
+    def topic_dict_with_enum_name(descriptor):
+        d = {"topic": descriptor.topic, **descriptor.__dict__}
         if "enum" in d and d["enum"] is not None:
             d["enum"] = d["enum"].__name__
         return d
@@ -61,9 +62,9 @@ def main():
     data = {
         **metadata,
         "topics": [
-            topic_dict_with_enum_name(k, v)
-            for k, v in topic_map.items()
-            if getattr(v, "message_type", None) != MetricKind.ATTRIBUTE
+            topic_dict_with_enum_name(descriptor)
+            for descriptor in topics
+            if getattr(descriptor, "message_type", None) != MetricKind.ATTRIBUTE
         ],
         "enums": get_all_enums(_victron_enums),
     }

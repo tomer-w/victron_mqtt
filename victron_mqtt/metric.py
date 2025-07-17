@@ -9,8 +9,8 @@ import asyncio
 from collections.abc import Callable
 import logging
 
-from victron_mqtt.constants import PLACEHOLDER_PHASE, MetricKind
-from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor
+from .constants import MetricKind
+from .data_classes import ParsedTopic, TopicDescriptor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class Metric:
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, unique_id: str, descriptor: TopicDescriptor, parsed_topic: ParsedTopic, value) -> None:
+    def __init__(self, unique_id: str, short_id: str, descriptor: TopicDescriptor, parsed_topic: ParsedTopic, value) -> None:
         """Initialize the sensor."""
         _LOGGER.debug(
             "Creating new metric: unique_id=%s, type=%s, nature=%s",
@@ -28,15 +28,18 @@ class Metric:
         self._descriptor = descriptor
         self._unique_id = unique_id
         self._value = value
-        self._generic_short_id = descriptor.short_id.replace(PLACEHOLDER_PHASE, "lx")
+        self._generic_short_id = parsed_topic.get_generic_short_id(descriptor)
         self._phase = parsed_topic.phase
-        self._short_id = descriptor.short_id.replace(PLACEHOLDER_PHASE, parsed_topic.phase) if parsed_topic.phase is not None else descriptor.short_id
-        self._name = descriptor.name.replace(PLACEHOLDER_PHASE, parsed_topic.phase) if parsed_topic.phase is not None else descriptor.name
+        self._short_id = short_id
+        self._name = parsed_topic.get_name(descriptor)
+        self._key_values: dict[str, str] = parsed_topic.get_key_values(descriptor)
         self._on_update: Callable | None = None
         _LOGGER.debug("Metric %s initialized with value %s", unique_id, value)
 
     def __repr__(self) -> str:
         """Return the string representation of the metric."""
+        key_values_str = ", ".join(f"{k}={v}" for k, v in self._key_values.items())
+        key_values_part = f", key_values={{{key_values_str}}}" if key_values_str else ", key_values={}"
         return (
             f"Metric(unique_id={self.unique_id}, "
             f"descriptor={self._descriptor}, "
@@ -45,7 +48,8 @@ class Metric:
             f"phase={self.phase}, "
             f"device_type={self.device_type}, "
             f"short_id={self.short_id}, "
-            f"short_id={self.name})"
+            f"short_id={self.name}, "
+            f"{key_values_part})"
             )
 
     def __str__(self) -> str:
@@ -140,6 +144,11 @@ class Metric:
         return self._unique_id
 
     @property
+    def key_values(self) -> dict[str, str]:
+        """Return the key_values dictionary as read-only."""
+        return self._key_values.copy()
+
+    @property
     def on_update(self) -> Callable | None:
         """Returns the on_update callback."""
         return self._on_update
@@ -149,7 +158,7 @@ class Metric:
         """Sets the on_update callback."""
         self._on_update = value
 
-    def _handle_message(self, parsed_topic, topic_desc, value, event_loop: asyncio.AbstractEventLoop):  # noqa: ARG002 pylint: disable=unused-argument
+    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop):
         """Handle a message."""
         if value != self._value:
             _LOGGER.debug(

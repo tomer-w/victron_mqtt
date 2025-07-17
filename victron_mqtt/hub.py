@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import ssl
+import re
 from typing import Any, Optional
 
 import paho.mqtt.client as mqtt
@@ -12,7 +13,7 @@ from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.reasoncodes import ReasonCode
 from paho.mqtt.properties import Properties
 
-from ._victron_topics import topic_map
+from ._victron_topics import topics
 from .constants import TOPIC_INSTALLATION_ID
 from .data_classes import ParsedTopic, TopicDescriptor
 from .device import Device
@@ -70,6 +71,8 @@ class Hub:
         self._keep_alive_task = None
         self._connected_event = asyncio.Event()
         self._connected_failed = False
+        # Replace all {placeholder} patterns with + for MQTT wildcards
+        self.topic_map = {Hub._remove_placeholders(desc.topic): desc for desc in topics}
         _LOGGER.info("Hub initialized")
 
     async def connect(self) -> None:
@@ -183,9 +186,9 @@ class Hub:
             _LOGGER.debug("Ignoring message - could not parse topic: %s", topic)
             return
 
-        desc = topic_map.get(parsed_topic.wildcards_with_device_type)
+        desc = self.topic_map.get(parsed_topic.wildcards_with_device_type)
         if desc is None:
-            desc = topic_map.get(parsed_topic.wildcards_without_device_type)
+            desc = self.topic_map.get(parsed_topic.wildcards_without_device_type)
 
         if desc is None:
             _LOGGER.debug("Ignoring message - no descriptor found for topic: %s", topic)
@@ -339,6 +342,10 @@ class Hub:
         _LOGGER.info("Installation ID read successfully: %s", self.installation_id)
         return str(self.installation_id)
 
+    @staticmethod
+    def _remove_placeholders(topic: str) -> str:
+        return re.sub(r'\{[^}]+\}', '+', topic)
+
     def _setup_subscriptions(self) -> None:
         """Subscribe to list of topics."""
         _LOGGER.info("Setting up MQTT subscriptions")
@@ -346,7 +353,7 @@ class Hub:
         if not self._client.is_connected():
             raise NotConnectedError
         #topic_list = [(topic, 0) for topic in topic_map]
-        for topic in topic_map:
+        for topic in self.topic_map:
             self._client.subscribe(topic)
             _LOGGER.debug("Subscribed to: %s", topic)
 
@@ -364,7 +371,7 @@ class Hub:
     async def _wait_for_first_refresh(self) -> None:
         """Wait for the first full refresh to complete."""
         try:
-            await asyncio.wait_for(self._first_refresh_event.wait(), timeout=95)
+            await asyncio.wait_for(self._first_refresh_event.wait(), timeout=60)
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout waiting for first full refresh")
             raise CannotConnectError("Timeout waiting for first full refresh")

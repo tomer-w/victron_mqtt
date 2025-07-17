@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .hub import Hub
 
 from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_enum
-from .constants import PLACEHOLDER_PHASE, MetricKind
+from .constants import MetricKind
 from .metric import Metric
 from ._victron_enums import DeviceType
 from .switch import Switch
@@ -115,14 +115,11 @@ class Device:
             )
             return
 
-        short_id = topic_desc.short_id
-        if PLACEHOLDER_PHASE in short_id:
-            assert parsed_topic.phase is not None
-            short_id = short_id.replace(PLACEHOLDER_PHASE, parsed_topic.phase)
+        short_id = parsed_topic.get_short_id(topic_desc)
         metric_id = f"{self.unique_id}_{short_id}"
 
         metric = self._get_or_create_metric(metric_id, short_id, topic, parsed_topic, topic_desc, payload, hub)
-        metric._handle_message(parsed_topic, topic_desc, value, event_loop)
+        metric._handle_message(value, event_loop)
 
     @staticmethod
     def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | type[Enum] | None:
@@ -141,11 +138,10 @@ class Device:
         if metric is None:
             _LOGGER.info("Creating new metric: metric_id=%s, short_id=%s", metric_id, short_id)
             if topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
-                metric = Switch(metric_id, topic_desc, topic, parsed_topic, payload, hub)
+                metric = Switch(metric_id, short_id, topic_desc, topic, parsed_topic, payload, hub)
             else:
-                metric = Metric(metric_id, topic_desc, parsed_topic, payload)
+                metric = Metric(metric_id, short_id, topic_desc, parsed_topic, payload)
             self._metrics[metric_id] = metric
-            setattr(self, short_id, metric)
 
         return metric
 

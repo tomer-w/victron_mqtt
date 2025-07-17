@@ -6,14 +6,14 @@ from dataclasses import dataclass
 import logging
 
 from ._victron_enums import DeviceType
-from .constants import MetricKind, MetricNature, MetricType, ValueType, VictronEnum
+from .constants import PLACEHOLDER_NEXT_PHASE, PLACEHOLDER_PHASE, MetricKind, MetricNature, MetricType, ValueType, VictronEnum
 
 _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class TopicDescriptor:
     """Describes the topic, how to map it and how to parse it."""
-
+    topic: str
     message_type: MetricKind
     short_id: str  # Unique short id of the attribute/value
     name: str | None  = None # More user friendly name, doesnt have to be unique
@@ -30,7 +30,8 @@ class TopicDescriptor:
     def __repr__(self) -> str:
         """Return a string representation of the topic."""
         return (
-            f"TopicDescriptor(message_type={self.message_type}, "
+            f"TopicDescriptor(topic={self.topic},"
+            f"message_type={self.message_type}, "
             f"short_id={self.short_id}, "
             f"name={self.name}, "
             f"unit_of_measurement={self.unit_of_measurement}, "
@@ -68,7 +69,6 @@ class ParsedTopic:
             f"installation_id={self.installation_id}, "
             f"device_id={self.device_id}, "
             f"device_type={self.device_type}, "
-            f"phase={self.phase}, "
             f"wildcards_with_device_type={self.wildcards_with_device_type}, "
             f"wildcards_without_device_type={self.wildcards_without_device_type}"
             f")"
@@ -121,3 +121,47 @@ class ParsedTopic:
             wildcards_with_device_type,
             wildcards_without_device_type,
         )
+
+    def get_short_id(self, topic_desc: TopicDescriptor) -> str:
+        return self._replace_ids(topic_desc.short_id)
+
+    def get_name(self, topic_desc: TopicDescriptor) -> str:
+        assert topic_desc.name is not None
+        return self._replace_ids(topic_desc.name)
+
+    def _replace_ids(self, str:str) -> str:
+        result_str = str
+        if PLACEHOLDER_PHASE in result_str:
+            assert self.phase is not None
+            result_str = result_str.replace(PLACEHOLDER_PHASE, self.phase)
+        if PLACEHOLDER_NEXT_PHASE in result_str:
+            assert self.phase is not None
+            result_str = result_str.replace(PLACEHOLDER_NEXT_PHASE, ParsedTopic._get_next_Phase(self.phase))
+        return result_str
+
+    def get_generic_short_id(self, topic_desc: TopicDescriptor) -> str:
+        short_id = topic_desc.short_id.replace(PLACEHOLDER_PHASE, "lx")
+        short_id = short_id.replace(PLACEHOLDER_NEXT_PHASE, "lx")
+        return short_id
+
+    def get_key_values(self, topic_desc: TopicDescriptor) -> dict[str, str]:
+        result: dict[str, str] = {}
+        if PLACEHOLDER_PHASE in topic_desc.short_id:
+            assert self.phase is not None
+            result[PLACEHOLDER_PHASE] = self.phase
+        if PLACEHOLDER_NEXT_PHASE in topic_desc.short_id:
+            assert self.phase is not None
+            result[PLACEHOLDER_PHASE] = ParsedTopic._get_next_Phase(self.phase)
+        return result
+
+    @staticmethod
+    def _get_next_Phase(phase: str) -> str:
+        """Get the next phase in rotation (L1 -> L2 -> L3 -> L1)."""
+        if phase == "L1":
+            return "L2"
+        elif phase == "L2":
+            return "L3"
+        elif phase == "L3":
+            return "L1"
+        else:
+            raise ValueError(f"Invalid phase: {phase}. Expected L1, L2, or L3.")
