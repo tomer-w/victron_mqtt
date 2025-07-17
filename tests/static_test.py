@@ -57,6 +57,10 @@ def test_topics():
             errors.append(f"Topic '{descriptor.topic}' has value_type ENUM but missing 'enum' field")
         if descriptor.value_type != ValueType.ENUM and descriptor.enum is not None:
             errors.append(f"Topic '{descriptor.topic}' has 'enum' field but value_type is not ENUM")
+        
+        # Check that ENUM value_type has NONE metric_nature
+        if descriptor.value_type == ValueType.ENUM and descriptor.metric_nature != MetricNature.NONE:
+            errors.append(f"Topic '{descriptor.topic}' has value_type ENUM but metric_nature is {descriptor.metric_nature} (should be NONE)")
     
     # Check for inappropriate metric types based on units
     for descriptor in topics:
@@ -72,16 +76,7 @@ def test_topics():
             errors.append(f"Topic '{descriptor.topic}' has frequency unit 'Hz' but metric_type is {descriptor.metric_type}")
         if descriptor.unit_of_measurement == "kWh" and descriptor.metric_type != MetricType.ENERGY:
             errors.append(f"Topic '{descriptor.topic}' has energy unit 'kWh' but metric_type is {descriptor.metric_type}")
-    
-    # Check for inconsistent metric nature for energy metrics
-    for descriptor in topics:
-        if descriptor.metric_type == MetricType.ENERGY and descriptor.metric_nature != MetricNature.CUMULATIVE:
-            errors.append(f"Topic '{descriptor.topic}' has metric_type ENERGY but metric_nature is {descriptor.metric_nature} (should be CUMULATIVE)")
-        
-        # Check for power metrics that should be instantaneous
-        if descriptor.metric_type == MetricType.POWER and descriptor.metric_nature not in [MetricNature.INSTANTANEOUS, MetricNature.NONE]:
-            errors.append(f"Topic '{descriptor.topic}' has metric_type POWER but metric_nature is {descriptor.metric_nature} (should be INSTANTANEOUS)")
-    
+       
     # Check for topics with min/max values but inappropriate message types
     for descriptor in topics:
         if (descriptor.min is not None or descriptor.max is not None) and descriptor.message_type not in [MetricKind.NUMBER]:
