@@ -93,6 +93,15 @@ def test_topics():
             errors.append(f"Topic '{descriptor.topic}' has frequency unit 'Hz' but metric_type is {descriptor.metric_type}")
         if descriptor.unit_of_measurement == "kWh" and descriptor.metric_type != MetricType.ENERGY:
             errors.append(f"Topic '{descriptor.topic}' has energy unit 'kWh' but metric_type is {descriptor.metric_type}")
+
+    # Check for inconsistent metric nature for energy metrics
+    for descriptor in topics:
+        if descriptor.metric_type == MetricType.ENERGY and descriptor.metric_nature != MetricNature.CUMULATIVE:
+            errors.append(f"Topic '{descriptor.topic}' has metric_type ENERGY but metric_nature is {descriptor.metric_nature} (should be CUMULATIVE)")
+        
+        # Check for power metrics that should be instantaneous
+        if descriptor.metric_type == MetricType.POWER and descriptor.metric_nature not in [MetricNature.INSTANTANEOUS, MetricNature.NONE]:
+            errors.append(f"Topic '{descriptor.topic}' has metric_type POWER but metric_nature is {descriptor.metric_nature} (should be INSTANTANEOUS)")
        
     # Check for topics with min/max values but inappropriate message types
     for descriptor in topics:
