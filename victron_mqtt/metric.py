@@ -28,7 +28,6 @@ class Metric:
         self._descriptor = descriptor
         self._unique_id = unique_id
         self._value = value
-        self._generic_short_id = parsed_topic.get_generic_short_id(descriptor)
         self._phase = parsed_topic.phase
         self._short_id = short_id
         self._name = parsed_topic.get_name(descriptor)
@@ -39,7 +38,7 @@ class Metric:
     def __repr__(self) -> str:
         """Return the string representation of the metric."""
         key_values_str = ", ".join(f"{k}={v}" for k, v in self._key_values.items())
-        key_values_part = f", key_values={{{key_values_str}}}" if key_values_str else ", key_values={}"
+        key_values_part = f"key_values={{{key_values_str}}}" if key_values_str else "key_values={}"
         return (
             f"Metric(unique_id={self.unique_id}, "
             f"descriptor={self._descriptor}, "
@@ -48,7 +47,7 @@ class Metric:
             f"phase={self.phase}, "
             f"device_type={self.device_type}, "
             f"short_id={self.short_id}, "
-            f"short_id={self.name}, "
+            f"name={self.name}, "
             f"{key_values_part})"
             )
 
@@ -89,7 +88,7 @@ class Metric:
     @property
     def generic_short_id(self) -> str:
         """Returns the generic short id of the metric."""
-        return self._generic_short_id
+        return self._descriptor.short_id
 
     @property
     def phase(self) -> str | None:

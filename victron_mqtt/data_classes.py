@@ -139,11 +139,6 @@ class ParsedTopic:
             result_str = result_str.replace(PLACEHOLDER_NEXT_PHASE, ParsedTopic._get_next_Phase(self.phase))
         return result_str
 
-    def get_generic_short_id(self, topic_desc: TopicDescriptor) -> str:
-        short_id = topic_desc.short_id.replace(PLACEHOLDER_PHASE, "lx")
-        short_id = short_id.replace(PLACEHOLDER_NEXT_PHASE, "lx")
-        return short_id
-
     def get_key_values(self, topic_desc: TopicDescriptor) -> dict[str, str]:
         result: dict[str, str] = {}
         if PLACEHOLDER_PHASE in topic_desc.short_id:
