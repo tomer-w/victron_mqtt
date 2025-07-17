@@ -152,7 +152,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/grid/+/Ac/PENVoltage", 
         message_type=MetricKind.SENSOR,
-        short_id="grid_voltage_PEN",
+        short_id="grid_voltage_pen",
         name="Grid voltage on PEN",
         unit_of_measurement="V",
         metric_type=MetricType.VOLTAGE,
@@ -164,7 +164,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/grid/+/Ac/N/Current",
         message_type=MetricKind.SENSOR,
-        short_id="grid_current_N",
+        short_id="grid_current_n",
         name="Grid current on N",
         unit_of_measurement="A",
         metric_type=MetricType.CURRENT,

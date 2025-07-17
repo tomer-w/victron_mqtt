@@ -12,6 +12,7 @@ def test_topics():
     4. Proper enum/value_type combinations
     5. Correct metric nature for energy/power types
     6. Valid topic structure patterns
+    7. Valid short_id format (lowercase letters, numbers, hyphens, underscores, and placeholders; cannot start/end with underscore)
     """
     from victron_mqtt._victron_topics import topics
     from victron_mqtt.constants import MetricKind, ValueType, MetricType, MetricNature
@@ -61,6 +62,22 @@ def test_topics():
         # Check that ENUM value_type has NONE metric_nature
         if descriptor.value_type == ValueType.ENUM and descriptor.metric_nature != MetricNature.NONE:
             errors.append(f"Topic '{descriptor.topic}' has value_type ENUM but metric_nature is {descriptor.metric_nature} (should be NONE)")
+    
+    # Check for valid short_id format
+    import re
+    short_id_pattern = re.compile(r'^[a-z0-9_-]+(?:\{[a-z_]+\}[a-z0-9_-]*)*$')
+    for descriptor in topics:
+        short_id = descriptor.short_id
+        if short_id:
+            # Check if short_id matches the allowed pattern (allowing placeholders like {phase})
+            if not short_id_pattern.match(short_id):
+                errors.append(f"Topic '{descriptor.topic}' has invalid short_id '{short_id}' (must contain only lowercase letters, numbers, hyphens, underscores, and {{placeholders}})")
+            
+            # Check if short_id starts or ends with underscore
+            if short_id.startswith('_'):
+                errors.append(f"Topic '{descriptor.topic}' has short_id '{short_id}' that starts with underscore (not allowed)")
+            if short_id.endswith('_'):
+                errors.append(f"Topic '{descriptor.topic}' has short_id '{short_id}' that ends with underscore (not allowed)")
     
     # Check for inappropriate metric types based on units
     for descriptor in topics:
