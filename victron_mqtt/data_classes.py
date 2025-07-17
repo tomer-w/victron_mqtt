@@ -148,10 +148,10 @@ class ParsedTopic:
         result: dict[str, str] = {}
         if PLACEHOLDER_PHASE in topic_desc.short_id:
             assert self.phase is not None
-            result[PLACEHOLDER_PHASE] = self.phase
+            result[PLACEHOLDER_PHASE.strip("{}")] = self.phase
         if PLACEHOLDER_NEXT_PHASE in topic_desc.short_id:
             assert self.phase is not None
-            result[PLACEHOLDER_PHASE] = ParsedTopic._get_next_Phase(self.phase)
+            result[PLACEHOLDER_NEXT_PHASE.strip("{}")] = ParsedTopic._get_next_Phase(self.phase)
         return result
 
     @staticmethod
