@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 
 from ._victron_enums import DeviceType
-from .constants import PLACEHOLDER_NEXT_PHASE, PLACEHOLDER_PHASE, MetricKind, MetricNature, MetricType, ValueType, VictronEnum
+from .constants import PLACEHOLDER_NEXT_PHASE, PLACEHOLDER_PHASE, MetricKind, MetricNature, MetricType, RangeType, ValueType, VictronEnum
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,8 @@ class TopicDescriptor:
     precision: int | None = 2
     enum: type[VictronEnum] | None = None
     min: int | None = None
-    max: int | None = None
+    max: int | RangeType | None = None
+    is_adjustable_suffix: str | None = None
 
     def __repr__(self) -> str:
         """Return a string representation of the topic."""
@@ -74,6 +75,10 @@ class ParsedTopic:
             f")"
         )
     
+    def __hash__(self):
+        """Make ParsedTopic hashable for use as dictionary keys."""
+        return hash((self.installation_id, self.device_id, self.device_type, self.native_device_type, self.phase, self.wildcards_with_device_type, self.wildcards_without_device_type))
+
     @classmethod
     def __get_index_and_phase(cls, topic_parts: list[str]) -> tuple[int, str | None]:
         """Get the index of the phase and the phase itself."""

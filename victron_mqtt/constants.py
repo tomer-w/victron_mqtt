@@ -45,11 +45,18 @@ class MetricType(Enum):
 class ValueType(Enum):
     """Value types."""
 
+    BOOL = "bool"
     INT = "int"
     INT_DEFAULT_0 = "int_0"
     FLOAT = "float"
     STRING = "str"
     ENUM = "enum"
+
+class RangeType(Enum):
+    """Range types for numeric values."""
+
+    DYNAMIC = "dynamic"  # Dynamic range, e.g., depends on device model
+
 
 PLACEHOLDER_PHASE = "{phase}"
 PLACEHOLDER_NEXT_PHASE = "{next_phase}"

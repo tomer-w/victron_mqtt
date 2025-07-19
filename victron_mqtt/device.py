@@ -5,19 +5,18 @@ from __future__ import annotations
 import asyncio
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+import copy
 
 if TYPE_CHECKING:
     from .hub import Hub
 
-from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_enum
-from .constants import MetricKind
+from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_float
+from .constants import MetricKind, RangeType
 from .metric import Metric
 from ._victron_enums import DeviceType
 from .switch import Switch
-
-if TYPE_CHECKING:
-    from .data_classes import ParsedTopic, TopicDescriptor
+from .data_classes import ParsedTopic, TopicDescriptor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +42,10 @@ class Device:
         self._serial_number = None
         self._firmware_version = None
         self._custom_name = None
-        
+        self._fallback_is_adjustable_first_map: dict[ParsedTopic, bool] = {}
+        self._fallback_data_first_map: dict[ParsedTopic, Any] = {} # Any is payload
+        self._fallback_handled_set: set[str] = set()
+
         if self._device_type == DeviceType.SYSTEM:
             self._model = self._device_name = "Victron Venus"
 
@@ -98,7 +100,7 @@ class Device:
             _LOGGER.warning("Unhandled device property %s for %s", short_id, self.unique_id)
 
     
-    def handle_message(self, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop, hub: Hub) -> None:
+    def handle_message(self, fallback_to_metric_topic:bool, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop, hub: Hub) -> None:
         """Handle a message."""
         _LOGGER.debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 
@@ -106,8 +108,10 @@ class Device:
             self._set_device_property_from_topic(parsed_topic, topic_desc, payload)
             return
         
-        # It is metric or switch
-        value = Device._unwrap_payload(topic_desc, payload)
+        if fallback_to_metric_topic:
+            value = unwrap_bool(payload)
+        else:
+            value = Device._unwrap_payload(topic_desc, payload)
         if value is None:
             _LOGGER.debug(
                 "Ignoring null metric value for device %s metric %s", 
@@ -115,14 +119,48 @@ class Device:
             )
             return
 
+        # It is metric or switch
+        is_adjustable = False
+        new_topic_desc = topic_desc
+        if topic_desc.message_type != MetricKind.SENSOR and topic_desc.is_adjustable_suffix:
+            data_topic = topic.rsplit('/', 1)[0] + '/' + topic_desc.topic.rsplit('/', 1)[1] if fallback_to_metric_topic else topic # need to move from the IsAdjustable topic to the original one
+            if data_topic not in self._fallback_handled_set:
+                if fallback_to_metric_topic:
+                    assert isinstance(value, bool)
+                    data_parsed_topic = ParsedTopic.from_topic(data_topic)
+                    assert data_parsed_topic is not None
+                    stored_payload = self._fallback_data_first_map.pop(data_parsed_topic, None)
+                    if stored_payload is None:
+                        _LOGGER.info("Setting fallback for %s to %s", data_parsed_topic, value)
+                        self._fallback_is_adjustable_first_map[data_parsed_topic] = value
+                        return
+                    is_adjustable = value
+                    # Setting all the values to restore state
+                    payload = stored_payload
+                    value = Device._unwrap_payload(topic_desc, payload)
+                    parsed_topic = data_parsed_topic
+                    topic = data_topic
+                    _LOGGER.info("parsed_topic %s is ready. is_adjustable=%s", data_parsed_topic, is_adjustable)
+                else:
+                    is_adjustable = self._fallback_is_adjustable_first_map.pop(parsed_topic, None)
+                    if is_adjustable is None:
+                        _LOGGER.info("No is_adjustable for %s yet. Storing topic_desc=%s, value=%s", parsed_topic, topic_desc, value)
+                        self._fallback_data_first_map[parsed_topic] = payload
+                        return
+                    _LOGGER.info("Got both topic and isAdjustable value (%s) for %s", is_adjustable, topic_desc)
+                self._fallback_handled_set.add(data_topic)
+                if not is_adjustable:
+                    new_topic_desc = copy.deepcopy(topic_desc)  # Deep copy
+                    new_topic_desc.message_type = MetricKind.SENSOR
+
         short_id = parsed_topic.get_short_id(topic_desc)
         metric_id = f"{self.unique_id}_{short_id}"
 
-        metric = self._get_or_create_metric(metric_id, short_id, topic, parsed_topic, topic_desc, payload, hub)
+        metric = self._get_or_create_metric(metric_id, short_id, topic, parsed_topic, new_topic_desc, hub, payload)
         metric._handle_message(value, event_loop)
 
     @staticmethod
-    def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | type[Enum] | None:
+    def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | bool | type[Enum] | None:
         assert topic_desc.value_type is not None
         unwrapper = VALUE_TYPE_UNWRAPPER[topic_desc.value_type]
         if unwrapper == unwrap_enum:
@@ -131,16 +169,25 @@ class Device:
             return unwrapper(payload)
 
     def _get_or_create_metric(
-        self, metric_id: str, short_id: str, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, hub: Hub
+        self, metric_id: str, short_id: str, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, hub: Hub, payload: str
     ) -> Metric:
         """Get or create a metric."""
         metric = self._metrics.get(metric_id)
         if metric is None:
             _LOGGER.info("Creating new metric: metric_id=%s, short_id=%s", metric_id, short_id)
+            new_topic_desc = topic_desc
+            if topic_desc.max == RangeType.DYNAMIC:
+                max_value = unwrap_float(payload, "max")
+                if max_value is not None:
+                    _LOGGER.info("Setting dynamic max value to %s for %s", max_value, topic_desc)
+                    new_topic_desc = copy.deepcopy(topic_desc)  # Deep copy
+                    new_topic_desc.max = int(max_value)
+                else:
+                    _LOGGER.warning("Expected max value for %s", topic_desc)
             if topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
-                metric = Switch(metric_id, short_id, topic_desc, topic, parsed_topic, payload, hub)
+                metric = Switch(metric_id, short_id, new_topic_desc, topic, parsed_topic, hub)
             else:
-                metric = Metric(metric_id, short_id, topic_desc, parsed_topic, payload)
+                metric = Metric(metric_id, short_id, new_topic_desc, parsed_topic)
             self._metrics[metric_id] = metric
 
         return metric

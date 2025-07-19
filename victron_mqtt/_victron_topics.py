@@ -3,7 +3,7 @@ Maps all the MQTT topics to either attributes or metrics.
 """
 
 from typing import List
-from .constants import MetricKind, MetricNature, MetricType, ValueType
+from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
 from ._victron_enums import DeviceType, InverterMode, GenericOnOff, EvChargerMode, InverterState, TemperatureStatus, TemperatureType
 
@@ -570,7 +570,8 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         precision=0,
         min=0,
-        max=16,
+        max=RangeType.DYNAMIC,  # Dynamic range, depends on device model
+        is_adjustable_suffix = "CurrentLimitIsAdjustable"
     ),
     # integrated system. Note that this might not be currently accurate for all systems
     #  as there are different physical configurations

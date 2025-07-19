@@ -73,6 +73,7 @@ class Hub:
         self._connected_failed = False
         # Replace all {placeholder} patterns with + for MQTT wildcards
         self.topic_map = {Hub._remove_placeholders(desc.topic): desc for desc in topics}
+        self.fallback_map = {Hub._remove_placeholders(desc.topic.rsplit('/', 1)[0] + '/' + desc.is_adjustable_suffix): desc for desc in topics if desc.is_adjustable_suffix}
         _LOGGER.info("Hub initialized")
 
     async def connect(self) -> None:
@@ -126,6 +127,12 @@ class Hub:
         _LOGGER.log(level, buf)
 
     def _on_connect(self, client: MQTTClient, userdata: Any, flags: dict, rc: int, properties: Optional[dict] = None) -> None:
+        try:
+            self._on_connect_internal(client, userdata, flags, rc, properties)
+        except Exception as exc:
+            _LOGGER.exception("_on_connect exception %s: %s", type(exc), exc, exc_info=True)
+
+    def _on_connect_internal(self, client: MQTTClient, userdata: Any, flags: dict, rc: int, properties: Optional[dict] = None) -> None:
         """Handle connection callback."""
         if self._client is None:
             _LOGGER.warning("Got new connection while self._client is None, ignoring")
@@ -148,7 +155,7 @@ class Hub:
         try:
             self._on_message_internal(client, userdata, message)
         except Exception as exc:
-            _LOGGER.error("Exception %s on message handling: %s", type(exc), exc)
+            _LOGGER.exception("_on_message exception %s: %s", type(exc), exc, exc_info=True)
 
     def _on_message_internal(self, client: MQTTClient, userdata: Any, message: mqtt.MQTTMessage) -> None:
         """Process MQTT message asynchronously."""
@@ -186,16 +193,22 @@ class Hub:
             _LOGGER.debug("Ignoring message - could not parse topic: %s", topic)
             return
 
+        fallback_to_metric_topic: bool = False
         desc = self.topic_map.get(parsed_topic.wildcards_with_device_type)
         if desc is None:
             desc = self.topic_map.get(parsed_topic.wildcards_without_device_type)
-
+        if desc is None:
+            desc = self.fallback_map.get(parsed_topic.wildcards_with_device_type)
+            fallback_to_metric_topic = True
+        if desc is None:
+            desc = self.fallback_map.get(parsed_topic.wildcards_without_device_type)
+            fallback_to_metric_topic = True
         if desc is None:
             _LOGGER.debug("Ignoring message - no descriptor found for topic: %s", topic)
             return
 
         device = self._get_or_create_device(parsed_topic, desc)
-        device.handle_message(topic, parsed_topic, desc, payload.decode(), self._loop, self)
+        device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload.decode(), self._loop, self)
 
     async def disconnect(self) -> None:
         """Disconnect from the hub."""
@@ -301,7 +314,7 @@ class Hub:
             value = json.loads(message.payload.decode())
             self._set_nested_dict_value(self._snapshot, topic_parts, value)
         except Exception as exc:
-            _LOGGER.error("Error processing snapshot message: %s", exc)
+            _LOGGER.error("Error processing snapshot message: %s", exc, exc_info=True)
 
     def _on_installation_id_message(
         self,
@@ -353,9 +366,12 @@ class Hub:
         if not self._client.is_connected():
             raise NotConnectedError
         #topic_list = [(topic, 0) for topic in topic_map]
-        for topic in self.topic_map:
+        for topic in self.topic_map.keys():
             self._client.subscribe(topic)
             _LOGGER.debug("Subscribed to: %s", topic)
+        for topic in self.fallback_map.keys():
+            self._client.subscribe(topic)
+            _LOGGER.debug("Subscribed to fallback topic: %s", topic)
 
         self._client.subscribe("N/+/full_publish_completed")
         _LOGGER.info("Subscribed to full_publish_completed notification")

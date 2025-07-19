@@ -287,7 +287,7 @@ def main():
     args = parser.parse_args()
 
     # Configure logging
-    log_level = logging.DEBUG if args.verbose else logging.WARNING
+    log_level = logging.INFO if args.verbose else logging.WARNING
     logging.basicConfig(
         level=log_level,
         format='%(asctime)s - %(name)s - %(levelname)s - [%(thread)d] - %(message)s'

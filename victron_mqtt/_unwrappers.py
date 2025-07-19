@@ -6,7 +6,17 @@ import json
 from victron_mqtt.constants import ValueType, VictronEnum
 
 
-def unwrap_int(json_str):
+def unwrap_bool(json_str) -> bool | None:
+    """Unwrap a boolean value from a JSON string."""
+    try:
+        data = json.loads(json_str)
+        if data["value"] is None:
+            return None
+        return bool(data["value"])
+    except (json.JSONDecodeError, KeyError, ValueError, TypeError):
+        return None
+
+def unwrap_int(json_str) -> int | None:
     """Unwrap an integer value from a JSON string."""
     try:
         data = json.loads(json_str)
@@ -16,8 +26,7 @@ def unwrap_int(json_str):
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
 
-
-def unwrap_int_default_0(json_str):
+def unwrap_int_default_0(json_str) -> int:
     """Unwrap an integer value from a JSON string, defaulting to 0."""
     try:
         data = json.loads(json_str)
@@ -28,18 +37,18 @@ def unwrap_int_default_0(json_str):
         return 0
 
 
-def unwrap_float(json_str):
+def unwrap_float(json_str, json_value: str = "value") -> float | None:
     """Unwrap a float value from a JSON string."""
     try:
         data = json.loads(json_str)
-        if data["value"] is None:
+        if data[json_value] is None:
             return None
-        return float(data["value"])
+        return float(data[json_value])
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
 
 
-def unwrap_string(json_str):
+def unwrap_string(json_str) -> str | None:
     """Unwrap a string value from a JSON string."""
     try:
         data = json.loads(json_str)
@@ -50,7 +59,7 @@ def unwrap_string(json_str):
         return None
 
 
-def unwrap_enum(json_str, enum: type[VictronEnum]):
+def unwrap_enum(json_str, enum: type[VictronEnum]) -> VictronEnum | None:
     """Unwrap a string value from a JSON string."""
     try:
         data = json.loads(json_str)
@@ -91,6 +100,7 @@ def wrap_string(value: str | None) -> str:
 
 
 VALUE_TYPE_UNWRAPPER = {
+    ValueType.BOOL: unwrap_bool,
     ValueType.INT: unwrap_int,
     ValueType.INT_DEFAULT_0: unwrap_int_default_0,
     ValueType.FLOAT: unwrap_float,
