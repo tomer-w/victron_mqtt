@@ -124,6 +124,9 @@ class Device:
         new_topic_desc = topic_desc
         if topic_desc.message_type != MetricKind.SENSOR and topic_desc.is_adjustable_suffix:
             data_topic = topic.rsplit('/', 1)[0] + '/' + topic_desc.topic.rsplit('/', 1)[1] if fallback_to_metric_topic else topic # need to move from the IsAdjustable topic to the original one
+            if fallback_to_metric_topic and data_topic in self._fallback_handled_set:
+                _LOGGER.debug("Already handled fallback for %s", data_topic)
+                return
             if data_topic not in self._fallback_handled_set:
                 if fallback_to_metric_topic:
                     assert isinstance(value, bool)
