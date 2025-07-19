@@ -6,8 +6,8 @@ import logging
 
 
 @pytest.mark.asyncio
-async def test_devices_and_metrics(config_host, config_port, config_username, config_password, config_use_ssl, caplog):
-    hub = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl)
+async def test_devices_and_metrics(config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix):
+    hub = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix)
     await hub.connect()
 
     assert len(hub.devices) > 0

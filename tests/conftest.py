@@ -26,13 +26,16 @@ def config_port():
 
 @pytest.fixture
 def config_username():
-    return os.getenv("VENUS_TEST_USERNAME", None)
+    return os.getenv("VICTRON_TEST_USERNAME", None)
 
 
 @pytest.fixture
 def config_password():
-    return os.getenv("VENUS_TEST_PASSWORD", None)
+    return os.getenv("VICTRON_TEST_PASSWORD", None)
 
+@pytest.fixture
+def config_root_prefix():
+    return os.getenv("VICTRON_TEST_ROOT_PREFIX", None)
 
 @pytest.fixture
 def config_use_ssl() -> bool:

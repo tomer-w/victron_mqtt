@@ -48,11 +48,12 @@ class Hub:
         installation_id: str | None = None,
         model_name: str | None = None,
         serial: str = "noserial",
+        topic_prefix: str | None = None,
     ) -> None:
         """Initialize."""
         _LOGGER.debug(
-            "Initializing Hub(host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s)",
-            host, port, username, use_ssl, installation_id, model_name
+            "Initializing Hub(host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s)",
+            host, port, username, use_ssl, installation_id, model_name, topic_prefix
         )
         self._model_name = model_name
         self.host = host
@@ -63,6 +64,7 @@ class Hub:
         self._client = None
         self.port = port
         self._installation_id = installation_id
+        self._topic_prefix = topic_prefix
         self.logger = logging.getLogger(__name__)
         self._devices: dict[str, Device] = {}
         self._first_refresh_event: asyncio.Event = asyncio.Event()
@@ -163,10 +165,13 @@ class Hub:
         payload = message.payload
         _LOGGER.debug("Message received: topic=%s, payload=%s", topic, payload)
         
+        # Remove topic prefix before processing
+        topic = self._remove_topic_prefix(topic)
+        
         if "full_publish_completed" in topic:
             _LOGGER.info("Full publish completed, unsubscribing from notification")
             if self._client is not None and self._client.is_connected():
-                self._client.unsubscribe("N/+/full_publish_completed")
+                self._unsubscribe("N/+/full_publish_completed")
             self._loop.call_soon_threadsafe(self._first_refresh_event.set)
             return
 
@@ -239,7 +244,8 @@ class Hub:
 
     def publish(self, topic: str, value: PayloadType) -> None:
         assert self._client is not None
-        self._client.publish(topic, value)
+        prefixed_topic = self._add_topic_prefix(topic)
+        self._client.publish(prefixed_topic, value)
 
     async def _keep_alive_loop(self) -> None:
         """Run keep_alive every 30 seconds."""
@@ -283,7 +289,7 @@ class Hub:
         assert self._client is not None
         self._first_refresh_event.clear()
         self._client.on_message = self._on_snapshot_message
-        self._client.subscribe("#")
+        self._subscribe("#")
         _LOGGER.info("Subscribed to all topics for snapshot")
         await self._keep_alive()
         await self._wait_for_first_refresh()
@@ -303,14 +309,15 @@ class Hub:
     ) -> None:
         """Handle snapshot messages synchronously."""
         try:
-            if "full_publish_completed" in message.topic:
+            topic = self._remove_topic_prefix(message.topic)
+            if "full_publish_completed" in topic:
                 _LOGGER.info("Full publish completed, unsubscribing from notification")
                 if self._client is not None:
-                    self._client.unsubscribe("N/+/full_publish_completed")
+                    self._unsubscribe("N/+/full_publish_completed")
                 self._loop.call_soon_threadsafe(self._first_refresh_event.set)
                 return
 
-            topic_parts = message.topic.split("/")
+            topic_parts = topic.split("/")
             value = json.loads(message.payload.decode())
             self._set_nested_dict_value(self._snapshot, topic_parts, value)
         except Exception as exc:
@@ -324,7 +331,8 @@ class Hub:
     ) -> None:
         """Handle installation ID messages synchronously."""
         try:
-            topic_parts = message.topic.split("/")
+            topic = self._remove_topic_prefix(message.topic)
+            topic_parts = topic.split("/")
             if len(topic_parts) == 5 and topic_parts[2:5] == ["system", "0", "Serial"]:
                 payload_json = json.loads(message.payload.decode())
                 self._installation_id = payload_json.get("value")
@@ -344,20 +352,48 @@ class Hub:
             _LOGGER.error("Cannot read installation ID - client not connected")
             raise NotConnectedError
 
-        self._client.subscribe(TOPIC_INSTALLATION_ID)
+        self._subscribe(TOPIC_INSTALLATION_ID)
         try:
             await asyncio.wait_for(self._installation_id_event.wait(), timeout=60)
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout waiting for installation ID")
             raise
         if self._client is not None:
-            self._client.unsubscribe(TOPIC_INSTALLATION_ID)
+            self._unsubscribe(TOPIC_INSTALLATION_ID)
         _LOGGER.info("Installation ID read successfully: %s", self.installation_id)
         return str(self.installation_id)
 
     @staticmethod
     def _remove_placeholders(topic: str) -> str:
         return re.sub(r'\{[^}]+\}', '+', topic)
+
+    def _add_topic_prefix(self, topic: str) -> str:
+        """Add the topic prefix to a topic if configured."""
+        if self._topic_prefix is None:
+            return topic
+        return f"{self._topic_prefix}/{topic}"
+
+    def _remove_topic_prefix(self, topic: str) -> str:
+        """Remove the topic prefix from a topic if configured."""
+        if self._topic_prefix is None:
+            return topic
+        if topic.startswith(f"{self._topic_prefix}/"):
+            return topic[len(self._topic_prefix) + 1:]
+        return topic
+
+    def _subscribe(self, topic: str) -> None:
+        """Subscribe to a topic with automatic prefix handling."""
+        assert self._client is not None
+        prefixed_topic = self._add_topic_prefix(topic)
+        self._client.subscribe(prefixed_topic)
+        _LOGGER.debug("Subscribed to: %s", prefixed_topic)
+
+    def _unsubscribe(self, topic: str) -> None:
+        """Unsubscribe from a topic with automatic prefix handling."""
+        assert self._client is not None
+        prefixed_topic = self._add_topic_prefix(topic)
+        self._client.unsubscribe(prefixed_topic)
+        _LOGGER.debug("Unsubscribed from: %s", prefixed_topic)
 
     def _setup_subscriptions(self) -> None:
         """Subscribe to list of topics."""
@@ -367,13 +403,11 @@ class Hub:
             raise NotConnectedError
         #topic_list = [(topic, 0) for topic in topic_map]
         for topic in self.topic_map.keys():
-            self._client.subscribe(topic)
-            _LOGGER.debug("Subscribed to: %s", topic)
+            self._subscribe(topic)
         for topic in self.fallback_map.keys():
-            self._client.subscribe(topic)
-            _LOGGER.debug("Subscribed to fallback topic: %s", topic)
+            self._subscribe(topic)
 
-        self._client.subscribe("N/+/full_publish_completed")
+        self._subscribe("N/+/full_publish_completed")
         _LOGGER.info("Subscribed to full_publish_completed notification")
 
     async def _wait_for_connect(self) -> None:
@@ -444,6 +478,11 @@ class Hub:
     def model_name(self) -> str | None:
         """Return the model name."""
         return self._model_name
+
+    @property
+    def topic_prefix(self) -> str | None:
+        """Return the topic prefix."""
+        return self._topic_prefix
 
     @property
     def connected(self) -> bool:

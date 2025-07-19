@@ -8,10 +8,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 @pytest.mark.asyncio
-async def test_connect(config_host, config_port, config_username, config_password, config_use_ssl, caplog):
+async def test_connect(config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix):
     """Tests whether the client can connect to a Venus device. Disconnects after passing the test."""
     logger.debug("Starting test_connect")
-    hub = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl)
+    hub = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix)
     await hub.connect()
     logger.debug("Connected to hub")
     assert hub.connected
@@ -23,13 +23,13 @@ async def test_connect(config_host, config_port, config_username, config_passwor
     assert len(error_logs) == 0, f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"
 
 @pytest.mark.asyncio
-async def test_create_full_raw_snapshot(config_host, config_port, config_username, config_password, config_use_ssl, caplog):
+async def test_create_full_raw_snapshot(config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix):
     """
     Tests whether the client can connect to a Venus device and verify the connection details by
     checking whether a serial number could be obtained.
     """
     logger.debug("Starting test_create_full_raw_snapshot")
-    hub = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl)
+    hub = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix)
     await hub.connect()
     logger.debug("Connected to hub")
     snapshot = await hub.create_full_raw_snapshot()
