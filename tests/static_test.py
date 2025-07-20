@@ -2,6 +2,8 @@
 
 import pytest
 
+from victron_mqtt._victron_enums import GenericOnOff
+
 def test_topics():
     """Tests the topics list for various mistakes and inconsistencies.
     
@@ -62,7 +64,16 @@ def test_topics():
         # Check that ENUM value_type has NONE metric_nature
         if descriptor.value_type == ValueType.ENUM and descriptor.metric_nature != MetricNature.NONE:
             errors.append(f"Topic '{descriptor.topic}' has value_type ENUM but metric_nature is {descriptor.metric_nature} (should be NONE)")
-    
+
+    # Check that topics with 'enum' are of MetricKind.SELECT, MetricKind.SENSOR, or MetricKind.SWITCH
+    # Allow MetricKind.BINARY_SENSOR only for GenericOnOff enum
+    for descriptor in topics:
+        if descriptor.enum is not None:
+            if descriptor.enum == GenericOnOff and descriptor.message_type == MetricKind.BINARY_SENSOR:
+                continue
+            if descriptor.message_type not in [MetricKind.SELECT, MetricKind.SENSOR, MetricKind.SWITCH]:
+                errors.append(f"Topic '{descriptor.topic}' has 'enum' but message_type is {descriptor.message_type} (should be SELECT, SENSOR, SWITCH, or BINARY_SENSOR for GenericOnOff)")
+
     # Check for valid short_id format
     import re
     short_id_pattern = re.compile(r'^[a-z0-9_-]+(?:\{[a-z_]+\}[a-z0-9_-]*)*$')
@@ -145,6 +156,11 @@ def test_topics():
             if part in ['L1', 'L2', 'L3']:
                 errors.append(f"Topic '{topic}' contains literal phase identifier '{part}' - use '+' placeholder instead")
     
+    # Check for invalid characters in topic strings
+    for descriptor in topics:
+        if '//' in descriptor.topic:
+            errors.append(f"Topic '{descriptor.topic}' contains invalid '//' sequence")
+    
     # Report all errors
     if errors:
         error_message = "\n".join([f"  - {error}" for error in errors])
@@ -152,4 +168,17 @@ def test_topics():
     
     # If we reach here, all tests passed
     assert len(topics) > 0, "topics should not be empty"
+
+def test_victron_enum_in_init():
+    """Ensure all VictronEnum-derived enums are included in __init__.py's __all__."""
+    from victron_mqtt.constants import VictronEnum
+    from victron_mqtt import __all__
+
+    # Collect all subclasses of VictronEnum
+    victron_enum_classes = [cls.__name__ for cls in VictronEnum.__subclasses__()]
+
+    # Check if all subclasses are in __all__
+    missing_enums = [enum for enum in victron_enum_classes if enum not in __all__]
+
+    assert not missing_enums, f"The following VictronEnum-derived enums are missing in __init__.py's __all__: {missing_enums}"
 

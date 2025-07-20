@@ -51,7 +51,26 @@ class Hub:
         topic_prefix: str | None = None,
     ) -> None:
         """Initialize."""
-        _LOGGER.debug(
+        # Parameter validation
+        if not isinstance(host, str) or not host:
+            raise ValueError("host must be a non-empty string")
+        if not isinstance(port, int) or not (0 < port < 65536):
+            raise ValueError("port must be an integer between 1 and 65535")
+        if username is not None and not isinstance(username, str):
+            raise TypeError("username must be a string or None")
+        if password is not None and not isinstance(password, str):
+            raise TypeError("password must be a string or None")
+        if not isinstance(use_ssl, bool):
+            raise TypeError("use_ssl must be a boolean")
+        if installation_id is not None and not isinstance(installation_id, str):
+            raise TypeError("installation_id must be a string or None")
+        if model_name is not None and not isinstance(model_name, str):
+            raise TypeError("model_name must be a string or None")
+        if not isinstance(serial, str):
+            raise TypeError("serial must be a string")
+        if topic_prefix is not None and not isinstance(topic_prefix, str):
+            raise TypeError("topic_prefix must be a string or None")
+        _LOGGER.info(
             "Initializing Hub(host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s)",
             host, port, username, use_ssl, installation_id, model_name, topic_prefix
         )
@@ -122,7 +141,7 @@ class Hub:
             await self._wait_for_first_refresh()
             _LOGGER.info("Devices and metrics initialized. Found %d devices", len(self._devices))
         except Exception as exc:
-            _LOGGER.error("Failed to connect to MQTT broker: %s", exc)
+            _LOGGER.error("Failed to connect to MQTT broker: %s", exc, exc_info=True)
             raise CannotConnectError(f"Failed to connect to MQTT broker: {exc}") from exc
 
     def _on_log(self, client: MQTTClient, userdata: Any, level:int, buf:str) -> None:

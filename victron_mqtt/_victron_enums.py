@@ -13,6 +13,8 @@ class DeviceType(VictronEnum):
     EVCHARGER = ("evcharger", "EV Charging Station")
     PVINVERTER = ("pvinverter", "PV Inverter")
     TEMPERATURE = ("temperature", "Temperature")
+    GENERATOR = ("generator", "Generator")
+    TANK = ("tank", "Liquid Tank")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""
@@ -43,6 +45,11 @@ class InverterState(VictronEnum):
     Sustain = (244, "Sustain")
     ExternalControl = (252, "External Control")
 
+class InverterOverloadAlarmEnum(VictronEnum):
+    NoAlarm = (0, "No Alarm")
+    Warning = (1, "Warning")
+    Alarm = (2, "Alarm")
+
 class EvChargerMode(VictronEnum):
     """EVCharger Mode Enum"""
     Manual = (0, "Manual")
@@ -66,3 +73,18 @@ class TemperatureType(VictronEnum):
     Outdoor = (4, "Outdoor")
     WaterHeater = (5, "Water Heater")
     Freezer = (6, "Freezer")
+
+class FluidType(VictronEnum):
+    """Fluid type enum"""
+    Fuel = (0, "Fuel")
+    FreshWater = (1, "Fresh Water")
+    WasteWater = (2, "Waste Water")
+    LiveWell = (3, "Live Well")
+    Oil = (4, "Oil")
+    BlackWater = (5, "Black water (sewage)")
+    Gasoline = (6, "Gasoline")
+    Diesel = (7, "Diesel")
+    LPG = (8, "Liquid  Petroleum Gas (LPG)")
+    LNG = (9, "Liquid Natural Gas (LNG)")
+    HydraulicOil = (10, "Hydraulic oil")
+    RawWater = (11, "Raw water")

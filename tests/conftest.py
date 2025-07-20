@@ -11,8 +11,17 @@ VENUS_TEST_USE_SSL - Whether to use SSL for the connection. Default False
 
 import os
 import pytest
+import traceback
+import asyncio
 
+orig_close = asyncio.BaseEventLoop.close
 
+def debug_close(self):
+    print("Event loop is being closed. Call stack:")
+    traceback.print_stack()
+    orig_close(self)
+
+asyncio.BaseEventLoop.close = debug_close
 
 @pytest.fixture
 def config_host():

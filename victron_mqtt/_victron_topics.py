@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import DeviceType, InverterMode, GenericOnOff, EvChargerMode, InverterState, TemperatureStatus, TemperatureType
+from ._victron_enums import DeviceType, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, TemperatureStatus, TemperatureType
 
 topics: List[TopicDescriptor] = [
     # generic device attributes
@@ -54,7 +54,6 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.NONE,
         value_type=ValueType.INT,
-        precision=0,
     ),
     TopicDescriptor(
         topic="N/+/+/+/FirmwareVersion",
@@ -262,7 +261,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/solarcharger/+/Dc/0/Voltage",
         message_type=MetricKind.SENSOR,
-        short_id="solar_voltage",
+        short_id="solarcharger_voltage",
         name="DC Bus voltage",
         unit_of_measurement="V",
         metric_type=MetricType.VOLTAGE,
@@ -274,7 +273,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/solarcharger/+/Dc/0/Current",
         message_type=MetricKind.SENSOR,
-        short_id="solar_current",
+        short_id="solarcharger_current",
         name="DC current",
         unit_of_measurement="A",
         metric_type=MetricType.CURRENT,
@@ -286,7 +285,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/solarcharger/+/Yield/Power",
         message_type=MetricKind.SENSOR,
-        short_id="solar_power",
+        short_id="solarcharger_power",
         name="Power",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -298,8 +297,32 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/solarcharger/+/Yield/User",
         message_type=MetricKind.SENSOR,
-        short_id="solar_yield",
-        name="Yield",
+        short_id="solarcharger_yield_total",
+        name="Total Yield",
+        unit_of_measurement="kWh",
+        metric_type=MetricType.ENERGY,
+        metric_nature=MetricNature.CUMULATIVE,
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/History/Daily/0/Yield",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_yield_today",
+        name="Yield Today",
+        unit_of_measurement="kWh",
+        metric_type=MetricType.ENERGY,
+        metric_nature=MetricNature.CUMULATIVE,
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/History/Daily/1/Yield",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_yield_yesterday",
+        name="Yield Yesterday",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
         metric_nature=MetricNature.CUMULATIVE,
@@ -310,8 +333,20 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/solarcharger/+/History/Daily/0/MaxPower",
         message_type=MetricKind.SENSOR,
-        short_id="solar_max_power",
+        short_id="solarcharger_max_power_today",
         name="Max Power Today",
+        unit_of_measurement="W",
+        metric_type=MetricType.POWER,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/History/Daily/1/MaxPower",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_max_power_yesterday",
+        name="Max Power Yesterday",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
@@ -393,6 +428,17 @@ topics: List[TopicDescriptor] = [
         precision=1,
     ),
     TopicDescriptor(
+        topic="N/+/battery/+/History/AutomaticSyncs",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_automatic_syncs",
+        name="Automatic syncs",
+        unit_of_measurement="count",
+        metric_type=MetricType.NONE,
+        metric_nature=MetricNature.CUMULATIVE,
+        device_type=DeviceType.BATTERY,
+        value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
         topic="N/+/battery/+/Capacity",
         message_type=MetricKind.SENSOR,
         short_id="battery_capacity",
@@ -451,6 +497,17 @@ topics: List[TopicDescriptor] = [
         device_type=DeviceType.BATTERY,
         value_type=ValueType.FLOAT,
         precision=3,
+    ),
+    TopicDescriptor(
+        topic="N/+/battery/+/TimeToGo",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_time_to_go",
+        name="Battery time to go",
+        unit_of_measurement="s",
+        metric_type=MetricType.TIME,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.BATTERY,
+        value_type=ValueType.INT,
     ),
     # inverter
     TopicDescriptor(
@@ -559,6 +616,17 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
+        topic="N/+/vebus/+/Alarms/Overload",
+        message_type=MetricKind.SENSOR,
+        short_id="inverter_alarm_overload",
+        name="Inverter overload alarm",
+        metric_type=MetricType.NONE,
+        metric_nature=MetricNature.NONE,
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=InverterOverloadAlarmEnum,
+    ),
+    TopicDescriptor(
         topic="N/+/vebus/+/Ac/ActiveIn/CurrentLimit",
         message_type=MetricKind.NUMBER,
         short_id="inverter_current_limit",
@@ -568,7 +636,6 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.INVERTER,
         value_type=ValueType.INT,
-        precision=0,
         min=0,
         max=RangeType.DYNAMIC,  # Dynamic range, depends on device model
         is_adjustable_suffix = "CurrentLimitIsAdjustable"
@@ -633,6 +700,30 @@ topics: List[TopicDescriptor] = [
         device_type=DeviceType.SYSTEM,
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+    ),
+    TopicDescriptor(
+        topic="N/+/system/+/Ac/Genset/{phase}/Power",
+        message_type=MetricKind.SENSOR,
+        short_id="system_generator_load_{phase}",
+        name="Genset Load {phase}",
+        unit_of_measurement="W",
+        metric_type=MetricType.POWER,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.FLOAT,
+        precision=1
+    ),
+    TopicDescriptor(
+        topic="N/+/system/+/Ac/Grid/{phase}/Power",
+        message_type=MetricKind.SENSOR,
+        short_id="system_grid_power_{phase}",
+        name="Grid Power {phase}",
+        unit_of_measurement="W",
+        metric_type=MetricType.POWER,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.FLOAT,
+        precision=1
     ),
     # evcharger
     TopicDescriptor(
@@ -702,7 +793,6 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.EVCHARGER,
         value_type=ValueType.INT,
-        precision=0,
         min=0,
         max=16,
     ),
@@ -710,7 +800,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/pvinverter/+/Ac/{phase}/Voltage",
         message_type=MetricKind.SENSOR,
-        short_id="solar_voltage_{phase}",
+        short_id="pvinverter_voltage_{phase}",
         name="Voltage {phase}",
         unit_of_measurement="V",
         metric_type=MetricType.VOLTAGE,
@@ -722,7 +812,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/pvinverter/+/Ac/{phase}/Current",
         message_type=MetricKind.SENSOR,
-        short_id="solar_current_{phase}",
+        short_id="pvinverter_current_{phase}",
         name="Current {phase}",
         unit_of_measurement="A",
         metric_type=MetricType.CURRENT,
@@ -734,7 +824,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/pvinverter/+/Ac/Power",
         message_type=MetricKind.SENSOR,
-        short_id="solar_power_total",
+        short_id="pvinverter_power_total",
         name="Power Total",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -746,7 +836,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/pvinverter/+/Ac/{phase}/Power",
         message_type=MetricKind.SENSOR,
-        short_id="solar_power_{phase}",
+        short_id="pvinverter_power_{phase}",
         name="Power {phase}",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -758,7 +848,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/pvinverter/+/Ac/Energy/Forward",
         message_type=MetricKind.SENSOR,
-        short_id="solar_yield_total",
+        short_id="pvinverter_yield_total",
         name="Total Yield",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
@@ -770,7 +860,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/pvinverter/+/Ac/{phase}/Energy/Forward",
         message_type=MetricKind.SENSOR,
-        short_id="solar_yield_{phase}",
+        short_id="pvinverter_yield_{phase}",
         name="Yield {phase}",
         unit_of_measurement="kWh",
         metric_type=MetricType.ENERGY,
@@ -789,7 +879,7 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.TEMPERATURE,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.TEMPERATURE,
-        value_type=ValueType.INT,
+        value_type=ValueType.FLOAT,
         precision=1,
     ),
     TopicDescriptor(
@@ -838,4 +928,39 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         precision=2,
     ),
+    #Tanks
+    TopicDescriptor(
+        topic="N/+/tank/+/Level",
+        message_type=MetricKind.SENSOR,
+        short_id="tank_level",
+        name="Level",
+        unit_of_measurement="%",
+        metric_type=MetricType.PERCENTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.TANK,
+        value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
+        topic="N/+/tank/+/Remaining",
+        message_type=MetricKind.SENSOR,
+        short_id="tank_remaining",
+        name="Remaining",
+        unit_of_measurement="m3",
+        metric_type=MetricType.LIQUID_VOLUME,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.TANK,
+        value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
+        topic="N/+/tank/+/Temperature",
+        message_type=MetricKind.SENSOR,
+        short_id="tank_temperature",
+        name="Temperature",
+        unit_of_measurement="°C",
+        metric_type=MetricType.TEMPERATURE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.TANK,
+        value_type=ValueType.INT,
+    ),
+
 ]

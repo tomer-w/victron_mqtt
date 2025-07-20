@@ -4,17 +4,20 @@ import pytest
 import victron_mqtt
 import logging
 
+from victron_mqtt._victron_enums import DeviceType
+from victron_mqtt.hub import Hub
+
 
 @pytest.mark.asyncio
 async def test_devices_and_metrics(config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix):
-    hub = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix)
+    hub = Hub(config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix)
     await hub.connect()
 
     assert len(hub.devices) > 0
 
     for device in hub.devices:
         assert device.device_type is not None
-        if device.device_type == victron_mqtt.DeviceType.UNKNOWN:
+        if device.device_type == DeviceType.UNKNOWN or device.device_type == DeviceType.GENERATOR:
             continue
         assert len(device.metrics) > 0
 

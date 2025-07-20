@@ -48,7 +48,7 @@ class TopicDescriptor:
     
     def __post_init__(self):
         assert self.message_type == MetricKind.ATTRIBUTE or self.name is not None
-        if self.value_type in [ValueType.STRING, ValueType.ENUM]:
+        if self.value_type != ValueType.FLOAT:
             self.precision = None
 
 @dataclass

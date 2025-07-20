@@ -40,6 +40,7 @@ class MetricType(Enum):
     TIME = "time"
     PERCENTAGE = "percentage"
     ELECTRIC_STORAGE_CAPACITY = "electric_storage_capacity"
+    LIQUID_VOLUME = "liquid_volume"
 
 
 class ValueType(Enum):
