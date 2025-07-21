@@ -95,7 +95,7 @@ class Solarchargerstate(VictronEnum):
     MPPTactive = (2, "MPPT active")
     Notavailable = (255, "Not available")
 
-class Essmode(VictronEnum):
+class ESSMode(VictronEnum):
     selfconsumptionbatterylife = (0, "self consumption (batterylife))
     selfconsumption = (1, "self consumption)
     keepcharger = (2, "keep charged")
