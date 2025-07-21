@@ -949,7 +949,8 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.LIQUID_VOLUME,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.TANK,
-        value_type=ValueType.INT,
+        value_type=ValueType.FLOAT,
+        precision=2,
     ),
     TopicDescriptor(
         topic="N/+/tank/+/Temperature",
@@ -960,7 +961,8 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.TEMPERATURE,
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.TANK,
-        value_type=ValueType.INT,
+        value_type=ValueType.FLOAT,
+        precision=1,
     ),
 
 ]
