@@ -91,12 +91,12 @@ class FluidType(VictronEnum):
     
 class SolarChargerState(VictronEnum):
     Off = (0, "Off")
-    VoltageCurrentLimited = (1, "Voltage/current limited)
+    VoltageCurrentLimited = (1, "Voltage/current limited")
     MPPTActive = (2, "MPPT active")
     NotavAilable = (255, "Not available")
 
 class ESSMode(VictronEnum):
-    SelfConsumptionBatterylife = (0, "self consumption (batterylife))
-    SelfConsumption = (1, "self consumption)
+    SelfConsumptionBatterylife = (0, "self consumption (batterylife)")
+    SelfConsumption = (1, "self consumption")
     KeepCharged = (2, "keep charged")
-    ExternalControl = (3, "External control)
+    ExternalControl = (3, "External control")
