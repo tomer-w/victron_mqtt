@@ -88,8 +88,15 @@ class FluidType(VictronEnum):
     LNG = (9, "Liquid Natural Gas (LNG)")
     HydraulicOil = (10, "Hydraulic oil")
     RawWater = (11, "Raw water")
+    
 class Solarchargerstate(VictronEnum):
     Off = (0, "Off")
     Voltage/Current_limited = (1, "Voltage/current limited)
     MPPTactive = (2, "MPPT active")
     Notavailable = (255, "Not available")
+
+class Essmode(VictronEnum):
+    selfconsumptionbatterylife = (0, "self consumption (batterylife))
+    selfconsumption = (1, "self consumption)
+    keepcharger = (2, "keep charged")
+    externalcontrol = (3, "External control)
