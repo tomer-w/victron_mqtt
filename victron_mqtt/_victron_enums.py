@@ -5,7 +5,7 @@ class DeviceType(VictronEnum):
 
     UNKNOWN = ("unknown", "Unknown Device")
     SYSTEM = ("system", "System")
-    SOLAR_CHARGER = ("solarcharger", "Solar Charger")
+    SOLAR_CHARGER = ("solar_charger", "Solar Charger")
     INVERTER = ("inverter", "Inverter")
     BATTERY = ("battery", "Battery")
     GRID = ("grid", "Grid")
@@ -15,6 +15,7 @@ class DeviceType(VictronEnum):
     TEMPERATURE = ("temperature", "Temperature")
     GENERATOR = ("generator", "Generator")
     TANK = ("tank", "Liquid Tank")
+    MULTI_RS_SOLAR = ("multi_rs_solar", "Multi RS Solar")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""
