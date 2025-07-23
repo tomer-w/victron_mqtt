@@ -17,6 +17,7 @@ class DeviceType(VictronEnum):
     GENERATOR = ("generator", "Generator")
     TANK = ("tank", "Liquid Tank")
     MULTI_RS_SOLAR = ("multi", "Multi RS Solar")
+    SETTINGS = ("settings", "Settings")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""

@@ -18,7 +18,7 @@ orig_close = asyncio.BaseEventLoop.close
 
 def debug_close(self):
     print("Event loop is being closed. Call stack:")
-    traceback.print_stack()
+    #traceback.print_stack()
     orig_close(self)
 
 asyncio.BaseEventLoop.close = debug_close

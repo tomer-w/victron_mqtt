@@ -1121,7 +1121,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=ESSMode,
     ),             
-#ESS Information
+    #ESS Information
     TopicDescriptor(
         topic="N/+/multi/+/Ess/AcPowerSetpoint",
         message_type=MetricKind.SENSOR,
@@ -1145,6 +1145,20 @@ topics: List[TopicDescriptor] = [
         device_type=DeviceType.MULTI_RS_SOLAR,
         value_type=ValueType.FLOAT,
         precision=1,
-    ),    
+    ),
+    # Settings
+    TopicDescriptor(
+        topic="N/+/settings/+/Settings/CGwacs/AcPowerSetPoint",
+        message_type=MetricKind.NUMBER,
+        short_id="cgwacs_ac_power_set_point",
+        name="CGwacs AC Power Setpoint",
+        unit_of_measurement="W",
+        metric_type=MetricType.POWER,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SETTINGS,
+        value_type=ValueType.INT,
+        min=RangeType.DYNAMIC,  # Dynamic range, depends on device model,
+        max=RangeType.DYNAMIC,  # Dynamic range, depends on device model
+    ),
         
 ]

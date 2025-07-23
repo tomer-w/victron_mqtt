@@ -120,7 +120,7 @@ class Metric:
         return self._descriptor.precision
 
     @property
-    def min_value(self) -> int | None:
+    def min_value(self) -> int | RangeType | None:
         return self._descriptor.min
 
     @property

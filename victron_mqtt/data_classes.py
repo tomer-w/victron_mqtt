@@ -25,7 +25,7 @@ class TopicDescriptor:
     value_type: ValueType | None = None
     precision: int | None = 2
     enum: type[VictronEnum] | None = None
-    min: int | None = None
+    min: int | RangeType | None = None
     max: int | RangeType | None = None
     is_adjustable_suffix: str | None = None
 

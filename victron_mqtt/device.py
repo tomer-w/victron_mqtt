@@ -157,6 +157,9 @@ class Device:
         metric_id = f"{self.unique_id}_{short_id}"
 
         metric = self._get_or_create_metric(metric_id, short_id, topic, parsed_topic, new_topic_desc, hub, payload)
+        if metric is None:
+            _LOGGER.warning("Failed to create metric for %s. payload=%s", topic, payload)
+            return
         metric._handle_message(value, event_loop)
 
     @staticmethod
@@ -170,25 +173,37 @@ class Device:
 
     def _get_or_create_metric(
         self, metric_id: str, short_id: str, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, hub: Hub, payload: str
-    ) -> Metric:
+    ) -> Metric | None:
         """Get or create a metric."""
         metric = self._metrics.get(metric_id)
-        if metric is None:
-            _LOGGER.info("Creating new metric: metric_id=%s, short_id=%s", metric_id, short_id)
-            new_topic_desc = topic_desc
-            if topic_desc.max == RangeType.DYNAMIC:
-                max_value = unwrap_float(payload, "max")
-                if max_value is not None:
-                    _LOGGER.info("Setting dynamic max value to %s for %s", max_value, topic_desc)
-                    new_topic_desc = copy.deepcopy(topic_desc)  # Deep copy
-                    new_topic_desc.max = int(max_value)
-                else:
-                    _LOGGER.warning("Expected max value for %s", topic_desc)
-            if topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
-                metric = Switch(metric_id, short_id, new_topic_desc, topic, parsed_topic, hub)
+        if metric is not None:
+            return metric
+
+        _LOGGER.info("Creating new metric: metric_id=%s, short_id=%s", metric_id, short_id)
+        new_topic_desc = topic_desc
+        if topic_desc.max == RangeType.DYNAMIC:
+            max_value = unwrap_float(payload, "max")
+            if max_value is not None:
+                _LOGGER.info("Setting dynamic max value to %s for %s", max_value, topic_desc)
+                new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
+                new_topic_desc.max = int(max_value)
             else:
-                metric = Metric(metric_id, short_id, new_topic_desc, parsed_topic)
-            self._metrics[metric_id] = metric
+                _LOGGER.warning("Expected max value for %s", new_topic_desc)
+                return None
+        if topic_desc.min == RangeType.DYNAMIC:
+            min_value = unwrap_float(payload, "min")
+            if min_value is not None:
+                _LOGGER.info("Setting dynamic min value to %s for %s", min_value, topic_desc)
+                new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
+                new_topic_desc.min = int(min_value)
+            else:
+                _LOGGER.warning("Expected min value for %s", new_topic_desc)
+                return None
+        if topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
+            metric = Switch(metric_id, short_id, new_topic_desc, topic, parsed_topic, hub)
+        else:
+            metric = Metric(metric_id, short_id, new_topic_desc, parsed_topic)
+        self._metrics[metric_id] = metric
 
         return metric
 

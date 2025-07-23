@@ -136,6 +136,27 @@ async def test_placeholder_message(create_mocked_hub):
     assert metric.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric.value}"
 
 @pytest.mark.asyncio
+async def test_dynamic_min_max_message(create_mocked_hub):
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    hub, connect_task = await create_mocked_hub
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/settings/0/Settings/CGwacs/AcPowerSetPoint", '{"max": 1000000, "min": -1000000, "value": 50}')
+    await finalize_injection(hub, connect_task)
+
+    # Validate the Hub's state
+    assert len(hub._devices) == 1, f"Expected 1 device, got {len(hub._devices)}"
+
+    # Validate that the device has the metric we published
+    device = list(hub._devices.values())[0]
+    metric = device.get_metric_from_unique_id("123_settings_0_cgwacs_ac_power_set_point")
+    assert metric is not None, "Metric should exist in the device"
+    assert isinstance(metric, Switch), f"Expected metric to be of type Switch, got {type(metric)}"
+    assert metric.value == 50, f"Expected metric value to be 50, got {metric.value}"
+    assert metric.min_value == -1000000, f"Expected metric min to be -1000000, got {metric.min_value}"
+    assert metric.max_value == 1000000, f"Expected metric max to be 1000000, got {metric.max_value}"
+
+@pytest.mark.asyncio
 async def test_number_message(create_mocked_hub):
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
     hub, connect_task = await create_mocked_hub
