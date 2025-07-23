@@ -2,10 +2,11 @@ from .constants import VictronEnum
 
 class DeviceType(VictronEnum):
     """Type of device."""
-
+    # This is used to identify the type of device in the system.
+    # BEWARE!!! The code is used for mapping from the victron topic, IT IS NOT RANDOM FREE TEXT. The string is used for display purposes.
     UNKNOWN = ("unknown", "Unknown Device")
     SYSTEM = ("system", "System")
-    SOLAR_CHARGER = ("solar_charger", "Solar Charger")
+    SOLAR_CHARGER = ("solarcharger", "Solar Charger")
     INVERTER = ("inverter", "Inverter")
     BATTERY = ("battery", "Battery")
     GRID = ("grid", "Grid")
@@ -15,7 +16,7 @@ class DeviceType(VictronEnum):
     TEMPERATURE = ("temperature", "Temperature")
     GENERATOR = ("generator", "Generator")
     TANK = ("tank", "Liquid Tank")
-    MULTI_RS_SOLAR = ("multi_rs_solar", "Multi RS Solar")
+    MULTI_RS_SOLAR = ("multi", "Multi RS Solar")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""
