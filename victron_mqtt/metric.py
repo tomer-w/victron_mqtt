@@ -29,10 +29,9 @@ class Metric:
         self._descriptor = descriptor
         self._unique_id = unique_id
         self._value = None
-        self._phase = parsed_topic.phase
         self._short_id = short_id
-        self._name = parsed_topic.get_name(descriptor)
-        self._key_values: dict[str, str] = parsed_topic.get_key_values(descriptor)
+        self._name = parsed_topic.name
+        self._key_values: dict[str, str] = parsed_topic.key_values
         self._on_update: Callable | None = None
         _LOGGER.debug("Metric %s initialized", repr(self))
 
@@ -45,7 +44,6 @@ class Metric:
             f"descriptor={self._descriptor}, "
             f"value={self.value}, "
             f"generic_short_id={self.generic_short_id}, "
-            f"phase={self.phase}, "
             f"device_type={self.device_type}, "
             f"short_id={self.short_id}, "
             f"name={self.name}, "
@@ -90,11 +88,6 @@ class Metric:
     def generic_short_id(self) -> str:
         """Returns the generic short id of the metric."""
         return self._descriptor.short_id
-
-    @property
-    def phase(self) -> str | None:
-        """Returns the phase of the metric if referring to a specific AC phase. None if not relevant"""
-        return self._phase
 
     @property
     def unit_of_measurement(self) -> str | None:
@@ -146,7 +139,7 @@ class Metric:
     @property
     def key_values(self) -> dict[str, str]:
         """Return the key_values dictionary as read-only."""
-        return self._key_values.copy()
+        return self._key_values
 
     @property
     def on_update(self) -> Callable | None:

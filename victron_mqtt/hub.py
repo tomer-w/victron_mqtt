@@ -93,14 +93,23 @@ class Hub:
         self._connected_event = asyncio.Event()
         self._connected_failed = False
         # Replace all {placeholder} patterns with + for MQTT wildcards
-        self.topic_map = {Hub._remove_placeholders(desc.topic): desc for desc in topics}
-        self.fallback_map = {Hub._remove_placeholders(desc.topic.rsplit('/', 1)[0] + '/' + desc.is_adjustable_suffix): desc for desc in topics if desc.is_adjustable_suffix}
+
+        def merge_is_adjustable_suffix(desc: TopicDescriptor) -> str:
+            """Merge the topic with its adjustable suffix."""
+            assert desc.is_adjustable_suffix is not None
+            return Hub._remove_placeholders_map(desc.topic.rsplit('/', 1)[0] + '/' + desc.is_adjustable_suffix)
+
+        self.topic_map = {Hub._remove_placeholders_map(desc.topic): desc for desc in topics}
+        self.fallback_map = {Hub._remove_placeholders_map(merge_is_adjustable_suffix(desc)): desc for desc in topics if desc.is_adjustable_suffix}
+        subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in topics]
+        subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(desc)) for desc in topics if desc.is_adjustable_suffix]
+        self._subscription_list = subscription_list1 + subscription_list2
+        self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2)
         _LOGGER.info("Hub initialized")
 
     async def connect(self) -> None:
         """Connect to the hub."""
         _LOGGER.info("Connecting to MQTT broker at %s:%d", self.host, self.port)
-        self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2)
         
         if self.username is not None:
             _LOGGER.info("Setting auth credentials for user: %s", self.username)
@@ -386,6 +395,16 @@ class Hub:
     def _remove_placeholders(topic: str) -> str:
         return re.sub(r'\{[^}]+\}', '+', topic)
 
+    @staticmethod
+    def _remove_placeholders_map(topic: str) -> str:
+        topic_parts = topic.split("/")
+        for i, part in enumerate(topic_parts):
+            if part == "{phase}":
+                topic_parts[i] = "##phase##"
+            elif part.isdigit() or (part.startswith("{") and part.endswith("}")):
+                topic_parts[i] = "##num##"
+        return "/".join(topic_parts)
+
     def _add_topic_prefix(self, topic: str) -> str:
         """Add the topic prefix to a topic if configured."""
         if self._topic_prefix is None:
@@ -404,8 +423,8 @@ class Hub:
         """Subscribe to a topic with automatic prefix handling."""
         assert self._client is not None
         prefixed_topic = self._add_topic_prefix(topic)
+        _LOGGER.debug("Subscribing to: %s", prefixed_topic)
         self._client.subscribe(prefixed_topic)
-        _LOGGER.debug("Subscribed to: %s", prefixed_topic)
 
     def _unsubscribe(self, topic: str) -> None:
         """Unsubscribe from a topic with automatic prefix handling."""
@@ -421,9 +440,7 @@ class Hub:
         if not self._client.is_connected():
             raise NotConnectedError
         #topic_list = [(topic, 0) for topic in topic_map]
-        for topic in self.topic_map.keys():
-            self._subscribe(topic)
-        for topic in self.fallback_map.keys():
+        for topic in self._subscription_list:
             self._subscribe(topic)
 
         self._subscribe("N/+/full_publish_completed")

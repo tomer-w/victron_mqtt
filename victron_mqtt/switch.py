@@ -26,22 +26,13 @@ class Switch(Metric):
             "Creating new switch: unique_id=%s, type=%s, nature=%s",
             unique_id, descriptor.metric_type, descriptor.metric_nature
         )
-        super().__init__(unique_id, short_id, descriptor, parsed_topic)
         self._hub = hub
         assert topic.startswith("N")
         self._write_topic = "W" + topic[1:]
+        super().__init__(unique_id, short_id, descriptor, parsed_topic)
     
     def __repr__(self) -> str:
-        """Return the string representation of the Switch."""
-        return (
-            f"Switch(unique_id={self.unique_id}, "
-            f"descriptor={self._descriptor}, "
-            f"value={self.value}, "
-            f"generic_short_id={self.generic_short_id}, "
-            f"phase={self.phase}, "
-            f"device_type={self.device_type}, "
-            f"short_id={self.short_id})"
-            )
+        return f"Switch({super().__repr__()}, write_topic = {self._write_topic})"
 
     def set(self, value: str | float | int | bool | Enum) -> None:
         payload = Switch._wrap_payload(self._descriptor, value)

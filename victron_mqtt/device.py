@@ -25,10 +25,6 @@ class Device:
 
     def __init__(self, unique_id: str, parsed_topic: ParsedTopic, descriptor: TopicDescriptor) -> None:
         """Initialize."""
-        _LOGGER.debug(
-            "Creating new device: unique_id=%s, parsed_topic=%s, descriptor=%s",
-            unique_id, parsed_topic, descriptor
-        )
         self._descriptor = descriptor
         self._unique_id = unique_id
         self._metrics: dict[str, Metric] = {}
@@ -156,7 +152,8 @@ class Device:
                     new_topic_desc = copy.deepcopy(topic_desc)  # Deep copy
                     new_topic_desc.message_type = MetricKind.SENSOR
 
-        short_id = parsed_topic.get_short_id(topic_desc)
+        parsed_topic.finalize_topic_fields(topic_desc)
+        short_id = parsed_topic.short_id
         metric_id = f"{self.unique_id}_{short_id}"
 
         metric = self._get_or_create_metric(metric_id, short_id, topic, parsed_topic, new_topic_desc, hub, payload)

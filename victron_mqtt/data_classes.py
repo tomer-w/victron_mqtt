@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ast import List
 from dataclasses import dataclass
 import logging
 
@@ -59,9 +60,9 @@ class ParsedTopic:
     device_id: str
     device_type: DeviceType
     native_device_type: str
-    phase: str | None
     wildcards_with_device_type: str
     wildcards_without_device_type: str
+    full_topic: str
 
     def __repr__(self) -> str:
         """Return a string representation of the parsed topic."""
@@ -71,27 +72,32 @@ class ParsedTopic:
             f"device_id={self.device_id}, "
             f"device_type={self.device_type}, "
             f"wildcards_with_device_type={self.wildcards_with_device_type}, "
-            f"wildcards_without_device_type={self.wildcards_without_device_type}"
+            f"wildcards_without_device_type={self.wildcards_without_device_type}, "
+            f"full_topic={self.full_topic}"
             f")"
         )
     
     def __hash__(self):
         """Make ParsedTopic hashable for use as dictionary keys."""
-        return hash((self.installation_id, self.device_id, self.device_type, self.native_device_type, self.phase, self.wildcards_with_device_type, self.wildcards_without_device_type))
+        return hash((self.full_topic))
 
     @classmethod
-    def __get_index_and_phase(cls, topic_parts: list[str]) -> tuple[int, str | None]:
-        """Get the index of the phase and the phase itself."""
+    def normalize_topic(cls, topic: str) -> str:
+        """Normalize a topic by replacing numeric parts with a marker."""
+        topic_parts = topic.split("/")
         for i, part in enumerate(topic_parts):
-            if part in {"L1", "L2", "L3"}:
-                return i, part
-        return -1, None
+            if part.isdigit():
+                topic_parts[i] = "##num##"
+            if part in ["L1", "L2", "L3"]:
+                topic_parts[i] = "##phase##"
+        return "/".join(topic_parts)
 
     @classmethod
     def from_topic(cls, topic: str) -> ParsedTopic | None:
         """Create a ParsedTopic from a topic and payload."""
 
         # example : N/123456789012/grid/30/Ac/L1/Energy/Forward
+        full_topic = topic
         topic_parts = topic.split("/")
 
         if len(topic_parts) < 4:  # noqa: PLR2004"
@@ -109,50 +115,66 @@ class ParsedTopic:
         device_id = topic_parts[3]
         wildcard_topic_parts[3] = "+"
 
-        phase_index, phase = ParsedTopic.__get_index_and_phase(topic_parts)
-        if phase_index != -1:
-            wildcard_topic_parts[phase_index] = "+"
-
-        wildcards_with_device_type = "/".join(wildcard_topic_parts)
+        wildcards_with_device_type = ParsedTopic.normalize_topic("/".join(wildcard_topic_parts))
         wildcard_topic_parts[2] = "+"
-        wildcards_without_device_type = "/".join(wildcard_topic_parts)
+        wildcards_without_device_type = ParsedTopic.normalize_topic("/".join(wildcard_topic_parts))
 
         return cls(
             installation_id,
             device_id,
             device_type,
             native_device_type,
-            phase,
             wildcards_with_device_type,
             wildcards_without_device_type,
+            full_topic,
         )
 
-    def get_short_id(self, topic_desc: TopicDescriptor) -> str:
-        return self._replace_ids(topic_desc.short_id)
-
-    def get_name(self, topic_desc: TopicDescriptor) -> str:
+    def finalize_topic_fields(self, topic_desc: TopicDescriptor) -> None:
+        self._key_values = self.get_key_values(topic_desc)
+        self._short_id = self._replace_ids(topic_desc.short_id)
         assert topic_desc.name is not None
-        return self._replace_ids(topic_desc.name)
+        self._name = self._replace_ids(topic_desc.name)
 
-    def _replace_ids(self, str:str) -> str:
-        result_str = str
-        if PLACEHOLDER_PHASE in result_str:
-            assert self.phase is not None
-            result_str = result_str.replace(PLACEHOLDER_PHASE, self.phase)
-        if PLACEHOLDER_NEXT_PHASE in result_str:
-            assert self.phase is not None
-            result_str = result_str.replace(PLACEHOLDER_NEXT_PHASE, ParsedTopic._get_next_Phase(self.phase))
-        return result_str
+    @property
+    def short_id(self) -> str:
+        assert self._short_id is not None
+        return self._short_id
+
+    @property
+    def name(self) -> str:
+        assert self._name is not None
+        return self._name
+
+    @property
+    def key_values(self) -> dict[str, str]:
+        assert self._key_values is not None
+        return self._key_values
+
+    def _replace_ids(self, string: str) -> str:
+        """Replace placeholders in the string with matched items from self.key_values."""
+        import re
+
+        def replace_match(match):
+            key = match.group(1)
+            if key in self.key_values:
+                return self.key_values[key]
+            return match.group(0)  # Leave the placeholder unchanged if no match
+
+        # Match {key} in the string
+        pattern = re.compile(r"\{([^{}]+)\}")
+        return pattern.sub(replace_match, string)
 
     def get_key_values(self, topic_desc: TopicDescriptor) -> dict[str, str]:
-        result: dict[str, str] = {}
-        if PLACEHOLDER_PHASE in topic_desc.short_id:
-            assert self.phase is not None
-            result[PLACEHOLDER_PHASE.strip("{}")] = self.phase
-        if PLACEHOLDER_NEXT_PHASE in topic_desc.short_id:
-            assert self.phase is not None
-            result[PLACEHOLDER_NEXT_PHASE.strip("{}")] = ParsedTopic._get_next_Phase(self.phase)
-        return result
+        topic_parts = self.full_topic.split("/")
+        topic_descriptor_parts = topic_desc.topic.split("/")
+        result_key_values: dict[str, str] = {}
+        for i, part in enumerate(topic_descriptor_parts):
+            if part.startswith("{") and part.endswith("}"):
+                result_key_values[part.strip("{}")] = topic_parts[i]
+        #hack for next phase
+        if "phase" in result_key_values:
+            result_key_values["next_phase"] = ParsedTopic._get_next_Phase(result_key_values["phase"])
+        return result_key_values
 
     @staticmethod
     def _get_next_Phase(phase: str) -> str:
