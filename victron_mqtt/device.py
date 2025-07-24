@@ -213,17 +213,17 @@ class Device:
     @property
     def name(self) -> str | None:
         """Return the name of the device."""
-        if (custom_name := self.custom_name) is not None:
+        if (custom_name := self.custom_name):
             return custom_name
-        if (model := self.model) is not None:
+        if (model := self.model):
             return model
         return self.device_type.string
     
     @property
     def model(self) -> str | None:
         """Return the model of the device."""
-        if self._model is not None:
-            return self._model
+        if (model := self._model):
+            return model
         
         if self._device_type == DeviceType.SYSTEM:
             return "Victron Venus"
