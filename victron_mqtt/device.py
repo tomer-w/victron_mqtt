@@ -31,7 +31,6 @@ class Device:
         self._device_type = parsed_topic.device_type
         self._device_id = parsed_topic.device_id
         self._installation_id = parsed_topic.installation_id
-        self._device_name = None
         self._model = None
         self._manufacturer = None
         self._serial_number = None
@@ -40,9 +39,6 @@ class Device:
         self._fallback_is_adjustable_first_map: dict[ParsedTopic, bool] = {}
         self._fallback_data_first_map: dict[ParsedTopic, Any] = {} # Any is payload
         self._fallback_handled_set: set[str] = set()
-
-        if self._device_type == DeviceType.SYSTEM:
-            self._model = self._device_name = "Victron Venus"
 
         _LOGGER.debug("Device %s initialized", unique_id)
 
@@ -55,7 +51,9 @@ class Device:
             f"manufacturer={self.manufacturer}, "
             f"serial_number={self.serial_number}, "
             f"device_type={self.device_type}, "
-            f"device_id={self.device_id})"
+            f"device_id={self.device_id}, "
+            f"firmware_version={self.firmware_version}, "
+            f"custom_name={self.custom_name})"
         )
 
     def _set_device_property_from_topic(
@@ -80,9 +78,6 @@ class Device:
 
         if short_id == "model":
             self._model = value
-            if self._device_name is None and self._model is not None:
-                self._device_name = value
-                _LOGGER.debug("Using model as device name: %s", value)
         elif short_id == "serial_number":
             self._serial_number = value
         elif short_id == "manufacturer":
@@ -218,12 +213,20 @@ class Device:
     @property
     def name(self) -> str | None:
         """Return the name of the device."""
-        return self._device_name
-
+        if (custom_name := self.custom_name) is not None:
+            return custom_name
+        if (model := self.model) is not None:
+            return model
+        return self.device_type.string
+    
     @property
     def model(self) -> str | None:
         """Return the model of the device."""
-        return self._model
+        if self._model is not None:
+            return self._model
+        
+        if self._device_type == DeviceType.SYSTEM:
+            return "Victron Venus"
 
     @property
     def manufacturer(self) -> str | None:

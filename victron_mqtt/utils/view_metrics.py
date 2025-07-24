@@ -199,12 +199,11 @@ class App:
             device_item = self.tree.insert(
                 "",
                 "end",
-                text=device.model or "",
+                text=device.name or "",
                 values=(device.serial_number, ""),
                 iid="D" + device.unique_id,
             )
             metrics = device.metrics
-            metrics.sort(key=lambda x: (x.phase if x.phase and len(x.phase) > 0 else "L0") + (x.short_id or ""))
             for metric in metrics:
                 metric_item = self.tree.insert(
                     device_item,
