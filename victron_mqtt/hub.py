@@ -99,8 +99,23 @@ class Hub:
             assert desc.is_adjustable_suffix is not None
             return Hub._remove_placeholders_map(desc.topic.rsplit('/', 1)[0] + '/' + desc.is_adjustable_suffix)
 
-        self.topic_map = {Hub._remove_placeholders_map(desc.topic): desc for desc in topics}
-        self.fallback_map = {Hub._remove_placeholders_map(merge_is_adjustable_suffix(desc)): desc for desc in topics if desc.is_adjustable_suffix}
+        # Helper to build a map where duplicate keys accumulate values in a list
+        def build_multi_map(items, key_func):
+            result = {}
+            for item in items:
+                key = key_func(item)
+                if key in result:
+                    existing = result[key]
+                    existing.append(item)
+                else:
+                    result[key] = [item]
+            return result
+
+        self.topic_map = build_multi_map(topics, lambda desc: Hub._remove_placeholders_map(desc.topic))
+        self.fallback_map = build_multi_map(
+            [desc for desc in topics if desc.is_adjustable_suffix],
+            lambda desc: Hub._remove_placeholders_map(merge_is_adjustable_suffix(desc))
+        )
         subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in topics]
         subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(desc)) for desc in topics if desc.is_adjustable_suffix]
         self._subscription_list = subscription_list1 + subscription_list2
@@ -227,18 +242,25 @@ class Hub:
             return
 
         fallback_to_metric_topic: bool = False
-        desc = self.topic_map.get(parsed_topic.wildcards_with_device_type)
-        if desc is None:
-            desc = self.topic_map.get(parsed_topic.wildcards_without_device_type)
-        if desc is None:
-            desc = self.fallback_map.get(parsed_topic.wildcards_with_device_type)
+        desc_list = self.topic_map.get(parsed_topic.wildcards_with_device_type)
+        if desc_list is None:
+            desc_list = self.topic_map.get(parsed_topic.wildcards_without_device_type)
+        if desc_list is None:
+            desc_list = self.fallback_map.get(parsed_topic.wildcards_with_device_type)
             fallback_to_metric_topic = True
-        if desc is None:
-            desc = self.fallback_map.get(parsed_topic.wildcards_without_device_type)
+        if desc_list is None:
+            desc_list = self.fallback_map.get(parsed_topic.wildcards_without_device_type)
             fallback_to_metric_topic = True
-        if desc is None:
+        if desc_list is None:
             _LOGGER.debug("Ignoring message - no descriptor found for topic: %s", topic)
             return
+        if len(desc_list) == 1:
+            desc = desc_list[0]
+        else:
+            desc = parsed_topic.match_from_list(desc_list)
+            if desc is None:
+                _LOGGER.debug("Ignoring message - no matching descriptor found for list of topic: %s", topic)
+                return
 
         device = self._get_or_create_device(parsed_topic, desc)
         device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload.decode(), self._loop, self)

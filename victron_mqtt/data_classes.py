@@ -137,6 +137,16 @@ class ParsedTopic:
         assert topic_desc.name is not None
         self._name = self._replace_ids(topic_desc.name)
 
+    def match_from_list(self, topic_desc_list: list[TopicDescriptor]) -> TopicDescriptor |None:
+        topic_parts = self.full_topic.split("/")
+        topic_parts[1] = "+"
+        topic_parts[3] = "+"
+        normalized_topic = "/".join(topic_parts)
+        for topic_desc in topic_desc_list:
+            if topic_desc.topic == normalized_topic:
+                return topic_desc
+        return None
+
     @property
     def short_id(self) -> str:
         return self._short_id

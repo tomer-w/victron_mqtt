@@ -285,3 +285,29 @@ async def test_placeholder_adjustable_off_reverse(create_mocked_hub):
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 100, f"Expected metric value to be 100, got {metric.value}"
     # Ensure cleanup happens even if the test fails
+
+
+@pytest.mark.asyncio
+async def test_today_message(create_mocked_hub):
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    hub, connect_task = await create_mocked_hub
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/solarcharger/290/History/Daily/0/MaxPower", "{\"value\": 1}")
+    inject_message(hub, "N/123/solarcharger/290/History/Daily/1/MaxPower", "{\"value\": 2}")
+    await finalize_injection(hub, connect_task)
+
+    # Validate the Hub's state
+    assert len(hub._devices) == 1, f"Expected 1 device, got {len(hub._devices)}"
+
+    # Validate that the device has the metric we published
+    device = list(hub._devices.values())[0]
+    assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
+
+    metric = device.get_metric_from_unique_id("123_solarcharger_290_solarcharger_max_power_today")
+    assert metric is not None, "Metric should exist in the device"
+    assert metric.value == 1, f"Expected metric value to be 1, got {metric.value}"
+
+    metric = device.get_metric_from_unique_id("123_solarcharger_290_solarcharger_max_power_yesterday")
+    assert metric is not None, "Metric should exist in the device"
+    assert metric.value == 2, f"Expected metric value to be 2, got {metric.value}"
