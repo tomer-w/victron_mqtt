@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from ast import List
 from dataclasses import dataclass
 import logging
 
 from ._victron_enums import DeviceType
-from .constants import PLACEHOLDER_NEXT_PHASE, PLACEHOLDER_PHASE, MetricKind, MetricNature, MetricType, RangeType, ValueType, VictronEnum
+from .constants import MetricKind, MetricNature, MetricType, RangeType, ValueType, VictronEnum
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,8 +24,9 @@ class TopicDescriptor:
     value_type: ValueType | None = None
     precision: int | None = 2
     enum: type[VictronEnum] | None = None
-    min: int | RangeType | None = None
-    max: int | RangeType | None = None
+    min_max_range: RangeType = RangeType.STATIC
+    min: int | None = None
+    max: int | None = None
     is_adjustable_suffix: str | None = None
 
     def __repr__(self) -> str:
@@ -59,7 +59,6 @@ class ParsedTopic:
     installation_id: str
     device_id: str
     device_type: DeviceType
-    native_device_type: str
     wildcards_with_device_type: str
     wildcards_without_device_type: str
     full_topic: str
@@ -110,6 +109,10 @@ class ParsedTopic:
         native_device_type = topic_parts[2]
         if native_device_type == "platform":  # platform is not a device type
             native_device_type = "system"
+        # for settings like N/ce3f0ae5476a/settings/0/Settings/CGwacs/AcPowerSetPoint
+        elif native_device_type == "settings":
+            native_device_type = topic_parts[5]
+
         device_type = DeviceType.from_code(native_device_type, DeviceType.UNKNOWN)
         assert device_type is not None
         device_id = topic_parts[3]
@@ -123,7 +126,6 @@ class ParsedTopic:
             installation_id,
             device_id,
             device_type,
-            native_device_type,
             wildcards_with_device_type,
             wildcards_without_device_type,
             full_topic,
@@ -137,7 +139,6 @@ class ParsedTopic:
 
     @property
     def short_id(self) -> str:
-        assert self._short_id is not None
         return self._short_id
 
     @property

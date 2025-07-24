@@ -55,7 +55,7 @@ class ValueType(Enum):
 
 class RangeType(Enum):
     """Range types for numeric values."""
-
+    STATIC = "static"  # Static range, e.g., fixed values
     DYNAMIC = "dynamic"  # Dynamic range, e.g., depends on device model
 
 

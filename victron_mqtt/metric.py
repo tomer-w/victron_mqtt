@@ -26,6 +26,9 @@ class Metric:
             unique_id, descriptor.metric_type, descriptor.metric_nature
         )
         assert descriptor.name is not None, "name must be set for metric"
+        assert parsed_topic.device_type is not None, "device_type must be set for metric"
+        assert parsed_topic.device_type != DeviceType.UNKNOWN, "device_type must not be UNKNOWN for metric"
+        
         self._descriptor = descriptor
         self._unique_id = unique_id
         self._value = None

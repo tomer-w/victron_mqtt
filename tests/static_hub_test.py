@@ -149,7 +149,7 @@ async def test_dynamic_min_max_message(create_mocked_hub):
 
     # Validate that the device has the metric we published
     device = list(hub._devices.values())[0]
-    metric = device.get_metric_from_unique_id("123_settings_0_cgwacs_ac_power_set_point")
+    metric = device.get_metric_from_unique_id("123_CGwacs_0_cgwacs_ac_power_set_point")
     assert metric is not None, "Metric should exist in the device"
     assert isinstance(metric, Switch), f"Expected metric to be of type Switch, got {type(metric)}"
     assert metric.value == 50, f"Expected metric value to be 50, got {metric.value}"

@@ -636,8 +636,9 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.INVERTER,
         value_type=ValueType.INT,
+        min_max_range=RangeType.DYNAMIC,
         min=0,
-        max=RangeType.DYNAMIC,  # Dynamic range, depends on device model
+        max=16,
         is_adjustable_suffix = "CurrentLimitIsAdjustable"
     ),
     # integrated system. Note that this might not be currently accurate for all systems
@@ -1155,10 +1156,11 @@ topics: List[TopicDescriptor] = [
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
         metric_nature=MetricNature.INSTANTANEOUS,
-        device_type=DeviceType.SETTINGS,
+        device_type=DeviceType.CGWACS,
         value_type=ValueType.INT,
-        min=RangeType.DYNAMIC,  # Dynamic range, depends on device model,
-        max=RangeType.DYNAMIC,  # Dynamic range, depends on device model
+        min_max_range=RangeType.DYNAMIC,
+        min=-10000,  # Dynamic range, depends on device model,
+        max=10000,  # Dynamic range, depends on device model
     ),
         
 ]

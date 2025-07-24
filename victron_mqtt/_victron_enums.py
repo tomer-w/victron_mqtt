@@ -4,6 +4,7 @@ class DeviceType(VictronEnum):
     """Type of device."""
     # This is used to identify the type of device in the system.
     # BEWARE!!! The code is used for mapping from the victron topic, IT IS NOT RANDOM FREE TEXT. The string is used for display purposes.
+    # For settings this will be used to identify the device type in the settings.
     UNKNOWN = ("unknown", "Unknown Device")
     SYSTEM = ("system", "System")
     SOLAR_CHARGER = ("solarcharger", "Solar Charger")
@@ -17,7 +18,7 @@ class DeviceType(VictronEnum):
     GENERATOR = ("generator", "Generator")
     TANK = ("tank", "Liquid Tank")
     MULTI_RS_SOLAR = ("multi", "Multi RS Solar")
-    SETTINGS = ("settings", "Settings")
+    CGWACS = ("CGwacs", "Carlo Gavazzi Wired AC Sensors")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""

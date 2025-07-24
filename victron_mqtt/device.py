@@ -29,7 +29,6 @@ class Device:
         self._unique_id = unique_id
         self._metrics: dict[str, Metric] = {}
         self._device_type = parsed_topic.device_type
-        self._native_device_type = parsed_topic.native_device_type
         self._device_id = parsed_topic.device_id
         self._installation_id = parsed_topic.installation_id
         self._device_name = None
@@ -181,24 +180,19 @@ class Device:
 
         _LOGGER.info("Creating new metric: metric_id=%s, short_id=%s", metric_id, short_id)
         new_topic_desc = topic_desc
-        if topic_desc.max == RangeType.DYNAMIC:
+        if topic_desc.min_max_range == RangeType.DYNAMIC:
             max_value = unwrap_float(payload, "max")
             if max_value is not None:
                 _LOGGER.info("Setting dynamic max value to %s for %s", max_value, topic_desc)
                 new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
                 new_topic_desc.max = int(max_value)
-            else:
-                _LOGGER.warning("Expected max value for %s", new_topic_desc)
-                return None
-        if topic_desc.min == RangeType.DYNAMIC:
+            
             min_value = unwrap_float(payload, "min")
             if min_value is not None:
                 _LOGGER.info("Setting dynamic min value to %s for %s", min_value, topic_desc)
                 new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
                 new_topic_desc.min = int(min_value)
-            else:
-                _LOGGER.warning("Expected min value for %s", new_topic_desc)
-                return None
+
         if topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
             metric = Switch(metric_id, short_id, new_topic_desc, topic, parsed_topic, hub)
         else:
@@ -245,11 +239,6 @@ class Device:
     def device_type(self) -> DeviceType:
         """Return the device type."""
         return self._device_type
-
-    @property
-    def native_device_type(self) -> str:
-        """Return the device type."""
-        return self._native_device_type
 
     @property
     def firmware_version(self) -> str | None:
