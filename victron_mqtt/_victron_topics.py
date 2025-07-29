@@ -354,6 +354,18 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         precision=1,
     ),
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/Pv/V",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_pv_voltage",
+        name="PV voltage",
+        unit_of_measurement="V",
+        metric_type=MetricType.VOLTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
     # batteries
     TopicDescriptor(
         topic="N/+/battery/+/Dc/0/Voltage",
