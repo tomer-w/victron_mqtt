@@ -509,6 +509,17 @@ topics: List[TopicDescriptor] = [
         device_type=DeviceType.BATTERY,
         value_type=ValueType.INT,
     ),
+    TopicDescriptor(
+        topic="N/+/battery/+/Info/ChargeMode",
+        message_type=MetricKind.ATTRIBUTE,
+        short_id="charge_mode",
+        name="Battery charge mode",
+        device_type=DeviceType.BATTERY,
+        unit_of_measurement=None,
+        metric_type=MetricType.NONE,
+        metric_nature=MetricNature.NONE,
+        value_type=ValueType.STRING,
+    ),
     # inverter
     TopicDescriptor(
         topic="N/+/vebus/+/Mode",
