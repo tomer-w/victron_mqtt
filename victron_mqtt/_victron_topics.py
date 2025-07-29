@@ -1162,5 +1162,58 @@ topics: List[TopicDescriptor] = [
         min=-10000,  # Dynamic range, depends on device model,
         max=10000,  # Dynamic range, depends on device model
     ),
-        
+    # DC Load
+    TopicDescriptor(
+        topic="N/+/dcload/+/Dc/0/Voltage",
+        message_type=MetricKind.SENSOR,
+        short_id="dcload_voltage",
+        name="DC load voltage",
+        unit_of_measurement="V",
+        metric_type=MetricType.VOLTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.DC_LOAD,
+        value_type=ValueType.FLOAT,
+        min_max_range=RangeType.DYNAMIC,
+        precision=2
+    ),
+    TopicDescriptor(
+        topic="N/+/dcload/+/Dc/0/Voltage",
+        message_type=MetricKind.SENSOR,
+        short_id="dcload_voltage",
+        name="DC load voltage",
+        unit_of_measurement="V",
+        metric_type=MetricType.VOLTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.DC_LOAD,
+        value_type=ValueType.FLOAT,
+        min_max_range=RangeType.DYNAMIC,
+        precision=2
+    ),
+    TopicDescriptor(
+        topic="N/+/dcload/+/Dc/0/Current",
+        message_type=MetricKind.SENSOR,
+        short_id="dcload_current",
+        name="DC load current",
+        unit_of_measurement="A",
+        metric_type=MetricType.CURRENT,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.DC_LOAD,
+        value_type=ValueType.FLOAT,
+        min_max_range=RangeType.DYNAMIC,
+        precision=1
+    ),
+    TopicDescriptor(
+        topic="N/+/dcload/+/Dc/0/Power",
+        message_type=MetricKind.SENSOR,
+        short_id="dcload_power",
+        name="DC load power",
+        unit_of_measurement="W",
+        metric_type=MetricType.POWER,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.DC_LOAD,
+        value_type=ValueType.FLOAT,
+        min_max_range=RangeType.DYNAMIC,
+        precision=1
+    ),
+    
 ]
