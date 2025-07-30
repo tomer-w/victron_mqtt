@@ -21,6 +21,7 @@ class DeviceType(VictronEnum):
     CGWACS = ("CGwacs", "Carlo Gavazzi Wired AC Sensors")
     ALTERNATOR = ("alternator", "Charger (Orion/Alternator)")
     SWITCH = ("switch", "Switch")
+    GPS = ("gps", "Gps")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""
