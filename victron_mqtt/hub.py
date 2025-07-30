@@ -47,7 +47,7 @@ class Hub:
         use_ssl: bool,
         installation_id: str | None = None,
         model_name: str | None = None,
-        serial: str = "noserial",
+        serial: str | None = "noserial",
         topic_prefix: str | None = None,
     ) -> None:
         """Initialize."""
@@ -57,19 +57,19 @@ class Hub:
         if not isinstance(port, int) or not (0 < port < 65536):
             raise ValueError("port must be an integer between 1 and 65535")
         if username is not None and not isinstance(username, str):
-            raise TypeError("username must be a string or None")
+            raise TypeError(f"username must be a string or None, got type={type(username).__name__}, value={username!r}")
         if password is not None and not isinstance(password, str):
-            raise TypeError("password must be a string or None")
+            raise TypeError(f"password must be a string or None, got type={type(password).__name__}, value={password!r}")
         if not isinstance(use_ssl, bool):
-            raise TypeError("use_ssl must be a boolean")
+            raise TypeError(f"use_ssl must be a boolean, got type={type(use_ssl).__name__}, value={use_ssl!r}")
         if installation_id is not None and not isinstance(installation_id, str):
-            raise TypeError("installation_id must be a string or None")
+            raise TypeError(f"installation_id must be a string or None, got type={type(installation_id).__name__}, value={installation_id!r}")
         if model_name is not None and not isinstance(model_name, str):
-            raise TypeError("model_name must be a string or None")
-        if not isinstance(serial, str):
-            raise TypeError("serial must be a string")
+            raise TypeError(f"model_name must be a string or None, got type={type(model_name).__name__}, value={model_name!r}")
+        if serial is not None and not isinstance(serial, str):
+            raise TypeError(f"serial must be a string or None, got type={type(serial).__name__}, value={serial!r}")
         if topic_prefix is not None and not isinstance(topic_prefix, str):
-            raise TypeError("topic_prefix must be a string or None")
+            raise TypeError(f"topic_prefix must be a string or None, got type={type(topic_prefix).__name__}, value={topic_prefix!r}")
         _LOGGER.info(
             "Initializing Hub(host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s)",
             host, port, username, use_ssl, installation_id, model_name, topic_prefix
