@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import DeviceType, ESSMode, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, SolarChargerState, TemperatureStatus, TemperatureType
+from ._victron_enums import DeviceType, ESSMode, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, MultiState, SolarChargerState, TemperatureStatus, TemperatureType
 
 topics: List[TopicDescriptor] = [
     # generic device attributes
@@ -306,6 +306,17 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         precision=2,
     ),
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/State",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_state",
+        name="Solar Charger State",
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.ENUM,
+        enum=SolarChargerState,
+    ),
+
+    #System
     TopicDescriptor(
         topic="N/+/system/+/Dc/Pv/Power",
         message_type=MetricKind.SENSOR,
@@ -1133,7 +1144,7 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.NONE,
         device_type=DeviceType.MULTI_RS_SOLAR,
         value_type=ValueType.ENUM,
-        enum=SolarChargerState,
+        enum=MultiState,
     ),     
     TopicDescriptor(
         topic="N/+/multi/+/Yield/Power",

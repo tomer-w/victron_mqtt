@@ -93,14 +93,24 @@ class FluidType(VictronEnum):
     HydraulicOil = (10, "Hydraulic oil")
     RawWater = (11, "Raw water")
     
-class SolarChargerState(VictronEnum):
+class MultiState(VictronEnum):
     Off = (0, "Off")
     VoltageCurrentLimited = (1, "Voltage/current limited")
     MPPTActive = (2, "MPPT active")
-    NotavAilable = (255, "Not available")
+    NotAvailable = (255, "Not available")
 
 class ESSMode(VictronEnum):
     SelfConsumptionBatterylife = (0, "self consumption (batterylife)")
     SelfConsumption = (1, "self consumption")
     KeepCharged = (2, "keep charged")
     ExternalControl = (3, "External control")
+
+class SolarChargerState(VictronEnum):
+    Off = (0, "Off")
+    Fault = (2, "Fault")
+    Bulk = (3, "Bulk")
+    Absorption = (4, "Absorption")
+    Float = (5, "Float")
+    Storage = (6, "Storage")
+    Equalize = (7, "Equalize")
+    ExternalControl = (252, "External control")
