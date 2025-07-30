@@ -413,6 +413,16 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         precision=1,
     ),
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/Load/State",
+        message_type=MetricKind.SWITCH,
+        short_id="solarcharger_load_state",
+        name="Solar Charger Load State",
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+
     # batteries
     TopicDescriptor(
         topic="N/+/battery/+/Dc/0/Voltage",
