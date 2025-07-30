@@ -20,6 +20,7 @@ class DeviceType(VictronEnum):
     MULTI_RS_SOLAR = ("multi", "Multi RS Solar")
     CGWACS = ("CGwacs", "Carlo Gavazzi Wired AC Sensors")
     ALTERNATOR = ("alternator", "Charger (Orion/Alternator)")
+    SWITCH = ("switch", "Switch")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""

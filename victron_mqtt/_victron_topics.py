@@ -422,7 +422,6 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
-
     # batteries
     TopicDescriptor(
         topic="N/+/battery/+/Dc/0/Voltage",
@@ -1304,5 +1303,24 @@ topics: List[TopicDescriptor] = [
         min=-10000,  # Dynamic range, depends on device model,
         max=10000,  # Dynamic range, depends on device model
     ),
-        
+    # Switches
+    TopicDescriptor(
+        topic="N/+/switch/+/SwitchableOutput/output_{output}/State",
+        message_type=MetricKind.SWITCH,
+        short_id="switch_{output}_state",
+        name="Switch {output} State",
+        device_type=DeviceType.SWITCH,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    TopicDescriptor(
+        topic="N/+/switch/+/SwitchableOutput/output_{output}/Dimming",
+        message_type=MetricKind.NUMBER,
+        short_id="switch_{output}_dimming",
+        name="Switch {output} Dimming",
+        device_type=DeviceType.SWITCH,
+        value_type=ValueType.INT,
+        min=0,
+        max=100,
+    ),
 ]
