@@ -23,4 +23,4 @@ jobs:
       - name: Install Hatch
         run: pip install hatch
       - name: Run static tests
-        run: hatch test -t tests/static_test.py tests/static_hub_test.py tests/parsed_topics_tests.py
+        run: hatch test -t tests/static_test.py tests/static_hub_test.py tests/parsed_topics_test.py
