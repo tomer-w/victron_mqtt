@@ -1305,7 +1305,7 @@ topics: List[TopicDescriptor] = [
     ),
     # Switches
     TopicDescriptor(
-        topic="N/+/switch/+/SwitchableOutput/output_{output}/State",
+        topic="N/+/switch/+/SwitchableOutput/output_{output(1-4)}/State",
         message_type=MetricKind.SWITCH,
         short_id="switch_{output}_state",
         name="Switch {output} State",
@@ -1314,7 +1314,7 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/switch/+/SwitchableOutput/output_{output}/Dimming",
+        topic="N/+/switch/+/SwitchableOutput/output_{output(1-4)}/Dimming",
         message_type=MetricKind.NUMBER,
         short_id="switch_{output}_dimming",
         name="Switch {output} Dimming",

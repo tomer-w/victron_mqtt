@@ -93,7 +93,7 @@ class Hub:
         self._connected_event = asyncio.Event()
         self._connected_failed = False
         # Replace all {placeholder} patterns with + for MQTT wildcards
-
+        expanded_topics = Hub.expand_topic_list(topics)
         def merge_is_adjustable_suffix(desc: TopicDescriptor) -> str:
             """Merge the topic with its adjustable suffix."""
             assert desc.is_adjustable_suffix is not None
@@ -111,13 +111,13 @@ class Hub:
                     result[key] = [item]
             return result
 
-        self.topic_map = build_multi_map(topics, lambda desc: Hub._remove_placeholders_map(desc.topic))
+        self.topic_map = build_multi_map(expanded_topics, lambda desc: Hub._remove_placeholders_map(desc.topic))
         self.fallback_map = build_multi_map(
-            [desc for desc in topics if desc.is_adjustable_suffix],
+            [desc for desc in expanded_topics if desc.is_adjustable_suffix],
             lambda desc: Hub._remove_placeholders_map(merge_is_adjustable_suffix(desc))
         )
-        subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in topics]
-        subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(desc)) for desc in topics if desc.is_adjustable_suffix]
+        subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in expanded_topics]
+        subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(desc)) for desc in expanded_topics if desc.is_adjustable_suffix]
         self._subscription_list = subscription_list1 + subscription_list2
         self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2)
         _LOGGER.info("Hub initialized")
@@ -549,12 +549,36 @@ class Hub:
             return False
         return self._client.is_connected()
 
-
     def on_connect_fail(self, client: MQTTClient, userdata: Any) -> None:
         """Handle connection failure callback."""
         _LOGGER.error("Connection to MQTT broker failed")
         self._connected_failed = True
         self._loop.call_soon_threadsafe(self._connected_event.set)
+
+    @staticmethod
+    def expand_topic_list(topic_list: list[TopicDescriptor]) -> list[TopicDescriptor]:
+        """
+        Expands TopicDescriptors with placeholders like {output(1-4)} into multiple descriptors.
+        """
+        import re
+        expanded = []
+        pattern = re.compile(r"\{([a-zA-Z0-9_]+)\((\d+)-(\d+)\)\}")
+        for td in topic_list:
+            matches = list(pattern.finditer(td.topic))
+            if matches:
+                # For each placeholder, expand all combinations
+                # Only support one placeholder per field for now
+                match = matches[0]
+                key, start, end = match.group(1), int(match.group(2)), int(match.group(3))
+                for i in range(start, end+1):
+                    new_kwargs = td.__dict__.copy()
+                    new_kwargs['topic'] = pattern.sub(str(i), td.topic)
+                    new_kwargs['key_values'] = {key: str(i)}
+                    expanded.append(TopicDescriptor(**new_kwargs))
+            else:
+                expanded.append(td)
+        return expanded
+
 
 
 class CannotConnectError(Exception):
