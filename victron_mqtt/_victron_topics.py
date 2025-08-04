@@ -1173,7 +1173,6 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.DC_LOAD,
         value_type=ValueType.FLOAT,
-        min_max_range=RangeType.DYNAMIC,
         precision=2
     ),
     TopicDescriptor(
@@ -1186,7 +1185,6 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.DC_LOAD,
         value_type=ValueType.FLOAT,
-        min_max_range=RangeType.DYNAMIC,
         precision=1
     ),
     TopicDescriptor(
@@ -1199,7 +1197,6 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.DC_LOAD,
         value_type=ValueType.FLOAT,
-        min_max_range=RangeType.DYNAMIC,
         precision=1
     ),
 
