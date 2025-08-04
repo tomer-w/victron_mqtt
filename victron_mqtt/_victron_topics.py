@@ -511,7 +511,7 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/+/battery/+/Info/ChargeMode",
-        message_type=MetricKind.ATTRIBUTE,
+        message_type=MetricKind.SENSOR,
         short_id="charge_mode",
         name="Battery charge mode",
         device_type=DeviceType.BATTERY,
