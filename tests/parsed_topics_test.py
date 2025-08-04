@@ -100,9 +100,9 @@ def test_settings_parsed_topic():
     # Validate the ParsedTopic instance
     assert parsed_topic.installation_id == "123", "Installation ID should match"
     assert parsed_topic.device_id == "0", "Device ID should match"
-    assert parsed_topic.device_type == DeviceType.CGWACS
+    assert parsed_topic.device_type == DeviceType.SYSTEM # We decided to map CGwacs to SYSTEM
 
     parsed_topic.finalize_topic_fields(descriptor)
     # Validate the ParsedTopic instance additional fields after matching description
-    assert parsed_topic.name == "CGwacs AC Power Setpoint", "Name should match"
-    assert parsed_topic.short_id == "cgwacs_ac_power_set_point", "Short ID should match"
+    assert parsed_topic.name == "AC Power Setpoint", "Name should match"
+    assert parsed_topic.short_id == "system_ac_power_set_point", "Short ID should match"

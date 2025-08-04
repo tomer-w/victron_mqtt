@@ -18,6 +18,7 @@ class DeviceType(VictronEnum):
     GENERATOR = ("generator", "Generator")
     TANK = ("tank", "Liquid Tank")
     MULTI_RS_SOLAR = ("multi", "Multi RS Solar")
+    CGWACS = ("CGwacs", "Carlo Gavazzi Wired AC Sensors") # Should be mapped to SYSTEM
     DC_LOAD = ("dcload", "DC Load")
     ALTERNATOR = ("alternator", "Charger (Orion/Alternator)")
     SWITCH = ("switch", "Switch")
