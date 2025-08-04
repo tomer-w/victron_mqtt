@@ -2,10 +2,11 @@ import pytest
 import asyncio
 from unittest.mock import MagicMock, patch
 from victron_mqtt._victron_enums import DeviceType, GenericOnOff
+from victron_mqtt.data_classes import TopicDescriptor
 from victron_mqtt.hub import Hub
 from victron_mqtt.constants import TOPIC_INSTALLATION_ID
-from victron_mqtt.metric import Metric
 from victron_mqtt.switch import Switch
+from victron_mqtt._victron_topics import topics
 
 @pytest.fixture
 async def create_mocked_hub():
@@ -311,3 +312,35 @@ async def test_today_message(create_mocked_hub):
     metric = device.get_metric_from_unique_id("123_solarcharger_290_solarcharger_max_power_yesterday")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 2, f"Expected metric value to be 2, got {metric.value}"
+
+def test_expend_topics():
+    descriptor = next((t for t in topics if t.topic == "N/+/switch/+/SwitchableOutput/output_{output(1-4)}/State"), None)
+    assert descriptor is not None, "TopicDescriptor with the specified topic not found"
+
+    expanded = Hub.expand_topic_list([descriptor])
+    assert len(expanded) == 4, f"Expected 4 expanded topics, got {len(expanded)}"
+    new_desc = next((t for t in expanded if t.topic == "N/+/switch/+/SwitchableOutput/output_1/State"), None)
+    assert new_desc, "Missing expanded topic for output 1"
+    assert new_desc.short_id == "switch_{output}_state"
+    assert new_desc.name == "Switch {output} State"
+    assert new_desc.key_values["output"] == "1"
+
+@pytest.mark.asyncio
+async def test_expend_message(create_mocked_hub):
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    hub, connect_task = await create_mocked_hub
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/switch/170/SwitchableOutput/output_2/State", "{\"value\": 1}")
+    await finalize_injection(hub, connect_task)
+
+    # Validate the Hub's state
+    assert len(hub._devices) == 1, f"Expected 1 device, got {len(hub._devices)}"
+
+    # Validate that the device has the metric we published
+    device = list(hub._devices.values())[0]
+    metric = device.get_metric_from_unique_id("123_switch_170_switch_2_state")
+    assert metric is not None, "Metric should exist in the device"
+    assert metric.generic_short_id == "switch_{output}_state"
+    assert metric.key_values["output"] == "2"
+    assert metric.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric.value}"

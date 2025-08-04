@@ -7,7 +7,7 @@ from .device import Device
 from .hub import Hub, CannotConnectError, ProgrammingError, NotConnectedError
 from .metric import Metric
 from .switch import Switch
-from ._victron_enums import DeviceType, InverterState, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, FluidType, TemperatureType, TemperatureStatus, SolarChargerState, ESSMode
+from ._victron_enums import DeviceType, InverterState, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, FluidType, TemperatureType, TemperatureStatus, SolarChargerState, ESSMode, MultiState
 
 __all__ = [
     "Hub",
@@ -32,5 +32,6 @@ __all__ = [
     "TemperatureType",
     "FluidType",
     "SolarChargerState",
-    "ESSMode"
+    "ESSMode",
+    "MultiState"
 ]
