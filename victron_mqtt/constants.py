@@ -41,7 +41,9 @@ class MetricType(Enum):
     PERCENTAGE = "percentage"
     ELECTRIC_STORAGE_CAPACITY = "electric_storage_capacity"
     LIQUID_VOLUME = "liquid_volume"
-    GPS = "gps"
+    LOCATION = "location"
+    HEADING = "heading"
+    SPEED = "speed"
 
 
 class ValueType(Enum):
