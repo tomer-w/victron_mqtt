@@ -118,7 +118,7 @@ class ParsedTopic:
             native_device_type = topic_parts[5]
 
         device_type = DeviceType.from_code(native_device_type, DeviceType.UNKNOWN)
-        assert device_type is not None and device_type is not DeviceType.UNKNOWN
+        assert device_type is not None and device_type is not DeviceType.UNKNOWN, f"Unknown device type: {native_device_type}, topic: {topic}"
         if device_type == DeviceType.CGWACS:
             device_type = DeviceType.SYSTEM
 
