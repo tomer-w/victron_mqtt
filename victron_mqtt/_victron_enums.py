@@ -22,6 +22,7 @@ class DeviceType(VictronEnum):
     DC_LOAD = ("dcload", "DC Load")
     ALTERNATOR = ("alternator", "Charger (Orion/Alternator)")
     SWITCH = ("switch", "Switch")
+    GPS = ("gps", "Gps")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""
