@@ -1392,7 +1392,7 @@ topics: List[TopicDescriptor] = [
     # GPS
     TopicDescriptor(
         topic="N/+/gps/+/Altitude",
-        message_type=MetricKind.NUMBER,
+        message_type=MetricKind.SENSOR,
         short_id="gps_altitude",
         name="GPS Altitude",
 		metric_nature=MetricNature.INSTANTANEOUS,
@@ -1410,7 +1410,7 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/+/gps/+/Course",
-        message_type=MetricKind.NUMBER,
+        message_type=MetricKind.SENSOR,
         short_id="gps_course",
         name="GPS Course",
 		metric_nature=MetricNature.INSTANTANEOUS,
@@ -1429,7 +1429,7 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/+/gps/+/Speed",
-        message_type=MetricKind.NUMBER,
+        message_type=MetricKind.SENSOR,
         short_id="gps_speed",
         name="GPS Speed",
 		metric_nature=MetricNature.INSTANTANEOUS,
@@ -1439,7 +1439,7 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/+/gps/+/NrOfSatellites",
-        message_type=MetricKind.NUMBER,
+        message_type=MetricKind.SENSOR,
         short_id="gps_nrofsatellites",
         name="GPS Nr Of Satellites",
 		metric_nature=MetricNature.INSTANTANEOUS,
@@ -1448,7 +1448,7 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/+/gps/+/Position/Latitude",
-        message_type=MetricKind.NUMBER,
+        message_type=MetricKind.SENSOR,
         short_id="gps_latitude",
         name="GPS Latitude",
 		metric_nature=MetricNature.INSTANTANEOUS,
@@ -1458,7 +1458,7 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/+/gps/+/Position/Longitude",
-        message_type=MetricKind.NUMBER,
+        message_type=MetricKind.SENSOR,
         short_id="gps_longitude",
         name="GPS Longitude",
 		metric_nature=MetricNature.INSTANTANEOUS,
