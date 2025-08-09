@@ -162,6 +162,14 @@ class Metric:
                 self.unique_id, self._value, value,
                 self._descriptor.unit_of_measurement or ''
             )
+        else:
+            _LOGGER.debug(
+                "Metric %s value unchanged: %s %s",
+                self.unique_id, value,
+                self._descriptor.unit_of_measurement or ''
+            )
+            return
+        
         self._value = value
 
         try:
