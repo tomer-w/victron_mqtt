@@ -35,6 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 #         else:
 #             print(f"[TASK DONE] {self.get_name()} - Result: {result}")
 
+running_client_id=0
 class Hub:
     """Class to communicate with the Venus OS hub."""
 
@@ -119,7 +120,9 @@ class Hub:
         subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in expanded_topics]
         subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(desc)) for desc in expanded_topics if desc.is_adjustable_suffix]
         self._subscription_list = subscription_list1 + subscription_list2
-        self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2)
+        global running_client_id
+        self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2, client_id="victron_mqtt" + str(running_client_id))
+        running_client_id += 1
         _LOGGER.info("Hub initialized")
 
     async def connect(self) -> None:
