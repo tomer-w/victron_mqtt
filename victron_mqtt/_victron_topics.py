@@ -1332,6 +1332,18 @@ topics: List[TopicDescriptor] = [
         min=-10000,  # Dynamic range, depends on device model,
         max=10000,  # Dynamic range, depends on device model
     ),
+    TopicDescriptor(
+    topic="N/+/settings/+/Settings/SystemSetup/MaxChargeCurrent",
+    message_type=MetricKind.NUMBER,
+    short_id="system_ess_max_charge_current",
+    name="ESS max charge current",
+    unit_of_measurement="A",
+    metric_type=MetricType.CURRENT,
+    metric_nature=MetricNature.INSTANTANEOUS,
+    device_type=DeviceType.SYSTEM,
+    value_type=ValueType.INT,
+    min_max_range=RangeType.DYNAMIC,
+    ),
     # DC Load
     TopicDescriptor(
         topic="N/+/dcload/+/Dc/0/Voltage",
