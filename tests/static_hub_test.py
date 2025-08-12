@@ -9,10 +9,17 @@ from victron_mqtt.switch import Switch
 from victron_mqtt._victron_topics import topics
 
 @pytest.fixture
+async def create_mocked_hub_with_installation_id():
+    return await create_mocked_hub_internal(installation_id="123")
+
+@pytest.fixture
 async def create_mocked_hub():
+    return await create_mocked_hub_internal()
+
+async def create_mocked_hub_internal(installation_id=None):
     """Helper function to create and return a mocked Hub object."""
     with patch('victron_mqtt.hub.mqtt.Client') as mock_client:
-        hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False)
+        hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id = installation_id)
         mocked_client = mock_client.return_value
 
         # Set the mocked client explicitly to prevent overwriting
@@ -371,3 +378,23 @@ async def test_same_message_events(create_mocked_hub):
     assert metric.on_update.call_count == 1, "on_update should be called for the new value"
 
     hub.disconnect()
+
+@pytest.mark.asyncio
+async def test_existing_installation_id(create_mocked_hub_with_installation_id):
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    hub, connect_task = await create_mocked_hub_with_installation_id
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/switch/170/SwitchableOutput/output_2/State", "{\"value\": 1}")
+    await finalize_injection(hub, connect_task)
+
+    # Validate the Hub's state
+    assert len(hub._devices) == 1, f"Expected 1 device, got {len(hub._devices)}"
+
+    # Validate that the device has the metric we published
+    device = list(hub._devices.values())[0]
+    metric = device.get_metric_from_unique_id("123_switch_170_switch_2_state")
+    assert metric is not None, "Metric should exist in the device"
+    assert metric.generic_short_id == "switch_{output}_state"
+    assert metric.key_values["output"] == "2"
+    assert metric.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric.value}"

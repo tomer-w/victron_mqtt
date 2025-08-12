@@ -221,7 +221,7 @@ class Hub:
             self._loop.call_soon_threadsafe(self._first_refresh_event.set)
             return
 
-        if not self._installation_id_event.is_set():
+        if self._installation_id is None and not self._installation_id_event.is_set():
             self._handle_installation_id_message(topic, payload)
             return
 
@@ -229,13 +229,14 @@ class Hub:
 
     def _handle_installation_id_message(self, topic: str, payload: bytes) -> None:
         """Handle installation ID message."""
-        topic_parts = topic.split("/")
-        if len(topic_parts) == 5 and topic_parts[2:5] == ["system", "0", "Serial"]:
-            payload_json = json.loads(payload.decode())
-            self._installation_id = payload_json.get("value")
-            _LOGGER.info("Installation ID received: %s. Original topic: %s", self._installation_id, topic)
-            if self._installation_id_event:
-                 self._loop.call_soon_threadsafe(self._installation_id_event.set)
+        parsed_topic = ParsedTopic.from_topic(topic)
+        if parsed_topic is None:
+            _LOGGER.debug("Ignoring message - could not parse topic: %s", topic)
+            return
+        
+        self._installation_id = parsed_topic.installation_id
+        _LOGGER.info("Installation ID received: %s. Original topic: %s", self._installation_id, topic)
+        self._loop.call_soon_threadsafe(self._installation_id_event.set)
 
     def _handle_normal_message(self, topic: str, payload: bytes) -> None:
         """Handle regular MQTT message."""
@@ -283,7 +284,6 @@ class Hub:
     async def _keep_alive(self) -> None:
         """Send a keep alive message to the hub. Updates will only be made to the metrics
         for the 60 seconds following this method call."""
-        # cspell:disable-next-line
         keep_alive_topic = f"R/{self._installation_id}/keepalive"
 
         if self._client is None:
