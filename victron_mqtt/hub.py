@@ -31,10 +31,9 @@ class InstanceIDFilter(logging.Filter):
         record.instance_id = self.instance_id
         return True
 
-# Update the log format to include instance_id
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - [ID: %(instance_id)s] - %(message)s')
+# Update the log format to include instance_id with a default value if not present
 for handler in logging.getLogger().handlers:
-    handler.setFormatter(formatter)
+    handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - [ID: %(instance_id)s] - %(message)s', defaults={'instance_id': 'N/A'}))
 
 # class TracedTask(asyncio.Task):
 #     def __init__(self, coro, *, loop=None, name=None):
@@ -171,7 +170,7 @@ class Hub:
         #self._client.on_log = self._on_log
         self._connected_failed = False
         self._loop = asyncio.get_event_loop()
-        #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop))
+        #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop, name=name))
 
         try:
             _LOGGER.info("Starting paho mqtt")
