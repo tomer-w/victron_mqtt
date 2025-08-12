@@ -398,3 +398,40 @@ async def test_existing_installation_id(create_mocked_hub_with_installation_id):
     assert metric.generic_short_id == "switch_{output}_state"
     assert metric.key_values["output"] == "2"
     assert metric.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric.value}"
+
+
+@pytest.mark.asyncio
+async def test_multiple_hubs(create_mocked_hub_with_installation_id, create_mocked_hub):
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    hub1, connect_task1 = await create_mocked_hub
+
+    # Inject messages after the event is set
+    inject_message(hub1, "N/123/switch/170/SwitchableOutput/output_2/State", "{\"value\": 1}")
+    await finalize_injection(hub1, connect_task1, disconnect=False)
+
+    # Validate the Hub's state
+    assert len(hub1._devices) == 1, f"Expected 1 device, got {len(hub1._devices)}"
+
+    # Validate that the device has the metric we published
+    device1 = list(hub1._devices.values())[0]
+    metric1 = device1.get_metric_from_unique_id("123_switch_170_switch_2_state")
+    assert metric1 is not None, "Metric should exist in the device"
+    assert metric1.generic_short_id == "switch_{output}_state"
+    assert metric1.key_values["output"] == "2"
+    assert metric1.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric1.value}"
+
+    hub2, connect_task2 = await create_mocked_hub_with_installation_id
+    # Inject messages after the event is set
+    inject_message(hub2, "N/123/switch/170/SwitchableOutput/output_2/State", "{\"value\": 0}")
+    await finalize_injection(hub1, connect_task1, disconnect=False)
+
+    # Validate the Hub's state
+    assert len(hub2._devices) == 1, f"Expected 1 device, got {len(hub1._devices)}"
+
+    # Validate that the device has the metric we published
+    device2 = list(hub2._devices.values())[0]
+    metric2 = device2.get_metric_from_unique_id("123_switch_170_switch_2_state")
+    assert metric2 is not None, "Metric should exist in the device"
+    assert metric2.generic_short_id == "switch_{output}_state"
+    assert metric2.key_values["output"] == "2"
+    assert metric2.value == GenericOnOff.Off, f"Expected metric value to be GenericOnOff.Off, got {metric2.value}"

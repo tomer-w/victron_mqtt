@@ -21,6 +21,21 @@ from .metric import Metric
 
 _LOGGER = logging.getLogger(__name__)
 
+# Modify the logger to include instance_id without changing the tracing level
+class InstanceIDFilter(logging.Filter):
+    def __init__(self, instance_id):
+        super().__init__()
+        self.instance_id = instance_id
+
+    def filter(self, record):
+        record.instance_id = self.instance_id
+        return True
+
+# Update the log format to include instance_id
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - [ID: %(instance_id)s] - %(message)s')
+for handler in logging.getLogger().handlers:
+    handler.setFormatter(formatter)
+
 # class TracedTask(asyncio.Task):
 #     def __init__(self, coro, *, loop=None, name=None):
 #         super().__init__(coro, loop=loop, name=name)
@@ -50,8 +65,20 @@ class Hub:
         model_name: str | None = None,
         serial: str | None = "noserial",
         topic_prefix: str | None = None,
+        logger_level: int | None = None
+
     ) -> None:
         """Initialize."""
+        global running_client_id
+        self._instance_id = running_client_id
+        running_client_id += 1
+
+        # Add the instance_id filter to the logger only if it doesn't already exist
+        self.logger = logging.getLogger(__name__)
+        self.logger.addFilter(InstanceIDFilter(self._instance_id))
+        if logger_level is not None:
+            self.logger.setLevel(logger_level)
+
         # Parameter validation
         if not isinstance(host, str) or not host:
             raise ValueError("host must be a non-empty string")
@@ -85,7 +112,6 @@ class Hub:
         self.port = port
         self._installation_id = installation_id
         self._topic_prefix = topic_prefix
-        self.logger = logging.getLogger(__name__)
         self._devices: dict[str, Device] = {}
         self._first_refresh_event: asyncio.Event = asyncio.Event()
         self._installation_id_event: asyncio.Event = asyncio.Event()
@@ -120,9 +146,7 @@ class Hub:
         subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in expanded_topics]
         subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(desc)) for desc in expanded_topics if desc.is_adjustable_suffix]
         self._subscription_list = subscription_list1 + subscription_list2
-        global running_client_id
-        self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2, client_id="victron_mqtt" + str(running_client_id))
-        running_client_id += 1
+        self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2, client_id="victron_mqtt-" + str(self._instance_id))
         _LOGGER.info("Hub initialized")
 
     async def connect(self) -> None:
