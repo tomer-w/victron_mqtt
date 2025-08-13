@@ -22,18 +22,18 @@ from .metric import Metric
 _LOGGER = logging.getLogger(__name__)
 
 # Modify the logger to include instance_id without changing the tracing level
-class InstanceIDFilter(logging.Filter):
-    def __init__(self, instance_id):
-        super().__init__()
-        self.instance_id = instance_id
+# class InstanceIDFilter(logging.Filter):
+#     def __init__(self, instance_id):
+#         super().__init__()
+#         self.instance_id = instance_id
 
-    def filter(self, record):
-        record.instance_id = self.instance_id
-        return True
+#     def filter(self, record):
+#         record.instance_id = self.instance_id
+#         return True
 
 # Update the log format to include instance_id with a default value if not present
-for handler in logging.getLogger().handlers:
-    handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - [ID: %(instance_id)s] - %(message)s', defaults={'instance_id': 'N/A'}))
+# for handler in logging.getLogger().handlers:
+#     handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - [ID: %(instance_id)s] - %(message)s', defaults={'instance_id': 'N/A'}))
 
 # class TracedTask(asyncio.Task):
 #     def __init__(self, coro, *, loop=None, name=None):
@@ -64,7 +64,7 @@ class Hub:
         model_name: str | None = None,
         serial: str | None = "noserial",
         topic_prefix: str | None = None,
-        logger_level: int | None = None
+#        logger_level: int | None = None
 
     ) -> None:
         """Initialize."""
@@ -73,10 +73,10 @@ class Hub:
         running_client_id += 1
 
         # Add the instance_id filter to the logger only if it doesn't already exist
-        self.logger = logging.getLogger(__name__)
-        self.logger.addFilter(InstanceIDFilter(self._instance_id))
-        if logger_level is not None:
-            self.logger.setLevel(logger_level)
+        # self.logger = logging.getLogger(__name__)
+        # self.logger.addFilter(InstanceIDFilter(self._instance_id))
+        # if logger_level is not None:
+        #     self.logger.setLevel(logger_level)
 
         # Parameter validation
         if not isinstance(host, str) or not host:
