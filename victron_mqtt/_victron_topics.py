@@ -778,6 +778,18 @@ topics: List[TopicDescriptor] = [
         precision=1,
     ),
     TopicDescriptor(
+        topic="N/+/system/+/Dc/Battery/Soc",
+        message_type=MetricKind.SENSOR,
+        short_id="system_dc_battery_soc",
+        name="DC Battery Charge",
+        unit_of_measurement="%",
+        metric_type=MetricType.PERCENTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
         topic="N/+/system/+/Relay/{relay}/State",
         message_type=MetricKind.SWITCH,
         short_id="system_relay_{relay}",
