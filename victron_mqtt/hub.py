@@ -20,6 +20,7 @@ from .device import Device
 from .metric import Metric
 
 _LOGGER = logging.getLogger(__name__)
+CONNECT_MAX_FAILED_ATTEMPTS = 3
 
 # Modify the logger to include instance_id without changing the tracing level
 # class InstanceIDFilter(logging.Filter):
@@ -117,7 +118,7 @@ class Hub:
         self._snapshot = {}
         self._keep_alive_task = None
         self._connected_event = asyncio.Event()
-        self._connected_failed = False
+        self._connected_failed_attempts = 0
         # Replace all {placeholder} patterns with + for MQTT wildcards
         expanded_topics = Hub.expand_topic_list(topics)
         def merge_is_adjustable_suffix(desc: TopicDescriptor) -> str:
@@ -151,7 +152,8 @@ class Hub:
     async def connect(self) -> None:
         """Connect to the hub."""
         _LOGGER.info("Connecting to MQTT broker at %s:%d", self.host, self.port)
-        
+        assert self._client is not None
+
         if self.username is not None:
             _LOGGER.info("Setting auth credentials for user: %s", self.username)
             self._client.username_pw_set(self.username, self.password)
@@ -168,7 +170,7 @@ class Hub:
         self._client.on_message = self._on_message
         self._client.on_connect_fail = self.on_connect_fail
         #self._client.on_log = self._on_log
-        self._connected_failed = False
+        self._connected_failed_attempts = 0
         self._loop = asyncio.get_event_loop()
         #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop, name=name))
 
@@ -179,7 +181,7 @@ class Hub:
             self._client.connect_async(self.host, self.port)
             _LOGGER.info("Waiting for connection event")
             await self._wait_for_connect()
-            if self._connected_failed:
+            if self._connected_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
                 _LOGGER.error("Failed to connect to MQTT broker")
                 raise CannotConnectError("Failed to connect to MQTT broker")
             _LOGGER.info("Successfully connected to MQTT broker at %s:%d", self.host, self.port)
@@ -577,9 +579,10 @@ class Hub:
 
     def on_connect_fail(self, client: MQTTClient, userdata: Any) -> None:
         """Handle connection failure callback."""
-        _LOGGER.error("Connection to MQTT broker failed")
-        self._connected_failed = True
-        self._loop.call_soon_threadsafe(self._connected_event.set)
+        _LOGGER.warning("Connection to MQTT broker failed")
+        self._connected_failed_attempts += 1
+        if self._connected_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
+            self._loop.call_soon_threadsafe(self._connected_event.set)
 
     @staticmethod
     def expand_topic_list(topic_list: list[TopicDescriptor]) -> list[TopicDescriptor]:
