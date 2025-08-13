@@ -630,6 +630,18 @@ topics: List[TopicDescriptor] = [
         enum=InverterState,
     ),
     TopicDescriptor(
+        topic="N/+/vebus/+/Ac/ActiveIn/{phase}/V",
+        message_type=MetricKind.SENSOR,
+        short_id="inverter_input_voltage_{phase}",
+        name="Inverter input voltage {phase}",
+        unit_of_measurement="V",
+        metric_type=MetricType.VOLTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
         topic="N/+/vebus/+/Ac/ActiveIn/{phase}/P",
         message_type=MetricKind.SENSOR,
         short_id="inverter_input_power_{phase}",
