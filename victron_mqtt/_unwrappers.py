@@ -37,13 +37,13 @@ def unwrap_int_default_0(json_str) -> int:
         return 0
 
 
-def unwrap_float(json_str, json_value: str = "value") -> float | None:
+def unwrap_float(json_str, precision, json_value: str = "value") -> float | None:
     """Unwrap a float value from a JSON string."""
     try:
         data = json.loads(json_str)
         if data[json_value] is None:
             return None
-        return float(data[json_value])
+        return round(float(data[json_value]), precision)
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
 

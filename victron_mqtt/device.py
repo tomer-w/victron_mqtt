@@ -162,6 +162,8 @@ class Device:
         unwrapper = VALUE_TYPE_UNWRAPPER[topic_desc.value_type]
         if unwrapper == unwrap_enum:
             return unwrapper(payload, topic_desc.enum)
+        elif unwrapper == unwrap_float:
+            return unwrapper(payload, topic_desc.precision)
         else:
             return unwrapper(payload)
 
@@ -176,13 +178,13 @@ class Device:
         _LOGGER.info("Creating new metric: metric_id=%s, short_id=%s", metric_id, short_id)
         new_topic_desc = topic_desc
         if topic_desc.min_max_range == RangeType.DYNAMIC:
-            max_value = unwrap_float(payload, "max")
+            max_value = unwrap_float(payload, topic_desc.precision, "max")
             if max_value is not None:
                 _LOGGER.info("Setting dynamic max value to %s for %s", max_value, topic_desc)
                 new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
                 new_topic_desc.max = int(max_value)
-            
-            min_value = unwrap_float(payload, "min")
+
+            min_value = unwrap_float(payload, topic_desc.precision, "min")
             if min_value is not None:
                 _LOGGER.info("Setting dynamic min value to %s for %s", min_value, topic_desc)
                 new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
