@@ -435,3 +435,21 @@ async def test_multiple_hubs(create_mocked_hub_with_installation_id, create_mock
     assert metric2.generic_short_id == "switch_{output}_state"
     assert metric2.key_values["output"] == "2"
     assert metric2.value == GenericOnOff.Off, f"Expected metric value to be GenericOnOff.Off, got {metric2.value}"
+
+@pytest.mark.asyncio
+async def test_float_precision(create_mocked_hub):
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    hub, connect_task = await create_mocked_hub
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/system/170/Dc/System/Power", "{\"value\": 1.1234}")
+    await finalize_injection(hub, connect_task)
+
+    # Validate the Hub's state
+    assert len(hub._devices) == 1, f"Expected 1 device, got {len(hub._devices)}"
+
+    # Validate that the device has the metric we published
+    device = list(hub._devices.values())[0]
+    metric = device.get_metric_from_unique_id("123_system_170_system_dc_consumption")
+    assert metric is not None, "Metric should exist in the device"
+    assert metric.value == 1.1, f"Expected metric value to be 1.1, got {metric.value}"
