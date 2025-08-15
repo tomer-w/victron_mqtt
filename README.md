@@ -56,7 +56,7 @@ python3 -m victron_mqtt.utils.dump_mqtt --help
 ```
 
 ## Help Needed!!
-Please help with extending the library with more topics. See instructions [here](extending-victron-support.md) for how to contribute.
+Please help with extending the library with more topics. See instructions [here](CONTRIBUTING.md) for how to contribute.
 
 ## ⚠️ Limitations and Known Issues
 
