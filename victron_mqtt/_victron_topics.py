@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import DeviceType, ESSMode, FluidType, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, MultiState, SolarChargerState, TemperatureStatus, TemperatureType
+from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DeviceType, ESSMode, FluidType, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, MultiState, SolarChargerState, TemperatureStatus, TemperatureType
 
 topics: List[TopicDescriptor] = [
     # generic device attributes
@@ -851,11 +851,27 @@ topics: List[TopicDescriptor] = [
         message_type=MetricKind.SWITCH,
         short_id="system_relay_{relay}",
         name="Relay {relay} state",
-        metric_type=MetricType.NONE,
-        metric_nature=MetricNature.NONE,
         device_type=DeviceType.SYSTEM,
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+    ),
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/Strategy",
+        message_type=MetricKind.SWITCH,
+        short_id="system_dynamicess_strategy",
+        name="Dynamic ESS Strategy",
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.ENUM,
+        enum=DESSStrategy,
+    ),
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/ReactiveStrategy",
+        message_type=MetricKind.SWITCH,
+        short_id="system_dynamicess_reactive_strategy",
+        name="Dynamic ESS Reactive Strategy",
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.ENUM,
+        enum=DESSReactiveStrategy,
     ),
     TopicDescriptor(
         topic="N/+/system/+/Ac/Genset/{phase}/Power",
