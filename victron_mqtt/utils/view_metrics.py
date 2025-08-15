@@ -177,6 +177,7 @@ class App:
         try:
             self._client = Hub(server, port, username, password, use_ssl)
             await self._client.connect()
+            await self._client.wait_for_first_refresh()
             self._fill_tree()
             self.disconnect_button.config(state=tk.NORMAL)
             return True
