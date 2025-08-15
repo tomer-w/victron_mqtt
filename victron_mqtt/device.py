@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Tuple
 import copy
 
 if TYPE_CHECKING:
@@ -150,11 +150,17 @@ class Device:
         short_id = parsed_topic.short_id
         metric_id = f"{self.unique_id}_{short_id}"
 
-        metric = self._get_or_create_metric(metric_id, short_id, topic, parsed_topic, new_topic_desc, hub, payload)
-        if metric is None:
-            _LOGGER.warning("Failed to create metric for %s. payload=%s", topic, payload)
-            return
+        metric, created = self._get_or_create_metric(metric_id, short_id, topic, parsed_topic, new_topic_desc, hub, payload)
         metric._handle_message(value, event_loop)
+        if created:
+            try:
+                if callable(hub._on_new_metric):
+                    if event_loop.is_running():
+                        # If the event loop is running, schedule the callback
+                        event_loop.call_soon_threadsafe(hub._on_new_metric, hub, self, metric)
+            except Exception as exc:
+                _LOGGER.error("Error calling _on_new_metric callback %s", exc, exc_info=True)
+
 
     @staticmethod
     def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | bool | type[Enum] | None:
@@ -169,11 +175,11 @@ class Device:
 
     def _get_or_create_metric(
         self, metric_id: str, short_id: str, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, hub: Hub, payload: str
-    ) -> Metric | None:
+    ) -> Tuple[Metric, bool]:
         """Get or create a metric."""
         metric = self._metrics.get(metric_id)
         if metric is not None:
-            return metric
+            return metric, False
 
         _LOGGER.info("Creating new metric: metric_id=%s, short_id=%s", metric_id, short_id)
         new_topic_desc = topic_desc
@@ -196,7 +202,7 @@ class Device:
             metric = Metric(metric_id, short_id, new_topic_desc, parsed_topic)
         self._metrics[metric_id] = metric
 
-        return metric
+        return metric, True
 
     def get_metric_from_unique_id(self, unique_id: str) -> Metric | Switch | None:
         """Get a metric from a unique id."""

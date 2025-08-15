@@ -5,7 +5,7 @@ import json
 import logging
 import ssl
 import re
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import Client as MQTTClient, PayloadType
@@ -51,6 +51,9 @@ CONNECT_MAX_FAILED_ATTEMPTS = 3
 #             print(f"[TASK DONE] {self.get_name()} - Result: {result}")
 
 running_client_id=0
+
+CallbackOnNewMetric = Callable[["Hub", Device, Metric], None]
+
 class Hub:
     """Class to communicate with the Venus OS hub."""
 
@@ -119,6 +122,8 @@ class Hub:
         self._keep_alive_task = None
         self._connected_event = asyncio.Event()
         self._connected_failed_attempts = 0
+        self._on_new_metric: CallbackOnNewMetric | None = None
+
         # Replace all {placeholder} patterns with + for MQTT wildcards
         expanded_topics = Hub.expand_topic_list(topics)
         def merge_is_adjustable_suffix(desc: TopicDescriptor) -> str:
@@ -189,9 +194,7 @@ class Hub:
                 _LOGGER.info("No installation ID provided, attempting to read from device")
                 self._installation_id = await self._read_installation_id()
             self._start_keep_alive_loop()
-            _LOGGER.info("Waiting for first refresh")
-            await self._wait_for_first_refresh()
-            _LOGGER.info("Devices and metrics initialized. Found %d devices", len(self._devices))
+            _LOGGER.info("Connected. Installation ID: %s", self._installation_id)
         except Exception as exc:
             _LOGGER.error("Failed to connect to MQTT broker: %s", exc, exc_info=True)
             raise CannotConnectError(f"Failed to connect to MQTT broker: {exc}") from exc
@@ -248,7 +251,6 @@ class Hub:
 
         if self._installation_id is None and not self._installation_id_event.is_set():
             self._handle_installation_id_message(topic, payload)
-            return
 
         self._handle_normal_message(topic, payload)
 
@@ -298,6 +300,7 @@ class Hub:
         """Disconnect from the hub."""
         _LOGGER.info("Disconnecting from MQTT broker")
         self._stop_keep_alive_loop()
+        await asyncio.sleep(0.1)
         if self._client is None:
             _LOGGER.debug("No client to disconnect")
             return
@@ -370,7 +373,7 @@ class Hub:
         self._subscribe("#")
         _LOGGER.info("Subscribed to all topics for snapshot")
         await self._keep_alive()
-        await self._wait_for_first_refresh()
+        await self.wait_for_first_refresh()
         _LOGGER.info("Snapshot complete with %d top-level entries", len(self._snapshot))
         return self._snapshot
 
@@ -504,10 +507,12 @@ class Hub:
             _LOGGER.error("Timeout waiting for first first connection")
             raise CannotConnectError("Timeout waiting for first connection")
 
-    async def _wait_for_first_refresh(self) -> None:
+    async def wait_for_first_refresh(self) -> None:
         """Wait for the first full refresh to complete."""
+        _LOGGER.info("Waiting for first refresh")
         try:
             await asyncio.wait_for(self._first_refresh_event.wait(), timeout=60)
+            _LOGGER.info("Devices and metrics initialized. Found %d devices", len(self._devices))
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout waiting for first full refresh")
             raise CannotConnectError("Timeout waiting for first full refresh")
@@ -608,6 +613,15 @@ class Hub:
                 expanded.append(td)
         return expanded
 
+    @property
+    def on_new_metric(self) -> CallbackOnNewMetric | None:
+        """Returns the on_new_metric callback."""
+        return self._on_new_metric
+
+    @on_new_metric.setter
+    def on_new_metric(self, value: CallbackOnNewMetric):
+        """Sets the on_new_metric callback."""
+        self._on_new_metric = value
 
 
 class CannotConnectError(Exception):
