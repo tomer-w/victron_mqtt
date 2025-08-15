@@ -432,6 +432,15 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
+        topic="N/+/solarcharger/+/MppOperationMode",
+        message_type=MetricKind.SWITCH,
+        short_id="solarcharger_mppt_operation_mode",
+        name="Solar Charger MPPT Operation Mode",
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.ENUM,
+        enum=MultiState,
+    ),
+    TopicDescriptor(
         topic="N/+/solarcharger/+/Relay/0/State",
         message_type=MetricKind.SWITCH,
         short_id="solarcharger_relay_state",
