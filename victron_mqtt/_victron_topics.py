@@ -1434,7 +1434,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/settings/+/Settings/CGwacs/OvervoltageFeedIn",
         message_type=MetricKind.SWITCH,
-        short_id="systemGenericOnOff_feedin",
+        short_id="system_settings_overvoltage_feedin",
         name="PV DC Overvoltage FeedIn",
         device_type=DeviceType.SYSTEM,
         value_type=ValueType.ENUM,
