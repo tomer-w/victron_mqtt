@@ -1427,6 +1427,15 @@ topics: List[TopicDescriptor] = [
         max=10000,  # Dynamic range, depends on device model
     ),
     TopicDescriptor(
+        topic="N/+/settings/+/Settings/CGwacs/OvervoltageFeedIn",
+        message_type=MetricKind.SWITCH,
+        short_id="systemGenericOnOff_feedin",
+        name="PV DC Overvoltage FeedIn",
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    TopicDescriptor(
     topic="N/+/settings/+/Settings/SystemSetup/MaxChargeCurrent",
     message_type=MetricKind.NUMBER,
     short_id="system_ess_max_charge_current",
