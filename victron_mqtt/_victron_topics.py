@@ -857,7 +857,7 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/+/system/+/DynamicEss/Strategy",
-        message_type=MetricKind.SWITCH,
+        message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_strategy",
         name="Dynamic ESS Strategy",
         device_type=DeviceType.SYSTEM,
@@ -866,7 +866,7 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/+/system/+/DynamicEss/ReactiveStrategy",
-        message_type=MetricKind.SWITCH,
+        message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_reactive_strategy",
         name="Dynamic ESS Reactive Strategy",
         device_type=DeviceType.SYSTEM,
