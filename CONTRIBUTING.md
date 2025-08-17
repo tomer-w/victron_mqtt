@@ -2,6 +2,13 @@
 
 This guide explains how to extend the `_victron_topics.py` and `_victron_enums.py` file to add support for additional Victron MQTT topics and devices.
 
+## Useful documents to learn about Victron mqtt support
+
+- [Modbus TCP Register List](https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.victronenergy.com%2Fupload%2Fdocuments%2FCCGX-Modbus-TCP-register-list-3.60.xlsx) - This is useful as it also has the ```dbus-obj-path``` column which usually maps directly to the mqtt topics.
+- [Venus dbus wiki](https://github.com/victronenergy/venus/wiki/dbus) - More data on each of the topics and possible values.  
+
+Using those documents one can easily understand what will be the topic which they want to add to the integration.
+
 ## Overview
 
 The `_victron_topics.py` file contains a dictionary that maps MQTT topic patterns to `TopicDescriptor` objects. Each descriptor defines how the topic should be interpreted, what type of entity it represents, and how its values should be processed.
