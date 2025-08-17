@@ -204,7 +204,8 @@ class App:
         if not self._client:
             return
             
-        for device in self._client.devices:
+        devices = sorted(self._client.devices, key=lambda x: x.unique_id)
+        for device in devices:
             device_item = self.tree.insert(
                 "",
                 "end",
@@ -212,7 +213,7 @@ class App:
                 values=(device.serial_number, ""),
                 iid="D" + device.unique_id,
             )
-            metrics = device.metrics
+            metrics = sorted(device.metrics, key=lambda x: x.short_id)
             for metric in metrics:
                 metric_item = self.tree.insert(
                     device_item,
