@@ -32,7 +32,7 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/src"  // Include src in PYTHONPATH so Python can find the module
             },
-            "args": ["--verbose"]
+            "args": ["--verbose", "--log-file", "view_metrics.log"]
         }
     ]
 }

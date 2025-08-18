@@ -293,14 +293,20 @@ async def run_app():
 def main():
     parser = argparse.ArgumentParser(description='Victron Venus Client Metric Viewer')
     parser.add_argument('--verbose', '-v', action='store_true', help='Enable debug logging')
+    parser.add_argument('--log-file', '-l', type=str, help='Log to a specified file')
     args = parser.parse_args()
 
     # Configure logging
-    log_level = logging.DEBUG if args.verbose else logging.WARNING
-    logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - [%(thread)d] - %(message)s'
-    )
+    log_level = logging.INFO if args.verbose else logging.WARNING
+    log_config = {
+        'level': log_level,
+        'format': '%(asctime)s - %(name)s - %(levelname)s - [%(thread)d] - %(message)s'
+    }
+
+    if args.log_file:
+        log_config['filename'] = args.log_file
+
+    logging.basicConfig(**log_config)
 
     asyncio.run(run_app())
 
