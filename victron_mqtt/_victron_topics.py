@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DeviceType, ESSMode, FluidType, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, MultiState, SolarChargerState, TemperatureStatus, TemperatureType
+from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DeviceType, ESSMode, FluidType, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, MultiState, SolarChargerState, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions
 
 topics: List[TopicDescriptor] = [
     # generic device attributes
@@ -859,6 +859,101 @@ topics: List[TopicDescriptor] = [
         device_type=DeviceType.SYSTEM,
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+    ),
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/Available",
+        message_type=MetricKind.BINARY_SENSOR,
+        short_id="system_dynamicess_available",
+        name="Dynamic ESS Available",
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff
+    ),
+    # there is at least one mode for DESS that is controlled by Node-Red (value=4)
+    # it may show up here - as well as: GREEN Mode (1?)an Trade Mode (2?)
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/Active",
+        message_type=MetricKind.SWITCH,
+        short_id="system_dynamicess_active",
+        name="Dynamic ESS Active",
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/AllowGridFeedIn",
+        message_type=MetricKind.BINARY_SENSOR,
+        short_id="system_dynamicess_allow_gridfeedin",
+        name="Dynamic ESS Allow Grid Feed In",
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/AvailableOverhead",
+        message_type=MetricKind.SENSOR,
+        short_id="system_dynamicess_available_overhead",
+        name="Dynamic ESS Available Overhead",
+        device_type=DeviceType.SYSTEM,
+        unit_of_measurement="W",
+        metric_type=MetricType.POWER,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/ErrorCode",
+        message_type=MetricKind.SWITCH,
+        short_id="system_dynamicess_error",
+        name="Dynamic ESS Error",
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.ENUM,
+        enum=DESSErrorCode,
+    ),
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/NumberOfSchedules",
+        message_type=MetricKind.SENSOR,
+        short_id="system_dynamicess_schedule_count",
+        name="Dynamic ESS Number Of Schedules",
+        device_type=DeviceType.SYSTEM,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/TargetSoc",
+        message_type=MetricKind.SENSOR,
+        short_id="system_dynamicess_target_soc",
+        name="Dynamic ESS Target SOC",
+        metric_type=MetricType.PERCENTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.FLOAT,
+        precision=0,
+    ),
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/MinimumSoc",
+        message_type=MetricKind.SENSOR,
+        short_id="system_dynamicess_minimum_soc",
+        name="Dynamic ESS Target SOC",
+        metric_type=MetricType.PERCENTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.FLOAT,
+        precision=0,
+    ),
+    # N/+/system/+/DynamicEss/Capabilities       - not documented - in my case always 31 (bitmask?)
+    # N/+/system/+/DynamicEss/ChargeRate         - not documented - in my case alway 0
+    # N/+/system/+/DynamicEss/Flags              - not documented - in my case always 0
+    # N/+/system/+/DynamicEss/LastScheduledStart - unix timestamp - needs conversion to time
+    # N/+/system/+/DynamicEss/LastScheduledEnd   - unix timestamp - needs conversion to time
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/Restrictions",
+        message_type=MetricKind.SENSOR,
+        short_id="system_dynamicess_restrictions",
+        name="Dynamic ESS Restrictions",
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.ENUM,
+        enum=DESSRestrictions,
     ),
     TopicDescriptor(
         topic="N/+/system/+/DynamicEss/Strategy",

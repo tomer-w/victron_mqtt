@@ -154,4 +154,16 @@ class DESSStrategy(VictronEnum):
     PROBATTERY = (2, "Pro Battery")
     PROGRID = (3, "Pro Grid")
 
+class DESSErrorCode(VictronEnum):
+    NO_ERROR = (0,"No Error")
+    NO_ESS = (1,"No ESS")
+    ESS_MODE = (2, "ESS Mode") # ???
+    NO_SCHEDULE = (3, "No Matching Schedule")
+    SOC_LOW = (4, "SOC low")
+    BATTRY_CAPACITY_NOT_CONFIGURED = (5,"Battery Capacity Not Configured")
 
+class DESSRestrictions(VictronEnum):
+    NO_RESTRICTIONS = (0, "No Restrictions between battery and the grid")
+    GRID_TO_BATTERY_RESTRICTED = (1, "Grid to battey energy flow restricted")
+    BATTERY_TO_GRID_RESTRICTED = (2, "Battery to grid energy flow restricted")
+    NO_FLOW = (3, "No energy flow between battery and grid")
