@@ -63,14 +63,17 @@ class Metric:
         if self._value is None:
             return ""
 
-        try:
-            fvalue = float(self._value)  # Attempt to convert the object to a float
+        if isinstance(self._value, float):
+            assert self._descriptor.precision is not None, f"Precision must be set for float values in metric {self._descriptor.short_id}"
             if self._descriptor.unit_of_measurement is None:
-                return f"{fvalue:.{self._descriptor.precision}f}"
+                return f"{self._value:.{self._descriptor.precision}f}"
             else:
-                return f"{fvalue:.{self._descriptor.precision}f} {self._descriptor.unit_of_measurement}"
-        except (ValueError, TypeError):  # Handle cases where conversion fails
+                return f"{self._value:.{self._descriptor.precision}f} {self._descriptor.unit_of_measurement}"
+            
+        if self._descriptor.unit_of_measurement is None:
             return str(self._value)
+        else:
+            return f"{self._value} {self._descriptor.unit_of_measurement}"
 
     @property
     def value(self):
