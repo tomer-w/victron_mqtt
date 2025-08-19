@@ -436,6 +436,21 @@ async def test_float_precision(create_mocked_hub):
     assert metric.value == 1.1, f"Expected metric value to be 1.1, got {metric.value}"
 
 @pytest.mark.asyncio
+async def test_float_precision_none(create_mocked_hub):
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    hub: Hub = create_mocked_hub
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/gps/170/Position/Latitude", "{\"value\": 1.0123456789}")
+    await finalize_injection(hub)
+
+    # Validate that the device has the metric we published
+    device = hub._devices["123_gps_170"]
+    metric = device.get_metric_from_unique_id("123_gps_170_gps_latitude")
+    assert metric is not None, "Metric should exist in the device"
+    assert metric.value == 1.0123456789, f"Expected metric value to be 1.0123456789, got {metric.value}"
+
+@pytest.mark.asyncio
 async def test_new_metric(create_mocked_hub):
     """Test that the Hub correctly triggers the on_new_metric callback."""
     hub: Hub = create_mocked_hub

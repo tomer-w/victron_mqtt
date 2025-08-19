@@ -1613,6 +1613,7 @@ topics: List[TopicDescriptor] = [
 		metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.GPS,
         value_type=ValueType.FLOAT,
+        precision=None # Use full precision of GPS device
     ),
     TopicDescriptor(
         topic="N/+/gps/+/Connected",
@@ -1670,6 +1671,7 @@ topics: List[TopicDescriptor] = [
 		metric_type=MetricType.LOCATION,
         device_type=DeviceType.GPS,
         value_type=ValueType.FLOAT,
+        precision=None # Use full precision of GPS device
     ),
     TopicDescriptor(
         topic="N/+/gps/+/Position/Longitude",
@@ -1680,5 +1682,6 @@ topics: List[TopicDescriptor] = [
 		metric_type=MetricType.LOCATION,
         device_type=DeviceType.GPS,
         value_type=ValueType.FLOAT,
+        precision=None # Use full precision of GPS device
     ),
 ]

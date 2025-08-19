@@ -43,7 +43,8 @@ def unwrap_float(json_str, precision, json_value: str = "value") -> float | None
         data = json.loads(json_str)
         if data[json_value] is None:
             return None
-        return round(float(data[json_value]), precision)
+        value = float(data[json_value])
+        return value if precision is None else round(value, precision)
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
 
