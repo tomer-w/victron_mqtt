@@ -15,7 +15,7 @@ def test_topics():
     5. Correct metric nature for energy/power types
     6. Valid topic structure patterns
     7. Valid short_id format (lowercase letters, numbers, hyphens, underscores, and placeholders; cannot start/end with underscore)
-    8. No Duplicate names (except for attributes)
+    8. No Duplicate DeviceTypes + Names (except for attributes)
     """
     from victron_mqtt._victron_topics import topics
     from victron_mqtt.constants import MetricKind, ValueType, MetricType, MetricNature
@@ -32,13 +32,13 @@ def test_topics():
             else:
                 short_ids[short_id] = descriptor.topic
 
-    # Check for duplicate names
+    # Check for duplicate devices+names
     names = {}
     for descriptor in topics:
         if descriptor.message_type != MetricKind.ATTRIBUTE:
-            name = descriptor.name
+            name = f"devicetype '{descriptor.device_type}' name '{descriptor.name}'"
             if name in names:
-                errors.append(f"Duplicate name '{name}' found in topics: '{descriptor.topic}' and '{names[name]}'")
+                errors.append(f"Duplicate {name} found in topics: '{descriptor.topic}' and '{names[name]}'")
             else:
                 names[name] = descriptor.topic
 
