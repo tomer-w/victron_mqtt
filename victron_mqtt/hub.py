@@ -68,8 +68,7 @@ class Hub:
         model_name: str | None = None,
         serial: str | None = "noserial",
         topic_prefix: str | None = None,
-#        logger_level: int | None = None
-
+        topic_log_info: str | None = None
     ) -> None:
         """Initialize."""
         global running_client_id
@@ -123,6 +122,7 @@ class Hub:
         self._connected_event = asyncio.Event()
         self._connected_failed_attempts = 0
         self._on_new_metric: CallbackOnNewMetric | None = None
+        self._topic_log_info = topic_log_info
 
         # Replace all {placeholder} patterns with + for MQTT wildcards
         expanded_topics = Hub.expand_topic_list(topics)
@@ -237,11 +237,16 @@ class Hub:
         """Process MQTT message asynchronously."""
         topic = message.topic
         payload = message.payload
-        _LOGGER.debug("Message received: topic=%s, payload=%s", topic, payload)
-        
+
+        # Determine log level based on the substring
+        is_info_level = self._topic_log_info and self._topic_log_info in topic
+        log_debug = _LOGGER.info if is_info_level else _LOGGER.debug
+
+        log_debug("Message received: topic=%s, payload=%s", topic, payload)
+
         # Remove topic prefix before processing
         topic = self._remove_topic_prefix(topic)
-        
+
         if "full_publish_completed" in topic:
             _LOGGER.info("Full publish completed, unsubscribing from notification")
             if self._client is not None and self._client.is_connected():
@@ -250,26 +255,26 @@ class Hub:
             return
 
         if self._installation_id is None and not self._installation_id_event.is_set():
-            self._handle_installation_id_message(topic, payload)
+            self._handle_installation_id_message(topic, payload, log_debug)
 
-        self._handle_normal_message(topic, payload)
+        self._handle_normal_message(topic, payload, log_debug)
 
-    def _handle_installation_id_message(self, topic: str, payload: bytes) -> None:
+    def _handle_installation_id_message(self, topic: str, payload: bytes, log_debug) -> None:
         """Handle installation ID message."""
         parsed_topic = ParsedTopic.from_topic(topic)
         if parsed_topic is None:
-            _LOGGER.debug("Ignoring message - could not parse topic: %s", topic)
+            log_debug("Ignoring installation ID handling - could not parse topic: %s", topic)
             return
-        
+
         self._installation_id = parsed_topic.installation_id
-        _LOGGER.info("Installation ID received: %s. Original topic: %s", self._installation_id, topic)
+        log_debug("Installation ID received: %s. Original topic: %s", self._installation_id, topic)
         self._loop.call_soon_threadsafe(self._installation_id_event.set)
 
-    def _handle_normal_message(self, topic: str, payload: bytes) -> None:
+    def _handle_normal_message(self, topic: str, payload: bytes, log_debug) -> None:
         """Handle regular MQTT message."""
         parsed_topic = ParsedTopic.from_topic(topic)
         if parsed_topic is None:
-            _LOGGER.debug("Ignoring message - could not parse topic: %s", topic)
+            log_debug("Ignoring message - could not parse topic: %s", topic)
             return
 
         fallback_to_metric_topic: bool = False
@@ -283,18 +288,18 @@ class Hub:
             desc_list = self.fallback_map.get(parsed_topic.wildcards_without_device_type)
             fallback_to_metric_topic = True
         if desc_list is None:
-            _LOGGER.debug("Ignoring message - no descriptor found for topic: %s", topic)
+            log_debug("Ignoring message - no descriptor found for topic: %s", topic)
             return
         if len(desc_list) == 1:
             desc = desc_list[0]
         else:
             desc = parsed_topic.match_from_list(desc_list)
             if desc is None:
-                _LOGGER.debug("Ignoring message - no matching descriptor found for list of topic: %s", topic)
+                log_debug("Ignoring message - no matching descriptor found for list of topic: %s", topic)
                 return
 
         device = self._get_or_create_device(parsed_topic, desc)
-        device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload.decode(), self._loop, self)
+        device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload.decode(), self._loop, self, log_debug)
 
     async def disconnect(self) -> None:
         """Disconnect from the hub."""
@@ -331,17 +336,16 @@ class Hub:
     async def _keep_alive_loop(self) -> None:
         """Run keep_alive every 30 seconds."""
         _LOGGER.info("Starting keepalive loop")
-        try:
-            while True:
-                try:
-                    await self._keep_alive()
-                    await asyncio.sleep(30)
-                except Exception as exc:
-                    _LOGGER.error("Error in keepalive loop: %s", exc, exc_info=True)
-                    await asyncio.sleep(5)  # Short delay before retrying
-        except asyncio.CancelledError:
-            _LOGGER.info("Keepalive loop canceled")
-            raise
+        while True:
+            try:
+                await self._keep_alive()
+                await asyncio.sleep(30)
+            except asyncio.CancelledError:
+                _LOGGER.info("Keepalive loop canceled")
+                raise
+            except Exception as exc:
+                _LOGGER.error("Error in keepalive loop: %s", exc, exc_info=True)
+                await asyncio.sleep(5)  # Short delay before retrying
 
     def _start_keep_alive_loop(self) -> None:
         """Start the keep_alive loop."""

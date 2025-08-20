@@ -150,22 +150,22 @@ class Metric:
         """Sets the on_update callback."""
         self._on_update = value
 
-    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop):
+    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop, log_debug: Callable[..., None]    ):
         """Handle a message."""
         if value != self._value:
-            _LOGGER.debug(
+            log_debug(
                 "Metric %s value changed: %s -> %s %s",
                 self.unique_id, self._value, value,
                 self._descriptor.unit_of_measurement or ''
             )
         else:
-            _LOGGER.debug(
+            log_debug(
                 "Metric %s value unchanged: %s %s",
                 self.unique_id, value,
                 self._descriptor.unit_of_measurement or ''
             )
             return
-        
+
         self._value = value
 
         try:
@@ -174,4 +174,4 @@ class Metric:
                     # If the event loop is running, schedule the callback
                     event_loop.call_soon_threadsafe(self._on_update, self)
         except Exception as exc:
-            _LOGGER.error("Error calling callback %s", exc, exc_info=True)
+            log_debug("Error calling callback %s", exc, exc_info=True)

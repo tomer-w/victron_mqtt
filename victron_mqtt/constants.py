@@ -103,3 +103,8 @@ class VictronEnum(Enum):
             return lookup[value]
         except KeyError:
             raise ValueError(f"No enum member found with string={value}")
+
+class VictronDeviceEnum(VictronEnum):
+    def __init__(self, code: str, string: str, mapped_to: str | None = None):
+        super().__init__(code, string)
+        self.mapped_to = mapped_to

@@ -89,21 +89,21 @@ class Device:
         else:
             _LOGGER.warning("Unhandled device property %s for %s", short_id, self.unique_id)
 
-    
-    def handle_message(self, fallback_to_metric_topic:bool, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop, hub: Hub) -> None:
+
+    def handle_message(self, fallback_to_metric_topic: bool, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop, hub: Hub, log_debug: Callable[..., None]) -> None:
         """Handle a message."""
-        _LOGGER.debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
+        log_debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 
         if topic_desc.message_type == MetricKind.ATTRIBUTE:
             self._set_device_property_from_topic(parsed_topic, topic_desc, payload)
             return
-        
+
         if fallback_to_metric_topic:
             value = unwrap_bool(payload)
         else:
             value = Device._unwrap_payload(topic_desc, payload)
         if value is None:
-            _LOGGER.debug(
+            log_debug(
                 "Ignoring null metric value for device %s metric %s", 
                 self.unique_id, topic_desc.short_id
             )
@@ -115,7 +115,7 @@ class Device:
         if topic_desc.message_type != MetricKind.SENSOR and topic_desc.is_adjustable_suffix:
             data_topic = topic.rsplit('/', 1)[0] + '/' + topic_desc.topic.rsplit('/', 1)[1] if fallback_to_metric_topic else topic # need to move from the IsAdjustable topic to the original one
             if fallback_to_metric_topic and data_topic in self._fallback_handled_set:
-                _LOGGER.debug("Already handled fallback for %s", data_topic)
+                log_debug("Already handled fallback for %s", data_topic)
                 return
             if data_topic not in self._fallback_handled_set:
                 if fallback_to_metric_topic:
@@ -151,7 +151,7 @@ class Device:
         metric_id = f"{self.unique_id}_{short_id}"
 
         metric, created = self._get_or_create_metric(metric_id, short_id, topic, parsed_topic, new_topic_desc, hub, payload)
-        metric._handle_message(value, event_loop)
+        metric._handle_message(value, event_loop, log_debug)
         if created:
             try:
                 if callable(hub._on_new_metric):

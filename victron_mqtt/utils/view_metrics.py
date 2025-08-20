@@ -125,7 +125,8 @@ class MetricContainer:
         
 
 class App:
-    def __init__(self):
+    def __init__(self, log_topic: str | None):
+        self._log_topic = log_topic
         self.root = tk.Tk()
 
         self.root.resizable(True, True)
@@ -183,7 +184,7 @@ class App:
 
     async def _async_connect(self, server: str, port: int, username: str | None, password: str | None, use_ssl: bool) -> bool:
         try:
-            self._client = Hub(server, port, username, password, use_ssl)
+            self._client = Hub(server, port, username, password, use_ssl, topic_log_info=self._log_topic)
             await self._client.connect()
             await self._client.wait_for_first_refresh()
             self._fill_tree()
@@ -192,8 +193,6 @@ class App:
         except Exception as e:  # pylint: disable=broad-except
             LOGGER.error("Error connecting to Venus device: %s", e, exc_info=True)
             message = str(e)
-            if message == "":
-                message = type(e).__name__
             messagebox.showerror("Error", f"Error connecting: {message}")
             if self._client:
                 await self._client.disconnect()
@@ -281,8 +280,8 @@ class App:
 
         self.connect_button.config(state=tk.NORMAL)
 
-async def run_app():
-    app = App()
+async def run_app(log_topic: str | None):
+    app = App(log_topic)
     global asyncio_loop
     asyncio_loop = asyncio.get_running_loop()
     while not app.to_quit:
@@ -294,6 +293,7 @@ def main():
     parser = argparse.ArgumentParser(description='Victron Venus Client Metric Viewer')
     parser.add_argument('--verbose', '-v', action='store_true', help='Enable debug logging')
     parser.add_argument('--log-file', '-l', type=str, help='Log to a specified file')
+    parser.add_argument('--log-topic', '-lt', type=str, help='Log level bump to a specified topic')
     args = parser.parse_args()
 
     # Configure logging
@@ -308,7 +308,7 @@ def main():
 
     logging.basicConfig(**log_config)
 
-    asyncio.run(run_app())
+    asyncio.run(run_app(args.log_topic))
 
 
 if __name__ == "__main__":
