@@ -118,13 +118,19 @@ class ParsedTopic:
             native_device_type = topic_parts[5]
 
         device_type = DeviceType.from_code(native_device_type, DeviceType.UNKNOWN)
+        assert device_type is not None
         if device_type == DeviceType.UNKNOWN: # This can happen as we register for the attribute topics
-            _LOGGER.debug("Unknown device type: %s, topic: %s", native_device_type, topic)
+            _LOGGER.warning("Unknown device type: %s, topic: %s", native_device_type, topic)
             # If the device type is unknown, we cannot create a ParsedTopic
             return None
-        
-        if device_type == DeviceType.CGWACS:
-            device_type = DeviceType.SYSTEM
+
+        if device_type.mapped_to:
+            device_type = DeviceType.from_code(device_type.mapped_to, DeviceType.UNKNOWN)
+            assert device_type is not None
+            if device_type == DeviceType.UNKNOWN: # This can happen as we register for the attribute topics
+                _LOGGER.warning("Unknown device type after mapping: %s, topic: %s", device_type.mapped_to, topic)
+                # If the device type is unknown, we cannot create a ParsedTopic
+                return None
 
         device_id = topic_parts[3]
         wildcard_topic_parts[3] = "+"

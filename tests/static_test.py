@@ -161,6 +161,28 @@ def test_topics():
         if '//' in descriptor.topic:
             errors.append(f"Topic '{descriptor.topic}' contains invalid '//' sequence")
     
+    # Check for valid device_type in topics
+    from victron_mqtt._victron_enums import DeviceType
+    # Collect all valid device type codes from DeviceType
+    valid_device_types = {member.code for member in DeviceType}
+
+    # Validate device_type in topics, skipping ATTRIBUTE topics
+    for descriptor in topics:
+        if descriptor.message_type == MetricKind.ATTRIBUTE:
+            continue
+
+        topic_parts = descriptor.topic.split('/')
+        if len(topic_parts) > 2:
+            device_type = topic_parts[2]
+            if device_type != "settings" and device_type not in valid_device_types:
+                errors.append(f"Topic '{descriptor.topic}' has invalid device_type '{device_type}' not defined in DeviceType")
+
+            # If the topic is related to settings, validate part[5] as the actual device type
+            if len(topic_parts) > 5 and topic_parts[2] == 'settings':
+                actual_device_type = topic_parts[5]
+                if actual_device_type not in valid_device_types:
+                    errors.append(f"Settings topic '{descriptor.topic}' has invalid actual device_type '{actual_device_type}' not defined in DeviceType")
+    
     # Report all errors
     if errors:
         error_message = "\n".join([f"  - {error}" for error in errors])

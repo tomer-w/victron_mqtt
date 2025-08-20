@@ -106,3 +106,24 @@ def test_settings_parsed_topic():
     # Validate the ParsedTopic instance additional fields after matching description
     assert parsed_topic.name == "AC Power Setpoint", "Name should match"
     assert parsed_topic.short_id == "system_ac_power_set_point", "Short ID should match"
+
+
+def test_settings_parsed_topic_2():
+    # Find the TopicDescriptor with the desired topic
+    descriptor = next((t for t in topics if t.topic == "N/+/settings/+/Settings/SystemSetup/MaxChargeCurrent"), None)
+    assert descriptor is not None, "TopicDescriptor with the specified topic not found"
+
+    # Create a ParsedTopic instance
+    topic = "N/061c6f611bd7/settings/0/Settings/SystemSetup/MaxChargeCurrent"
+    parsed_topic = ParsedTopic.from_topic(topic)
+    assert parsed_topic is not None, "ParsedTopic should not be None"
+
+    # Validate the ParsedTopic instance
+    assert parsed_topic.installation_id == "061c6f611bd7", "Installation ID should match"
+    assert parsed_topic.device_id == "0", "Device ID should match"
+    assert parsed_topic.device_type == DeviceType.SYSTEM_SETUP # We decided that SYSTEM_SETUP will not be mapped
+
+    parsed_topic.finalize_topic_fields(descriptor)
+    # Validate the ParsedTopic instance additional fields after matching description
+    assert parsed_topic.name == "ESS max charge current", "Name should match"
+    assert parsed_topic.short_id == "system_ess_max_charge_current", "Short ID should match"
