@@ -1547,6 +1547,18 @@ topics: List[TopicDescriptor] = [
     value_type=ValueType.INT,
     min_max_range=RangeType.DYNAMIC,
     ),
+    TopicDescriptor(
+    topic="N/+/settings/+/Settings/SystemSetup/MaxChargeVoltage",
+    message_type=MetricKind.NUMBER,
+    short_id="system_ess_max_charge_voltage",
+    name="ESS max charge voltage",
+    unit_of_measurement="V",
+    metric_type=MetricType.VOLTAGE,
+    metric_nature=MetricNature.INSTANTANEOUS,
+    device_type=DeviceType.SYSTEM,
+    value_type=ValueType.INT,
+    min_max_range=RangeType.DYNAMIC,
+    ),
     # DC Load
     TopicDescriptor(
         topic="N/+/dcload/+/Dc/0/Voltage",
