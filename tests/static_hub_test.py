@@ -341,6 +341,23 @@ async def test_expend_message(create_mocked_hub):
     assert metric.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric.value}"
 
 @pytest.mark.asyncio
+async def test_expend_message_2(create_mocked_hub):
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    hub: Hub = create_mocked_hub
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/battery/170/Voltages/Cell3", "{\"value\": 3.331}")
+    await finalize_injection(hub)
+
+    # Validate that the device has the metric we published
+    device = hub._devices["123_battery_170"]
+    metric = device.get_metric_from_unique_id("123_battery_170_battery_cell_3_voltage")
+    assert metric is not None, "Metric should exist in the device"
+    assert metric.generic_short_id == "battery_cell_{cell_id}_voltage"
+    assert metric.key_values["cell_id"] == "3"
+    assert metric.value == 3.331, f"Expected metric value to be 3.331, got {metric.value}"
+
+@pytest.mark.asyncio
 async def test_same_message_events(create_mocked_hub):
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
     hub: Hub = create_mocked_hub

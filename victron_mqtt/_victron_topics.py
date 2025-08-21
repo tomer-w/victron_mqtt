@@ -624,6 +624,18 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         precision=1,
     ),
+    TopicDescriptor(
+        topic="N/+/battery/+/Voltages/Cell{cell_id(1-4)}",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_cell_{cell_id}_voltage",
+        name="Battery cell {cell_id} voltage",
+        unit_of_measurement="V",
+        metric_type=MetricType.VOLTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.BATTERY,
+        value_type=ValueType.FLOAT,
+        precision=3,
+    ),
     # inverter
     TopicDescriptor(
         topic="N/+/vebus/+/Mode",
