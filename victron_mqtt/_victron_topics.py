@@ -1722,4 +1722,16 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         precision=None # Use full precision of GPS device
     ),
+    TopicDescriptor(
+        topic="N/+/settings/+/Settings/CGwacs/MaxDischargePower",
+        message_type=MetricKind.NUMBER,
+        short_id="system_ess_max_inverter_power_limit",
+        name="ESS max inverter power limit",
+        unit_of_measurement="W",
+        metric_type=MetricType.POWER,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.INT,
+        min_max_range=RangeType.DYNAMIC,
+    ),
 ]
