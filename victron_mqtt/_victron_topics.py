@@ -268,7 +268,7 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.SOLAR_CHARGER,
         value_type=ValueType.FLOAT,
-        precision=2,
+        precision=3,
     ),
     TopicDescriptor(
         topic="N/+/solarcharger/+/Dc/0/Current",
@@ -460,7 +460,7 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.BATTERY,
         value_type=ValueType.FLOAT,
-        precision=1,
+        precision=3,
     ),
     TopicDescriptor(
         topic="N/+/battery/+/Dc/0/Current",
@@ -837,7 +837,7 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.SYSTEM,
         value_type=ValueType.FLOAT,
-        precision=1,
+        precision=3,
     ),
     TopicDescriptor(
         topic="N/+/system/+/Dc/Battery/Current",
@@ -1451,7 +1451,7 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.ALTERNATOR,
         value_type=ValueType.FLOAT,
-        precision=2,
+        precision=3,
     ),
     TopicDescriptor(
         topic="N/+/alternator/+/Dc/0/Current",
@@ -1572,7 +1572,7 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.DC_LOAD,
         value_type=ValueType.FLOAT,
-        precision=2
+        precision=3
     ),
     TopicDescriptor(
         topic="N/+/dcload/+/Dc/0/Current",
