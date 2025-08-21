@@ -3,8 +3,10 @@
 import asyncio
 import json
 import logging
+import random
 import ssl
 import re
+import string
 from typing import Any, Callable, Optional
 
 import paho.mqtt.client as mqtt
@@ -151,8 +153,11 @@ class Hub:
         subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in expanded_topics]
         subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(desc)) for desc in expanded_topics if desc.is_adjustable_suffix]
         self._subscription_list = subscription_list1 + subscription_list2
-        self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2, client_id="victron_mqtt-" + str(self._instance_id))
-        _LOGGER.info("Hub initialized")
+        # The client ID is generated using a random string and the instance ID. It has to be unique between all clients connected to the same mqtt server. If not, they may reset each other connection.
+        random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+        client_id = f"victron_mqtt-{random_string}-{self._instance_id}"
+        self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2, client_id=client_id)
+        _LOGGER.info("Hub initialized. Client ID: %s", client_id)
 
     async def connect(self) -> None:
         """Connect to the hub."""
