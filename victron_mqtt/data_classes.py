@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 
 from ._victron_enums import DeviceType
@@ -28,6 +28,7 @@ class TopicDescriptor:
     min: int | None = None
     max: int | None = None
     is_adjustable_suffix: str | None = None
+    key_values: dict[str, str] = field(default_factory=dict)
 
     def __repr__(self) -> str:
         """Return a string representation of the topic."""
@@ -44,13 +45,16 @@ class TopicDescriptor:
             f"precision={self.precision}, "
             f"min={self.min}, "
             f"max={self.max}, "
-            f"enum={self.enum})"
+            f"enum={self.enum}, "
+            f"is_adjustable_suffix={self.is_adjustable_suffix}, "
+            f"key_values={self.key_values})"
         )
     
     def __post_init__(self):
         assert self.message_type == MetricKind.ATTRIBUTE or self.name is not None
         if self.value_type != ValueType.FLOAT:
             self.precision = None
+
 
 @dataclass
 class ParsedTopic:
@@ -115,6 +119,19 @@ class ParsedTopic:
 
         device_type = DeviceType.from_code(native_device_type, DeviceType.UNKNOWN)
         assert device_type is not None
+        if device_type == DeviceType.UNKNOWN: # This can happen as we register for the attribute topics
+            _LOGGER.warning("Unknown device type: %s, topic: %s", native_device_type, topic)
+            # If the device type is unknown, we cannot create a ParsedTopic
+            return None
+
+        if device_type.mapped_to:
+            device_type = DeviceType.from_code(device_type.mapped_to, DeviceType.UNKNOWN)
+            assert device_type is not None
+            if device_type == DeviceType.UNKNOWN: # This can happen as we register for the attribute topics
+                _LOGGER.warning("Unknown device type after mapping: %s, topic: %s", device_type.mapped_to, topic)
+                # If the device type is unknown, we cannot create a ParsedTopic
+                return None
+
         device_id = topic_parts[3]
         wildcard_topic_parts[3] = "+"
 
@@ -133,6 +150,7 @@ class ParsedTopic:
 
     def finalize_topic_fields(self, topic_desc: TopicDescriptor) -> None:
         self._key_values = self.get_key_values(topic_desc)
+        self._key_values.update(topic_desc.key_values)
         self._short_id = self._replace_ids(topic_desc.short_id)
         assert topic_desc.name is not None
         self._name = self._replace_ids(topic_desc.name)

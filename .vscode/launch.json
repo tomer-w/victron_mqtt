@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug dump_victron_mqtt",
+            "name": "dump_victron_mqtt",
             "type": "debugpy",
             "request": "launch",
             "module": "victron_mqtt.utils.dump_victron_mqtt",
@@ -15,7 +15,7 @@
             "args": ["victron_mqtt.json"]
         },
         {
-            "name": "Debug dump_mqtt",
+            "name": "dump_mqtt",
             "type": "debugpy",
             "request": "launch",
             "module": "victron_mqtt.utils.dump_mqtt",
@@ -25,14 +25,24 @@
             "args": ["--host", "192.168.0.159", "--port", "1884", "--verbose"]
         },
         {
-            "name": "Debug view_metrics",
+            "name": "view_metrics",
             "type": "debugpy",
             "request": "launch",
             "module": "victron_mqtt.utils.view_metrics",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/src"  // Include src in PYTHONPATH so Python can find the module
             },
-            "args": ["--verbose"]
+            "args": ["--verbose", "--log-file", "view_metrics.log"]
+        },
+        {
+            "name": "dumb_mqtt_listener",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "victron_mqtt.utils.dumb_mqtt_listener",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"  // Include src in PYTHONPATH so Python can find the module
+            },
+            "args": ["--host", "192.168.0.159", "--port", "1883", "--only_supported_victron"]
         }
     ]
 }

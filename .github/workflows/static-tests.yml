@@ -1,0 +1,26 @@
+name: Static Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  static_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Hatch
+        run: pip install hatch
+      - name: Run static tests
+        run: hatch test tests/static_test.py tests/static_hub_test.py tests/parsed_topics_test.py

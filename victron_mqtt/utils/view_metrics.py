@@ -17,6 +17,8 @@ from victron_mqtt.switch import Switch
 
 DEFAULT_HOST = "venus.local."
 DEFAULT_PORT = 1883
+DEFAULT_USER = ""
+DEFAULT_PASSWORD = ""
 
 LOGGER = getLogger(__name__)
 
@@ -34,6 +36,9 @@ class ConnectionDialog(simpledialog.Dialog):
         tk.Label(master, text="Use SSL:").grid(row=4)
         host = os.environ.get("VICTRON_MQTT_SERVER", DEFAULT_HOST)
         port = os.environ.get("VICTRON_MQTT_PORT", DEFAULT_PORT)
+        user = os.environ.get("VICTRON_MQTT_USER", DEFAULT_USER)
+        password = os.environ.get("VICTRON_MQTT_PASSWORD", DEFAULT_PASSWORD)
+        ssl = os.environ.get("VICTRON_MQTT_SSL", False) not in [False, "0", "False", "false", "F", "f", "No", "no", "N", "n"]
 
         self.server_entry = tk.Entry(master)
         self.server_entry.insert(0, host)
@@ -42,11 +47,14 @@ class ConnectionDialog(simpledialog.Dialog):
         self.port_entry.insert(0, str(port))
 
         self.username_entry = tk.Entry(master)
+        self.username_entry.insert(0, user)
 
         self.password_entry = tk.Entry(master, show="*")
+        self.password_entry.insert(0, password)
 
         self.use_ssl_var = tk.BooleanVar()
         self.use_ssl_check = tk.Checkbutton(master, variable=self.use_ssl_var)
+        self.use_ssl_var.set(ssl)
 
         self.server_entry.grid(row=0, column=1)
         self.port_entry.grid(row=1, column=1)
@@ -117,7 +125,8 @@ class MetricContainer:
         
 
 class App:
-    def __init__(self):
+    def __init__(self, log_topic: str | None):
+        self._log_topic = log_topic
         self.root = tk.Tk()
 
         self.root.resizable(True, True)
@@ -175,16 +184,15 @@ class App:
 
     async def _async_connect(self, server: str, port: int, username: str | None, password: str | None, use_ssl: bool) -> bool:
         try:
-            self._client = Hub(server, port, username, password, use_ssl)
+            self._client = Hub(server, port, username, password, use_ssl, topic_log_info=self._log_topic)
             await self._client.connect()
+            await self._client.wait_for_first_refresh()
             self._fill_tree()
             self.disconnect_button.config(state=tk.NORMAL)
             return True
         except Exception as e:  # pylint: disable=broad-except
             LOGGER.error("Error connecting to Venus device: %s", e, exc_info=True)
             message = str(e)
-            if message == "":
-                message = type(e).__name__
             messagebox.showerror("Error", f"Error connecting: {message}")
             if self._client:
                 await self._client.disconnect()
@@ -195,7 +203,8 @@ class App:
         if not self._client:
             return
             
-        for device in self._client.devices:
+        devices = sorted(self._client.devices, key=lambda x: x.unique_id)
+        for device in devices:
             device_item = self.tree.insert(
                 "",
                 "end",
@@ -203,7 +212,7 @@ class App:
                 values=(device.serial_number, ""),
                 iid="D" + device.unique_id,
             )
-            metrics = device.metrics
+            metrics = sorted(device.metrics, key=lambda x: x.short_id)
             for metric in metrics:
                 metric_item = self.tree.insert(
                     device_item,
@@ -271,8 +280,8 @@ class App:
 
         self.connect_button.config(state=tk.NORMAL)
 
-async def run_app():
-    app = App()
+async def run_app(log_topic: str | None):
+    app = App(log_topic)
     global asyncio_loop
     asyncio_loop = asyncio.get_running_loop()
     while not app.to_quit:
@@ -283,16 +292,23 @@ async def run_app():
 def main():
     parser = argparse.ArgumentParser(description='Victron Venus Client Metric Viewer')
     parser.add_argument('--verbose', '-v', action='store_true', help='Enable debug logging')
+    parser.add_argument('--log-file', '-l', type=str, help='Log to a specified file')
+    parser.add_argument('--log-topic', '-lt', type=str, help='Log level bump to a specified topic')
     args = parser.parse_args()
 
     # Configure logging
     log_level = logging.INFO if args.verbose else logging.WARNING
-    logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - [%(thread)d] - %(message)s'
-    )
+    log_config = {
+        'level': log_level,
+        'format': '%(asctime)s - %(name)s - %(levelname)s - [%(thread)d] - %(message)s'
+    }
 
-    asyncio.run(run_app())
+    if args.log_file:
+        log_config['filename'] = args.log_file
+
+    logging.basicConfig(**log_config)
+
+    asyncio.run(run_app(args.log_topic))
 
 
 if __name__ == "__main__":

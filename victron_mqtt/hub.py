@@ -3,9 +3,11 @@
 import asyncio
 import json
 import logging
+import random
 import ssl
 import re
-from typing import Any, Optional
+import string
+from typing import Any, Callable, Optional
 
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import Client as MQTTClient, PayloadType
@@ -20,6 +22,21 @@ from .device import Device
 from .metric import Metric
 
 _LOGGER = logging.getLogger(__name__)
+CONNECT_MAX_FAILED_ATTEMPTS = 3
+
+# Modify the logger to include instance_id without changing the tracing level
+# class InstanceIDFilter(logging.Filter):
+#     def __init__(self, instance_id):
+#         super().__init__()
+#         self.instance_id = instance_id
+
+#     def filter(self, record):
+#         record.instance_id = self.instance_id
+#         return True
+
+# Update the log format to include instance_id with a default value if not present
+# for handler in logging.getLogger().handlers:
+#     handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - [ID: %(instance_id)s] - %(message)s', defaults={'instance_id': 'N/A'}))
 
 # class TracedTask(asyncio.Task):
 #     def __init__(self, coro, *, loop=None, name=None):
@@ -35,6 +52,10 @@ _LOGGER = logging.getLogger(__name__)
 #         else:
 #             print(f"[TASK DONE] {self.get_name()} - Result: {result}")
 
+running_client_id=0
+
+CallbackOnNewMetric = Callable[["Hub", Device, Metric], None]
+
 class Hub:
     """Class to communicate with the Venus OS hub."""
 
@@ -47,29 +68,40 @@ class Hub:
         use_ssl: bool,
         installation_id: str | None = None,
         model_name: str | None = None,
-        serial: str = "noserial",
+        serial: str | None = "noserial",
         topic_prefix: str | None = None,
+        topic_log_info: str | None = None
     ) -> None:
         """Initialize."""
+        global running_client_id
+        self._instance_id = running_client_id
+        running_client_id += 1
+
+        # Add the instance_id filter to the logger only if it doesn't already exist
+        # self.logger = logging.getLogger(__name__)
+        # self.logger.addFilter(InstanceIDFilter(self._instance_id))
+        # if logger_level is not None:
+        #     self.logger.setLevel(logger_level)
+
         # Parameter validation
         if not isinstance(host, str) or not host:
             raise ValueError("host must be a non-empty string")
         if not isinstance(port, int) or not (0 < port < 65536):
             raise ValueError("port must be an integer between 1 and 65535")
         if username is not None and not isinstance(username, str):
-            raise TypeError("username must be a string or None")
+            raise TypeError(f"username must be a string or None, got type={type(username).__name__}, value={username!r}")
         if password is not None and not isinstance(password, str):
-            raise TypeError("password must be a string or None")
+            raise TypeError(f"password must be a string or None, got type={type(password).__name__}, value={password!r}")
         if not isinstance(use_ssl, bool):
-            raise TypeError("use_ssl must be a boolean")
+            raise TypeError(f"use_ssl must be a boolean, got type={type(use_ssl).__name__}, value={use_ssl!r}")
         if installation_id is not None and not isinstance(installation_id, str):
-            raise TypeError("installation_id must be a string or None")
+            raise TypeError(f"installation_id must be a string or None, got type={type(installation_id).__name__}, value={installation_id!r}")
         if model_name is not None and not isinstance(model_name, str):
-            raise TypeError("model_name must be a string or None")
-        if not isinstance(serial, str):
-            raise TypeError("serial must be a string")
+            raise TypeError(f"model_name must be a string or None, got type={type(model_name).__name__}, value={model_name!r}")
+        if serial is not None and not isinstance(serial, str):
+            raise TypeError(f"serial must be a string or None, got type={type(serial).__name__}, value={serial!r}")
         if topic_prefix is not None and not isinstance(topic_prefix, str):
-            raise TypeError("topic_prefix must be a string or None")
+            raise TypeError(f"topic_prefix must be a string or None, got type={type(topic_prefix).__name__}, value={topic_prefix!r}")
         _LOGGER.info(
             "Initializing Hub(host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s)",
             host, port, username, use_ssl, installation_id, model_name, topic_prefix
@@ -84,16 +116,18 @@ class Hub:
         self.port = port
         self._installation_id = installation_id
         self._topic_prefix = topic_prefix
-        self.logger = logging.getLogger(__name__)
         self._devices: dict[str, Device] = {}
         self._first_refresh_event: asyncio.Event = asyncio.Event()
         self._installation_id_event: asyncio.Event = asyncio.Event()
         self._snapshot = {}
         self._keep_alive_task = None
         self._connected_event = asyncio.Event()
-        self._connected_failed = False
-        # Replace all {placeholder} patterns with + for MQTT wildcards
+        self._connected_failed_attempts = 0
+        self._on_new_metric: CallbackOnNewMetric | None = None
+        self._topic_log_info = topic_log_info
 
+        # Replace all {placeholder} patterns with + for MQTT wildcards
+        expanded_topics = Hub.expand_topic_list(topics)
         def merge_is_adjustable_suffix(desc: TopicDescriptor) -> str:
             """Merge the topic with its adjustable suffix."""
             assert desc.is_adjustable_suffix is not None
@@ -111,21 +145,25 @@ class Hub:
                     result[key] = [item]
             return result
 
-        self.topic_map = build_multi_map(topics, lambda desc: Hub._remove_placeholders_map(desc.topic))
+        self.topic_map = build_multi_map(expanded_topics, lambda desc: Hub._remove_placeholders_map(desc.topic))
         self.fallback_map = build_multi_map(
-            [desc for desc in topics if desc.is_adjustable_suffix],
+            [desc for desc in expanded_topics if desc.is_adjustable_suffix],
             lambda desc: Hub._remove_placeholders_map(merge_is_adjustable_suffix(desc))
         )
-        subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in topics]
-        subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(desc)) for desc in topics if desc.is_adjustable_suffix]
+        subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in expanded_topics]
+        subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(desc)) for desc in expanded_topics if desc.is_adjustable_suffix]
         self._subscription_list = subscription_list1 + subscription_list2
-        self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2)
-        _LOGGER.info("Hub initialized")
+        # The client ID is generated using a random string and the instance ID. It has to be unique between all clients connected to the same mqtt server. If not, they may reset each other connection.
+        random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+        client_id = f"victron_mqtt-{random_string}-{self._instance_id}"
+        self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2, client_id=client_id)
+        _LOGGER.info("Hub initialized. Client ID: %s", client_id)
 
     async def connect(self) -> None:
         """Connect to the hub."""
         _LOGGER.info("Connecting to MQTT broker at %s:%d", self.host, self.port)
-        
+        assert self._client is not None
+
         if self.username is not None:
             _LOGGER.info("Setting auth credentials for user: %s", self.username)
             self._client.username_pw_set(self.username, self.password)
@@ -142,9 +180,9 @@ class Hub:
         self._client.on_message = self._on_message
         self._client.on_connect_fail = self.on_connect_fail
         #self._client.on_log = self._on_log
-        self._connected_failed = False
+        self._connected_failed_attempts = 0
         self._loop = asyncio.get_event_loop()
-        #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop))
+        #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop, name=name))
 
         try:
             _LOGGER.info("Starting paho mqtt")
@@ -153,7 +191,7 @@ class Hub:
             self._client.connect_async(self.host, self.port)
             _LOGGER.info("Waiting for connection event")
             await self._wait_for_connect()
-            if self._connected_failed:
+            if self._connected_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
                 _LOGGER.error("Failed to connect to MQTT broker")
                 raise CannotConnectError("Failed to connect to MQTT broker")
             _LOGGER.info("Successfully connected to MQTT broker at %s:%d", self.host, self.port)
@@ -161,9 +199,7 @@ class Hub:
                 _LOGGER.info("No installation ID provided, attempting to read from device")
                 self._installation_id = await self._read_installation_id()
             self._start_keep_alive_loop()
-            _LOGGER.info("Waiting for first refresh")
-            await self._wait_for_first_refresh()
-            _LOGGER.info("Devices and metrics initialized. Found %d devices", len(self._devices))
+            _LOGGER.info("Connected. Installation ID: %s", self._installation_id)
         except Exception as exc:
             _LOGGER.error("Failed to connect to MQTT broker: %s", exc, exc_info=True)
             raise CannotConnectError(f"Failed to connect to MQTT broker: {exc}") from exc
@@ -206,11 +242,16 @@ class Hub:
         """Process MQTT message asynchronously."""
         topic = message.topic
         payload = message.payload
-        _LOGGER.debug("Message received: topic=%s, payload=%s", topic, payload)
-        
+
+        # Determine log level based on the substring
+        is_info_level = self._topic_log_info and self._topic_log_info in topic
+        log_debug = _LOGGER.info if is_info_level else _LOGGER.debug
+
+        log_debug("Message received: topic=%s, payload=%s", topic, payload)
+
         # Remove topic prefix before processing
         topic = self._remove_topic_prefix(topic)
-        
+
         if "full_publish_completed" in topic:
             _LOGGER.info("Full publish completed, unsubscribing from notification")
             if self._client is not None and self._client.is_connected():
@@ -218,27 +259,27 @@ class Hub:
             self._loop.call_soon_threadsafe(self._first_refresh_event.set)
             return
 
-        if not self._installation_id_event.is_set():
-            self._handle_installation_id_message(topic, payload)
+        if self._installation_id is None and not self._installation_id_event.is_set():
+            self._handle_installation_id_message(topic, payload, log_debug)
+
+        self._handle_normal_message(topic, payload, log_debug)
+
+    def _handle_installation_id_message(self, topic: str, payload: bytes, log_debug) -> None:
+        """Handle installation ID message."""
+        parsed_topic = ParsedTopic.from_topic(topic)
+        if parsed_topic is None:
+            log_debug("Ignoring installation ID handling - could not parse topic: %s", topic)
             return
 
-        self._handle_normal_message(topic, payload)
+        self._installation_id = parsed_topic.installation_id
+        log_debug("Installation ID received: %s. Original topic: %s", self._installation_id, topic)
+        self._loop.call_soon_threadsafe(self._installation_id_event.set)
 
-    def _handle_installation_id_message(self, topic: str, payload: bytes) -> None:
-        """Handle installation ID message."""
-        topic_parts = topic.split("/")
-        if len(topic_parts) == 5 and topic_parts[2:5] == ["system", "0", "Serial"]:
-            payload_json = json.loads(payload.decode())
-            self._installation_id = payload_json.get("value")
-            _LOGGER.info("Installation ID received: %s. Original topic: %s", self._installation_id, topic)
-            if self._installation_id_event:
-                 self._loop.call_soon_threadsafe(self._installation_id_event.set)
-
-    def _handle_normal_message(self, topic: str, payload: bytes) -> None:
+    def _handle_normal_message(self, topic: str, payload: bytes, log_debug) -> None:
         """Handle regular MQTT message."""
         parsed_topic = ParsedTopic.from_topic(topic)
         if parsed_topic is None:
-            _LOGGER.debug("Ignoring message - could not parse topic: %s", topic)
+            log_debug("Ignoring message - could not parse topic: %s", topic)
             return
 
         fallback_to_metric_topic: bool = False
@@ -252,23 +293,24 @@ class Hub:
             desc_list = self.fallback_map.get(parsed_topic.wildcards_without_device_type)
             fallback_to_metric_topic = True
         if desc_list is None:
-            _LOGGER.debug("Ignoring message - no descriptor found for topic: %s", topic)
+            log_debug("Ignoring message - no descriptor found for topic: %s", topic)
             return
         if len(desc_list) == 1:
             desc = desc_list[0]
         else:
             desc = parsed_topic.match_from_list(desc_list)
             if desc is None:
-                _LOGGER.debug("Ignoring message - no matching descriptor found for list of topic: %s", topic)
+                log_debug("Ignoring message - no matching descriptor found for list of topic: %s", topic)
                 return
 
         device = self._get_or_create_device(parsed_topic, desc)
-        device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload.decode(), self._loop, self)
+        device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload.decode(), self._loop, self, log_debug)
 
     async def disconnect(self) -> None:
         """Disconnect from the hub."""
         _LOGGER.info("Disconnecting from MQTT broker")
         self._stop_keep_alive_loop()
+        await asyncio.sleep(0.1)
         if self._client is None:
             _LOGGER.debug("No client to disconnect")
             return
@@ -280,7 +322,6 @@ class Hub:
     async def _keep_alive(self) -> None:
         """Send a keep alive message to the hub. Updates will only be made to the metrics
         for the 60 seconds following this method call."""
-        # cspell:disable-next-line
         keep_alive_topic = f"R/{self._installation_id}/keepalive"
 
         if self._client is None:
@@ -300,17 +341,16 @@ class Hub:
     async def _keep_alive_loop(self) -> None:
         """Run keep_alive every 30 seconds."""
         _LOGGER.info("Starting keepalive loop")
-        try:
-            while True:
-                try:
-                    await self._keep_alive()
-                    await asyncio.sleep(30)
-                except Exception as exc:
-                    _LOGGER.error("Error in keepalive loop: %s", exc, exc_info=True)
-                    await asyncio.sleep(5)  # Short delay before retrying
-        except asyncio.CancelledError:
-            _LOGGER.info("Keepalive loop canceled")
-            raise
+        while True:
+            try:
+                await self._keep_alive()
+                await asyncio.sleep(30)
+            except asyncio.CancelledError:
+                _LOGGER.info("Keepalive loop canceled")
+                raise
+            except Exception as exc:
+                _LOGGER.error("Error in keepalive loop: %s", exc, exc_info=True)
+                await asyncio.sleep(5)  # Short delay before retrying
 
     def _start_keep_alive_loop(self) -> None:
         """Start the keep_alive loop."""
@@ -342,7 +382,7 @@ class Hub:
         self._subscribe("#")
         _LOGGER.info("Subscribed to all topics for snapshot")
         await self._keep_alive()
-        await self._wait_for_first_refresh()
+        await self.wait_for_first_refresh()
         _LOGGER.info("Snapshot complete with %d top-level entries", len(self._snapshot))
         return self._snapshot
 
@@ -476,10 +516,12 @@ class Hub:
             _LOGGER.error("Timeout waiting for first first connection")
             raise CannotConnectError("Timeout waiting for first connection")
 
-    async def _wait_for_first_refresh(self) -> None:
+    async def wait_for_first_refresh(self) -> None:
         """Wait for the first full refresh to complete."""
+        _LOGGER.info("Waiting for first refresh")
         try:
             await asyncio.wait_for(self._first_refresh_event.wait(), timeout=60)
+            _LOGGER.info("Devices and metrics initialized. Found %d devices", len(self._devices))
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout waiting for first full refresh")
             raise CannotConnectError("Timeout waiting for first full refresh")
@@ -549,12 +591,46 @@ class Hub:
             return False
         return self._client.is_connected()
 
-
     def on_connect_fail(self, client: MQTTClient, userdata: Any) -> None:
         """Handle connection failure callback."""
-        _LOGGER.error("Connection to MQTT broker failed")
-        self._connected_failed = True
-        self._loop.call_soon_threadsafe(self._connected_event.set)
+        _LOGGER.warning("Connection to MQTT broker failed")
+        self._connected_failed_attempts += 1
+        if self._connected_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
+            self._loop.call_soon_threadsafe(self._connected_event.set)
+
+    @staticmethod
+    def expand_topic_list(topic_list: list[TopicDescriptor]) -> list[TopicDescriptor]:
+        """
+        Expands TopicDescriptors with placeholders like {output(1-4)} into multiple descriptors.
+        """
+        import re
+        expanded = []
+        pattern = re.compile(r"\{([a-zA-Z0-9_]+)\((\d+)-(\d+)\)\}")
+        for td in topic_list:
+            matches = list(pattern.finditer(td.topic))
+            if matches:
+                # For each placeholder, expand all combinations
+                # Only support one placeholder per field for now
+                match = matches[0]
+                key, start, end = match.group(1), int(match.group(2)), int(match.group(3))
+                for i in range(start, end+1):
+                    new_kwargs = td.__dict__.copy()
+                    new_kwargs['topic'] = pattern.sub(str(i), td.topic)
+                    new_kwargs['key_values'] = {key: str(i)}
+                    expanded.append(TopicDescriptor(**new_kwargs))
+            else:
+                expanded.append(td)
+        return expanded
+
+    @property
+    def on_new_metric(self) -> CallbackOnNewMetric | None:
+        """Returns the on_new_metric callback."""
+        return self._on_new_metric
+
+    @on_new_metric.setter
+    def on_new_metric(self, value: CallbackOnNewMetric):
+        """Sets the on_new_metric callback."""
+        self._on_new_metric = value
 
 
 class CannotConnectError(Exception):

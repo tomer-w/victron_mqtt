@@ -63,14 +63,10 @@ class Metric:
         if self._value is None:
             return ""
 
-        try:
-            fvalue = float(self._value)  # Attempt to convert the object to a float
-            if self._descriptor.unit_of_measurement is None:
-                return f"{fvalue:.{self._descriptor.precision}f}"
-            else:
-                return f"{fvalue:.{self._descriptor.precision}f} {self._descriptor.unit_of_measurement}"
-        except (ValueError, TypeError):  # Handle cases where conversion fails
+        if self._descriptor.unit_of_measurement is None:
             return str(self._value)
+        else:
+            return f"{self._value} {self._descriptor.unit_of_measurement}"
 
     @property
     def value(self):
@@ -154,14 +150,22 @@ class Metric:
         """Sets the on_update callback."""
         self._on_update = value
 
-    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop):
+    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop, log_debug: Callable[..., None]    ):
         """Handle a message."""
         if value != self._value:
-            _LOGGER.debug(
+            log_debug(
                 "Metric %s value changed: %s -> %s %s",
                 self.unique_id, self._value, value,
                 self._descriptor.unit_of_measurement or ''
             )
+        else:
+            log_debug(
+                "Metric %s value unchanged: %s %s",
+                self.unique_id, value,
+                self._descriptor.unit_of_measurement or ''
+            )
+            return
+
         self._value = value
 
         try:
@@ -170,4 +174,4 @@ class Metric:
                     # If the event loop is running, schedule the callback
                     event_loop.call_soon_threadsafe(self._on_update, self)
         except Exception as exc:
-            _LOGGER.error("Error calling callback %s", exc, exc_info=True)
+            log_debug("Error calling callback %s", exc, exc_info=True)
