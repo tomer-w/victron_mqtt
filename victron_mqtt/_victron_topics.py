@@ -433,7 +433,7 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/+/solarcharger/+/MppOperationMode",
-        message_type=MetricKind.SWITCH,
+        message_type=MetricKind.SENSOR,
         short_id="solarcharger_mppt_operation_mode",
         name="Solar Charger MPPT Operation Mode",
         device_type=DeviceType.SOLAR_CHARGER,
