@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Tuple
 import copy
 
 if TYPE_CHECKING:
@@ -90,13 +90,13 @@ class Device:
             _LOGGER.warning("Unhandled device property %s for %s", short_id, self.unique_id)
 
 
-    def handle_message(self, fallback_to_metric_topic: bool, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop, hub: Hub, log_debug: Callable[..., None]) -> None:
+    def handle_message(self, fallback_to_metric_topic: bool, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop, hub: Hub, log_debug: Callable[..., None]) -> Tuple[Device,Metric] | None:
         """Handle a message."""
         log_debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 
         if topic_desc.message_type == MetricKind.ATTRIBUTE:
             self._set_device_property_from_topic(parsed_topic, topic_desc, payload)
-            return
+            return None
 
         if fallback_to_metric_topic:
             value = unwrap_bool(payload)
@@ -107,7 +107,7 @@ class Device:
                 "Ignoring null metric value for device %s metric %s", 
                 self.unique_id, topic_desc.short_id
             )
-            return
+            return None
 
         # It is metric or switch
         is_adjustable = False
@@ -116,7 +116,7 @@ class Device:
             data_topic = topic.rsplit('/', 1)[0] + '/' + topic_desc.topic.rsplit('/', 1)[1] if fallback_to_metric_topic else topic # need to move from the IsAdjustable topic to the original one
             if fallback_to_metric_topic and data_topic in self._fallback_handled_set:
                 log_debug("Already handled fallback for %s", data_topic)
-                return
+                return None
             if data_topic not in self._fallback_handled_set:
                 if fallback_to_metric_topic:
                     assert isinstance(value, bool)
@@ -126,7 +126,7 @@ class Device:
                     if stored_payload is None:
                         _LOGGER.info("Setting fallback for %s to %s", data_parsed_topic, value)
                         self._fallback_is_adjustable_first_map[data_parsed_topic] = value
-                        return
+                        return None
                     is_adjustable = value
                     # Setting all the values to restore state
                     payload = stored_payload
@@ -139,7 +139,7 @@ class Device:
                     if is_adjustable is None:
                         _LOGGER.info("No is_adjustable for %s yet. Storing topic_desc=%s, value=%s", parsed_topic, topic_desc, value)
                         self._fallback_data_first_map[parsed_topic] = payload
-                        return
+                        return None
                     _LOGGER.info("Got both topic and isAdjustable value (%s) for %s", is_adjustable, topic_desc)
                 self._fallback_handled_set.add(data_topic)
                 if not is_adjustable:
@@ -153,14 +153,8 @@ class Device:
         metric, created = self._get_or_create_metric(metric_id, short_id, topic, parsed_topic, new_topic_desc, hub, payload)
         metric._handle_message(value, event_loop, log_debug)
         if created:
-            try:
-                if callable(hub._on_new_metric):
-                    if event_loop.is_running():
-                        # If the event loop is running, schedule the callback
-                        event_loop.call_soon_threadsafe(hub._on_new_metric, hub, self, metric)
-            except Exception as exc:
-                _LOGGER.error("Error calling _on_new_metric callback %s", exc, exc_info=True)
-
+            return self, metric
+        return None
 
     @staticmethod
     def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | bool | type[Enum] | None:

@@ -7,7 +7,7 @@ import random
 import ssl
 import re
 import string
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Tuple
 
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import Client as MQTTClient, PayloadType
@@ -120,11 +120,16 @@ class Hub:
         self._first_refresh_event: asyncio.Event = asyncio.Event()
         self._installation_id_event: asyncio.Event = asyncio.Event()
         self._snapshot = {}
-        self._keep_alive_task = None
+        self._keepalive_task = None
         self._connected_event = asyncio.Event()
         self._connected_failed_attempts = 0
         self._on_new_metric: CallbackOnNewMetric | None = None
         self._topic_log_info = topic_log_info
+        # The client ID is generated using a random string and the instance ID. It has to be unique between all clients connected to the same mqtt server. If not, they may reset each other connection.
+        random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+        self._client_id = f"victron_mqtt-{random_string}-{self._instance_id}"
+        self._keepalive_counter = 0
+        self._new_metrics: list[Tuple[Device, Metric]] = []
 
         # Replace all {placeholder} patterns with + for MQTT wildcards
         expanded_topics = Hub.expand_topic_list(topics)
@@ -153,11 +158,8 @@ class Hub:
         subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in expanded_topics]
         subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(desc)) for desc in expanded_topics if desc.is_adjustable_suffix]
         self._subscription_list = subscription_list1 + subscription_list2
-        # The client ID is generated using a random string and the instance ID. It has to be unique between all clients connected to the same mqtt server. If not, they may reset each other connection.
-        random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
-        client_id = f"victron_mqtt-{random_string}-{self._instance_id}"
-        self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2, client_id=client_id)
-        _LOGGER.info("Hub initialized. Client ID: %s", client_id)
+        self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2, client_id=self._client_id)
+        _LOGGER.info("Hub initialized. Client ID: %s", self._client_id)
 
     async def connect(self) -> None:
         """Connect to the hub."""
@@ -241,7 +243,7 @@ class Hub:
     def _on_message_internal(self, client: MQTTClient, userdata: Any, message: mqtt.MQTTMessage) -> None:
         """Process MQTT message asynchronously."""
         topic = message.topic
-        payload = message.payload
+        payload = message.payload.decode()
 
         # Determine log level based on the substring
         is_info_level = self._topic_log_info and self._topic_log_info in topic
@@ -253,18 +255,32 @@ class Hub:
         topic = self._remove_topic_prefix(topic)
 
         if "full_publish_completed" in topic:
-            _LOGGER.info("Full publish completed, unsubscribing from notification")
-            if self._client is not None and self._client.is_connected():
-                self._unsubscribe("N/+/full_publish_completed")
-            self._loop.call_soon_threadsafe(self._first_refresh_event.set)
-            return
+            # Check if this is our full publish completed message
+            echo = self.get_keepalive_echo(payload)
+            # Check if it matches our client ID so we got full cycle or refresh
+            if echo.startswith(self._client_id):
+                log_debug("Full publish completed: %s", echo)
+                # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
+                for device, new_metric in self._new_metrics:
+                    try:
+                        if callable(self._on_new_metric):
+                            if self._loop.is_running():
+                                # If the event loop is running, schedule the callback
+                                self._loop.call_soon_threadsafe(self._on_new_metric, self, device, new_metric)
+                    except Exception as exc:
+                        _LOGGER.error("Error calling _on_new_metric callback %s", exc, exc_info=True)
+                self._new_metrics.clear()
+                self._loop.call_soon_threadsafe(self._first_refresh_event.set)
+                return
+            else:
+                log_debug("Not our echo: %s", echo)
 
         if self._installation_id is None and not self._installation_id_event.is_set():
-            self._handle_installation_id_message(topic, payload, log_debug)
+            self._handle_installation_id_message(topic, log_debug)
 
         self._handle_normal_message(topic, payload, log_debug)
 
-    def _handle_installation_id_message(self, topic: str, payload: bytes, log_debug) -> None:
+    def _handle_installation_id_message(self, topic: str, log_debug) -> None:
         """Handle installation ID message."""
         parsed_topic = ParsedTopic.from_topic(topic)
         if parsed_topic is None:
@@ -275,7 +291,7 @@ class Hub:
         log_debug("Installation ID received: %s. Original topic: %s", self._installation_id, topic)
         self._loop.call_soon_threadsafe(self._installation_id_event.set)
 
-    def _handle_normal_message(self, topic: str, payload: bytes, log_debug) -> None:
+    def _handle_normal_message(self, topic: str, payload: str, log_debug) -> None:
         """Handle regular MQTT message."""
         parsed_topic = ParsedTopic.from_topic(topic)
         if parsed_topic is None:
@@ -304,12 +320,14 @@ class Hub:
                 return
 
         device = self._get_or_create_device(parsed_topic, desc)
-        device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload.decode(), self._loop, self, log_debug)
+        tuple = device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload, self._loop, self, log_debug)
+        if tuple:
+            self._new_metrics.append(tuple)
 
     async def disconnect(self) -> None:
         """Disconnect from the hub."""
         _LOGGER.info("Disconnecting from MQTT broker")
-        self._stop_keep_alive_loop()
+        self._stop_keepalive_loop()
         await asyncio.sleep(0.1)
         if self._client is None:
             _LOGGER.debug("No client to disconnect")
@@ -319,9 +337,10 @@ class Hub:
             _LOGGER.info("Disconnected from MQTT broker")
         self._client = None
 
-    async def _keep_alive(self) -> None:
+    async def _keepalive(self) -> None:
         """Send a keep alive message to the hub. Updates will only be made to the metrics
         for the 60 seconds following this method call."""
+        # Docuementation: https://github.com/victronenergy/dbus-flashmq
         keep_alive_topic = f"R/{self._installation_id}/keepalive"
 
         if self._client is None:
@@ -331,19 +350,21 @@ class Hub:
             _LOGGER.warning("Cannot send keepalive - client is not connected")
             return
         _LOGGER.debug("Sending keepalive message to topic: %s", keep_alive_topic)
-        self.publish(keep_alive_topic, b"1")
+        self._keepalive_counter += 1
+        keepalive_value = Hub.generate_keepalive_options(f"{self._client_id}-{self._keepalive_counter}")
+        self.publish(keep_alive_topic, keepalive_value)
 
     def publish(self, topic: str, value: PayloadType) -> None:
         assert self._client is not None
         prefixed_topic = self._add_topic_prefix(topic)
         self._client.publish(prefixed_topic, value)
 
-    async def _keep_alive_loop(self) -> None:
-        """Run keep_alive every 30 seconds."""
+    async def _keepalive_loop(self) -> None:
+        """Run keepalive every 30 seconds."""
         _LOGGER.info("Starting keepalive loop")
         while True:
             try:
-                await self._keep_alive()
+                await self._keepalive()
                 await asyncio.sleep(30)
             except asyncio.CancelledError:
                 _LOGGER.info("Keepalive loop canceled")
@@ -355,17 +376,17 @@ class Hub:
     def _start_keep_alive_loop(self) -> None:
         """Start the keep_alive loop."""
         _LOGGER.info("Creating keepalive task")
-        if self._keep_alive_task is None or self._keep_alive_task.done():
-            self._keep_alive_task = asyncio.create_task(self._keep_alive_loop())
+        if self._keepalive_task is None or self._keepalive_task.done():
+            self._keepalive_task = asyncio.create_task(self._keepalive_loop())
         else:
             _LOGGER.warning("Keepalive task already running")
 
-    def _stop_keep_alive_loop(self) -> None:
-        """Stop the keep_alive loop."""
-        if self._keep_alive_task is not None:
+    def _stop_keepalive_loop(self) -> None:
+        """Stop the keepalive loop."""
+        if self._keepalive_task is not None:
             _LOGGER.info("Cancelling keepalive task")
-            self._keep_alive_task.cancel()
-            self._keep_alive_task = None
+            self._keepalive_task.cancel()
+            self._keepalive_task = None
 
 
     async def create_full_raw_snapshot(self) -> dict:
@@ -381,7 +402,7 @@ class Hub:
         self._client.on_message = self._on_snapshot_message
         self._subscribe("#")
         _LOGGER.info("Subscribed to all topics for snapshot")
-        await self._keep_alive()
+        await self._keepalive()
         await self.wait_for_first_refresh()
         _LOGGER.info("Snapshot complete with %d top-level entries", len(self._snapshot))
         return self._snapshot
@@ -403,7 +424,7 @@ class Hub:
             if "full_publish_completed" in topic:
                 _LOGGER.info("Full publish completed, unsubscribing from notification")
                 if self._client is not None:
-                    self._unsubscribe("N/+/full_publish_completed")
+                    self._unsubscribe("#")
                 self._loop.call_soon_threadsafe(self._first_refresh_event.set)
                 return
 
@@ -631,6 +652,23 @@ class Hub:
     def on_new_metric(self, value: CallbackOnNewMetric):
         """Sets the on_new_metric callback."""
         self._on_new_metric = value
+
+    @staticmethod
+    def generate_keepalive_options(echo_value: str) -> str:
+        """Generate a JSON string for keepalive options with a configurable echo value."""
+        options = {
+            "keepalive-options": [
+                {"full-publish-completed-echo": echo_value}
+            ]
+        }
+        return json.dumps(options)
+
+    @staticmethod
+    def get_keepalive_echo(value: str) -> str:
+        """Extract the keepalive echo value from the published message."""
+        publish_completed_message = json.loads(value)
+        echo = publish_completed_message.get("full-publish-completed-echo", False)
+        return echo
 
 
 class CannotConnectError(Exception):

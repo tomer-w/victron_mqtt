@@ -208,7 +208,7 @@ class App:
             device_item = self.tree.insert(
                 "",
                 "end",
-                text=device.name or "",
+                text=f"{device.name} (ID: {device.device_id})" if device.device_id != "0" else device.name or "",
                 values=(device.serial_number, ""),
                 iid="D" + device.unique_id,
             )

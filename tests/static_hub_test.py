@@ -59,10 +59,12 @@ async def create_mocked_hub_internal(installation_id=None) -> Hub:
 
         def mock_publish(topic, value):
             if topic == "R/123/keepalive":
+                echo = parse_keepalive_options(value)
+                keepalive_payload = json.dumps({"full-publish-completed-echo": echo, "value": 42})
                 mocked_client.on_message(
                     mocked_client,
                     None,
-                    MagicMock(topic="N/123/full_publish_completed", payload=json.dumps({"value": str(value)}).encode())
+                    MagicMock(topic="N/123/full_publish_completed", payload=keepalive_payload.encode())
                 )
         mocked_client.publish = MagicMock(name="publish", side_effect=mock_publish)
 
@@ -70,14 +72,27 @@ async def create_mocked_hub_internal(installation_id=None) -> Hub:
 
         return hub
 
+def parse_keepalive_options(json_string: str) -> str:
+    """Parse the JSON string for keepalive options and return the echo value."""
+    try:
+        options = json.loads(json_string)
+        keepalive_options = options.get("keepalive-options", [])
+        if keepalive_options and isinstance(keepalive_options, list):
+            return keepalive_options[0].get("full-publish-completed-echo", "")
+        return ""
+    except (json.JSONDecodeError, AttributeError, IndexError):
+        return ""
+
+
+
 def inject_message(hub_instance, topic, payload):
     """Helper function to inject a single MQTT message into the Hub."""
     hub_instance._client.on_message(None, None, MagicMock(topic=topic, payload=payload.encode()))
 
 async def finalize_injection(hub: Hub, disconnect: bool = True):
     """Finalize the injection of messages into the Hub."""
-    inject_message(hub, "R/123/keepalive", "1")
     # Wait for the connect task to finish
+    await hub._keepalive()
     await hub.wait_for_first_refresh()
     if disconnect:
         await hub.disconnect()
@@ -188,7 +203,7 @@ async def test_number_message(create_mocked_hub):
         published['value'] = value
         # Call the original publish if needed
         if hasattr(hub.publish, '__wrapped__'):
-            return hub.publish.__wrapped__(topic, value)
+            return hub.publish.__wrapped__(topic, value) # type: ignore
     orig_publish = hub.publish
     hub.publish = mock_publish
 
@@ -485,6 +500,12 @@ async def test_new_metric(create_mocked_hub):
     await asyncio.sleep(0.1)  # Allow event loop to process the callback
 
     # Validate that the on_new_metric callback was called
+    hub.on_new_metric.assert_called_once()
+
+    # Check that we got the callback only once
+    await hub._keepalive()
+    # Wait for the callback to be triggered
+    await asyncio.sleep(0.1)  # Allow event loop to process the callback
     hub.on_new_metric.assert_called_once()
 
     # Validate that the device has the metric we published
