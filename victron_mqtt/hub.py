@@ -258,7 +258,7 @@ class Hub:
             # Check if this is our full publish completed message
             echo = self.get_keepalive_echo(payload)
             # Check if it matches our client ID so we got full cycle or refresh
-            if echo.startswith(self._client_id):
+            if echo and echo.startswith(self._client_id):
                 log_debug("Full publish completed: %s", echo)
                 # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
                 for device, new_metric in self._new_metrics:
@@ -664,10 +664,10 @@ class Hub:
         return json.dumps(options)
 
     @staticmethod
-    def get_keepalive_echo(value: str) -> str:
+    def get_keepalive_echo(value: str) -> str | None:
         """Extract the keepalive echo value from the published message."""
         publish_completed_message = json.loads(value)
-        echo = publish_completed_message.get("full-publish-completed-echo", False)
+        echo = publish_completed_message.get("full-publish-completed-echo", None)
         return echo
 
 
