@@ -958,8 +958,22 @@ topics: List[TopicDescriptor] = [
     # N/+/system/+/DynamicEss/Capabilities       - not documented - in my case always 31 (bitmask?)
     # N/+/system/+/DynamicEss/ChargeRate         - not documented - in my case alway 0
     # N/+/system/+/DynamicEss/Flags              - not documented - in my case always 0
-    # N/+/system/+/DynamicEss/LastScheduledStart - unix timestamp - needs conversion to time
-    # N/+/system/+/DynamicEss/LastScheduledEnd   - unix timestamp - needs conversion to time
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/LastScheduledStart",
+        message_type=MetricKind.SENSOR,
+        short_id="system_dynamicess_last_scheduled_start",
+        name="Dynamic ESS Last Scheduled Start",
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.EPOCH,
+    ),
+    TopicDescriptor(
+        topic="N/+/system/+/DynamicEss/LastScheduledEnd",
+        message_type=MetricKind.SENSOR,
+        short_id="system_dynamicess_last_scheduled_end",
+        name="Dynamic ESS Last Scheduled End",
+        device_type=DeviceType.SYSTEM,
+        value_type=ValueType.EPOCH,
+    ),
     TopicDescriptor(
         topic="N/+/system/+/DynamicEss/Restrictions",
         message_type=MetricKind.SENSOR,
