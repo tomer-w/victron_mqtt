@@ -694,7 +694,7 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         device_type=DeviceType.INVERTER,
         value_type=ValueType.FLOAT,
-        precision=1,
+        precision=2,
     ),
     TopicDescriptor(
         topic="N/+/vebus/+/Ac/ActiveIn/{phase}/S",
