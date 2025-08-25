@@ -213,7 +213,7 @@ async def test_number_message(create_mocked_hub):
     # Validate that publish was called with the correct topic and value
     assert published, "Expected publish to be called after setting value"
     assert published['topic'] == "W/123/evcharger/170/SetCurrent", f"Expected topic 'W/123/evcharger/170/SetCurrent', got {published['topic']}"
-    assert published['value'] == '{"value": 42}', f"Expected published value to be {'{"value": 42}'}, got {published['value']}"
+    assert published['value'] == '{"value": 42}', f"Expected published value to be {'{value: 42}'}, got {published['value']}"
 
     # Restore the original publish method
     hub.publish = orig_publish
