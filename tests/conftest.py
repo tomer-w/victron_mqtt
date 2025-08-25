@@ -44,7 +44,11 @@ def config_password():
 
 @pytest.fixture
 def config_root_prefix():
-    return os.getenv("VICTRON_TEST_ROOT_PREFIX", None)
+    prefix = os.getenv("VICTRON_TEST_ROOT_PREFIX", None)
+    if prefix and prefix not in [""]:
+        return prefix
+    else:
+        return None
 
 @pytest.fixture
 def config_use_ssl() -> bool:
