@@ -7,6 +7,11 @@ from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeTyp
 from .data_classes import TopicDescriptor
 from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DeviceType, ESSMode, FluidType, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, MultiState, SolarChargerState, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions
 
+# Good sources for topics is:
+# https://github.com/victronenergy/venus/wiki/dbus
+# https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.victronenergy.com%2Fupload%2Fdocuments%2FCCGX-Modbus-TCP-register-list-3.60.xlsx
+# mqtt-explorer
+
 topics: List[TopicDescriptor] = [
     # generic device attributes
     TopicDescriptor(
@@ -885,7 +890,7 @@ topics: List[TopicDescriptor] = [
     # it may show up here - as well as: GREEN Mode (1?)an Trade Mode (2?)
     TopicDescriptor(
         topic="N/+/system/+/DynamicEss/Active",
-        message_type=MetricKind.SWITCH,
+        message_type=MetricKind.BINARY_SENSOR,
         short_id="system_dynamicess_active",
         name="Dynamic ESS Active",
         device_type=DeviceType.SYSTEM,
@@ -915,7 +920,7 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/+/system/+/DynamicEss/ErrorCode",
-        message_type=MetricKind.SWITCH,
+        message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_error",
         name="Dynamic ESS Error",
         device_type=DeviceType.SYSTEM,
