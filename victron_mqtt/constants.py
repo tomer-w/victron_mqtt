@@ -55,6 +55,7 @@ class ValueType(Enum):
     FLOAT = "float"
     STRING = "str"
     ENUM = "enum"
+    EPOCH = "epoch"
 
 class RangeType(Enum):
     """Range types for numeric values."""

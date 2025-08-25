@@ -1,5 +1,6 @@
 """Functions to unwrap the data from the JSON string."""
 
+from datetime import datetime
 from enum import Enum
 import json
 
@@ -69,6 +70,16 @@ def unwrap_enum(json_str, enum: type[VictronEnum]) -> VictronEnum | None:
     val = data["value"]
     return enum.from_code(val) if val is not None else None
 
+def unwrap_epoch(json_str) -> datetime | None:
+    """Unwrap a timestamp value from a JSON string."""
+    try:
+        data = json.loads(json_str)
+        if data["value"] is None:
+            return None
+        value = data["value"]
+        return datetime.fromtimestamp(value)
+    except (json.JSONDecodeError, KeyError, ValueError, TypeError):
+        return None
 
 def wrap_enum(enum_val: Enum | str, enum_expected: type[VictronEnum]) -> str:
     """Wrap an Enum value into a JSON string with a 'value' key."""
@@ -99,6 +110,9 @@ def wrap_string(value: str | None) -> str:
     """Wrap a string value into a JSON string with a 'value' key."""
     return json.dumps({"value": value})
 
+def wrap_epoch(value: datetime | None) -> str:
+    """Wrap a datetime value into a JSON string with a 'value' key in the format of an epoch timestamp."""
+    return json.dumps({"value": datetime.timestamp(value) })
 
 VALUE_TYPE_UNWRAPPER = {
     ValueType.BOOL: unwrap_bool,
@@ -107,6 +121,7 @@ VALUE_TYPE_UNWRAPPER = {
     ValueType.FLOAT: unwrap_float,
     ValueType.STRING: unwrap_string,
     ValueType.ENUM: unwrap_enum,
+    ValueType.EPOCH: unwrap_epoch
 }
 
 VALUE_TYPE_WRAPPER = {
@@ -115,4 +130,5 @@ VALUE_TYPE_WRAPPER = {
     ValueType.FLOAT: wrap_float,
     ValueType.STRING: wrap_string,
     ValueType.ENUM: wrap_enum,
+    ValueType.EPOCH: wrap_epoch
 }
