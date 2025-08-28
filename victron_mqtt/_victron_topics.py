@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DeviceType, ESSMode, FluidType, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, MultiState, SolarChargerState, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions
+from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DeviceType, ESSMode, FluidType, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, State, MultiState, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, ErrorCode, PhoenixInverterMode
 
 # Good sources for topics is:
 # https://github.com/victronenergy/venus/wiki/dbus
@@ -318,7 +318,70 @@ topics: List[TopicDescriptor] = [
         name="Solar Charger State",
         device_type=DeviceType.SOLAR_CHARGER,
         value_type=ValueType.ENUM,
-        enum=SolarChargerState,
+        enum=State,
+    ),
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/ErrorCode",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_error_code",
+        name="Solar Charger Error Code",
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.ENUM,
+        enum=ErrorCode,
+    ),
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/History/Daily/0/MinBatteryVoltage",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_min_battery_voltage_today",
+        name="Solar Charger Min Battery Voltage Today",
+        unit_of_measurement="V",
+        metric_type=MetricType.VOLTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.FLOAT,
+        precision=2,
+    ),
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/History/Daily/0/MaxBatteryVoltage",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_max_battery_voltage_today",
+        name="Solar Charger Max Battery Voltage Today",
+        unit_of_measurement="V",
+        metric_type=MetricType.VOLTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.FLOAT,
+        precision=2,
+    ),
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/History/Daily/0/TimeInAbsorption",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_time_in_absorption_today",
+        name="Solar Charger Time in Absorption Today",
+        unit_of_measurement="s",
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/History/Daily/0/TimeInFloat",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_time_in_float_today",
+        name="Solar Charger Time in Float Today",
+        unit_of_measurement="s",
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
+        topic="N/+/solarcharger/+/History/Daily/0/TimeInBulk",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_time_in_bulk_today",
+        name="Solar Charger Time in Bulk Today",
+        unit_of_measurement="s",
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.SOLAR_CHARGER,
+        value_type=ValueType.INT,
     ),
 
     #System
@@ -645,7 +708,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/vebus/+/Mode",
         message_type=MetricKind.SELECT,
-        short_id="inverter_mode",
+        short_id="vebus_inverter_mode",
         name="Inverter mode",
         device_type=DeviceType.INVERTER,
         value_type=ValueType.ENUM,
@@ -654,16 +717,16 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/vebus/+/State",
         message_type=MetricKind.SENSOR,
-        short_id="inverter_state",
+        short_id="vebus_inverter_state",
         name="Inverter state",
         device_type=DeviceType.INVERTER,
         value_type=ValueType.ENUM,
-        enum=InverterState,
+        enum=State,
     ),
     TopicDescriptor(
         topic="N/+/vebus/+/Ac/ActiveIn/{phase}/V",
         message_type=MetricKind.SENSOR,
-        short_id="inverter_input_voltage_{phase}",
+        short_id="vebus_inverter_input_voltage_{phase}",
         name="Inverter input voltage {phase}",
         unit_of_measurement="V",
         metric_type=MetricType.VOLTAGE,
@@ -675,7 +738,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/vebus/+/Ac/ActiveIn/{phase}/P",
         message_type=MetricKind.SENSOR,
-        short_id="inverter_input_power_{phase}",
+        short_id="vebus_inverter_input_power_{phase}",
         name="Inverter input power {phase}",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -687,7 +750,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/vebus/+/Ac/ActiveIn/{phase}/F",
         message_type=MetricKind.SENSOR,
-        short_id="inverter_input_frequency_{phase}",
+        short_id="vebus_inverter_input_frequency_{phase}",
         name="Inverter input frequency {phase}",
         unit_of_measurement="Hz",
         metric_type=MetricType.FREQUENCY,
@@ -699,7 +762,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/vebus/+/Ac/ActiveIn/{phase}/S",
         message_type=MetricKind.SENSOR,
-        short_id="inverter_input_apparent_power_{phase}",
+        short_id="vebus_inverter_input_apparent_power_{phase}",
         name="Inverter input apparent power {phase}",
         unit_of_measurement="VA",
         metric_type=MetricType.POWER,
@@ -711,7 +774,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/vebus/+/Ac/Out/{phase}/P",
         message_type=MetricKind.SENSOR,
-        short_id="inverter_output_power_{phase}",
+        short_id="vebus_inverter_output_power_{phase}",
         name="Inverter output power {phase}",
         unit_of_measurement="W",
         metric_type=MetricType.POWER,
@@ -723,7 +786,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/vebus/+/Ac/Out/{phase}/F",
         message_type=MetricKind.SENSOR,
-        short_id="inverter_output_frequency_{phase}",
+        short_id="vebus_inverter_output_frequency_{phase}",
         name="Inverter output frequency {phase}",
         unit_of_measurement="Hz",
         metric_type=MetricType.FREQUENCY,
@@ -735,7 +798,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/vebus/+/Ac/Out/{phase}/S",
         message_type=MetricKind.SENSOR,
-        short_id="inverter_output_apparent_power_{phase}",
+        short_id="vebus_inverter_output_apparent_power_{phase}",
         name="Inverter output apparent power {phase}",
         unit_of_measurement="VA",
         metric_type=MetricType.POWER,
@@ -747,7 +810,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/vebus/+/Connected",
         message_type=MetricKind.BINARY_SENSOR,
-        short_id="inverter_connected",
+        short_id="vebus_inverter_connected",
         name="Inverter connected",
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.NONE,
@@ -758,7 +821,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/vebus/+/Alarms/Overload",
         message_type=MetricKind.SENSOR,
-        short_id="inverter_alarm_overload",
+        short_id="vebus_inverter_alarm_overload",
         name="Inverter overload alarm",
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.NONE,
@@ -769,7 +832,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/+/vebus/+/Ac/ActiveIn/CurrentLimit",
         message_type=MetricKind.NUMBER,
-        short_id="inverter_current_limit",
+        short_id="vebus_inverter_current_limit",
         name="Inverter current limit",
         unit_of_measurement="A",
         metric_type=MetricType.CURRENT,
@@ -781,6 +844,147 @@ topics: List[TopicDescriptor] = [
         max=16,
         is_adjustable_suffix = "CurrentLimitIsAdjustable"
     ),
+
+    # inverter with +/+/inverter/# in topic - e.g. Phoenix Inverter
+    TopicDescriptor(
+        topic="N/+/inverter/+/Mode",
+        message_type=MetricKind.SELECT,
+        short_id="inverter_mode",
+        name="Inverter mode",
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=PhoenixInverterMode,
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/State",
+        message_type=MetricKind.SENSOR,
+        short_id="inverter_state",
+        name="Inverter state",
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=State,
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/Ac/Out/{phase}/V",
+        message_type=MetricKind.SENSOR,
+        short_id="inverter_output_voltage_{phase}",
+        name="Inverter output voltage {phase}",
+        unit_of_measurement="V",
+        metric_type=MetricType.VOLTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/Ac/Out/{phase}/P",
+        message_type=MetricKind.SENSOR,
+        short_id="inverter_output_power_{phase}",
+        name="Inverter output power {phase}",
+        unit_of_measurement="W",
+        metric_type=MetricType.POWER,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/Ac/Out/{phase}/S",
+        message_type=MetricKind.SENSOR,
+        short_id="inverter_output_apparent_power_{phase}",
+        name="Inverter output apparent power {phase}",
+        unit_of_measurement="VA",
+        metric_type=MetricType.POWER,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/Ac/Out/{phase}/I",
+        message_type=MetricKind.SENSOR,
+        short_id="inverter_output_current_{phase}",
+        name="Inverter output current {phase}",
+        unit_of_measurement="A",
+        metric_type=MetricType.CURRENT,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/Alarms/Ripple",
+        message_type=MetricKind.BINARY_SENSOR,
+        short_id="inverter_alarm_ripple",
+        name="Inverter alarm Ripple",
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/Alarms/LowVoltageAcOut",
+        message_type=MetricKind.BINARY_SENSOR,
+        short_id="inverter_alarm_low_voltage_ac_out",
+        name="Inverter alarm LowVoltageAcOut",
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/Alarms/LowVoltage",
+        message_type=MetricKind.BINARY_SENSOR,
+        short_id="inverter_alarm_low_voltage",
+        name="Inverter alarm LowVoltage",
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/Alarms/HighVoltageAcOut",
+        message_type=MetricKind.BINARY_SENSOR,
+        short_id="inverter_alarm_high_voltage_ac_out",
+        name="Inverter alarm HighVoltageAcOut",
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/Alarms/HighTemperature",
+        message_type=MetricKind.BINARY_SENSOR,
+        short_id="inverter_alarm_high_temperature",
+        name="Inverter alarm HighTemperature",
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/Alarms/HighVoltage",
+        message_type=MetricKind.BINARY_SENSOR,
+        short_id="inverter_alarm_high_voltage",
+        name="Inverter alarm HighVoltage",
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/Alarms/LowTemperature",
+        message_type=MetricKind.BINARY_SENSOR,
+        short_id="inverter_alarm_low_temperature",
+        name="Inverter alarm LowTemperature",
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff
+    ),
+    TopicDescriptor(
+        topic="N/+/inverter/+/Alarms/Overload",
+        message_type=MetricKind.BINARY_SENSOR,
+        short_id="inverter_alarm_overload",
+        name="Inverter alarm Overload",
+        device_type=DeviceType.INVERTER,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff
+    ),
+
     # integrated system. Note that this might not be currently accurate for all systems
     #  as there are different physical configurations
     # and don't have access to any other for testing or feedback.
@@ -1373,7 +1577,7 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.NONE,
         device_type=DeviceType.MULTI_RS_SOLAR,
         value_type=ValueType.ENUM,
-        enum=InverterState,
+        enum=State,
     ),
     #multirssolar mppt {mpptnumber} pv topics
         TopicDescriptor(
