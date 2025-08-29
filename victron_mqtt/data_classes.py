@@ -10,6 +10,19 @@ from .constants import MetricKind, MetricNature, MetricType, RangeType, ValueTyp
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def topic_to_device_type(topic_parts: list[str]) -> DeviceType | None:
+    """Extract the device type from the topic."""
+    if len(topic_parts) < 2:
+        return None
+    native_device_type = topic_parts[2]
+    if native_device_type == "settings":
+        native_device_type = topic_parts[5]
+    result = DeviceType.from_code(native_device_type)
+    assert result is None or isinstance(result, DeviceType)
+    return result
+
+
 @dataclass
 class TopicDescriptor:
     """Describes the topic, how to map it and how to parse it."""
@@ -20,7 +33,7 @@ class TopicDescriptor:
     unit_of_measurement: str | None = None
     metric_type: MetricType = MetricType.NONE
     metric_nature: MetricNature = MetricNature.NONE
-    device_type: DeviceType = DeviceType.UNKNOWN
+    device_type: DeviceType | None = None
     value_type: ValueType | None = None
     precision: int | None = 2
     enum: type[VictronEnum] | None = None
@@ -54,6 +67,99 @@ class TopicDescriptor:
         assert self.message_type == MetricKind.ATTRIBUTE or self.name is not None
         if self.value_type != ValueType.FLOAT:
             self.precision = None
+        if self.message_type != MetricKind.ATTRIBUTE and self.device_type is None:
+            self.device_type = topic_to_device_type(self.topic.split("/"))
+            assert isinstance(self.device_type, DeviceType), f"Invalid device type for topic: {self.topic}"
+        # Voltage default
+        if self.metric_type == MetricType.VOLTAGE:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "V"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 3
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Power default
+        if self.metric_type == MetricType.POWER:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "W"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Current default
+        if self.metric_type == MetricType.CURRENT:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "A"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Energy default
+        if self.metric_type == MetricType.ENERGY:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "kWh"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.CUMULATIVE
+        # frequency default
+        if self.metric_type == MetricType.FREQUENCY:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "Hz"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 2
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Temperature default
+        if self.metric_type == MetricType.TEMPERATURE:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "°C"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Electric storage capacity default
+        if self.metric_type == MetricType.ELECTRIC_STORAGE_CAPACITY:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "Ah"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Electric storage percentage default
+        if self.metric_type == MetricType.ELECTRIC_STORAGE_PERCENTAGE:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "%"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Apparent power default
+        if self.metric_type == MetricType.APPARENT_POWER:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "VA"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
 
 
 @dataclass
@@ -111,26 +217,15 @@ class ParsedTopic:
         installation_id = topic_parts[1]
         wildcard_topic_parts[1] = "+"
         native_device_type = topic_parts[2]
-        if native_device_type == "platform":  # platform is not a device type
-            native_device_type = "system"
         # for settings like N/ce3f0ae5476a/settings/0/Settings/CGwacs/AcPowerSetPoint
-        elif native_device_type == "settings":
+        if native_device_type == "settings":
             native_device_type = topic_parts[5]
 
-        device_type = DeviceType.from_code(native_device_type, DeviceType.UNKNOWN)
-        assert device_type is not None
-        if device_type == DeviceType.UNKNOWN: # This can happen as we register for the attribute topics
+        device_type = topic_to_device_type(topic_parts)
+        if device_type is None: # This can happen as we register for the attribute topics
             _LOGGER.warning("Unknown device type: %s, topic: %s", native_device_type, topic)
             # If the device type is unknown, we cannot create a ParsedTopic
             return None
-
-        if device_type.mapped_to:
-            device_type = DeviceType.from_code(device_type.mapped_to, DeviceType.UNKNOWN)
-            assert device_type is not None
-            if device_type == DeviceType.UNKNOWN: # This can happen as we register for the attribute topics
-                _LOGGER.warning("Unknown device type after mapping: %s, topic: %s", device_type.mapped_to, topic)
-                # If the device type is unknown, we cannot create a ParsedTopic
-                return None
 
         device_id = topic_parts[3]
         wildcard_topic_parts[3] = "+"

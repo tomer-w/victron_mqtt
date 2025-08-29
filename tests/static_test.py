@@ -51,7 +51,7 @@ def test_topics():
                 errors.append(f"Unit mismatch: topic '{descriptor.topic}' has unit 'VA' but name suggests frequency: '{descriptor.name}'")
             
             # Check for percentage with wrong unit
-            if descriptor.unit_of_measurement == "%" and descriptor.metric_type != MetricType.PERCENTAGE:
+            if descriptor.unit_of_measurement == "%" and descriptor.metric_type not in [MetricType.PERCENTAGE, MetricType.ELECTRIC_STORAGE_PERCENTAGE]:
                 errors.append(f"Unit/type mismatch: topic '{descriptor.topic}' has unit '%' but metric_type is {descriptor.metric_type}")
         
     # Check for missing required fields based on message_type

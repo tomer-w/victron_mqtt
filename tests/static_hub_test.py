@@ -130,10 +130,10 @@ async def test_phase_message(create_mocked_hub):
 
     # Validate that the device has the metric we published
     device = hub._devices["123_grid_30"]
+    assert device.device_type == DeviceType.GRID, f"Expected metric type to be 'grid', got {device.device_type}"
     metric = device.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
-    assert metric.device_type == DeviceType.GRID, f"Expected metric type to be 'grid', got {metric.device_type}"
     assert metric.short_id == "grid_energy_forward_L1", f"Expected metric short_id to be 'grid_energy_forward_L1', got {metric.short_id}"
     assert metric.generic_short_id == "grid_energy_forward_{phase}", f"Expected metric generic_short_id to be 'grid_energy_forward_{{phase}}', got {metric.generic_short_id}"
     assert metric.unique_id == "123_grid_30_grid_energy_forward_L1", f"Expected metric unique_id to be '123_grid_30_grid_energy_forward_L1', got {metric.unique_id}"

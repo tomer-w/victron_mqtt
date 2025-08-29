@@ -27,7 +27,6 @@ class Metric:
         )
         assert descriptor.name is not None, "name must be set for metric"
         assert parsed_topic.device_type is not None, "device_type must be set for metric"
-        assert parsed_topic.device_type != DeviceType.UNKNOWN, "device_type must not be UNKNOWN for metric"
         
         self._descriptor = descriptor
         self._unique_id = unique_id
@@ -47,7 +46,6 @@ class Metric:
             f"descriptor={self._descriptor}, "
             f"value={self.value}, "
             f"generic_short_id={self.generic_short_id}, "
-            f"device_type={self.device_type}, "
             f"short_id={self.short_id}, "
             f"name={self.name}, "
             f"{key_values_part})"
@@ -107,11 +105,6 @@ class Metric:
     def metric_kind(self) -> MetricKind:
         """Returns the device type."""
         return self._descriptor.message_type
-
-    @property
-    def device_type(self) -> DeviceType:
-        """Returns the device type."""
-        return self._descriptor.device_type
 
     @property
     def precision(self) -> int | None:
