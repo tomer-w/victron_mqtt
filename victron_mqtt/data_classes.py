@@ -217,6 +217,9 @@ class ParsedTopic:
         installation_id = topic_parts[1]
         wildcard_topic_parts[1] = "+"
         native_device_type = topic_parts[2]
+        # For whatever reason some system  send topics to  N/+/platform/0/ProductName
+        if native_device_type == "platform":
+            native_device_type = "system"
         # for settings like N/ce3f0ae5476a/settings/0/Settings/CGwacs/AcPowerSetPoint
         if native_device_type == "settings":
             native_device_type = topic_parts[5]
