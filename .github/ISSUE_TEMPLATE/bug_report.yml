@@ -12,7 +12,7 @@ body:
   attributes:
     label: I have read the documentation
     options:
-      - label: I have read the [documentation](https://github.com/tomer-w/ha-victron-mqtt) and understand the setup process.
+      - label: I have read the [documentation](https://github.com/tomer-w/victron-mqtt) and understand the setup process.
         required: true
 - type: textarea
   id: bug-description
