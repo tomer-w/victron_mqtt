@@ -16,6 +16,10 @@ def topic_to_device_type(topic_parts: list[str]) -> DeviceType | None:
     if len(topic_parts) < 2:
         return None
     native_device_type = topic_parts[2]
+    # For whatever reason some system  send topics to  N/+/platform/0/ProductName
+    if native_device_type == "platform":
+        native_device_type = "system"
+    # for settings like N/+/settings/0/Settings/CGwacs/AcPowerSetPoint
     if native_device_type == "settings":
         native_device_type = topic_parts[5]
     result = DeviceType.from_code(native_device_type)
@@ -33,7 +37,6 @@ class TopicDescriptor:
     unit_of_measurement: str | None = None
     metric_type: MetricType = MetricType.NONE
     metric_nature: MetricNature = MetricNature.NONE
-    device_type: DeviceType | None = None
     value_type: ValueType | None = None
     precision: int | None = 2
     enum: type[VictronEnum] | None = None
@@ -53,7 +56,6 @@ class TopicDescriptor:
             f"unit_of_measurement={self.unit_of_measurement}, "
             f"metric_type={self.metric_type}, "
             f"metric_nature={self.metric_nature}, "
-            f"device_type={self.device_type}, "
             f"precision={self.value_type}, "
             f"precision={self.precision}, "
             f"min={self.min}, "
@@ -67,9 +69,6 @@ class TopicDescriptor:
         assert self.message_type == MetricKind.ATTRIBUTE or self.name is not None
         if self.value_type != ValueType.FLOAT:
             self.precision = None
-        if self.message_type != MetricKind.ATTRIBUTE and self.device_type is None:
-            self.device_type = topic_to_device_type(self.topic.split("/"))
-            assert isinstance(self.device_type, DeviceType), f"Invalid device type for topic: {self.topic}"
         # Voltage default
         if self.metric_type == MetricType.VOLTAGE:
             if self.unit_of_measurement is None:
@@ -216,17 +215,9 @@ class ParsedTopic:
 
         installation_id = topic_parts[1]
         wildcard_topic_parts[1] = "+"
-        native_device_type = topic_parts[2]
-        # For whatever reason some system  send topics to  N/+/platform/0/ProductName
-        if native_device_type == "platform":
-            native_device_type = "system"
-        # for settings like N/ce3f0ae5476a/settings/0/Settings/CGwacs/AcPowerSetPoint
-        if native_device_type == "settings":
-            native_device_type = topic_parts[5]
-
         device_type = topic_to_device_type(topic_parts)
         if device_type is None: # This can happen as we register for the attribute topics
-            _LOGGER.warning("Unknown device type: %s, topic: %s", native_device_type, topic)
+            _LOGGER.warning("Unknown device type for topic: %s", topic)
             # If the device type is unknown, we cannot create a ParsedTopic
             return None
 

@@ -3,6 +3,7 @@
 import pytest
 
 from victron_mqtt._victron_enums import GenericOnOff
+from victron_mqtt.data_classes import topic_to_device_type
 
 def test_topics():
     """Tests the topics list for various mistakes and inconsistencies.
@@ -36,7 +37,7 @@ def test_topics():
     names = {}
     for descriptor in topics:
         if descriptor.message_type != MetricKind.ATTRIBUTE:
-            name = f"devicetype '{descriptor.device_type}' name '{descriptor.name}'"
+            name = f"devicetype '{topic_to_device_type(descriptor.topic.split('/'))}' name '{descriptor.name}'"
             if name in names:
                 errors.append(f"Duplicate {name} found in topics: '{descriptor.topic}' and '{names[name]}'")
             else:
