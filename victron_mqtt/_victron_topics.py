@@ -1212,7 +1212,7 @@ topics: List[TopicDescriptor] = [
         short_id="system_ess_max_charge_voltage",
         name="ESS max charge voltage",
         metric_type=MetricType.VOLTAGE,
-        value_type=ValueType.INT,
+        value_type=ValueType.FLOAT,
         min_max_range=RangeType.DYNAMIC,
     ),
     # DC Load
