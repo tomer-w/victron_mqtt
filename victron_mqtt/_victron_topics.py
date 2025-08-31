@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DeviceType, ESSMode, FluidType, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, MultiState, SolarChargerState, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions
+from ._victron_enums import DESSReactiveStrategy, DESSStrategy, ESSMode, FluidType, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, MultiState, SolarChargerState, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions
 
 # Good sources for topics is:
 # https://github.com/victronenergy/venus/wiki/dbus
@@ -507,6 +507,16 @@ topics: List[TopicDescriptor] = [
         max=16,
         is_adjustable_suffix = "CurrentLimitIsAdjustable"
     ),
+    TopicDescriptor(
+        topic="N/+/vebus/+/Settings/AssistCurrentBoostFactor",
+        message_type=MetricKind.NUMBER,
+        short_id="multiplus_assist_current_boost_factor",
+        name="Assist Current Boost Factor",
+        value_type=ValueType.FLOAT,
+        min=0.25,
+        max=3.5,
+        precision=3,
+    ),
     # integrated system. Note that this might not be currently accurate for all systems
     #  as there are different physical configurations
     # and don't have access to any other for testing or feedback.
@@ -835,6 +845,24 @@ topics: List[TopicDescriptor] = [
         enum=TemperatureType,
     ),
     TopicDescriptor(
+        topic="N/+/temperature/+/BatteryVoltage",
+        message_type=MetricKind.SENSOR,
+        short_id="temperature_battery_voltage",
+        name="Temperature sensor battery voltage",
+        metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/+/temperature/+/Humidity",
+        message_type=MetricKind.SENSOR,
+        short_id="temperature_humidity",
+        name="Humidity",
+        unit_of_measurement="%",
+        metric_type=MetricType.PERCENTAGE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
         topic="N/+/temperature/+/Offset",
         message_type=MetricKind.NUMBER,
         short_id="temperature_offset",
@@ -864,13 +892,20 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
+        topic="N/+/tank/+/BatteryVoltage",
+        message_type=MetricKind.SENSOR,
+        short_id="tank_battery_voltage",
+        name="Tank sensor battery voltage",
+        metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
         topic="N/+/tank/+/Remaining",
         message_type=MetricKind.SENSOR,
         short_id="tank_remaining",
         name="Remaining",
         unit_of_measurement="m³",
         metric_type=MetricType.LIQUID_VOLUME,
-        metric_nature=MetricNature.INSTANTANEOUS,
+        metric_nature=MetricNature.CUMULATIVE,
         value_type=ValueType.FLOAT,
         precision=2,
     ),
