@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from .hub import Hub
 
 from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_float
-from .constants import MetricKind, RangeType, OperationMode
+from .constants import MetricKind, RangeType
 from .metric import Metric
 from ._victron_enums import DeviceType
 from .switch import Switch

@@ -1,6 +1,7 @@
 """Module to communicate with the Venus OS MQTT Broker."""
 
 import asyncio
+import copy
 import json
 import logging
 import random
@@ -140,11 +141,20 @@ class Hub:
         #Filter out the topics based on operation mode
         active_topics: list[TopicDescriptor] = topics if operation_mode == OperationMode.EXPERIMENTAL else [t for t in topics if not t.experimental]
         #if operation_mode is READ_ONLY we should change all TopicDescriptor to SENSOR and BINARY_SENSOR
+        final_topics: list[TopicDescriptor] = []
         if operation_mode == OperationMode.READ_ONLY:
             for topic in active_topics:
-                topic.message_type = MetricKind.BINARY_SENSOR if topic.message_type == MetricKind.SWITCH else MetricKind.SENSOR
+                if topic.message_type in [MetricKind.ATTRIBUTE, MetricKind.SENSOR, MetricKind.BINARY_SENSOR]:
+                    final_topics.append(topic)
+                else:
+                    #deep copy the topic
+                    new_topic = copy.deepcopy(topic)
+                    new_topic.message_type = MetricKind.BINARY_SENSOR if topic.message_type == MetricKind.SWITCH else MetricKind.SENSOR
+                    final_topics.append(new_topic)
+        else:
+            final_topics = active_topics
         # Replace all {placeholder} patterns with + for MQTT wildcards
-        expanded_topics = Hub.expand_topic_list(active_topics)
+        expanded_topics = Hub.expand_topic_list(final_topics)
         def merge_is_adjustable_suffix(desc: TopicDescriptor) -> str:
             """Merge the topic with its adjustable suffix."""
             assert desc.is_adjustable_suffix is not None
