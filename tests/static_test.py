@@ -177,6 +177,7 @@ def test_topics():
     from victron_mqtt._victron_enums import DeviceType
     # Collect all valid device type codes from DeviceType
     valid_device_types = {member.code for member in DeviceType}
+    valid_device_types.add("Generator{gen_id(0-1)}") #Hack as there are special topics for generators which include device with ID
 
     # Validate device_type in topics, skipping ATTRIBUTE topics
     for descriptor in topics:

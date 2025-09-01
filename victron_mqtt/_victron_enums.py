@@ -15,14 +15,17 @@ class DeviceType(VictronDeviceEnum):
     PVINVERTER = ("pvinverter", "PV Inverter")
     TEMPERATURE = ("temperature", "Temperature")
     GENERATOR = ("generator", "Generator")
+    GENERATOR0 = ("Generator0", "<Not used>", "generator") # Alias for GENERATOR so they will all be together
+    GENERATOR1 = ("Generator1", "<Not used>", "generator") # Alias for GENERATOR so they will all be together
     TANK = ("tank", "Liquid Tank")
     MULTI_RS_SOLAR = ("multi", "Multi RS Solar")
-    CGWACS = ("CGwacs", "Carlo Gavazzi Wired AC Sensors", "system") # Should be mapped to SYSTEM
+    CGWACS = ("CGwacs", "<Not used>", "system") # Should be mapped to SYSTEM
     DC_LOAD = ("dcload", "DC Load")
     ALTERNATOR = ("alternator", "Charger (Orion/Alternator)")
     SWITCH = ("switch", "Switch")
     GPS = ("gps", "Gps")
     SYSTEM_SETUP = ("SystemSetup", "System Setup")
+    TRANSFER_SWITCH = ("TransferSwitch", "Transfer Switch")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""
@@ -108,6 +111,20 @@ class ESSMode(VictronEnum):
     SelfConsumption = (1, "self consumption")
     KeepCharged = (2, "keep charged")
     ExternalControl = (3, "External control")
+
+# Generator running state enum (mapped from YAML value_template)
+class GeneratorRunningByConditionCode(VictronEnum):
+    Stopped = (0, "Stopped")
+    Manual = (1, "Manual")
+    TestRun = (2, "Test Run")
+    LostComms = (3, "Lost Comms")
+    SOC = (4, "SOC")
+    ACLoad = (5, "AC Load")
+    BatteryCurrent = (6, "Battery Current")
+    BatteryVolts = (7, "Battery Volts")
+    InvTemp = (8, "Inv Temp")
+    InvOverload = (9, "Inv Overload")
+    StopOnAC1 = (10, "Stop On AC1")
 
 class SolarChargerState(VictronEnum):
     Off = (0, "Off")
