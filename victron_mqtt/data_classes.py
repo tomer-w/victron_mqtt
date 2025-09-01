@@ -216,7 +216,7 @@ class ParsedTopic:
         wildcard_topic_parts = topic_parts.copy()
 
         installation_id = topic_parts[1]
-        wildcard_topic_parts[1] = "+"
+        wildcard_topic_parts[1] = "##installation_id##"
         device_type = topic_to_device_type(topic_parts)
         if device_type is None: # This can happen as we register for the attribute topics
             _LOGGER.warning("Unknown device type for topic: %s", topic)
@@ -224,10 +224,10 @@ class ParsedTopic:
             return None
 
         device_id = topic_parts[3]
-        wildcard_topic_parts[3] = "+"
+        wildcard_topic_parts[3] = "##device_id##"
 
         wildcards_with_device_type = ParsedTopic.normalize_topic("/".join(wildcard_topic_parts))
-        wildcard_topic_parts[2] = "+"
+        wildcard_topic_parts[2] = "##device_type##"
         wildcards_without_device_type = ParsedTopic.normalize_topic("/".join(wildcard_topic_parts))
 
         return cls(
@@ -248,8 +248,8 @@ class ParsedTopic:
 
     def match_from_list(self, topic_desc_list: list[TopicDescriptor]) -> TopicDescriptor |None:
         topic_parts = self.full_topic.split("/")
-        topic_parts[1] = "+"
-        topic_parts[3] = "+"
+        topic_parts[1] = "{installation_id}"
+        topic_parts[3] = "{device_id}"
         normalized_topic = "/".join(topic_parts)
         for topic_desc in topic_desc_list:
             if topic_desc.topic == normalized_topic:

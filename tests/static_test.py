@@ -137,15 +137,15 @@ def test_topics():
         topic_parts = topic.split('/')
         if len(topic_parts) < 4:
             errors.append(f"Topic '{topic}' has invalid structure (too few parts)")
-        if not topic.startswith('N/+/'):
-            errors.append(f"Topic '{topic}' should start with 'N/+/'")
-        
-        # Check that all topics have between 2 and 3 plus signs
-        plus_count = topic.count('+')
-        if plus_count < 2:
-            errors.append(f"Topic '{topic}' has only {plus_count} plus signs (minimum 2 required)")
-        elif plus_count > 3:
-            errors.append(f"Topic '{topic}' has {plus_count} plus signs (maximum 3 allowed)")
+        # Accept only 'N/{installation_id}/' or 'W/{installation_id}/' as valid prefixes
+        if descriptor.message_type != MetricKind.SERVICE and not topic.startswith('N/{installation_id}/'):
+            errors.append(f"Topic '{topic}' must start with 'N/{{installation_id}}/'")
+        elif descriptor.message_type == MetricKind.SERVICE and not topic.startswith('W/{installation_id}/'):
+            errors.append(f"Service topic '{topic}' must start with 'W/{{installation_id}}/'")
+
+        # Count placeholders like {installation_id}, {device_id}, {phase}, etc., as valid
+        if not topic.find('N/{device_id}/') == -1:
+            errors.append(f"Topic '{topic}' must include 'N/{{device_id}}/'")
     
     # Check that topics with 3+ plus signs have {phase} in both short_id and name (except ATTRIBUTE types)
     for descriptor in topics:

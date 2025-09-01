@@ -67,10 +67,10 @@ Where:
 
 #### Common Topic Patterns
 
-- Device attributes: `N/+/+/+/ProductName`, `N/+/+/+/Serial`
-- Device metrics: `N/+/battery/+/Dc/0/Voltage`
-- Phase-specific metrics: `N/+/grid/+/Ac/+/Power` (where last `+` is phase L1, L2, L3)
-- System-level metrics: `N/+/system/+/Ac/Grid/NumberOfPhases`
+- Device attributes: `N/{installation_id}/{device_type}/{device_id}/ProductName`, `N/{installation_id}/{device_type}/{device_id}/Serial`
+- Device metrics: `N/{installation_id}/battery/{device_id}/Dc/0/Voltage`
+- Phase-specific metrics: `N/{installation_id}/grid/{device_id}/Ac/{phase}/Power` (where `{phase}` is L1, L2, L3)
+- System-level metrics: `N/{installation_id}/system/{device_id}/Ac/Grid/NumberOfPhases`
 
 ### TopicDescriptor Structure
 
@@ -157,7 +157,7 @@ First, determine the exact MQTT topic pattern. Use tools like [mqtt explorer](ht
 Add a new entry to the `topic_map` dictionary:
 
 ```python
-"N/+/service_type/+/MetricPath": TopicDescriptor(
+"N/{installation_id}/service_type/{device_id}/MetricPath": TopicDescriptor(
     message_type=MetricKind.SENSOR,          # Entity type
     short_id="unique_metric_id",             # Unique identifier
     name="Human Readable Name",              # Display name
@@ -175,7 +175,7 @@ Add a new entry to the `topic_map` dictionary:
 For multi-phase systems, use the `{phase}` placeholder in `short_id` and `name`:
 
 ```python
-"N/+/grid/+/Ac/+/Voltage": TopicDescriptor(
+"N/{installation_id}/grid/{device_id}/Ac/+/Voltage": TopicDescriptor(
     message_type=MetricKind.SENSOR,
     short_id="grid_voltage_{phase}",         # Will become grid_voltage_L1, etc.
     name="Grid voltage on {phase}",          # Will become "Grid voltage on L1"
@@ -205,7 +205,7 @@ class DeviceType(Enum):
 Add the device's MQTT topics to the topic map, using the new device type:
 
 ```python
-"N/+/new_device/+/SomeMetric": TopicDescriptor(
+"N/{installation_id}/new_device/{device_id}/SomeMetric": TopicDescriptor(
     message_type=MetricKind.SENSOR,
     short_id="new_device_metric",
     name="New Device Metric",
@@ -233,7 +233,7 @@ class NewDeviceMode(VictronEnum):
 Reference the enum in your topic descriptor:
 
 ```python
-"N/+/new_device/+/Mode": TopicDescriptor(
+"N/{installation_id}/new_device/{device_id}/Mode": TopicDescriptor(
     message_type=MetricKind.SELECT,
     short_id="new_device_mode",
     name="New Device Mode",
@@ -251,7 +251,7 @@ For metrics that can be controlled (switches, selects, numbers), use appropriate
 
 #### Switch Example
 ```python
-"N/+/device/+/EnableSomething": TopicDescriptor(
+"N/{installation_id}/device/{device_id}/EnableSomething": TopicDescriptor(
     message_type=MetricKind.SWITCH,
     short_id="device_enable",
     name="Enable Something",
@@ -263,7 +263,7 @@ For metrics that can be controlled (switches, selects, numbers), use appropriate
 
 #### Number Input Example
 ```python
-"N/+/device/+/SetCurrent": TopicDescriptor(
+"N/{installation_id}/device/{device_id}/SetCurrent": TopicDescriptor(
     message_type=MetricKind.NUMBER,
     short_id="device_set_current",
     name="Set Current",
@@ -281,7 +281,7 @@ For metrics that can be controlled (switches, selects, numbers), use appropriate
 
 #### Battery Management System Metrics
 ```python
-"N/+/battery/+/System/MinCellVoltage": TopicDescriptor(
+"N/{installation_id}/battery/{device_id}/System/MinCellVoltage": TopicDescriptor(
     message_type=MetricKind.SENSOR,
     short_id="battery_min_cell_voltage",
     name="Battery minimum cell voltage",
@@ -296,7 +296,7 @@ For metrics that can be controlled (switches, selects, numbers), use appropriate
 
 #### Tank Level Sensors
 ```python
-"N/+/tank/+/Level": TopicDescriptor(
+"N/{installation_id}/tank/{device_id}/Level": TopicDescriptor(
     message_type=MetricKind.SENSOR,
     short_id="tank_level",
     name="Tank level",
@@ -311,7 +311,7 @@ For metrics that can be controlled (switches, selects, numbers), use appropriate
 
 #### Temperature Sensors
 ```python
-"N/+/temperature/+/Temperature": TopicDescriptor(
+"N/{installation_id}/temperature/{device_id}/Temperature": TopicDescriptor(
     message_type=MetricKind.SENSOR,
     short_id="temperature_sensor",
     name="Temperature",

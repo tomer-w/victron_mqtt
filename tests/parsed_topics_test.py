@@ -4,7 +4,7 @@ from victron_mqtt._victron_topics import topics
 
 def test_parsed_topic_with_pattern():
     # Find the TopicDescriptor with the desired topic
-    descriptor = next((t for t in topics if t.topic == "N/+/system/+/Relay/{relay}/State"), None)
+    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/system/{device_id}/Relay/{relay}/State"), None)
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     # Create a ParsedTopic instance
@@ -26,7 +26,7 @@ def test_parsed_topic_with_pattern():
 
 def test_parsed_topic_with_phase():
     # Find the TopicDescriptor with the desired topic
-    descriptor = next((t for t in topics if t.topic == "N/+/system/+/Ac/Genset/{phase}/Power"), None)
+    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/system/{device_id}/Ac/Genset/{phase}/Power"), None)
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     # Create a ParsedTopic instance
@@ -47,7 +47,7 @@ def test_parsed_topic_with_phase():
 
 def test_parsed_topic_with_next_phase():
     # Find the TopicDescriptor with the desired topic
-    descriptor = next((t for t in topics if t.topic == "N/+/grid/+/Ac/{phase}/VoltageLineToLine"), None)
+    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/grid/{device_id}/Ac/{phase}/VoltageLineToLine"), None)
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     # Create a ParsedTopic instance
@@ -68,7 +68,7 @@ def test_parsed_topic_with_next_phase():
 
 def test_parsed_topic_with_phase_and_placeholder():
     # Find the TopicDescriptor with the desired topic
-    descriptor = next((t for t in topics if t.topic == "N/+/multi/+/Ac/Out/{output}/{phase}/I"), None)
+    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/multi/{device_id}/Ac/Out/{output}/{phase}/I"), None)
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     # Create a ParsedTopic instance
@@ -89,7 +89,7 @@ def test_parsed_topic_with_phase_and_placeholder():
 
 def test_settings_parsed_topic():
     # Find the TopicDescriptor with the desired topic
-    descriptor = next((t for t in topics if t.topic == "N/+/settings/+/Settings/CGwacs/AcPowerSetPoint"), None)
+    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/settings/{device_id}/Settings/CGwacs/AcPowerSetPoint"), None)
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     # Create a ParsedTopic instance
@@ -110,7 +110,7 @@ def test_settings_parsed_topic():
 
 def test_settings_parsed_topic_2():
     # Find the TopicDescriptor with the desired topic
-    descriptor = next((t for t in topics if t.topic == "N/+/settings/+/Settings/SystemSetup/MaxChargeCurrent"), None)
+    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/settings/{device_id}/Settings/SystemSetup/MaxChargeCurrent"), None)
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     # Create a ParsedTopic instance

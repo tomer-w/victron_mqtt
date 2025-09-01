@@ -209,14 +209,14 @@ async def test_number_message(create_mocked_hub):
 
     # Patch the publish method to track calls
     published = {}
-    def mock_publish(topic, value):
+    def mock__publish(topic, value):
         published['topic'] = topic
         published['value'] = value
         # Call the original publish if needed
-        if hasattr(hub.publish, '__wrapped__'):
-            return hub.publish.__wrapped__(topic, value) # type: ignore
-    orig_publish = hub.publish
-    hub.publish = mock_publish
+        if hasattr(hub._publish, '__wrapped__'):
+            return hub._publish.__wrapped__(topic, value) # type: ignore
+    orig__publish = hub._publish
+    hub._publish = mock__publish
 
     # Set the value, which should trigger a publish
     switch.value = 42
@@ -227,7 +227,7 @@ async def test_number_message(create_mocked_hub):
     assert published['value'] == '{"value": 42}', f"Expected published value to be {'{value: 42}'}, got {published['value']}"
 
     # Restore the original publish method
-    hub.publish = orig_publish
+    hub._publish = orig__publish
 
     await finalize_injection(hub)
 
@@ -338,12 +338,12 @@ async def test_today_message(create_mocked_hub):
     assert metric.value == 2, f"Expected metric value to be 2, got {metric.value}"
 
 def test_expend_topics():
-    descriptor = next((t for t in topics if t.topic == "N/+/switch/+/SwitchableOutput/output_{output(1-4)}/State"), None)
+    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/State"), None)
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     expanded = Hub.expand_topic_list([descriptor])
     assert len(expanded) == 4, f"Expected 4 expanded topics, got {len(expanded)}"
-    new_desc = next((t for t in expanded if t.topic == "N/+/switch/+/SwitchableOutput/output_1/State"), None)
+    new_desc = next((t for t in expanded if t.topic == "N/{installation_id}/switch/{device_id}/SwitchableOutput/output_1/State"), None)
     assert new_desc, "Missing expanded topic for output 1"
     assert new_desc.short_id == "switch_{output}_state"
     assert new_desc.name == "Switch {output} State"
@@ -567,3 +567,25 @@ async def test_read_only_creates_plain_metrics(create_mocked_hub_read_only):
     assert metric is not None, "Metric should exist in the device"
     assert not isinstance(metric, Switch), "In READ_ONLY mode the metric should NOT be a Switch"
     assert isinstance(metric, Metric), "In READ_ONLY mode the metric should be a plain Metric"
+
+@pytest.mark.asyncio
+async def test_publish(create_mocked_hub_experimental):
+    hub: Hub = create_mocked_hub_experimental
+    mocked_client: MagicMock = hub._client # type: ignore
+
+    # Clear any previous publish calls recorded by the mocked client
+    if hasattr(mocked_client.publish, 'reset_mock'):
+        mocked_client.publish.reset_mock()
+
+    # Call the publish helper which should result in an internal client.publish call
+    hub.publish("generator_service_counter_reset", "170", 1)
+
+    # Finalize injection to allow any keepalive/full-publish flows to complete
+    await finalize_injection(hub)
+
+    # Expected topic and payload
+    expected_topic = "W/123/generator/170/ServiceCounterReset"
+    expected_payload = '{"value": 1}'
+
+    # Ensure the underlying client's publish was called with the expected values
+    mocked_client.publish.assert_any_call(expected_topic, expected_payload)

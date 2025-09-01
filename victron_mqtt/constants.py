@@ -15,6 +15,7 @@ class MetricKind(Enum):
     SWITCH = "switch"
     SELECT = "select"
     NUMBER = "number"
+    SERVICE = "service"
 
 
 class MetricNature(Enum):

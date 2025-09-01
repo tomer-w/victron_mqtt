@@ -15,51 +15,51 @@ from ._victron_enums import DESSReactiveStrategy, DESSStrategy, ESSMode, FluidTy
 topics: List[TopicDescriptor] = [
     # generic device attributes
     TopicDescriptor(
-        topic = "N/+/+/+/ProductName",
+        topic = "N/{installation_id}/{device_type}/{device_id}/ProductName",
         message_type=MetricKind.ATTRIBUTE,
         short_id="model",
         value_type=ValueType.STRING,
     ),
     TopicDescriptor(
-        topic="N/+/+/+/Serial",
+        topic="N/{installation_id}/{device_type}/{device_id}/Serial",
         message_type=MetricKind.ATTRIBUTE,
         short_id="serial_number",
         value_type=ValueType.STRING,
     ),
     # inverter hides its serial number away in a different topic
     TopicDescriptor(
-        topic="N/+/vebus/+/Devices/0/SerialNumber",
+        topic="N/{installation_id}/vebus/{device_id}/Devices/0/SerialNumber",
         message_type=MetricKind.ATTRIBUTE,
         short_id="serial_number",
         value_type=ValueType.STRING,
     ),
     TopicDescriptor(
-        topic="N/+/+/+/Manufacturer",
+        topic="N/{installation_id}/{device_type}/{device_id}/Manufacturer",
         message_type=MetricKind.ATTRIBUTE,
         short_id="manufacturer",
         value_type=ValueType.STRING,
     ),
     TopicDescriptor(
-        topic="N/+/+/+/ProductId",
+        topic="N/{installation_id}/{device_type}/{device_id}/ProductId",
         message_type=MetricKind.ATTRIBUTE,
         short_id="victron_productid",
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/+/+/FirmwareVersion",
+        topic="N/{installation_id}/{device_type}/{device_id}/FirmwareVersion",
         message_type=MetricKind.ATTRIBUTE,
         short_id="firmware_version",
         value_type=ValueType.STRING,
     ),
     TopicDescriptor(
-        topic="N/+/+/+/CustomName",
+        topic="N/{installation_id}/{device_type}/{device_id}/CustomName",
         message_type=MetricKind.ATTRIBUTE,
         short_id="custom_name",
         value_type=ValueType.STRING,
     ),
     # grid
     TopicDescriptor(
-        topic="N/+/system/+/Ac/Grid/NumberOfPhases",
+        topic="N/{installation_id}/system/{device_id}/Ac/Grid/NumberOfPhases",
         message_type=MetricKind.SENSOR,
         short_id="system_grid_phases",  # system attribute
         name="Grid phases",
@@ -68,21 +68,21 @@ topics: List[TopicDescriptor] = [
     ),
     # individual grid phases
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/{phase}/Voltage",
+        topic="N/{installation_id}/grid/{device_id}/Ac/{phase}/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="grid_voltage_{phase}",
         name="Grid voltage on {phase}",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/{phase}/Current",
+        topic="N/{installation_id}/grid/{device_id}/Ac/{phase}/Current",
         message_type=MetricKind.SENSOR,
         short_id="grid_current_{phase}",
         name="Grid current on {phase}",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/{phase}/Power",
+        topic="N/{installation_id}/grid/{device_id}/Ac/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="grid_power_{phase}",
         name="Grid power on {phase}",
@@ -90,42 +90,42 @@ topics: List[TopicDescriptor] = [
     ),
     # VM-3P75CT
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/{phase}/Energy/Forward",
+        topic="N/{installation_id}/grid/{device_id}/Ac/{phase}/Energy/Forward",
         message_type=MetricKind.SENSOR,
         short_id="grid_energy_forward_{phase}",
         name="Grid consumption on {phase}",
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/{phase}/Energy/Reverse",
+        topic="N/{installation_id}/grid/{device_id}/Ac/{phase}/Energy/Reverse",
         message_type=MetricKind.SENSOR,
         short_id="grid_energy_reverse_{phase}",
         name="Grid feed-in on {phase}",
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/PENVoltage", 
+        topic="N/{installation_id}/grid/{device_id}/Ac/PENVoltage", 
         message_type=MetricKind.SENSOR,
         short_id="grid_voltage_pen",
         name="Grid voltage on PEN",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/N/Current",
+        topic="N/{installation_id}/grid/{device_id}/Ac/N/Current",
         message_type=MetricKind.SENSOR,
         short_id="grid_current_n",
         name="Grid current on N",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/Frequency",
+        topic="N/{installation_id}/grid/{device_id}/Ac/Frequency",
         message_type=MetricKind.SENSOR,
         short_id="grid_frequency",
         name="Grid frequency",
         metric_type=MetricType.FREQUENCY,
     ),
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/{phase}/VoltageLineToLine",
+        topic="N/{installation_id}/grid/{device_id}/Ac/{phase}/VoltageLineToLine",
         message_type=MetricKind.SENSOR,
         short_id="grid_voltage_{phase}_{next_phase}",
         name="Grid voltage {phase} to {next_phase}",
@@ -133,35 +133,35 @@ topics: List[TopicDescriptor] = [
     ),
     # total grid
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/Voltage",
+        topic="N/{installation_id}/grid/{device_id}/Ac/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="grid_voltage",
         name="Grid voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/Current",
+        topic="N/{installation_id}/grid/{device_id}/Ac/Current",
         message_type=MetricKind.SENSOR,
         short_id="grid_current",
         name="Grid current",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/Power",
+        topic="N/{installation_id}/grid/{device_id}/Ac/Power",
         message_type=MetricKind.SENSOR,
         short_id="grid_power",
         name="Grid power",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/Energy/Forward",
+        topic="N/{installation_id}/grid/{device_id}/Ac/Energy/Forward",
         message_type=MetricKind.SENSOR,
         short_id="grid_energy_forward",
         name="Grid consumption",
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
-        topic="N/+/grid/+/Ac/Energy/Reverse",
+        topic="N/{installation_id}/grid/{device_id}/Ac/Energy/Reverse",
         message_type=MetricKind.SENSOR,
         short_id="grid_energy_reverse",
         name="Grid feed-in",
@@ -169,35 +169,35 @@ topics: List[TopicDescriptor] = [
     ),
     # solar / MPPT
     TopicDescriptor(
-        topic="N/+/solarcharger/+/Dc/0/Voltage",
+        topic="N/{installation_id}/solarcharger/{device_id}/Dc/0/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_dc_voltage",
         name="DC (Batt) Bus voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/Dc/0/Current",
+        topic="N/{installation_id}/solarcharger/{device_id}/Dc/0/Current",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_dc_current",
         name="DC (Batt) Bus current",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/Load/I",
+        topic="N/{installation_id}/solarcharger/{device_id}/Load/I",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_load_current",
         name="Load Bus current",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/Pv/V",
+        topic="N/{installation_id}/solarcharger/{device_id}/Pv/V",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_voltage",
         name="PV Bus Voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/State",
+        topic="N/{installation_id}/solarcharger/{device_id}/State",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_state",
         name="Solar Charger State",
@@ -207,63 +207,63 @@ topics: List[TopicDescriptor] = [
 
     #System
     TopicDescriptor(
-        topic="N/+/system/+/Dc/Pv/Power",
+        topic="N/{installation_id}/system/{device_id}/Dc/Pv/Power",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_power",
         name="PV Power",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/PV/Current",
+        topic="N/{installation_id}/system/{device_id}/PV/Current",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_current",
         name="PV Bus current",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/Yield/Power",
+        topic="N/{installation_id}/solarcharger/{device_id}/Yield/Power",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_yield_power",
         name="PV Yield Power",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/Yield/User",
+        topic="N/{installation_id}/solarcharger/{device_id}/Yield/User",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_yield_total",
         name="Total Yield",
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/History/Daily/0/Yield",
+        topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/Yield",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_yield_today",
         name="Yield Today",
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/History/Daily/1/Yield",
+        topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/1/Yield",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_yield_yesterday",
         name="Yield Yesterday",
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/History/Daily/0/MaxPower",
+        topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/MaxPower",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_max_power_today",
         name="Max Power Today",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/History/Daily/1/MaxPower",
+        topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/1/MaxPower",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_max_power_yesterday",
         name="Max Power Yesterday",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/Load/State",
+        topic="N/{installation_id}/solarcharger/{device_id}/Load/State",
         message_type=MetricKind.BINARY_SENSOR,
         short_id="solarcharger_load_state",
         name="Solar Charger Load State",
@@ -271,7 +271,7 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/Mode",
+        topic="N/{installation_id}/solarcharger/{device_id}/Mode",
         message_type=MetricKind.SWITCH,
         short_id="solarcharger_mode",
         name="Solar Charger Mode",
@@ -279,7 +279,7 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/MppOperationMode",
+        topic="N/{installation_id}/solarcharger/{device_id}/MppOperationMode",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_mppt_operation_mode",
         name="Solar Charger MPPT Operation Mode",
@@ -287,7 +287,7 @@ topics: List[TopicDescriptor] = [
         enum=MultiState,
     ),
     TopicDescriptor(
-        topic="N/+/solarcharger/+/Relay/0/State",
+        topic="N/{installation_id}/solarcharger/{device_id}/Relay/0/State",
         message_type=MetricKind.SWITCH,
         short_id="solarcharger_relay_state",
         name="Solar Charger Relay State",
@@ -296,49 +296,49 @@ topics: List[TopicDescriptor] = [
     ),
     # batteries
     TopicDescriptor(
-        topic="N/+/battery/+/Dc/0/Voltage",
+        topic="N/{installation_id}/battery/{device_id}/Dc/0/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="battery_voltage",
         name="DC Bus voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/Dc/0/Current",
+        topic="N/{installation_id}/battery/{device_id}/Dc/0/Current",
         message_type=MetricKind.SENSOR,
         short_id="battery_current",
         name="DC Bus current",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/Dc/0/Power",
+        topic="N/{installation_id}/battery/{device_id}/Dc/0/Power",
         message_type=MetricKind.SENSOR,
         short_id="battery_power",
         name="Battery power",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/Dc/0/Temperature",
+        topic="N/{installation_id}/battery/{device_id}/Dc/0/Temperature",
         message_type=MetricKind.SENSOR,
         short_id="battery_temperature",
         name="Battery temperature",
         metric_type=MetricType.TEMPERATURE,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/History/DischargedEnergy",
+        topic="N/{installation_id}/battery/{device_id}/History/DischargedEnergy",
         message_type=MetricKind.SENSOR,
         short_id="battery_discharged_energy",
         name="Discharged energy",
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/History/ChargedEnergy",
+        topic="N/{installation_id}/battery/{device_id}/History/ChargedEnergy",
         message_type=MetricKind.SENSOR,
         short_id="battery_charged_energy",
         name="Charged energy",
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/History/AutomaticSyncs",
+        topic="N/{installation_id}/battery/{device_id}/History/AutomaticSyncs",
         message_type=MetricKind.SENSOR,
         short_id="battery_automatic_syncs",
         name="Automatic syncs",
@@ -348,42 +348,42 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/Capacity",
+        topic="N/{installation_id}/battery/{device_id}/Capacity",
         message_type=MetricKind.SENSOR,
         short_id="battery_capacity",
         name="Battery capacity",
         metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/InstalledCapacity",
+        topic="N/{installation_id}/battery/{device_id}/InstalledCapacity",
         message_type=MetricKind.SENSOR,
         short_id="battery_installed_capacity",
         name="Battery installed capacity",
         metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/Soc",
+        topic="N/{installation_id}/battery/{device_id}/Soc",
         message_type=MetricKind.SENSOR,
         short_id="battery_soc",
         name="Battery charge",
         metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/System/MinCellVoltage",
+        topic="N/{installation_id}/battery/{device_id}/System/MinCellVoltage",
         message_type=MetricKind.SENSOR,
         short_id="battery_min_cell_voltage",
         name="Battery minimum cell voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/System/MaxCellVoltage",
+        topic="N/{installation_id}/battery/{device_id}/System/MaxCellVoltage",
         message_type=MetricKind.SENSOR,
         short_id="battery_max_cell_voltage",
         name="Battery maximum cell voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/Soh",
+        topic="N/{installation_id}/battery/{device_id}/Soh",
         message_type=MetricKind.SENSOR,
         short_id="battery_soh",
         name="Battery State of Health",
@@ -392,49 +392,49 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.FLOAT
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/System/NrOfModulesBlockingCharge",
+        topic="N/{installation_id}/battery/{device_id}/System/NrOfModulesBlockingCharge",
         message_type=MetricKind.SENSOR,
         short_id="battery_nr_modules_blocking_charge",
         name="Battery number of modules blocking charge",
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/System/NrOfModulesBlockingDischarge",
+        topic="N/{installation_id}/battery/{device_id}/System/NrOfModulesBlockingDischarge",
         message_type=MetricKind.SENSOR,
         short_id="battery_nr_modules_blocking_discharge",
         name="Battery number of modules blocking discharge",
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/System/NrOfModulesOnline",
+        topic="N/{installation_id}/battery/{device_id}/System/NrOfModulesOnline",
         message_type=MetricKind.SENSOR,
         short_id="battery_nr_modules_online",
         name="Battery number of modules online",
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/System/NrOfModulesOffline",
+        topic="N/{installation_id}/battery/{device_id}/System/NrOfModulesOffline",
         message_type=MetricKind.SENSOR,
         short_id="battery_nr_modules_offline",
         name="Battery number of modules offline",
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/System/MinCellTemperature",
+        topic="N/{installation_id}/battery/{device_id}/System/MinCellTemperature",
         message_type=MetricKind.SENSOR,
         short_id="battery_min_cell_temperature",
         name="Battery minimum cell temperature",
         metric_type=MetricType.TEMPERATURE,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/System/MaxCellTemperature",
+        topic="N/{installation_id}/battery/{device_id}/System/MaxCellTemperature",
         message_type=MetricKind.SENSOR,
         short_id="battery_max_cell_temperature",
         name="Battery maximum cell temperature",
         metric_type=MetricType.TEMPERATURE,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/TimeToGo",
+        topic="N/{installation_id}/battery/{device_id}/TimeToGo",
         message_type=MetricKind.SENSOR,
         short_id="battery_time_to_go",
         name="Battery time to go",
@@ -444,21 +444,21 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/Info/ChargeMode",
+        topic="N/{installation_id}/battery/{device_id}/Info/ChargeMode",
         message_type=MetricKind.SENSOR,
         short_id="charge_mode",
         name="Battery charge mode",
         value_type=ValueType.STRING,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/ConsumedAmphours",
+        topic="N/{installation_id}/battery/{device_id}/ConsumedAmphours",
         message_type=MetricKind.SENSOR,
         short_id="battery_consumed_amphours",
         name="Battery consumed amp-hours",
         metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
     ),
     TopicDescriptor(
-        topic="N/+/battery/+/Voltages/Cell{cell_id(1-4)}",
+        topic="N/{installation_id}/battery/{device_id}/Voltages/Cell{cell_id(1-4)}",
         message_type=MetricKind.SENSOR,
         short_id="battery_cell_{cell_id}_voltage",
         name="Battery cell {cell_id} voltage",
@@ -466,7 +466,7 @@ topics: List[TopicDescriptor] = [
     ),
     # inverter
     TopicDescriptor(
-        topic="N/+/vebus/+/Mode",
+        topic="N/{installation_id}/vebus/{device_id}/Mode",
         message_type=MetricKind.SELECT,
         short_id="inverter_mode",
         name="Inverter mode",
@@ -474,7 +474,7 @@ topics: List[TopicDescriptor] = [
         enum=InverterMode,
     ),
     TopicDescriptor(
-        topic="N/+/vebus/+/State",
+        topic="N/{installation_id}/vebus/{device_id}/State",
         message_type=MetricKind.SENSOR,
         short_id="inverter_state",
         name="Inverter state",
@@ -482,56 +482,56 @@ topics: List[TopicDescriptor] = [
         enum=InverterState,
     ),
     TopicDescriptor(
-        topic="N/+/vebus/+/Ac/ActiveIn/{phase}/V",
+        topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/V",
         message_type=MetricKind.SENSOR,
         short_id="inverter_input_voltage_{phase}",
         name="Inverter input voltage {phase}",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/vebus/+/Ac/ActiveIn/{phase}/P",
+        topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/P",
         message_type=MetricKind.SENSOR,
         short_id="inverter_input_power_{phase}",
         name="Inverter input power {phase}",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/vebus/+/Ac/ActiveIn/{phase}/F",
+        topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/F",
         message_type=MetricKind.SENSOR,
         short_id="inverter_input_frequency_{phase}",
         name="Inverter input frequency {phase}",
         metric_type=MetricType.FREQUENCY,
     ),
     TopicDescriptor(
-        topic="N/+/vebus/+/Ac/ActiveIn/{phase}/S",
+        topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/S",
         message_type=MetricKind.SENSOR,
         short_id="inverter_input_apparent_power_{phase}",
         name="Inverter input apparent power {phase}",
         metric_type=MetricType.APPARENT_POWER,
     ),
     TopicDescriptor(
-        topic="N/+/vebus/+/Ac/Out/{phase}/P",
+        topic="N/{installation_id}/vebus/{device_id}/Ac/Out/{phase}/P",
         message_type=MetricKind.SENSOR,
         short_id="inverter_output_power_{phase}",
         name="Inverter output power {phase}",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/vebus/+/Ac/Out/{phase}/F",
+        topic="N/{installation_id}/vebus/{device_id}/Ac/Out/{phase}/F",
         message_type=MetricKind.SENSOR,
         short_id="inverter_output_frequency_{phase}",
         name="Inverter output frequency {phase}",
         metric_type=MetricType.FREQUENCY,
     ),
     TopicDescriptor(
-        topic="N/+/vebus/+/Ac/Out/{phase}/S",
+        topic="N/{installation_id}/vebus/{device_id}/Ac/Out/{phase}/S",
         message_type=MetricKind.SENSOR,
         short_id="inverter_output_apparent_power_{phase}",
         name="Inverter output apparent power {phase}",
         metric_type=MetricType.APPARENT_POWER,
     ),
     TopicDescriptor(
-        topic="N/+/vebus/+/Connected",
+        topic="N/{installation_id}/vebus/{device_id}/Connected",
         message_type=MetricKind.BINARY_SENSOR,
         short_id="inverter_connected",
         name="Inverter connected",
@@ -539,7 +539,7 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/vebus/+/Alarms/Overload",
+        topic="N/{installation_id}/vebus/{device_id}/Alarms/Overload",
         message_type=MetricKind.SENSOR,
         short_id="inverter_alarm_overload",
         name="Inverter overload alarm",
@@ -547,7 +547,7 @@ topics: List[TopicDescriptor] = [
         enum=InverterOverloadAlarmEnum,
     ),
     TopicDescriptor(
-        topic="N/+/vebus/+/Ac/ActiveIn/CurrentLimit",
+        topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/CurrentLimit",
         message_type=MetricKind.NUMBER,
         short_id="inverter_current_limit",
         name="Inverter current limit",
@@ -559,7 +559,7 @@ topics: List[TopicDescriptor] = [
         is_adjustable_suffix = "CurrentLimitIsAdjustable"
     ),
     TopicDescriptor(
-        topic="N/+/vebus/+/Settings/AssistCurrentBoostFactor",
+        topic="N/{installation_id}/vebus/{device_id}/Settings/AssistCurrentBoostFactor",
         message_type=MetricKind.NUMBER,
         short_id="multiplus_assist_current_boost_factor",
         name="Assist Current Boost Factor",
@@ -572,56 +572,56 @@ topics: List[TopicDescriptor] = [
     #  as there are different physical configurations
     # and don't have access to any other for testing or feedback.
     TopicDescriptor(
-        topic="N/+/system/+/Ac/ConsumptionOnOutput/{phase}/Power",
+        topic="N/{installation_id}/system/{device_id}/Ac/ConsumptionOnOutput/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="system_critical_loads_{phase}",
         name="Critical loads on {phase}",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Ac/ConsumptionOnInput/{phase}/Power",
+        topic="N/{installation_id}/system/{device_id}/Ac/ConsumptionOnInput/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="system_ac_loads_{phase}",
         name="AC loads on {phase}",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Dc/System/Power",
+        topic="N/{installation_id}/system/{device_id}/Dc/System/Power",
         message_type=MetricKind.SENSOR,
         short_id="system_dc_consumption",
         name="DC Consumption",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Dc/Battery/Soc",
+        topic="N/{installation_id}/system/{device_id}/Dc/Battery/Soc",
         message_type=MetricKind.SENSOR,
         short_id="system_dc_battery_soc",
         name="DC Battery Charge",
         metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Dc/Battery/Power",
+        topic="N/{installation_id}/system/{device_id}/Dc/Battery/Power",
         message_type=MetricKind.SENSOR,
         short_id="system_dc_battery_power",
         name="DC Battery Power",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Dc/Battery/Voltage",
+        topic="N/{installation_id}/system/{device_id}/Dc/Battery/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="system_dc_battery_voltage",
         name="DC Battery Voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Dc/Battery/Current",
+        topic="N/{installation_id}/system/{device_id}/Dc/Battery/Current",
         message_type=MetricKind.SENSOR,
         short_id="system_dc_battery_current",
         name="DC Battery Current",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Relay/{relay}/State",
+        topic="N/{installation_id}/system/{device_id}/Relay/{relay}/State",
         message_type=MetricKind.SWITCH,
         short_id="system_relay_{relay}",
         name="Relay {relay} state",
@@ -629,7 +629,7 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/Available",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/Available",
         message_type=MetricKind.BINARY_SENSOR,
         short_id="system_dynamicess_available",
         name="Dynamic ESS Available",
@@ -639,7 +639,7 @@ topics: List[TopicDescriptor] = [
     # there is at least one mode for DESS that is controlled by Node-Red (value=4)
     # it may show up here - as well as: GREEN Mode (1?)an Trade Mode (2?)
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/Active",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/Active",
         message_type=MetricKind.BINARY_SENSOR,
         short_id="system_dynamicess_active",
         name="Dynamic ESS Active",
@@ -647,7 +647,7 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/AllowGridFeedIn",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/AllowGridFeedIn",
         message_type=MetricKind.BINARY_SENSOR,
         short_id="system_dynamicess_allow_gridfeedin",
         name="Dynamic ESS Allow Grid Feed In",
@@ -655,14 +655,14 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/AvailableOverhead",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/AvailableOverhead",
         message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_available_overhead",
         name="Dynamic ESS Available Overhead",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/ErrorCode",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/ErrorCode",
         message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_error",
         name="Dynamic ESS Error",
@@ -670,7 +670,7 @@ topics: List[TopicDescriptor] = [
         enum=DESSErrorCode,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/NumberOfSchedules",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/NumberOfSchedules",
         message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_schedule_count",
         name="Dynamic ESS Number Of Schedules",
@@ -678,7 +678,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/TargetSoc",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/TargetSoc",
         message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_target_soc",
         name="Dynamic ESS Target SOC",
@@ -686,7 +686,7 @@ topics: List[TopicDescriptor] = [
         precision=0,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/MinimumSoc",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/MinimumSoc",
         message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_minimum_soc",
         name="Dynamic ESS Minimum SOC",
@@ -694,25 +694,25 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
         precision=0,
     ),
-    # N/+/system/+/DynamicEss/Capabilities       - not documented - in my case always 31 (bitmask?)
-    # N/+/system/+/DynamicEss/ChargeRate         - not documented - in my case alway 0
-    # N/+/system/+/DynamicEss/Flags              - not documented - in my case always 0
+    # N/{installation_id}/system/{device_id}/DynamicEss/Capabilities       - not documented - in my case always 31 (bitmask?)
+    # N/{installation_id}/system/{device_id}/DynamicEss/ChargeRate         - not documented - in my case alway 0
+    # N/{installation_id}/system/{device_id}/DynamicEss/Flags              - not documented - in my case always 0
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/LastScheduledStart",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/LastScheduledStart",
         message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_last_scheduled_start",
         name="Dynamic ESS Last Scheduled Start",
         value_type=ValueType.EPOCH,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/LastScheduledEnd",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/LastScheduledEnd",
         message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_last_scheduled_end",
         name="Dynamic ESS Last Scheduled End",
         value_type=ValueType.EPOCH,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/Restrictions",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/Restrictions",
         message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_restrictions",
         name="Dynamic ESS Restrictions",
@@ -720,7 +720,7 @@ topics: List[TopicDescriptor] = [
         enum=DESSRestrictions,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/Strategy",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/Strategy",
         message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_strategy",
         name="Dynamic ESS Strategy",
@@ -728,7 +728,7 @@ topics: List[TopicDescriptor] = [
         enum=DESSStrategy,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/DynamicEss/ReactiveStrategy",
+        topic="N/{installation_id}/system/{device_id}/DynamicEss/ReactiveStrategy",
         message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_reactive_strategy",
         name="Dynamic ESS Reactive Strategy",
@@ -736,21 +736,21 @@ topics: List[TopicDescriptor] = [
         enum=DESSReactiveStrategy,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Ac/Genset/{phase}/Power",
+        topic="N/{installation_id}/system/{device_id}/Ac/Genset/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="system_generator_load_{phase}",
         name="Genset Load {phase}",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Ac/Grid/{phase}/Power",
+        topic="N/{installation_id}/system/{device_id}/Ac/Grid/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="system_grid_power_{phase}",
         name="Grid Power {phase}",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Ac/PvOnOutput/NumberOfPhases",
+        topic="N/{installation_id}/system/{device_id}/Ac/PvOnOutput/NumberOfPhases",
         message_type=MetricKind.SENSOR,
         short_id="system_pv_on_output_phases",
         name="PV on Output phases",
@@ -758,21 +758,21 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Ac/PvOnOutput/{phase}/Power",
+        topic="N/{installation_id}/system/{device_id}/Ac/PvOnOutput/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="system_pv_on_output_power_{phase}",
         name="PV on Output Power {phase}",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Ac/PvOnOutput/{phase}/Current",
+        topic="N/{installation_id}/system/{device_id}/Ac/PvOnOutput/{phase}/Current",
         message_type=MetricKind.SENSOR,
         short_id="system_pv_on_output_current_{phase}",
         name="PV on Output Current {phase}",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Ac/ConsumptionOnOutput/NumberOfPhases",
+        topic="N/{installation_id}/system/{device_id}/Ac/ConsumptionOnOutput/NumberOfPhases",
         message_type=MetricKind.SENSOR,
         short_id="system_consumption_on_output_phases",
         name="Consumption On Output phases",
@@ -780,7 +780,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Ac/Consumption/NumberOfPhases",
+        topic="N/{installation_id}/system/{device_id}/Ac/Consumption/NumberOfPhases",
         message_type=MetricKind.SENSOR,
         short_id="system_consumption_phases",
         name="Consumption phases",
@@ -788,21 +788,21 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Ac/Consumption/{phase}/Power",
+        topic="N/{installation_id}/system/{device_id}/Ac/Consumption/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="system_consumption_power_{phase}",
         name="Consumption Power {phase}",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Ac/Consumption/{phase}/Current",
+        topic="N/{installation_id}/system/{device_id}/Ac/Consumption/{phase}/Current",
         message_type=MetricKind.SENSOR,
         short_id="system_consumption_current_{phase}",
         name="Consumption Current {phase}",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/system/+/Ac/Grid/{phase}/Current",
+        topic="N/{installation_id}/system/{device_id}/Ac/Grid/{phase}/Current",
         message_type=MetricKind.SENSOR,
         short_id="system_grid_current_{phase}",
         name="Grid Current {phase}",
@@ -810,7 +810,7 @@ topics: List[TopicDescriptor] = [
     ),
     # evcharger
     TopicDescriptor(
-        topic="N/+/evcharger/+/Mode",
+        topic="N/{installation_id}/evcharger/{device_id}/Mode",
         message_type=MetricKind.SELECT,
         short_id="evcharger_mode",
         name="EV charger mode",
@@ -818,7 +818,7 @@ topics: List[TopicDescriptor] = [
         enum=EvChargerMode,
     ),
     TopicDescriptor(
-        topic="N/+/evcharger/+/StartStop",
+        topic="N/{installation_id}/evcharger/{device_id}/StartStop",
         message_type=MetricKind.SWITCH,
         short_id="evcharger_charge",
         name="EV charger charge",
@@ -826,7 +826,7 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/evcharger/+/Connected",
+        topic="N/{installation_id}/evcharger/{device_id}/Connected",
         message_type=MetricKind.BINARY_SENSOR,
         short_id="evcharger_connected",
         name="EV charger connected",
@@ -834,21 +834,21 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/evcharger/+/Current",
+        topic="N/{installation_id}/evcharger/{device_id}/Current",
         message_type=MetricKind.SENSOR,
         short_id="evcharger_current",
         name="EV charger current",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/evcharger/+/Ac/{phase}/Power",
+        topic="N/{installation_id}/evcharger/{device_id}/Ac/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="evcharger_power_{phase}",
         name="EV charger power {phase}",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/evcharger/+/SetCurrent",
+        topic="N/{installation_id}/evcharger/{device_id}/SetCurrent",
         message_type=MetricKind.NUMBER,
         short_id="evcharger_set_current",
         name="EV charger set current",
@@ -859,42 +859,42 @@ topics: List[TopicDescriptor] = [
     ),
     #pvinverter
     TopicDescriptor(
-        topic="N/+/pvinverter/+/Ac/{phase}/Voltage",
+        topic="N/{installation_id}/pvinverter/{device_id}/Ac/{phase}/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="pvinverter_voltage_{phase}",
         name="Voltage {phase}",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/pvinverter/+/Ac/{phase}/Current",
+        topic="N/{installation_id}/pvinverter/{device_id}/Ac/{phase}/Current",
         message_type=MetricKind.SENSOR,
         short_id="pvinverter_current_{phase}",
         name="Current {phase}",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/pvinverter/+/Ac/Power",
+        topic="N/{installation_id}/pvinverter/{device_id}/Ac/Power",
         message_type=MetricKind.SENSOR,
         short_id="pvinverter_power_total",
         name="Power Total",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/pvinverter/+/Ac/{phase}/Power",
+        topic="N/{installation_id}/pvinverter/{device_id}/Ac/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="pvinverter_power_{phase}",
         name="Power {phase}",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/pvinverter/+/Ac/Energy/Forward",
+        topic="N/{installation_id}/pvinverter/{device_id}/Ac/Energy/Forward",
         message_type=MetricKind.SENSOR,
         short_id="pvinverter_yield_total",
         name="Total Yield",
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
-        topic="N/+/pvinverter/+/Ac/{phase}/Energy/Forward",
+        topic="N/{installation_id}/pvinverter/{device_id}/Ac/{phase}/Energy/Forward",
         message_type=MetricKind.SENSOR,
         short_id="pvinverter_yield_{phase}",
         name="Yield {phase}",
@@ -902,14 +902,14 @@ topics: List[TopicDescriptor] = [
     ),
     # temperature devices
     TopicDescriptor(
-        topic="N/+/temperature/+/Temperature",
+        topic="N/{installation_id}/temperature/{device_id}/Temperature",
         message_type=MetricKind.SENSOR,
         short_id="temperature_temperature",
         name="Temperature",
         metric_type=MetricType.TEMPERATURE,
     ),
     TopicDescriptor(
-        topic="N/+/temperature/+/Status",
+        topic="N/{installation_id}/temperature/{device_id}/Status",
         message_type=MetricKind.SENSOR,
         short_id="temperature_status",
         name="Temperature sensor status",
@@ -917,7 +917,7 @@ topics: List[TopicDescriptor] = [
         enum=TemperatureStatus,
     ),
     TopicDescriptor(
-        topic="N/+/temperature/+/TemperatureType",
+        topic="N/{installation_id}/temperature/{device_id}/TemperatureType",
         message_type=MetricKind.SENSOR,
         short_id="temperature_type",
         name="Temperature sensor type",
@@ -925,14 +925,14 @@ topics: List[TopicDescriptor] = [
         enum=TemperatureType,
     ),
     TopicDescriptor(
-        topic="N/+/temperature/+/BatteryVoltage",
+        topic="N/{installation_id}/temperature/{device_id}/BatteryVoltage",
         message_type=MetricKind.SENSOR,
         short_id="temperature_battery_voltage",
         name="Temperature sensor battery voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/temperature/+/Humidity",
+        topic="N/{installation_id}/temperature/{device_id}/Humidity",
         message_type=MetricKind.SENSOR,
         short_id="temperature_humidity",
         name="Humidity",
@@ -943,14 +943,14 @@ topics: List[TopicDescriptor] = [
         precision=1,
     ),
     TopicDescriptor(
-        topic="N/+/temperature/+/Offset",
+        topic="N/{installation_id}/temperature/{device_id}/Offset",
         message_type=MetricKind.NUMBER,
         short_id="temperature_offset",
         name="Temperature offset",
         metric_type=MetricType.TEMPERATURE,
     ),
     TopicDescriptor(
-        topic="N/+/temperature/+/Scale",
+        topic="N/{installation_id}/temperature/{device_id}/Scale",
         message_type=MetricKind.NUMBER,
         short_id="temperature_scale",
         name="Temperature scale factor",
@@ -962,7 +962,7 @@ topics: List[TopicDescriptor] = [
     ),
     #Tanks
     TopicDescriptor(
-        topic="N/+/tank/+/Level",
+        topic="N/{installation_id}/tank/{device_id}/Level",
         message_type=MetricKind.SENSOR,
         short_id="tank_level",
         name="Level",
@@ -972,14 +972,14 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/tank/+/BatteryVoltage",
+        topic="N/{installation_id}/tank/{device_id}/BatteryVoltage",
         message_type=MetricKind.SENSOR,
         short_id="tank_battery_voltage",
         name="Tank sensor battery voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/tank/+/Remaining",
+        topic="N/{installation_id}/tank/{device_id}/Remaining",
         message_type=MetricKind.SENSOR,
         short_id="tank_remaining",
         name="Remaining",
@@ -990,14 +990,14 @@ topics: List[TopicDescriptor] = [
         precision=2,
     ),
     TopicDescriptor(
-        topic="N/+/tank/+/Temperature",
+        topic="N/{installation_id}/tank/{device_id}/Temperature",
         message_type=MetricKind.SENSOR,
         short_id="tank_temperature",
         name="Temperature",
         metric_type=MetricType.TEMPERATURE,
     ),
     TopicDescriptor(
-        topic="N/+/tank/+/FluidType",
+        topic="N/{installation_id}/tank/{device_id}/FluidType",
         message_type=MetricKind.SENSOR,
         short_id="tank_fluid_type",
         name="Fluid Type",
@@ -1007,7 +1007,7 @@ topics: List[TopicDescriptor] = [
     #multirssolar
     #acin and acout
     TopicDescriptor(
-        topic="N/+/multi/+/Ac/NumberOfPhases",
+        topic="N/{installation_id}/multi/{device_id}/Ac/NumberOfPhases",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_phases",
         name="Phases",
@@ -1015,21 +1015,21 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/multi/+/Ac/In/1/{phase}/V",
+        topic="N/{installation_id}/multi/{device_id}/Ac/In/1/{phase}/V",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_acin_voltage_{phase}",
         name="Voltage on {phase}",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/multi/+/Ac/In/1/{phase}/I",
+        topic="N/{installation_id}/multi/{device_id}/Ac/In/1/{phase}/I",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_acin_current_{phase}",
         name="Current {phase}",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/multi/+/Ac/In/1/{phase}/P",
+        topic="N/{installation_id}/multi/{device_id}/Ac/In/1/{phase}/P",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_acin_power_{phase}",
         name="Power on {phase}",
@@ -1037,28 +1037,28 @@ topics: List[TopicDescriptor] = [
     ),
     #acout {output}
      TopicDescriptor(
-        topic="N/+/multi/+/Ac/Out/{output}/{phase}/V",
+        topic="N/{installation_id}/multi/{device_id}/Ac/Out/{output}/{phase}/V",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_acout_{output}_voltage_{phase}",
         name="AC Out {output} Voltage on {phase}",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/multi/+/Ac/Out/{output}/{phase}/I",
+        topic="N/{installation_id}/multi/{device_id}/Ac/Out/{output}/{phase}/I",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_acout_{output}_current_{phase}",
         name="AC Out {output} Current on {phase}",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/multi/+/Ac/Out/{output}/{phase}/P",
+        topic="N/{installation_id}/multi/{device_id}/Ac/Out/{output}/{phase}/P",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_acout_{output}_power_{phase}",
         name="AC Out {output} Power on {phase}",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/multi/+/State",
+        topic="N/{installation_id}/multi/{device_id}/State",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_state",
         name="State",
@@ -1067,21 +1067,21 @@ topics: List[TopicDescriptor] = [
     ),
     #multirssolar mppt {mpptnumber} pv topics
         TopicDescriptor(
-        topic="N/+/multi/+/Pv/{mpptnumber}/V",
+        topic="N/{installation_id}/multi/{device_id}/Pv/{mpptnumber}/V",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_mppt_{mpptnumber}_voltage",
         name="MPPT {mpptnumber} PV Voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/multi/+/Pv/{mpptnumber}/P",
+        topic="N/{installation_id}/multi/{device_id}/Pv/{mpptnumber}/P",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_mppt_{mpptnumber}_power",
         name="MPPT {mpptnumber} Power",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/multi/+/Pv/{mpptnumber}/MppOperationMode",
+        topic="N/{installation_id}/multi/{device_id}/Pv/{mpptnumber}/MppOperationMode",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_mppt_{mpptnumber}_state",
         name="MPPT {mpptnumber} state",
@@ -1089,21 +1089,21 @@ topics: List[TopicDescriptor] = [
         enum=MultiState,
     ),     
     TopicDescriptor(
-        topic="N/+/multi/+/Yield/Power",
+        topic="N/{installation_id}/multi/{device_id}/Yield/Power",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_pv_power_total",
         name="PV Power Total",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/multi/+/Yield/User",
+        topic="N/{installation_id}/multi/{device_id}/Yield/User",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_total_pv_yield",
         name="Total PV Yield",
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
-        topic="N/+/multi/+/Settings/Ess/Mode",
+        topic="N/{installation_id}/multi/{device_id}/Settings/Ess/Mode",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_ess_mode",
         name="ESS Mode",
@@ -1112,14 +1112,14 @@ topics: List[TopicDescriptor] = [
     ),             
     #ESS Information
     TopicDescriptor(
-        topic="N/+/multi/+/Ess/AcPowerSetpoint",
+        topic="N/{installation_id}/multi/{device_id}/Ess/AcPowerSetpoint",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_ess_ac_power_set_point",
         name="ESS AC Power Setpoint",
         metric_type=MetricType.POWER,
     ),        
     TopicDescriptor(
-        topic="N/+/multi/+/Ess/InverterPowerSetpoint",
+        topic="N/{installation_id}/multi/{device_id}/Ess/InverterPowerSetpoint",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_inverter_power_setpoint",
         name="Inverter Power Setpoint",
@@ -1127,42 +1127,42 @@ topics: List[TopicDescriptor] = [
     ),
     # Orion Alternator (Charger) metrics
     TopicDescriptor(
-        topic="N/+/alternator/+/Dc/0/Voltage",
+        topic="N/{installation_id}/alternator/{device_id}/Dc/0/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="alternator_dc_voltage",
         name="DC Output Voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/alternator/+/Dc/0/Current",
+        topic="N/{installation_id}/alternator/{device_id}/Dc/0/Current",
         message_type=MetricKind.SENSOR,
         short_id="alternator_dc_current",
         name="DC Output Current",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/alternator/+/Dc/0/Power",
+        topic="N/{installation_id}/alternator/{device_id}/Dc/0/Power",
         message_type=MetricKind.SENSOR,
         short_id="alternator_dc_power",
         name="DC Output Power",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/+/alternator/+/In/V",
+        topic="N/{installation_id}/alternator/{device_id}/In/V",
         message_type=MetricKind.SENSOR,
         short_id="alternator_input_voltage",
         name="Input Voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/alternator/+/In/I",
+        topic="N/{installation_id}/alternator/{device_id}/In/I",
         message_type=MetricKind.SENSOR,
         short_id="alternator_input_current",
         name="Input Current",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/alternator/+/In/P",
+        topic="N/{installation_id}/alternator/{device_id}/In/P",
         message_type=MetricKind.SENSOR,
         short_id="alternator_input_power",
         name="Input Power",
@@ -1170,7 +1170,7 @@ topics: List[TopicDescriptor] = [
     ),
     # Settings
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/CGwacs/AcPowerSetPoint",
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/AcPowerSetPoint",
         message_type=MetricKind.NUMBER,
         short_id="system_ac_power_set_point",
         name="AC Power Setpoint",
@@ -1181,7 +1181,7 @@ topics: List[TopicDescriptor] = [
         max=10000,  # Dynamic range, depends on device model
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/CGwacs/OvervoltageFeedIn",
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/OvervoltageFeedIn",
         message_type=MetricKind.SWITCH,
         short_id="system_settings_overvoltage_feedin",
         name="PV DC Overvoltage FeedIn",
@@ -1189,7 +1189,7 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/CGwacs/BatteryLife/MinimumSocLimit",
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/MinimumSocLimit",
         message_type=MetricKind.NUMBER,
         short_id="system_ess_min_soc_limit",
         name="ESS min SOC limit",
@@ -1198,7 +1198,7 @@ topics: List[TopicDescriptor] = [
         min_max_range=RangeType.DYNAMIC,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/SystemSetup/MaxChargeCurrent",
+        topic="N/{installation_id}/settings/{device_id}/Settings/SystemSetup/MaxChargeCurrent",
         message_type=MetricKind.NUMBER,
         short_id="system_ess_max_charge_current",
         name="ESS max charge current",
@@ -1207,7 +1207,7 @@ topics: List[TopicDescriptor] = [
         min_max_range=RangeType.DYNAMIC,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/SystemSetup/MaxChargeVoltage",
+        topic="N/{installation_id}/settings/{device_id}/Settings/SystemSetup/MaxChargeVoltage",
         message_type=MetricKind.NUMBER,
         short_id="system_ess_max_charge_voltage",
         name="ESS max charge voltage",
@@ -1217,21 +1217,21 @@ topics: List[TopicDescriptor] = [
     ),
     # DC Load
     TopicDescriptor(
-        topic="N/+/dcload/+/Dc/0/Voltage",
+        topic="N/{installation_id}/dcload/{device_id}/Dc/0/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="dcload_voltage",
         name="DC load voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/+/dcload/+/Dc/0/Current",
+        topic="N/{installation_id}/dcload/{device_id}/Dc/0/Current",
         message_type=MetricKind.SENSOR,
         short_id="dcload_current",
         name="DC load current",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/+/dcload/+/Dc/0/Power",
+        topic="N/{installation_id}/dcload/{device_id}/Dc/0/Power",
         message_type=MetricKind.SENSOR,
         short_id="dcload_power",
         name="DC load power",
@@ -1239,7 +1239,7 @@ topics: List[TopicDescriptor] = [
     ),
     # Switches
     TopicDescriptor(
-        topic="N/+/switch/+/SwitchableOutput/output_{output(1-4)}/State",
+        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/State",
         message_type=MetricKind.SWITCH,
         short_id="switch_{output}_state",
         name="Switch {output} State",
@@ -1247,7 +1247,7 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/switch/+/SwitchableOutput/output_{output(1-4)}/Dimming",
+        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/Dimming",
         message_type=MetricKind.NUMBER,
         short_id="switch_{output}_dimming",
         name="Switch {output} Dimming",
@@ -1257,7 +1257,7 @@ topics: List[TopicDescriptor] = [
     ),
     # GPS
     TopicDescriptor(
-        topic="N/+/gps/+/Altitude",
+        topic="N/{installation_id}/gps/{device_id}/Altitude",
         message_type=MetricKind.SENSOR,
         short_id="gps_altitude",
         name="GPS Altitude",
@@ -1266,7 +1266,7 @@ topics: List[TopicDescriptor] = [
         precision=None # Use full precision of GPS device
     ),
     TopicDescriptor(
-        topic="N/+/gps/+/Connected",
+        topic="N/{installation_id}/gps/{device_id}/Connected",
         message_type=MetricKind.BINARY_SENSOR,
         short_id="gps_connected",
         name="GPS Connected",
@@ -1274,7 +1274,7 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/gps/+/Course",
+        topic="N/{installation_id}/gps/{device_id}/Course",
         message_type=MetricKind.SENSOR,
         short_id="gps_course",
         name="GPS Course",
@@ -1283,7 +1283,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
     ),
     TopicDescriptor(
-        topic="N/+/gps/+/Fix",
+        topic="N/{installation_id}/gps/{device_id}/Fix",
         message_type=MetricKind.BINARY_SENSOR,
         short_id="gps_fix",
         name="GPS Fix",
@@ -1291,7 +1291,7 @@ topics: List[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/+/gps/+/Speed",
+        topic="N/{installation_id}/gps/{device_id}/Speed",
         message_type=MetricKind.SENSOR,
         short_id="gps_speed",
         name="GPS Speed",
@@ -1300,7 +1300,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
     ),
     TopicDescriptor(
-        topic="N/+/gps/+/NrOfSatellites",
+        topic="N/{installation_id}/gps/{device_id}/NrOfSatellites",
         message_type=MetricKind.SENSOR,
         short_id="gps_nrofsatellites",
         name="GPS Nr Of Satellites",
@@ -1308,7 +1308,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic="N/+/gps/+/Position/Latitude",
+        topic="N/{installation_id}/gps/{device_id}/Position/Latitude",
         message_type=MetricKind.SENSOR,
         short_id="gps_latitude",
         name="GPS Latitude",
@@ -1318,7 +1318,7 @@ topics: List[TopicDescriptor] = [
         precision=None # Use full precision of GPS device
     ),
     TopicDescriptor(
-        topic="N/+/gps/+/Position/Longitude",
+        topic="N/{installation_id}/gps/{device_id}/Position/Longitude",
         message_type=MetricKind.SENSOR,
         short_id="gps_longitude",
         name="GPS Longitude",
@@ -1328,7 +1328,7 @@ topics: List[TopicDescriptor] = [
         precision=None # Use full precision of GPS device
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/CGwacs/MaxDischargePower",
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxDischargePower",
         message_type=MetricKind.NUMBER,
         short_id="system_ess_max_inverter_power_limit",
         name="ESS max inverter power limit",
@@ -1338,7 +1338,15 @@ topics: List[TopicDescriptor] = [
     ),
     # Generator
     TopicDescriptor(
-        topic="N/+/generator/+/TodayRuntime",
+        topic="W/{installation_id}/generator/{device_id}/ServiceCounterReset",
+        message_type=MetricKind.SERVICE,
+        short_id="generator_service_counter_reset",
+        name="Generator service counter reset",
+        value_type=ValueType.INT,
+        experimental=True,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/generator/{device_id}/TodayRuntime",
         message_type=MetricKind.SENSOR,
         short_id="generator_today_runtime",
         name="Generator today runtime",
@@ -1349,7 +1357,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/generator/+/AccumulatedRuntime",
+        topic="N/{installation_id}/generator/{device_id}/AccumulatedRuntime",
         message_type=MetricKind.SENSOR,
         short_id="generator_total_runtime",
         name="Generator total runtime",
@@ -1360,7 +1368,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/generator/+/ServiceCounter",
+        topic="N/{installation_id}/generator/{device_id}/ServiceCounter",
         message_type=MetricKind.SENSOR,
         short_id="generator_service_counter",
         name="Generator service counter",
@@ -1371,7 +1379,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/generator/+/RunningByConditionCode",
+        topic="N/{installation_id}/generator/{device_id}/RunningByConditionCode",
         message_type=MetricKind.SENSOR,
         short_id="generator_run_state",
         name="Generator run state",
@@ -1381,7 +1389,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/generator/+/AutoStartEnabled",
+        topic="N/{installation_id}/generator/{device_id}/AutoStartEnabled",
         message_type=MetricKind.SWITCH,
         short_id="generator_autorun",
         name="Generator auto start enabled",
@@ -1390,7 +1398,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/generator/+/ManualStart",
+        topic="N/{installation_id}/generator/{device_id}/ManualStart",
         message_type=MetricKind.SWITCH,
         short_id="generator_manual_start",
         name="Generator manual start",
@@ -1399,7 +1407,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/QuietHours/Enabled",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/QuietHours/Enabled",
         message_type=MetricKind.SWITCH,
         short_id="generator_{gen_id}_quiet_hours_enabled",
         name="Generator quiet hours enabled",
@@ -1408,7 +1416,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/Soc/Enabled",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/Enabled",
         message_type=MetricKind.SWITCH,
         short_id="generator_{gen_id}_start_on_soc_enabled",
         name="Generator start on SOC enabled",
@@ -1417,7 +1425,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/BatteryVoltage/Enabled",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/Enabled",
         message_type=MetricKind.SWITCH,
         short_id="generator_{gen_id}_start_on_voltage_enabled",
         name="Generator start on voltage enabled",
@@ -1426,7 +1434,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/InverterHighTemp/Enabled",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/InverterHighTemp/Enabled",
         message_type=MetricKind.SWITCH,
         short_id="generator_{gen_id}_start_on_temp_enabled",
         name="Generator start on high temp enabled",
@@ -1435,7 +1443,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/Soc/StartValue",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StartValue",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_start_on_soc",
         name="Generator start on SOC",
@@ -1444,7 +1452,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/Soc/StopValue",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StopValue",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_stop_on_soc",
         name="Generator stop on SOC",
@@ -1453,7 +1461,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStartValue",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStartValue",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_qh_start_on_soc",
         name="Generator QH start on SOC",
@@ -1462,7 +1470,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStopValue",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStopValue",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_qh_stop_on_soc",
         name="Generator QH stop on SOC",
@@ -1471,7 +1479,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/Soc/StartTimer",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StartTimer",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_start_on_soc_timer",
         name="Generator start on SOC timer",
@@ -1482,7 +1490,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/Soc/StopTimer",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StopTimer",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_stop_on_soc_timer",
         name="Generator stop on SOC timer",
@@ -1493,7 +1501,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StartValue",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StartValue",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_start_on_voltage",
         name="Generator start on voltage",
@@ -1502,7 +1510,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StopValue",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StopValue",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_stop_on_voltage",
         name="Generator stop on voltage",
@@ -1511,7 +1519,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/BatteryVoltage/QuietHoursStartValue",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/QuietHoursStartValue",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_qh_start_on_voltage",
         name="Generator QH start on voltage",
@@ -1520,7 +1528,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/BatteryVoltage/QuietHoursStopValue",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/QuietHoursStopValue",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_qh_stop_on_voltage",
         name="Generator QH stop on voltage",
@@ -1529,7 +1537,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StartTimer",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StartTimer",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_start_on_voltage_timer",
         name="Generator start on voltage timer",
@@ -1539,7 +1547,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StopTimer",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StopTimer",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_stop_on_voltage_timer",
         name="Generator stop on voltage timer",
@@ -1549,7 +1557,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/InverterHighTemp/StartTimer",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/InverterHighTemp/StartTimer",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_start_on_temp_timer",
         name="Generator start on temp timer",
@@ -1559,7 +1567,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/InverterHighTemp/StopTimer",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/InverterHighTemp/StopTimer",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_stop_on_temp_timer",
         name="Generator stop on temp timer",
@@ -1569,7 +1577,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/CoolDownTime",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/CoolDownTime",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_cool_down_timer",
         name="Generator cool down timer",
@@ -1580,7 +1588,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/WarmUpTime",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/WarmUpTime",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_warm_up_timer",
         name="Generator warm up timer",
@@ -1591,7 +1599,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/GeneratorStopTime",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/GeneratorStopTime",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_shut_down_timer",
         name="Generator shut down timer",
@@ -1602,7 +1610,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/Generator{gen_id(0-1)}/ServiceInterval",
+        topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/ServiceInterval",
         message_type=MetricKind.NUMBER,
         short_id="generator_{gen_id}_service_interval",
         name="Generator service interval",
@@ -1613,7 +1621,7 @@ topics: List[TopicDescriptor] = [
         experimental=True,
     ),
     TopicDescriptor(
-        topic="N/+/settings/+/Settings/TransferSwitch/GeneratorCurrentLimit",
+        topic="N/{installation_id}/settings/{device_id}/Settings/TransferSwitch/GeneratorCurrentLimit",
         message_type=MetricKind.NUMBER,
         short_id="transfer_switch_generator_current_limit",
         name="Generator AC current limit",
