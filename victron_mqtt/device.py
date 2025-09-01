@@ -190,14 +190,10 @@ class Device:
                 new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
                 new_topic_desc.min = int(min_value)
 
-        # If the hub is in READ_ONLY mode, always create plain Metric objects (no Switch/Number/Select entities)
-        if hub.operation_mode == OperationMode.READ_ONLY:
-            metric = Metric(metric_id, short_id, new_topic_desc, parsed_topic)
+        if topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
+            metric = Switch(metric_id, short_id, new_topic_desc, topic, parsed_topic, hub)
         else:
-            if topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
-                metric = Switch(metric_id, short_id, new_topic_desc, topic, parsed_topic, hub)
-            else:
-                metric = Metric(metric_id, short_id, new_topic_desc, parsed_topic)
+            metric = Metric(metric_id, short_id, new_topic_desc, parsed_topic)
         self._metrics[metric_id] = metric
 
         return metric, True

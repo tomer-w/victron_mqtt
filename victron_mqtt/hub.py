@@ -16,7 +16,7 @@ from paho.mqtt.reasoncodes import ReasonCode
 from paho.mqtt.properties import Properties
 
 from ._victron_topics import topics
-from .constants import TOPIC_INSTALLATION_ID, OperationMode
+from .constants import TOPIC_INSTALLATION_ID, MetricKind, OperationMode
 from .data_classes import ParsedTopic, TopicDescriptor
 from .device import Device
 from .metric import Metric
@@ -139,6 +139,10 @@ class Hub:
 
         #Filter out the topics based on operation mode
         active_topics: list[TopicDescriptor] = topics if operation_mode == OperationMode.EXPERIMENTAL else [t for t in topics if not t.experimental]
+        #if operation_mode is READ_ONLY we should change all TopicDescriptor to SENSOR and BINARY_SENSOR
+        if operation_mode == OperationMode.READ_ONLY:
+            for topic in active_topics:
+                topic.message_type = MetricKind.BINARY_SENSOR if topic.message_type == MetricKind.SWITCH else MetricKind.SENSOR
         # Replace all {placeholder} patterns with + for MQTT wildcards
         expanded_topics = Hub.expand_topic_list(active_topics)
         def merge_is_adjustable_suffix(desc: TopicDescriptor) -> str:
@@ -650,11 +654,6 @@ class Hub:
             else:
                 expanded.append(td)
         return expanded
-
-    @property
-    def operation_mode(self) -> OperationMode:
-        """Returns the operation_mode callback."""
-        return self._operation_mode
 
     @property
     def on_new_metric(self) -> CallbackOnNewMetric | None:

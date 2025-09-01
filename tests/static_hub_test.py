@@ -532,7 +532,6 @@ async def test_new_metric(create_mocked_hub):
 async def test_experimental_metrics_not_created_by_default(create_mocked_hub):
     """Ensure experimental topics do not create devices/metrics when operation_mode is not EXPERIMENTAL."""
     hub: Hub = create_mocked_hub
-    assert hub.operation_mode != OperationMode.EXPERIMENTAL
 
     # Inject an experimental topic (generator TodayRuntime is marked experimental in _victron_topics)
     inject_message(hub, "N/123/generator/170/TodayRuntime", '{"value": 100}')
@@ -545,7 +544,6 @@ async def test_experimental_metrics_not_created_by_default(create_mocked_hub):
 async def test_experimental_metrics_created_when_needed(create_mocked_hub_experimental):
     """Ensure experimental topics create devices/metrics when operation_mode is EXPERIMENTAL."""
     hub: Hub = create_mocked_hub_experimental
-    assert hub.operation_mode == OperationMode.EXPERIMENTAL
 
     # Inject an experimental topic (generator TodayRuntime is marked experimental in _victron_topics)
     inject_message(hub, "N/123/generator/170/TodayRuntime", '{"value": 100}')
