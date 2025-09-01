@@ -4,7 +4,8 @@ import asyncio
 from unittest.mock import MagicMock, patch
 from victron_mqtt._victron_enums import DeviceType, GenericOnOff
 from victron_mqtt.hub import Hub
-from victron_mqtt.constants import TOPIC_INSTALLATION_ID
+from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
+from victron_mqtt.metric import Metric
 from victron_mqtt.switch import Switch
 from victron_mqtt._victron_topics import topics
 import json
@@ -22,10 +23,20 @@ async def create_mocked_hub_with_installation_id() -> Hub:
 async def create_mocked_hub() -> Hub:
     return await create_mocked_hub_internal()
 
-async def create_mocked_hub_internal(installation_id=None) -> Hub:
+@pytest_asyncio.fixture
+async def create_mocked_hub_read_only() -> Hub:
+    """Fixture returning a hub set to READ_ONLY operation mode."""
+    return await create_mocked_hub_internal(operation_mode=OperationMode.READ_ONLY)
+
+@pytest_asyncio.fixture
+async def create_mocked_hub_experimental() -> Hub:
+    """Fixture returning a hub set to EXPERIMENTAL operation mode."""
+    return await create_mocked_hub_internal(operation_mode=OperationMode.EXPERIMENTAL)
+
+async def create_mocked_hub_internal(installation_id=None, operation_mode: OperationMode = OperationMode.FULL) -> Hub:
     """Helper function to create and return a mocked Hub object."""
     with patch('victron_mqtt.hub.mqtt.Client') as mock_client:
-        hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id = installation_id)
+        hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id = installation_id, operation_mode=operation_mode)
         mocked_client = mock_client.return_value
 
         # Set the mocked client explicitly to prevent overwriting
@@ -516,3 +527,45 @@ async def test_new_metric(create_mocked_hub):
 
 
     await hub.disconnect()
+
+@pytest.mark.asyncio
+async def test_experimental_metrics_not_created_by_default(create_mocked_hub):
+    """Ensure experimental topics do not create devices/metrics when operation_mode is not EXPERIMENTAL."""
+    hub: Hub = create_mocked_hub
+    assert hub.operation_mode != OperationMode.EXPERIMENTAL
+
+    # Inject an experimental topic (generator TodayRuntime is marked experimental in _victron_topics)
+    inject_message(hub, "N/123/generator/170/TodayRuntime", '{"value": 100}')
+    await finalize_injection(hub)
+
+    # The experimental topic should not have created a device or metric
+    assert "123_generator_170" not in hub._devices, "Experimental topic should not create devices/metrics when operation_mode is not EXPERIMENTAL"
+
+@pytest.mark.asyncio
+async def test_experimental_metrics_created_when_needed(create_mocked_hub_experimental):
+    """Ensure experimental topics create devices/metrics when operation_mode is EXPERIMENTAL."""
+    hub: Hub = create_mocked_hub_experimental
+    assert hub.operation_mode == OperationMode.EXPERIMENTAL
+
+    # Inject an experimental topic (generator TodayRuntime is marked experimental in _victron_topics)
+    inject_message(hub, "N/123/generator/170/TodayRuntime", '{"value": 100}')
+    await finalize_injection(hub)
+
+    # The experimental topic should not have created a device or metric
+    assert "123_generator_170" in hub._devices, "Experimental topic should not create devices/metrics when operation_mode is not EXPERIMENTAL"
+
+@pytest.mark.asyncio
+async def test_read_only_creates_plain_metrics(create_mocked_hub_read_only):
+    """Ensure that in READ_ONLY mode entities that are normally Switch/Number/Select are created as plain Metric."""
+    hub: Hub = create_mocked_hub_read_only
+    # Inject a topic that normally creates a Switch/Number (evcharger SetCurrent)
+    inject_message(hub, "N/123/evcharger/170/SetCurrent", "{\"value\": 100}")
+    await finalize_injection(hub)
+
+    # Validate the Hub's state
+    assert "123_evcharger_170" in hub._devices, "Device should be created"
+    device = hub._devices["123_evcharger_170"]
+    metric = device.get_metric_from_unique_id("123_evcharger_170_evcharger_set_current")
+    assert metric is not None, "Metric should exist in the device"
+    assert not isinstance(metric, Switch), "In READ_ONLY mode the metric should NOT be a Switch"
+    assert isinstance(metric, Metric), "In READ_ONLY mode the metric should be a plain Metric"

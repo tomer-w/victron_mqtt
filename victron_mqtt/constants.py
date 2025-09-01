@@ -64,6 +64,13 @@ class RangeType(Enum):
     STATIC = "static"  # Static range, e.g., fixed values
     DYNAMIC = "dynamic"  # Dynamic range, e.g., depends on device model
 
+class OperationMode(Enum):
+    """Enum for operation modes."""
+    READ_ONLY = "read_only"
+    FULL = "full"
+    EXPERIMENTAL = "experimental"
+
+
 
 PLACEHOLDER_PHASE = "{phase}"
 PLACEHOLDER_NEXT_PHASE = "{next_phase}"

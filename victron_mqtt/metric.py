@@ -9,7 +9,6 @@ import asyncio
 from collections.abc import Callable
 import logging
 
-from ._victron_enums import DeviceType
 from .constants import MetricKind, MetricNature, MetricType, RangeType
 from .data_classes import ParsedTopic, TopicDescriptor
 
@@ -112,11 +111,11 @@ class Metric:
         return self._descriptor.precision
 
     @property
-    def min_value(self) -> int | RangeType | None:
+    def min_value(self) -> int | float | RangeType | None:
         return self._descriptor.min
 
     @property
-    def max_value(self) -> int | RangeType | None:
+    def max_value(self) -> int | float | RangeType | None:
         return self._descriptor.max
 
     @property
@@ -143,7 +142,7 @@ class Metric:
         """Sets the on_update callback."""
         self._on_update = value
 
-    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop, log_debug: Callable[..., None]    ):
+    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop, log_debug: Callable[..., None]):
         """Handle a message."""
         if value != self._value:
             log_debug(

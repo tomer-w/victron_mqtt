@@ -16,7 +16,7 @@ from paho.mqtt.reasoncodes import ReasonCode
 from paho.mqtt.properties import Properties
 
 from ._victron_topics import topics
-from .constants import TOPIC_INSTALLATION_ID
+from .constants import TOPIC_INSTALLATION_ID, OperationMode
 from .data_classes import ParsedTopic, TopicDescriptor
 from .device import Device
 from .metric import Metric
@@ -70,7 +70,8 @@ class Hub:
         model_name: str | None = None,
         serial: str | None = "noserial",
         topic_prefix: str | None = None,
-        topic_log_info: str | None = None
+        topic_log_info: str | None = None,
+        operation_mode: OperationMode = OperationMode.FULL,
     ) -> None:
         """Initialize."""
         global running_client_id
@@ -102,9 +103,13 @@ class Hub:
             raise TypeError(f"serial must be a string or None, got type={type(serial).__name__}, value={serial!r}")
         if topic_prefix is not None and not isinstance(topic_prefix, str):
             raise TypeError(f"topic_prefix must be a string or None, got type={type(topic_prefix).__name__}, value={topic_prefix!r}")
+        if topic_log_info is not None and not isinstance(topic_log_info, str):
+            raise TypeError(f"topic_log_info must be a string or None, got type={type(topic_log_info).__name__}, value={topic_log_info!r}")
+        if not isinstance(operation_mode, OperationMode):
+            raise TypeError(f"operation_mode must be an instance of OperationMode, got type={type(operation_mode).__name__}, value={operation_mode!r}")
         _LOGGER.info(
-            "Initializing Hub(host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s)",
-            host, port, username, use_ssl, installation_id, model_name, topic_prefix
+            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s)",
+            self._instance_id, host, port, username, use_ssl, installation_id, model_name, topic_prefix, operation_mode
         )
         self._model_name = model_name
         self.host = host
@@ -125,14 +130,17 @@ class Hub:
         self._connected_failed_attempts = 0
         self._on_new_metric: CallbackOnNewMetric | None = None
         self._topic_log_info = topic_log_info
+        self._operation_mode = operation_mode
         # The client ID is generated using a random string and the instance ID. It has to be unique between all clients connected to the same mqtt server. If not, they may reset each other connection.
         random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
         self._client_id = f"victron_mqtt-{random_string}-{self._instance_id}"
         self._keepalive_counter = 0
         self._new_metrics: list[Tuple[Device, Metric]] = []
 
+        #Filter out the topics based on operation mode
+        active_topics: list[TopicDescriptor] = topics if operation_mode == OperationMode.EXPERIMENTAL else [t for t in topics if not t.experimental]
         # Replace all {placeholder} patterns with + for MQTT wildcards
-        expanded_topics = Hub.expand_topic_list(topics)
+        expanded_topics = Hub.expand_topic_list(active_topics)
         def merge_is_adjustable_suffix(desc: TopicDescriptor) -> str:
             """Merge the topic with its adjustable suffix."""
             assert desc.is_adjustable_suffix is not None
@@ -642,6 +650,11 @@ class Hub:
             else:
                 expanded.append(td)
         return expanded
+
+    @property
+    def operation_mode(self) -> OperationMode:
+        """Returns the operation_mode callback."""
+        return self._operation_mode
 
     @property
     def on_new_metric(self) -> CallbackOnNewMetric | None:

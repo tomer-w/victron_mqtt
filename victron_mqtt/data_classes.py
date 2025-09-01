@@ -45,6 +45,7 @@ class TopicDescriptor:
     max: float | int | None = None
     is_adjustable_suffix: str | None = None
     key_values: dict[str, str] = field(default_factory=dict)
+    experimental: bool = False
 
     def __repr__(self) -> str:
         """Return a string representation of the topic."""
@@ -62,7 +63,8 @@ class TopicDescriptor:
             f"max={self.max}, "
             f"enum={self.enum}, "
             f"is_adjustable_suffix={self.is_adjustable_suffix}, "
-            f"key_values={self.key_values})"
+            f"key_values={self.key_values}, "
+            f"experimental={self.experimental})"
         )
     
     def __post_init__(self):
