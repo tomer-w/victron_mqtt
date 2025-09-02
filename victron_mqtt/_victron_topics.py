@@ -1631,6 +1631,13 @@ topics: List[TopicDescriptor] = [
         max=60,
         experimental=True,
     ),
+    # starter battery (smartshunt)
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Dc/1/Voltage",
+        message_type=MetricKind.SENSOR,
+        short_id="starter_battery_voltage",
+        name="Starter battery voltage",
+        metric_type=MetricType.VOLTAGE,
     # digital inputs
     TopicDescriptor(
         topic="N/{installation_id}/digitalinput/{device_id}/InputState",
