@@ -36,7 +36,7 @@ class Switch(Metric):
 
     def set(self, value: str | float | int | bool | Enum) -> None:
         payload = Switch._wrap_payload(self._descriptor, value)
-        self._hub.publish(self._write_topic, payload)
+        self._hub._publish(self._write_topic, payload)
 
     @staticmethod
     def _wrap_payload(topic_desc: TopicDescriptor, value: str | float | int | bool | Enum) -> str:

@@ -34,17 +34,17 @@ body:
 
       Example format and entries:
 
-      - topic: N/+/battery/+/Dc/0/Voltage
+      - topic: N/{installation_id}/battery/{device_id}/Dc/0/Voltage
         meaning: Battery voltage
         units: V
         example_value: {"value":13.460000038146973}
 
-      - topic: N/+/battery/+/Dc/0/Current
+      - topic: N/{installation_id}/battery/{device_id}/Dc/0/Current
         meaning: Battery current (positive = charging, negative = discharging)
         units: A
         example_value: {"value":5.12345}
 
-      - topic: N/+/tank/+/Remaining
+      - topic: N/{installation_id}/tank/{device_id}/Remaining
         meaning: Remaining capacity of the tank
         units: %
         example_value: {"value":75}
