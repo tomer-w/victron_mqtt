@@ -5,7 +5,6 @@ class DeviceType(VictronDeviceEnum):
     # This is used to identify the type of device in the system.
     # BEWARE!!! The code is used for mapping from the victron topic, IT IS NOT RANDOM FREE TEXT. The string is used for display purposes.
     # For settings this will be used to identify the device type in the settings.
-    UNKNOWN = ("unknown", "Unknown Device")
     SYSTEM = ("system", "System")
     SOLAR_CHARGER = ("solarcharger", "Solar Charger")
     INVERTER = ("inverter", "Inverter")
@@ -16,14 +15,18 @@ class DeviceType(VictronDeviceEnum):
     PVINVERTER = ("pvinverter", "PV Inverter")
     TEMPERATURE = ("temperature", "Temperature")
     GENERATOR = ("generator", "Generator")
+    GENERATOR0 = ("Generator0", "<Not used>", "generator") # Alias for GENERATOR so they will all be together
+    GENERATOR1 = ("Generator1", "<Not used>", "generator") # Alias for GENERATOR so they will all be together
     TANK = ("tank", "Liquid Tank")
     MULTI_RS_SOLAR = ("multi", "Multi RS Solar")
-    CGWACS = ("CGwacs", "Carlo Gavazzi Wired AC Sensors", "system") # Should be mapped to SYSTEM
+    CGWACS = ("CGwacs", "<Not used>", "system") # Should be mapped to SYSTEM
     DC_LOAD = ("dcload", "DC Load")
     ALTERNATOR = ("alternator", "Charger (Orion/Alternator)")
     SWITCH = ("switch", "Switch")
     GPS = ("gps", "Gps")
     SYSTEM_SETUP = ("SystemSetup", "System Setup")
+    TRANSFER_SWITCH = ("TransferSwitch", "Transfer Switch")
+    DIGITAL_INPUT = ("digitalinput", "Digital Input")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""
@@ -120,6 +123,19 @@ class ESSMode(VictronEnum):
     KeepCharged = (2, "keep charged")
     ExternalControl = (3, "External control")
 
+class GeneratorRunningByConditionCode(VictronEnum):
+    Stopped = (0, "Stopped")
+    Manual = (1, "Manual")
+    TestRun = (2, "Test Run")
+    LostComms = (3, "Lost Comms")
+    SOC = (4, "SOC")
+    ACLoad = (5, "AC Load")
+    BatteryCurrent = (6, "Battery Current")
+    BatteryVolts = (7, "Battery Volts")
+    InvTemp = (8, "Inv Temp")
+    InvOverload = (9, "Inv Overload")
+    StopOnAC1 = (10, "Stop On AC1")
+
 class DESSReactiveStrategy(VictronEnum):
     SCHEDULED_SELFCONSUME = (1, "Scheduled Self-Consume")
     SCHEDULED_CHARGE_ALLOW_GRID = (2, "Scheduled Charge Allow Grid")
@@ -190,3 +206,41 @@ class ErrorCode(VictronEnum):
     FACTORY_CALIBRATION_DATA_LOST = (116, "Factory calibration data lost")
     INVALID_INCOMPATIBLE_FIRMWARE = (117, "Invalid/incompatible firmware")
     USER_SETTINGS_INVALID = (119, "User settings invalid")
+
+class DigitalInputInputState(VictronEnum):
+    """Raw input state: High/Open (0) or Low/Closed (1)."""
+    High_Open = (0, "High/Open")
+    Low_Closed = (1, "Low/Closed")
+
+class DigitalInputType(VictronEnum):
+    """Type of digital input."""
+    Disabled = (0, "Disabled")
+    PulseMeter = (1, "Pulse meter")
+    DoorAlarm = (2, "Door alarm")
+    BilgePump = (3, "Bilge pump")
+    BilgeAlarm = (4, "Bilge alarm")
+    BurglarAlarm = (5, "Burglar alarm")
+    SmokeAlarm = (6, "Smoke alarm")
+    FireAlarm = (7, "Fire alarm")
+    CO2Alarm = (8, "CO2 alarm")
+    Generator = (9, "Generator")
+    TouchInputControl = (10, "Touch input control")
+
+class DigitalInputState(VictronEnum):
+    """Translated input state (determined by input type)."""
+    Low = (0, "Low")
+    High = (1, "High")
+    Off = (2, "Off")
+    On = (3, "On")
+    No = (4, "No")
+    Yes = (5, "Yes")
+    Open = (6, "Open")
+    Closed = (7, "Closed")
+    Ok = (8, "Ok")
+    Alarm = (9, "Alarm")
+    Running = (10, "Running")
+    Stopped = (11, "Stopped")
+
+class DigitalInputAlarm(VictronEnum):
+    Ok = (0, "Ok")
+    Alarm = (1, "Alarm")

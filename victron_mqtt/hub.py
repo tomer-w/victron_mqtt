@@ -1,6 +1,7 @@
 """Module to communicate with the Venus OS MQTT Broker."""
 
 import asyncio
+import copy
 import json
 import logging
 import random
@@ -15,8 +16,10 @@ from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.reasoncodes import ReasonCode
 from paho.mqtt.properties import Properties
 
+from victron_mqtt.switch import Switch
+
 from ._victron_topics import topics
-from .constants import TOPIC_INSTALLATION_ID
+from .constants import TOPIC_INSTALLATION_ID, MetricKind, OperationMode
 from .data_classes import ParsedTopic, TopicDescriptor
 from .device import Device
 from .metric import Metric
@@ -70,7 +73,8 @@ class Hub:
         model_name: str | None = None,
         serial: str | None = "noserial",
         topic_prefix: str | None = None,
-        topic_log_info: str | None = None
+        topic_log_info: str | None = None,
+        operation_mode: OperationMode = OperationMode.FULL,
     ) -> None:
         """Initialize."""
         global running_client_id
@@ -102,9 +106,13 @@ class Hub:
             raise TypeError(f"serial must be a string or None, got type={type(serial).__name__}, value={serial!r}")
         if topic_prefix is not None and not isinstance(topic_prefix, str):
             raise TypeError(f"topic_prefix must be a string or None, got type={type(topic_prefix).__name__}, value={topic_prefix!r}")
+        if topic_log_info is not None and not isinstance(topic_log_info, str):
+            raise TypeError(f"topic_log_info must be a string or None, got type={type(topic_log_info).__name__}, value={topic_log_info!r}")
+        if not isinstance(operation_mode, OperationMode):
+            raise TypeError(f"operation_mode must be an instance of OperationMode, got type={type(operation_mode).__name__}, value={operation_mode!r}")
         _LOGGER.info(
-            "Initializing Hub(host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s)",
-            host, port, username, use_ssl, installation_id, model_name, topic_prefix
+            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s)",
+            self._instance_id, host, port, username, use_ssl, installation_id, model_name, topic_prefix, operation_mode
         )
         self._model_name = model_name
         self.host = host
@@ -125,18 +133,37 @@ class Hub:
         self._connected_failed_attempts = 0
         self._on_new_metric: CallbackOnNewMetric | None = None
         self._topic_log_info = topic_log_info
+        self._operation_mode = operation_mode
         # The client ID is generated using a random string and the instance ID. It has to be unique between all clients connected to the same mqtt server. If not, they may reset each other connection.
         random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
         self._client_id = f"victron_mqtt-{random_string}-{self._instance_id}"
         self._keepalive_counter = 0
         self._new_metrics: list[Tuple[Device, Metric]] = []
 
+        # Filter the active topics
+        metrics_active_topics: list[TopicDescriptor] = []
+        self._service_active_topics: dict[str, TopicDescriptor] = {}
+        for topic in topics:
+            if operation_mode != OperationMode.EXPERIMENTAL and topic.experimental:
+                continue
+            if topic.message_type == MetricKind.SERVICE:
+                self._service_active_topics[topic.short_id] = topic
+            else:
+                #if operation_mode is READ_ONLY we should change all TopicDescriptor to SENSOR and BINARY_SENSOR
+                if operation_mode != OperationMode.READ_ONLY or topic.message_type in [MetricKind.ATTRIBUTE, MetricKind.SENSOR, MetricKind.BINARY_SENSOR]:
+                    metrics_active_topics.append(topic)
+                else: # READ ONLY and writable topic
+                    #deep copy the topic
+                    new_topic = copy.deepcopy(topic)
+                    new_topic.message_type = MetricKind.BINARY_SENSOR if topic.message_type == MetricKind.SWITCH else MetricKind.SENSOR
+                    metrics_active_topics.append(new_topic)
+
         # Replace all {placeholder} patterns with + for MQTT wildcards
-        expanded_topics = Hub.expand_topic_list(topics)
+        expanded_topics = Hub.expand_topic_list(metrics_active_topics)
         def merge_is_adjustable_suffix(desc: TopicDescriptor) -> str:
             """Merge the topic with its adjustable suffix."""
             assert desc.is_adjustable_suffix is not None
-            return Hub._remove_placeholders_map(desc.topic.rsplit('/', 1)[0] + '/' + desc.is_adjustable_suffix)
+            return desc.topic.rsplit('/', 1)[0] + '/' + desc.is_adjustable_suffix
 
         # Helper to build a map where duplicate keys accumulate values in a list
         def build_multi_map(items, key_func):
@@ -200,11 +227,22 @@ class Hub:
             if self._installation_id is None:
                 _LOGGER.info("No installation ID provided, attempting to read from device")
                 self._installation_id = await self._read_installation_id()
+            self._setup_subscriptions()
             self._start_keep_alive_loop()
             _LOGGER.info("Connected. Installation ID: %s", self._installation_id)
         except Exception as exc:
             _LOGGER.error("Failed to connect to MQTT broker: %s", exc, exc_info=True)
             raise CannotConnectError(f"Failed to connect to MQTT broker: {exc}") from exc
+
+    def publish(self, topic_short_id: str, device_id: str, value: str | float | int) -> None:
+        """Publish a message to the MQTT broker."""
+        _LOGGER.info("Publishing message to topic_short_id: %s, device_id: %s, value: %s", topic_short_id, device_id, value)
+        topic_desc = self._service_active_topics[topic_short_id]
+        assert self._installation_id is not None, "Installation ID must be set before publishing"
+        assert device_id is not None, "Device ID must be provided"
+        topic = topic_desc.topic.replace("{installation_id}", self._installation_id).replace("{device_id}", device_id)
+        payload = Switch._wrap_payload(topic_desc, value)
+        self._publish(topic, payload)
 
     def _on_log(self, client: MQTTClient, userdata: Any, level:int, buf:str) -> None:
         _LOGGER.log(level, buf)
@@ -222,7 +260,6 @@ class Hub:
             return
         if rc == 0:
             _LOGGER.info("Connected to MQTT broker successfully")
-            self._setup_subscriptions()
             self._loop.call_soon_threadsafe(self._connected_event.set)
         else:
             _LOGGER.error("Failed to connect with error code: %s. flags: %s", rc, flags)
@@ -352,11 +389,12 @@ class Hub:
         _LOGGER.debug("Sending keepalive message to topic: %s", keep_alive_topic)
         self._keepalive_counter += 1
         keepalive_value = Hub.generate_keepalive_options(f"{self._client_id}-{self._keepalive_counter}")
-        self.publish(keep_alive_topic, keepalive_value)
+        self._publish(keep_alive_topic, keepalive_value)
 
-    def publish(self, topic: str, value: PayloadType) -> None:
+    def _publish(self, topic: str, value: PayloadType) -> None:
         assert self._client is not None
         prefixed_topic = self._add_topic_prefix(topic)
+        _LOGGER.debug("Publishing message to topic: %s, value: %s", prefixed_topic, value)
         self._client.publish(prefixed_topic, value)
 
     async def _keepalive_loop(self) -> None:
@@ -482,7 +520,13 @@ class Hub:
     def _remove_placeholders_map(topic: str) -> str:
         topic_parts = topic.split("/")
         for i, part in enumerate(topic_parts):
-            if part == "{phase}":
+            if i == 1:
+                topic_parts[i] = "##installation_id##"
+            elif i == 2 and part.startswith("{") and part.endswith("}"):
+                topic_parts[i] = "##device_type##"
+            elif i == 3:
+                topic_parts[i] = "##device_id##"
+            elif part == "{phase}":
                 topic_parts[i] = "##phase##"
             elif part.isdigit() or (part.startswith("{") and part.endswith("}")):
                 topic_parts[i] = "##num##"
@@ -507,7 +551,11 @@ class Hub:
         assert self._client is not None
         prefixed_topic = self._add_topic_prefix(topic)
         _LOGGER.debug("Subscribing to: %s", prefixed_topic)
-        self._client.subscribe(prefixed_topic)
+        try:
+            self._client.subscribe(prefixed_topic)
+        except Exception as e:
+            _LOGGER.error("Failed to subscribe to %s: %s", prefixed_topic, e)
+            raise
 
     def _unsubscribe(self, topic: str) -> None:
         """Unsubscribe from a topic with automatic prefix handling."""
@@ -525,8 +573,8 @@ class Hub:
         #topic_list = [(topic, 0) for topic in topic_map]
         for topic in self._subscription_list:
             self._subscribe(topic)
-
-        self._subscribe("N/+/full_publish_completed")
+        assert self.installation_id is not None 
+        self._subscribe(f"N/{self.installation_id}/full_publish_completed")
         _LOGGER.info("Subscribed to full_publish_completed notification")
 
     async def _wait_for_connect(self) -> None:

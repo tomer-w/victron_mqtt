@@ -10,6 +10,23 @@ from .constants import MetricKind, MetricNature, MetricType, RangeType, ValueTyp
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def topic_to_device_type(topic_parts: list[str]) -> DeviceType | None:
+    """Extract the device type from the topic."""
+    if len(topic_parts) < 2:
+        return None
+    native_device_type = topic_parts[2]
+    # For whatever reason some system  send topics to  N/+/platform/0/ProductName
+    if native_device_type == "platform":
+        native_device_type = "system"
+    # for settings like N/+/settings/0/Settings/CGwacs/AcPowerSetPoint
+    if native_device_type == "settings":
+        native_device_type = topic_parts[5]
+    result = DeviceType.from_code(native_device_type)
+    assert result is None or isinstance(result, DeviceType)
+    return result
+
+
 @dataclass
 class TopicDescriptor:
     """Describes the topic, how to map it and how to parse it."""
@@ -20,15 +37,15 @@ class TopicDescriptor:
     unit_of_measurement: str | None = None
     metric_type: MetricType = MetricType.NONE
     metric_nature: MetricNature = MetricNature.NONE
-    device_type: DeviceType = DeviceType.UNKNOWN
     value_type: ValueType | None = None
     precision: int | None = 2
     enum: type[VictronEnum] | None = None
     min_max_range: RangeType = RangeType.STATIC
-    min: int | None = None
-    max: int | None = None
+    min: float | int | None = None
+    max: float | int | None = None
     is_adjustable_suffix: str | None = None
     key_values: dict[str, str] = field(default_factory=dict)
+    experimental: bool = False
 
     def __repr__(self) -> str:
         """Return a string representation of the topic."""
@@ -40,20 +57,110 @@ class TopicDescriptor:
             f"unit_of_measurement={self.unit_of_measurement}, "
             f"metric_type={self.metric_type}, "
             f"metric_nature={self.metric_nature}, "
-            f"device_type={self.device_type}, "
             f"precision={self.value_type}, "
             f"precision={self.precision}, "
             f"min={self.min}, "
             f"max={self.max}, "
             f"enum={self.enum}, "
             f"is_adjustable_suffix={self.is_adjustable_suffix}, "
-            f"key_values={self.key_values})"
+            f"key_values={self.key_values}, "
+            f"experimental={self.experimental})"
         )
     
     def __post_init__(self):
         assert self.message_type == MetricKind.ATTRIBUTE or self.name is not None
         if self.value_type != ValueType.FLOAT:
             self.precision = None
+        # Voltage default
+        if self.metric_type == MetricType.VOLTAGE:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "V"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 3
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Power default
+        if self.metric_type == MetricType.POWER:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "W"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Current default
+        if self.metric_type == MetricType.CURRENT:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "A"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Energy default
+        if self.metric_type == MetricType.ENERGY:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "kWh"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.CUMULATIVE
+        # frequency default
+        if self.metric_type == MetricType.FREQUENCY:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "Hz"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 2
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Temperature default
+        if self.metric_type == MetricType.TEMPERATURE:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "°C"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Electric storage capacity default
+        if self.metric_type == MetricType.ELECTRIC_STORAGE_CAPACITY:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "Ah"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Electric storage percentage default
+        if self.metric_type == MetricType.ELECTRIC_STORAGE_PERCENTAGE:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "%"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+        # Apparent power default
+        if self.metric_type == MetricType.APPARENT_POWER:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "VA"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
 
 
 @dataclass
@@ -109,34 +216,18 @@ class ParsedTopic:
         wildcard_topic_parts = topic_parts.copy()
 
         installation_id = topic_parts[1]
-        wildcard_topic_parts[1] = "+"
-        native_device_type = topic_parts[2]
-        if native_device_type == "platform":  # platform is not a device type
-            native_device_type = "system"
-        # for settings like N/ce3f0ae5476a/settings/0/Settings/CGwacs/AcPowerSetPoint
-        elif native_device_type == "settings":
-            native_device_type = topic_parts[5]
-
-        device_type = DeviceType.from_code(native_device_type, DeviceType.UNKNOWN)
-        assert device_type is not None
-        if device_type == DeviceType.UNKNOWN: # This can happen as we register for the attribute topics
-            _LOGGER.warning("Unknown device type: %s, topic: %s", native_device_type, topic)
+        wildcard_topic_parts[1] = "##installation_id##"
+        device_type = topic_to_device_type(topic_parts)
+        if device_type is None: # This can happen as we register for the attribute topics
+            _LOGGER.warning("Unknown device type for topic: %s", topic)
             # If the device type is unknown, we cannot create a ParsedTopic
             return None
 
-        if device_type.mapped_to:
-            device_type = DeviceType.from_code(device_type.mapped_to, DeviceType.UNKNOWN)
-            assert device_type is not None
-            if device_type == DeviceType.UNKNOWN: # This can happen as we register for the attribute topics
-                _LOGGER.warning("Unknown device type after mapping: %s, topic: %s", device_type.mapped_to, topic)
-                # If the device type is unknown, we cannot create a ParsedTopic
-                return None
-
         device_id = topic_parts[3]
-        wildcard_topic_parts[3] = "+"
+        wildcard_topic_parts[3] = "##device_id##"
 
         wildcards_with_device_type = ParsedTopic.normalize_topic("/".join(wildcard_topic_parts))
-        wildcard_topic_parts[2] = "+"
+        wildcard_topic_parts[2] = "##device_type##"
         wildcards_without_device_type = ParsedTopic.normalize_topic("/".join(wildcard_topic_parts))
 
         return cls(
@@ -152,13 +243,13 @@ class ParsedTopic:
         self._key_values = self.get_key_values(topic_desc)
         self._key_values.update(topic_desc.key_values)
         self._short_id = self._replace_ids(topic_desc.short_id)
-        assert topic_desc.name is not None
+        assert topic_desc.name is not None, f"TopicDescriptor name is None for topic: {topic_desc.topic}"
         self._name = self._replace_ids(topic_desc.name)
 
     def match_from_list(self, topic_desc_list: list[TopicDescriptor]) -> TopicDescriptor |None:
         topic_parts = self.full_topic.split("/")
-        topic_parts[1] = "+"
-        topic_parts[3] = "+"
+        topic_parts[1] = "{installation_id}"
+        topic_parts[3] = "{device_id}"
         normalized_topic = "/".join(topic_parts)
         for topic_desc in topic_desc_list:
             if topic_desc.topic == normalized_topic:

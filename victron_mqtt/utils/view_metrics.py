@@ -12,7 +12,7 @@ import tkinter.ttk as ttk
 from victron_mqtt import Hub, Device, Metric
 import os
 
-from victron_mqtt.constants import MetricKind
+from victron_mqtt.constants import MetricKind, OperationMode
 from victron_mqtt.switch import Switch
 
 DEFAULT_HOST = "venus.local."
@@ -184,7 +184,7 @@ class App:
 
     async def _async_connect(self, server: str, port: int, username: str | None, password: str | None, use_ssl: bool) -> bool:
         try:
-            self._client = Hub(server, port, username, password, use_ssl, topic_log_info=self._log_topic)
+            self._client = Hub(server, port, username, password, use_ssl, topic_log_info=self._log_topic, operation_mode=OperationMode.EXPERIMENTAL)
             await self._client.connect()
             await self._client.wait_for_first_refresh()
             self._fill_tree()

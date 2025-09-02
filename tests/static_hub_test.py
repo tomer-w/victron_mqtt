@@ -4,7 +4,8 @@ import asyncio
 from unittest.mock import MagicMock, patch
 from victron_mqtt._victron_enums import DeviceType, GenericOnOff
 from victron_mqtt.hub import Hub
-from victron_mqtt.constants import TOPIC_INSTALLATION_ID
+from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
+from victron_mqtt.metric import Metric
 from victron_mqtt.switch import Switch
 from victron_mqtt._victron_topics import topics
 import json
@@ -22,10 +23,20 @@ async def create_mocked_hub_with_installation_id() -> Hub:
 async def create_mocked_hub() -> Hub:
     return await create_mocked_hub_internal()
 
-async def create_mocked_hub_internal(installation_id=None) -> Hub:
+@pytest_asyncio.fixture
+async def create_mocked_hub_read_only() -> Hub:
+    """Fixture returning a hub set to READ_ONLY operation mode."""
+    return await create_mocked_hub_internal(operation_mode=OperationMode.READ_ONLY)
+
+@pytest_asyncio.fixture
+async def create_mocked_hub_experimental() -> Hub:
+    """Fixture returning a hub set to EXPERIMENTAL operation mode."""
+    return await create_mocked_hub_internal(operation_mode=OperationMode.EXPERIMENTAL)
+
+async def create_mocked_hub_internal(installation_id=None, operation_mode: OperationMode = OperationMode.FULL) -> Hub:
     """Helper function to create and return a mocked Hub object."""
     with patch('victron_mqtt.hub.mqtt.Client') as mock_client:
-        hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id = installation_id)
+        hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id = installation_id, operation_mode=operation_mode)
         mocked_client = mock_client.return_value
 
         # Set the mocked client explicitly to prevent overwriting
@@ -130,10 +141,10 @@ async def test_phase_message(create_mocked_hub):
 
     # Validate that the device has the metric we published
     device = hub._devices["123_grid_30"]
+    assert device.device_type == DeviceType.GRID, f"Expected metric type to be 'grid', got {device.device_type}"
     metric = device.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
-    assert metric.device_type == DeviceType.GRID, f"Expected metric type to be 'grid', got {metric.device_type}"
     assert metric.short_id == "grid_energy_forward_L1", f"Expected metric short_id to be 'grid_energy_forward_L1', got {metric.short_id}"
     assert metric.generic_short_id == "grid_energy_forward_{phase}", f"Expected metric generic_short_id to be 'grid_energy_forward_{{phase}}', got {metric.generic_short_id}"
     assert metric.unique_id == "123_grid_30_grid_energy_forward_L1", f"Expected metric unique_id to be '123_grid_30_grid_energy_forward_L1', got {metric.unique_id}"
@@ -198,14 +209,14 @@ async def test_number_message(create_mocked_hub):
 
     # Patch the publish method to track calls
     published = {}
-    def mock_publish(topic, value):
+    def mock__publish(topic, value):
         published['topic'] = topic
         published['value'] = value
         # Call the original publish if needed
-        if hasattr(hub.publish, '__wrapped__'):
-            return hub.publish.__wrapped__(topic, value) # type: ignore
-    orig_publish = hub.publish
-    hub.publish = mock_publish
+        if hasattr(hub._publish, '__wrapped__'):
+            return hub._publish.__wrapped__(topic, value) # type: ignore
+    orig__publish = hub._publish
+    hub._publish = mock__publish
 
     # Set the value, which should trigger a publish
     switch.value = 42
@@ -216,7 +227,7 @@ async def test_number_message(create_mocked_hub):
     assert published['value'] == '{"value": 42}', f"Expected published value to be {'{value: 42}'}, got {published['value']}"
 
     # Restore the original publish method
-    hub.publish = orig_publish
+    hub._publish = orig__publish
 
     await finalize_injection(hub)
 
@@ -327,12 +338,12 @@ async def test_today_message(create_mocked_hub):
     assert metric.value == 2, f"Expected metric value to be 2, got {metric.value}"
 
 def test_expend_topics():
-    descriptor = next((t for t in topics if t.topic == "N/+/switch/+/SwitchableOutput/output_{output(1-4)}/State"), None)
+    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/State"), None)
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     expanded = Hub.expand_topic_list([descriptor])
     assert len(expanded) == 4, f"Expected 4 expanded topics, got {len(expanded)}"
-    new_desc = next((t for t in expanded if t.topic == "N/+/switch/+/SwitchableOutput/output_1/State"), None)
+    new_desc = next((t for t in expanded if t.topic == "N/{installation_id}/switch/{device_id}/SwitchableOutput/output_1/State"), None)
     assert new_desc, "Missing expanded topic for output 1"
     assert new_desc.short_id == "switch_{output}_state"
     assert new_desc.name == "Switch {output} State"
@@ -516,3 +527,65 @@ async def test_new_metric(create_mocked_hub):
 
 
     await hub.disconnect()
+
+@pytest.mark.asyncio
+async def test_experimental_metrics_not_created_by_default(create_mocked_hub):
+    """Ensure experimental topics do not create devices/metrics when operation_mode is not EXPERIMENTAL."""
+    hub: Hub = create_mocked_hub
+
+    # Inject an experimental topic (generator TodayRuntime is marked experimental in _victron_topics)
+    inject_message(hub, "N/123/generator/170/TodayRuntime", '{"value": 100}')
+    await finalize_injection(hub)
+
+    # The experimental topic should not have created a device or metric
+    assert "123_generator_170" not in hub._devices, "Experimental topic should not create devices/metrics when operation_mode is not EXPERIMENTAL"
+
+@pytest.mark.asyncio
+async def test_experimental_metrics_created_when_needed(create_mocked_hub_experimental):
+    """Ensure experimental topics create devices/metrics when operation_mode is EXPERIMENTAL."""
+    hub: Hub = create_mocked_hub_experimental
+
+    # Inject an experimental topic (generator TodayRuntime is marked experimental in _victron_topics)
+    inject_message(hub, "N/123/generator/170/TodayRuntime", '{"value": 100}')
+    await finalize_injection(hub)
+
+    # The experimental topic should not have created a device or metric
+    assert "123_generator_170" in hub._devices, "Experimental topic should not create devices/metrics when operation_mode is not EXPERIMENTAL"
+
+@pytest.mark.asyncio
+async def test_read_only_creates_plain_metrics(create_mocked_hub_read_only):
+    """Ensure that in READ_ONLY mode entities that are normally Switch/Number/Select are created as plain Metric."""
+    hub: Hub = create_mocked_hub_read_only
+    # Inject a topic that normally creates a Switch/Number (evcharger SetCurrent)
+    inject_message(hub, "N/123/evcharger/170/SetCurrent", "{\"value\": 100}")
+    await finalize_injection(hub)
+
+    # Validate the Hub's state
+    assert "123_evcharger_170" in hub._devices, "Device should be created"
+    device = hub._devices["123_evcharger_170"]
+    metric = device.get_metric_from_unique_id("123_evcharger_170_evcharger_set_current")
+    assert metric is not None, "Metric should exist in the device"
+    assert not isinstance(metric, Switch), "In READ_ONLY mode the metric should NOT be a Switch"
+    assert isinstance(metric, Metric), "In READ_ONLY mode the metric should be a plain Metric"
+
+@pytest.mark.asyncio
+async def test_publish(create_mocked_hub_experimental):
+    hub: Hub = create_mocked_hub_experimental
+    mocked_client: MagicMock = hub._client # type: ignore
+
+    # Clear any previous publish calls recorded by the mocked client
+    if hasattr(mocked_client.publish, 'reset_mock'):
+        mocked_client.publish.reset_mock()
+
+    # Call the publish helper which should result in an internal client.publish call
+    hub.publish("generator_service_counter_reset", "170", 1)
+
+    # Finalize injection to allow any keepalive/full-publish flows to complete
+    await finalize_injection(hub)
+
+    # Expected topic and payload
+    expected_topic = "W/123/generator/170/ServiceCounterReset"
+    expected_payload = '{"value": 1}'
+
+    # Ensure the underlying client's publish was called with the expected values
+    mocked_client.publish.assert_any_call(expected_topic, expected_payload)
