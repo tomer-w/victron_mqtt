@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import DESSReactiveStrategy, DESSStrategy, ESSMode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, MultiState, SolarChargerState, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions
+from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DigitalInputAlarm, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, InverterState, MultiState, SolarChargerState, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions
 
 # Good sources for topics is:
 # https://github.com/victronenergy/venus/wiki/dbus
@@ -1630,5 +1630,46 @@ topics: List[TopicDescriptor] = [
         min=0,
         max=60,
         experimental=True,
+    ),
+    # digital inputs
+    TopicDescriptor(
+        topic="N/{installation_id}/digitalinput/{device_id}/InputState",
+        message_type=MetricKind.SENSOR,
+        short_id="digitalinput_input_state_raw",
+        name="Digital input raw state",
+        value_type=ValueType.ENUM,
+        enum=DigitalInputInputState,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/digitalinput/{device_id}/Type",
+        message_type=MetricKind.SENSOR,
+        short_id="digitalinput_type",
+        name="Digital input type",
+        value_type=ValueType.ENUM,
+        enum=DigitalInputType,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/digitalinput/{device_id}/State",
+        message_type=MetricKind.SENSOR,
+        short_id="digitalinput_state",
+        name="Digital input state",
+        value_type=ValueType.ENUM,
+        enum=DigitalInputState,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/digitalinput/{device_id}/Alarm",
+        message_type=MetricKind.SENSOR,
+        short_id="digitalinput_alarm",
+        name="Digital input alarm",
+        value_type=ValueType.ENUM,
+        enum=DigitalInputAlarm,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/digitalinput/{device_id}/Settings/InvertTranslation",
+        message_type=MetricKind.SWITCH,
+        short_id="digitalinput_settings_invert_translation",
+        name="Digital input settings invert translation",
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
     ),
 ]

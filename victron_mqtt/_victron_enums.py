@@ -26,6 +26,7 @@ class DeviceType(VictronDeviceEnum):
     GPS = ("gps", "Gps")
     SYSTEM_SETUP = ("SystemSetup", "System Setup")
     TRANSFER_SWITCH = ("TransferSwitch", "Transfer Switch")
+    DIGITAL_INPUT = ("digitalinput", "Digital Input")
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""
@@ -184,3 +185,41 @@ class DESSRestrictions(VictronEnum):
     GRID_TO_BATTERY_RESTRICTED = (1, "Grid to battey energy flow restricted")
     BATTERY_TO_GRID_RESTRICTED = (2, "Battery to grid energy flow restricted")
     NO_FLOW = (3, "No energy flow between battery and grid")
+
+class DigitalInputInputState(VictronEnum):
+    """Raw input state: High/Open (0) or Low/Closed (1)."""
+    High_Open = (0, "High/Open")
+    Low_Closed = (1, "Low/Closed")
+
+class DigitalInputType(VictronEnum):
+    """Type of digital input."""
+    Disabled = (0, "Disabled")
+    PulseMeter = (1, "Pulse meter")
+    DoorAlarm = (2, "Door alarm")
+    BilgePump = (3, "Bilge pump")
+    BilgeAlarm = (4, "Bilge alarm")
+    BurglarAlarm = (5, "Burglar alarm")
+    SmokeAlarm = (6, "Smoke alarm")
+    FireAlarm = (7, "Fire alarm")
+    CO2Alarm = (8, "CO2 alarm")
+    Generator = (9, "Generator")
+    TouchInputControl = (10, "Touch input control")
+
+class DigitalInputState(VictronEnum):
+    """Translated input state (determined by input type)."""
+    Low = (0, "Low")
+    High = (1, "High")
+    Off = (2, "Off")
+    On = (3, "On")
+    No = (4, "No")
+    Yes = (5, "Yes")
+    Open = (6, "Open")
+    Closed = (7, "Closed")
+    Ok = (8, "Ok")
+    Alarm = (9, "Alarm")
+    Running = (10, "Running")
+    Stopped = (11, "Stopped")
+
+class DigitalInputAlarm(VictronEnum):
+    Ok = (0, "Ok")
+    Alarm = (1, "Alarm")
