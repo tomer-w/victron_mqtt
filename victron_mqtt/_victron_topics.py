@@ -458,7 +458,7 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/battery/{device_id}/Voltages/Cell{cell_id(1-4)}",
+        topic="N/{installation_id}/battery/{device_id}/Voltages/Cell{cell_id(1-8)}",
         message_type=MetricKind.SENSOR,
         short_id="battery_cell_{cell_id}_voltage",
         name="Battery cell {cell_id} voltage",
