@@ -40,8 +40,14 @@ class InverterMode(VictronEnum):
     On = (3, "On")
     Off = (4, "Off")
 
-class InverterState(VictronEnum):
-    """Inverter State Enum"""
+class PhoenixInverterMode(VictronEnum):
+    """Inverter Mode Enum"""
+    INVERTER = (2, "Inverter")
+    OFF = (4, "Off")
+    ECO = (4, "Eco")
+
+class State(VictronEnum):
+    """State Enum"""
     Off = (0, "Off")
     LowPower = (1, "Low Power")
     Fault = (2, "Fault")
@@ -55,6 +61,10 @@ class InverterState(VictronEnum):
     PowerAssist = (10, "Power Assist")
     PowerSupply = (11, "Power Supply")
     Sustain = (244, "Sustain")
+    StartingUp = (245, "Starting Up")
+    RepeatedAbsorption = (246, "Repeated Absorption")
+    AutoEqualize = (247, "Auto Equalize / Recondition")
+    BatterySafe = (248, "Battery Safe")
     ExternalControl = (252, "External Control")
 
 class InverterOverloadAlarmEnum(VictronEnum):
@@ -113,7 +123,6 @@ class ESSMode(VictronEnum):
     KeepCharged = (2, "keep charged")
     ExternalControl = (3, "External control")
 
-# Generator running state enum (mapped from YAML value_template)
 class GeneratorRunningByConditionCode(VictronEnum):
     Stopped = (0, "Stopped")
     Manual = (1, "Manual")
@@ -126,16 +135,6 @@ class GeneratorRunningByConditionCode(VictronEnum):
     InvTemp = (8, "Inv Temp")
     InvOverload = (9, "Inv Overload")
     StopOnAC1 = (10, "Stop On AC1")
-
-class SolarChargerState(VictronEnum):
-    Off = (0, "Off")
-    Fault = (2, "Fault")
-    Bulk = (3, "Bulk")
-    Absorption = (4, "Absorption")
-    Float = (5, "Float")
-    Storage = (6, "Storage")
-    Equalize = (7, "Equalize")
-    ExternalControl = (252, "External control")
 
 class DESSReactiveStrategy(VictronEnum):
     SCHEDULED_SELFCONSUME = (1, "Scheduled Self-Consume")
@@ -185,6 +184,28 @@ class DESSRestrictions(VictronEnum):
     GRID_TO_BATTERY_RESTRICTED = (1, "Grid to battey energy flow restricted")
     BATTERY_TO_GRID_RESTRICTED = (2, "Battery to grid energy flow restricted")
     NO_FLOW = (3, "No energy flow between battery and grid")
+
+class ErrorCode(VictronEnum):
+    NO_ERROR = (0, "No error")
+    BATTERY_VOLTAGE_TOO_HIGH = (2, "Battery voltage too high")
+    CHARGER_TEMPERATURE_TOO_HIGH = (17, "Charger temperature too high")
+    CHARGER_OVER_CURRENT = (18, "Charger over current")
+    CHARGER_CURRENT_REVERSED = (19, "Charger current reversed")
+    BULK_TIME_LIMIT_EXCEEDED = (20, "Bulk time limit exceeded")
+    CURRENT_SENSOR_ISSUE = (21, "Current sensor issue")
+    TERMINALS_OVERHEATED = (26, "Terminals overheated")
+    CONVERTER_ISSUE = (28, "Converter issue")
+    INPUT_VOLTAGE_TOO_HIGH = (33, "Input voltage too high (solar panel)")
+    INPUT_CURRENT_TOO_HIGH = (34, "Input current too high (solar panel)")
+    INPUT_SHUTDOWN_BATTERY_VOLTAGE_TOO_HIGH = (38, "Input shutdown (battery voltage too high)")
+    INPUT_SHUTDOWN_REVERSE_CURRENT = (39, "Input shutdown (reverse current)")
+    LOST_COMMUNICATION_WITH_DEVICE = (65, "Lost communication with device")
+    SYNCHRONIZED_CHARGING_CONFIG_ISSUE = (66, "Synchronized charging config issue")
+    BMS_CONNECTION_LOST = (67, "BMS connection lost")
+    NETWORK_MISCONFIGURED = (68, "Network misconfigured")
+    FACTORY_CALIBRATION_DATA_LOST = (116, "Factory calibration data lost")
+    INVALID_INCOMPATIBLE_FIRMWARE = (117, "Invalid/incompatible firmware")
+    USER_SETTINGS_INVALID = (119, "User settings invalid")
 
 class DigitalInputInputState(VictronEnum):
     """Raw input state: High/Open (0) or Low/Closed (1)."""
