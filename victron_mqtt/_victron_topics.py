@@ -1895,4 +1895,33 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
+    # DC System topics (Smart Shunt configured as DC energy meter)
+    TopicDescriptor(
+        topic="N/{installation_id}/dcsystem/{device_id}/Dc/0/Voltage",
+        message_type=MetricKind.SENSOR,
+        short_id="dcsystem_voltage",
+        name="DC System Voltage",
+        metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/dcsystem/{device_id}/Dc/0/Current",
+        message_type=MetricKind.SENSOR,
+        short_id="dcsystem_current",
+        name="DC System Current",
+        metric_type=MetricType.CURRENT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/dcsystem/{device_id}/Dc/0/Power",
+        message_type=MetricKind.SENSOR,
+        short_id="dcsystem_power",
+        name="DC System Power",
+        metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/dcsystem/{device_id}/Dc/1/Voltage",
+        message_type=MetricKind.SENSOR,
+        short_id="dcsystem_aux_voltage",
+        name="DC System Auxiliary Voltage",
+        metric_type=MetricType.VOLTAGE,
+    ),
 ]

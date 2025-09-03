@@ -31,6 +31,24 @@ from ._victron_enums import ..., BatteryAlarmEnum
 - Add to import: `from ._victron_enums import ..., BatteryAlarmEnum`
 - Add to `__all__` list: `"BatteryAlarmEnum",`
 
+## Adding New Device Types
+
+If this is the first time adding topics for a new device type (e.g., `dcsystem`, `dcdc`, etc.):
+
+1. **Add the device type to the DeviceType enum** in `victron_mqtt/_victron_enums.py`:
+```python
+class DeviceType(VictronDeviceEnum):
+    # ...existing entries...
+    DC_SYSTEM = ("dcsystem", "DC System")
+```
+
+2. **Follow the naming convention**:
+   - First parameter: lowercase string matching the MQTT topic device type
+   - Second parameter: human-readable display name
+   - Use underscores in enum name, lowercase in MQTT topic
+
+**Important**: The first parameter must exactly match the device type used in MQTT topics. For example, if topics use `N/{installation_id}/dcsystem/{device_id}/...`, then use `("dcsystem", "DC System")`.
+
 ## Adding New Topics
 
 Add topic descriptors to the `topics` list in `victron_mqtt/_victron_topics.py`:
@@ -61,14 +79,22 @@ When processing a GitHub issue:
 1. Look for MQTT topic strings (usually from MQTT Explorer output)
 2. Identify the enum values and their numeric codes
 3. Extract the device type from the topic path
-4. Create descriptive names for short_id and name fields
-5. Choose appropriate message_type and value_type
+4. **Check if the device type exists** in the DeviceType enum - if not, add it first
+5. Create descriptive names for short_id and name fields
+6. Choose appropriate message_type and value_type
 
 ## Example Issue Processing
+
+For DC system topics from issue #111:
+- Topics: `N/{installation_id}/dcsystem/{device_id}/Dc/0/Voltage`, etc.
+- Device type: `dcsystem` (new - needed to add DC_SYSTEM to DeviceType enum)
+- Values: Numeric measurements for voltage, current, power
+- Result: DC_SYSTEM enum entry + 4 topic descriptors for DC measurements
 
 For battery alarm topics from issue #35:
 - Topic: `N/c0619ab48793/battery/512/Alarms/HighChargeCurrent`
 - Values: 0=No alarm, 1=Almost discharged, 2=Alarm
+- Device type: `battery` (already existed)
 - Result: BatteryAlarmEnum + 7 topic descriptors for different alarm types
 
 ## Testing
