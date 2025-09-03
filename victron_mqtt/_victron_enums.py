@@ -67,7 +67,7 @@ class State(VictronEnum):
     BatterySafe = (248, "Battery Safe")
     ExternalControl = (252, "External Control")
 
-class InverterOverloadAlarmEnum(VictronEnum):
+class GenericAlarmEnum(VictronEnum):
     NoAlarm = (0, "No Alarm")
     Warning = (1, "Warning")
     Alarm = (2, "Alarm")
@@ -240,7 +240,3 @@ class DigitalInputState(VictronEnum):
     Alarm = (9, "Alarm")
     Running = (10, "Running")
     Stopped = (11, "Stopped")
-
-class DigitalInputAlarm(VictronEnum):
-    Ok = (0, "Ok")
-    Alarm = (1, "Alarm")

@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DigitalInputAlarm, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, EvChargerMode, InverterOverloadAlarmEnum, MultiState, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions
+from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, EvChargerMode, MultiState, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum
 
 # Good sources for topics is:
 # https://github.com/victronenergy/venus/wiki/dbus
@@ -521,6 +521,63 @@ topics: List[TopicDescriptor] = [
         name="Battery cell {cell_id} voltage",
         metric_type=MetricType.VOLTAGE,
     ),
+    # battery alarms
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Alarms/HighChargeCurrent",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_high_charge_current",
+        name="Battery high charge current",
+        value_type=ValueType.ENUM,
+        enum=GenericAlarmEnum,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Alarms/HighDischargeCurrent",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_high_discharge_current",
+        name="Battery high discharge current",
+        value_type=ValueType.ENUM,
+        enum=GenericAlarmEnum,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Alarms/CellImbalance",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_cell_imbalance",
+        name="Battery cell imbalance",
+        value_type=ValueType.ENUM,
+        enum=GenericAlarmEnum,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Alarms/InternalFailure",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_internal_failure",
+        name="Battery internal failure",
+        value_type=ValueType.ENUM,
+        enum=GenericAlarmEnum,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Alarms/HighChargeTemperature",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_high_charge_temperature",
+        name="Battery high charge temperature",
+        value_type=ValueType.ENUM,
+        enum=GenericAlarmEnum,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Alarms/LowChargeTemperature",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_low_charge_temperature",
+        name="Battery low charge temperature",
+        value_type=ValueType.ENUM,
+        enum=GenericAlarmEnum,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Alarms/LowCellVoltage",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_low_cell_voltage",
+        name="Battery low cell voltage",
+        value_type=ValueType.ENUM,
+        enum=GenericAlarmEnum,
+    ),
     # inverter
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Mode",
@@ -601,7 +658,7 @@ topics: List[TopicDescriptor] = [
         short_id="vebus_inverter_alarm_overload",
         name="Inverter overload alarm",
         value_type=ValueType.ENUM,
-        enum=InverterOverloadAlarmEnum,
+        enum=GenericAlarmEnum,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/CurrentLimit",
@@ -1828,7 +1885,7 @@ topics: List[TopicDescriptor] = [
         short_id="digitalinput_alarm",
         name="Digital input alarm",
         value_type=ValueType.ENUM,
-        enum=DigitalInputAlarm,
+        enum=GenericAlarmEnum,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/digitalinput/{device_id}/Settings/InvertTranslation",
