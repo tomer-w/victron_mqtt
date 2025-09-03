@@ -60,7 +60,6 @@ extra-dependencies = [
   "pyfakefs",
   "pytest-asyncio",
   "pytest-benchmark",
-  "pytest-memray",
   "pytest-playwright",
   "pytest-print",
 ]
