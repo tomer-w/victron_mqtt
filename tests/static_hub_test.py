@@ -248,7 +248,7 @@ async def test_placeholder_adjustable_on(create_mocked_hub):
     # Validate that the device has the metric we published
     device = hub._devices["123_vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    metric = device.get_metric_from_unique_id("123_vebus_170_inverter_current_limit")
+    metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
     assert isinstance(metric, Switch), f"Expected metric to be of type Switch, got {type(metric)}"
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 100, f"Expected metric value to be 100, got {metric.value}"
@@ -270,7 +270,7 @@ async def test_placeholder_adjustable_off(create_mocked_hub):
     # Validate that the device has the metric we published
     device = hub._devices["123_vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    metric = device.get_metric_from_unique_id("123_vebus_170_inverter_current_limit")
+    metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
     assert not isinstance(metric, Switch), f"Expected metric to be of type Metric, got {type(metric)}"
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 100, f"Expected metric value to be 100, got {metric.value}"
@@ -289,7 +289,7 @@ async def test_placeholder_adjustable_on_reverse(create_mocked_hub):
     # Validate that the device has the metric we published
     device = hub._devices["123_vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    metric = device.get_metric_from_unique_id("123_vebus_170_inverter_current_limit")
+    metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
     assert isinstance(metric, Switch), f"Expected metric to be of type Switch, got {type(metric)}"
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 100, f"Expected metric value to be 100, got {metric.value}"
@@ -308,7 +308,7 @@ async def test_placeholder_adjustable_off_reverse(create_mocked_hub):
     # Validate that the device has the metric we published
     device = hub._devices["123_vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    metric = device.get_metric_from_unique_id("123_vebus_170_inverter_current_limit")
+    metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
     assert not isinstance(metric, Switch), f"Expected metric to be of type Metric, got {type(metric)}"
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 100, f"Expected metric value to be 100, got {metric.value}"
