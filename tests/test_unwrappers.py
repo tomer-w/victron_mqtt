@@ -7,6 +7,7 @@ from victron_mqtt._unwrappers import (
     unwrap_bool,
     unwrap_int,
     unwrap_int_default_0,
+    unwrap_int_seconds_to_hours,
     unwrap_float,
     unwrap_string,
     unwrap_enum,
@@ -14,6 +15,7 @@ from victron_mqtt._unwrappers import (
     wrap_enum,
     wrap_int,
     wrap_int_default_0,
+    wrap_int_hours_to_seconds,
     wrap_float,
     wrap_string,
     wrap_epoch,
@@ -82,6 +84,42 @@ def test_unwrap_enum_and_epoch():
     assert res_dt == dt
 
 
+def test_unwrap_int_seconds_to_hours():
+    # Test normal conversion: 3600 seconds = 1 hour
+    assert unwrap_int_seconds_to_hours('{"value": 3600}', None) == 1.0
+    assert unwrap_int_seconds_to_hours('{"value": 7200}', None) == 2.0
+    
+    # Test with precision
+    assert unwrap_int_seconds_to_hours('{"value": 1800}', 2) == 0.5  # 30 minutes
+    assert unwrap_int_seconds_to_hours('{"value": 900}', 3) == 0.25  # 15 minutes
+    
+    # Test rounding with precision
+    assert unwrap_int_seconds_to_hours('{"value": 3661}', 2) == 1.02  # 1 hour 1 minute 1 second
+    
+    # Test null value
+    assert unwrap_int_seconds_to_hours('{"value": null}', None) is None
+    assert unwrap_int_seconds_to_hours('{"value": null}', 2) is None
+    
+    # Test malformed JSON
+    assert unwrap_int_seconds_to_hours('bad json', None) is None
+    assert unwrap_int_seconds_to_hours('bad json', 2) is None
+    
+    # Test zero seconds
+    assert unwrap_int_seconds_to_hours('{"value": 0}', None) == 0.0
+
+
+def test_wrap_int_hours_to_seconds():
+    # Test normal conversion: 1 hour = 3600 seconds
+    assert json.loads(wrap_int_hours_to_seconds(1)) == {"value": 3600}
+    assert json.loads(wrap_int_hours_to_seconds(2)) == {"value": 7200}
+    
+    # Test fractional hours (though function expects int, test edge case)
+    assert json.loads(wrap_int_hours_to_seconds(0)) == {"value": 0}
+    
+    # Test None value
+    assert json.loads(wrap_int_hours_to_seconds(None)) == {"value": None}
+
+
 def test_wrap_functions_and_mappings():
     # wrap_int
     assert json.loads(wrap_int(5)) == {"value": 5}
@@ -110,5 +148,9 @@ def test_wrap_functions_and_mappings():
     # mappings contain expected types
     assert ValueType.FLOAT in VALUE_TYPE_UNWRAPPER
     assert ValueType.FLOAT in VALUE_TYPE_WRAPPER
+    assert ValueType.INT_SECONDS_TO_HOURS in VALUE_TYPE_UNWRAPPER
+    assert ValueType.INT_SECONDS_TO_HOURS in VALUE_TYPE_WRAPPER
     assert callable(VALUE_TYPE_UNWRAPPER[ValueType.FLOAT])
     assert callable(VALUE_TYPE_WRAPPER[ValueType.FLOAT])
+    assert callable(VALUE_TYPE_UNWRAPPER[ValueType.INT_SECONDS_TO_HOURS])
+    assert callable(VALUE_TYPE_WRAPPER[ValueType.INT_SECONDS_TO_HOURS])

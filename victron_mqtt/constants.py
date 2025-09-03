@@ -59,6 +59,7 @@ class ValueType(Enum):
     STRING = "str"
     ENUM = "enum"
     EPOCH = "epoch"
+    INT_SECONDS_TO_HOURS = "int_seconds_to_hours"
 
 class RangeType(Enum):
     """Range types for numeric values."""

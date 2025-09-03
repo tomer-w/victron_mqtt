@@ -15,8 +15,8 @@ class DeviceType(VictronDeviceEnum):
     PVINVERTER = ("pvinverter", "PV Inverter")
     TEMPERATURE = ("temperature", "Temperature")
     GENERATOR = ("generator", "Generator")
-    GENERATOR0 = ("Generator0", "<Not used>", "generator") # Alias for GENERATOR so they will all be together
-    GENERATOR1 = ("Generator1", "<Not used>", "generator") # Alias for GENERATOR so they will all be together
+    GENERATOR0 = ("Generator0", "Generator 0 Settings")
+    GENERATOR1 = ("Generator1", "Generator 1 Settings")
     TANK = ("tank", "Liquid Tank")
     MULTI_RS_SOLAR = ("multi", "Multi RS Solar")
     CGWACS = ("CGwacs", "<Not used>", "system") # Should be mapped to SYSTEM
