@@ -372,12 +372,12 @@ topics: List[TopicDescriptor] = [
         name="Battery temperature",
         metric_type=MetricType.TEMPERATURE,
     ),
-    # starter battery (smartshunt)
+    # Auxiliary battery (smartshunt)
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Dc/1/Voltage",
         message_type=MetricKind.SENSOR,
-        short_id="starter_battery_voltage",
-        name="Starter battery voltage",
+        short_id="auxiliary_battery_voltage",
+        name="Auxiliary battery voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
