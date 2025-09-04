@@ -11,7 +11,7 @@ import copy
 if TYPE_CHECKING:
     from .hub import Hub
 
-from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_float
+from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_float, unwrap_int_seconds_to_hours
 from .constants import MetricKind, RangeType
 from .metric import Metric
 from ._victron_enums import DeviceType
@@ -162,7 +162,7 @@ class Device:
         unwrapper = VALUE_TYPE_UNWRAPPER[topic_desc.value_type]
         if unwrapper == unwrap_enum:
             return unwrapper(payload, topic_desc.enum)
-        elif unwrapper == unwrap_float:
+        elif unwrapper in [unwrap_float, unwrap_int_seconds_to_hours]:
             return unwrapper(payload, topic_desc.precision)
         else:
             return unwrapper(payload)
