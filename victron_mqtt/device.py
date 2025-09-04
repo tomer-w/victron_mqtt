@@ -145,6 +145,10 @@ class Device:
                 if not is_adjustable:
                     new_topic_desc = copy.deepcopy(topic_desc)  # Deep copy
                     new_topic_desc.message_type = MetricKind.SENSOR
+        elif fallback_to_metric_topic and topic_desc.message_type == MetricKind.SENSOR:
+            # if this is fallback to metric topic and the message type is sensor (which probably mean we are in READ_ONLY mode) we can just skip it
+            log_debug("Skipping fallback to metric topic for %s", topic_desc)
+            return
 
         parsed_topic.finalize_topic_fields(topic_desc)
         short_id = parsed_topic.short_id
