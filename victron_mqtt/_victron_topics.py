@@ -672,6 +672,47 @@ topics: List[TopicDescriptor] = [
         max=16,
         is_adjustable_suffix = "CurrentLimitIsAdjustable"
     ),
+    # Individual device power sensors for parallel VE.Bus configurations
+    TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/Out/P",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_device_{device_number}_output_power_l1",
+        name="VE.Bus device {device_number} line 1 output power",
+        metric_type=MetricType.POWER,
+        experimental=True,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/Out/{phase}/P",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_device_{device_number}_output_power_{phase}",
+        name="VE.Bus device {device_number} line {phase} output power",
+        metric_type=MetricType.POWER,
+        experimental=True,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/Inverter/P",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_device_{device_number}_inverted_power",
+        name="VE.Bus device {device_number} inverted power",
+        metric_type=MetricType.POWER,
+        experimental=True,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/In/P",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_device_{device_number}_input_power_l1",
+        name="VE.Bus device {device_number} line 1 input power",
+        metric_type=MetricType.POWER,
+        experimental=True,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/In/{phase}/P",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_device_{device_number}_input_power_{phase}",
+        name="VE.Bus device {device_number} line {phase} input power",
+        metric_type=MetricType.POWER,
+        experimental=True,
+    ),
     # inverter topics - e.g. Phoenix Inverter
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Mode",
