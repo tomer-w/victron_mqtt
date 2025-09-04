@@ -19,8 +19,9 @@ from paho.mqtt.properties import Properties
 from victron_mqtt.switch import Switch
 
 from ._victron_topics import topics
+from ._victron_enums import DeviceType
 from .constants import TOPIC_INSTALLATION_ID, MetricKind, OperationMode
-from .data_classes import ParsedTopic, TopicDescriptor
+from .data_classes import ParsedTopic, TopicDescriptor, topic_to_device_type
 from .device import Device
 from .metric import Metric
 
@@ -75,6 +76,7 @@ class Hub:
         topic_prefix: str | None = None,
         topic_log_info: str | None = None,
         operation_mode: OperationMode = OperationMode.FULL,
+        device_type_exclude_filter: list[DeviceType] | None = None,
     ) -> None:
         """Initialize."""
         global running_client_id
@@ -110,9 +112,15 @@ class Hub:
             raise TypeError(f"topic_log_info must be a string or None, got type={type(topic_log_info).__name__}, value={topic_log_info!r}")
         if not isinstance(operation_mode, OperationMode):
             raise TypeError(f"operation_mode must be an instance of OperationMode, got type={type(operation_mode).__name__}, value={operation_mode!r}")
+        if device_type_exclude_filter is not None and not isinstance(device_type_exclude_filter, list):
+            raise TypeError(f"device_type_exclude_filter must be a list or None, got type={type(device_type_exclude_filter).__name__}, value={device_type_exclude_filter!r}")
+        if device_type_exclude_filter is not None:
+            for device_type in device_type_exclude_filter:
+                if not isinstance(device_type, DeviceType):
+                    raise TypeError(f"device_type_filter must contain only DeviceType instances, got type={type(device_type).__name__}, value={device_type!r}")
         _LOGGER.info(
-            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s)",
-            self._instance_id, host, port, username, use_ssl, installation_id, model_name, topic_prefix, operation_mode
+            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s)",
+            self._instance_id, host, port, username, use_ssl, installation_id, model_name, topic_prefix, operation_mode, device_type_exclude_filter
         )
         self._model_name = model_name
         self.host = host
@@ -134,6 +142,7 @@ class Hub:
         self._on_new_metric: CallbackOnNewMetric | None = None
         self._topic_log_info = topic_log_info
         self._operation_mode = operation_mode
+        self._device_type_exclude_filter = device_type_exclude_filter
         # The client ID is generated using a random string and the instance ID. It has to be unique between all clients connected to the same mqtt server. If not, they may reset each other connection.
         random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
         self._client_id = f"victron_mqtt-{random_string}-{self._instance_id}"
@@ -148,7 +157,7 @@ class Hub:
                 continue
             if topic.message_type == MetricKind.SERVICE:
                 self._service_active_topics[topic.short_id] = topic
-            else:
+            else:        
                 #if operation_mode is READ_ONLY we should change all TopicDescriptor to SENSOR and BINARY_SENSOR
                 if operation_mode != OperationMode.READ_ONLY or topic.message_type in [MetricKind.ATTRIBUTE, MetricKind.SENSOR, MetricKind.BINARY_SENSOR]:
                     metrics_active_topics.append(topic)
@@ -160,6 +169,21 @@ class Hub:
 
         # Replace all {placeholder} patterns with + for MQTT wildcards
         expanded_topics = Hub.expand_topic_list(metrics_active_topics)
+        # Apply device type filtering if specified
+        if self._device_type_exclude_filter is not None and len(self._device_type_exclude_filter) > 0:
+            relevant_topics = []
+            for td in expanded_topics:
+                if td.message_type == MetricKind.ATTRIBUTE:
+                    relevant_topics.append(td)
+                    continue
+                topic_device_types = topic_to_device_type(td.topic.split("/"))
+                assert topic_device_types is not None
+                if topic_device_types in self._device_type_exclude_filter:
+                    _LOGGER.info("Topic %s is filtered by device type: %s", td.topic, topic_device_types)
+                else:
+                    relevant_topics.append(td)
+            expanded_topics = relevant_topics
+
         def merge_is_adjustable_suffix(desc: TopicDescriptor) -> str:
             """Merge the topic with its adjustable suffix."""
             assert desc.is_adjustable_suffix is not None

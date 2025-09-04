@@ -33,10 +33,10 @@ async def create_mocked_hub_experimental() -> Hub:
     """Fixture returning a hub set to EXPERIMENTAL operation mode."""
     return await create_mocked_hub_internal(operation_mode=OperationMode.EXPERIMENTAL)
 
-async def create_mocked_hub_internal(installation_id=None, operation_mode: OperationMode = OperationMode.FULL) -> Hub:
+async def create_mocked_hub_internal(installation_id=None, operation_mode: OperationMode = OperationMode.FULL, device_type_exclude_filter: list[DeviceType] | None = None) -> Hub:
     """Helper function to create and return a mocked Hub object."""
     with patch('victron_mqtt.hub.mqtt.Client') as mock_client:
-        hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id = installation_id, operation_mode=operation_mode)
+        hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id = installation_id, operation_mode=operation_mode, device_type_exclude_filter=device_type_exclude_filter)
         mocked_client = mock_client.return_value
 
         # Set the mocked client explicitly to prevent overwriting
@@ -589,3 +589,68 @@ async def test_publish(create_mocked_hub_experimental):
 
     # Ensure the underlying client's publish was called with the expected values
     mocked_client.publish.assert_any_call(expected_topic, expected_payload)
+
+# Device Type Filter Tests
+
+@pytest.fixture
+def create_mocked_hub_with_device_filter():
+    """Fixture factory that returns a function to create mocked Hub with device filter."""
+    async def _create_hub(device_type_exclude_filter: list[DeviceType]) -> Hub:
+        """Helper function to create and return a mocked Hub object with specific device type filter."""
+        return await create_mocked_hub_internal(device_type_exclude_filter=device_type_exclude_filter, operation_mode=OperationMode.EXPERIMENTAL)
+    return _create_hub
+
+@pytest.mark.asyncio
+async def test_filtered_message(create_mocked_hub_with_device_filter):
+    """Test that the Hub correctly filters MQTT messages for EVCHARGER device type."""
+    hub: Hub = await create_mocked_hub_with_device_filter([DeviceType.EVCHARGER])
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/evcharger/170/SetCurrent", "{\"value\": 100}")
+
+    # Validate the Hub's state
+    assert len(hub._devices) == 1, f"Expected 1 device, got {len(hub._devices)}"
+    assert "123_system_0" in hub._devices, "Expected only the system device to exist"
+
+@pytest.mark.asyncio
+async def test_filtered_message_system(create_mocked_hub_with_device_filter):
+    """Test that the Hub correctly filters MQTT messages for system device type."""
+    hub: Hub = await create_mocked_hub_with_device_filter([DeviceType.SYSTEM])
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/system/0/Relay/0/State", "{\"value\": 1}")
+    await finalize_injection(hub)
+
+    # Validate the Hub's state - system device exists but has no metrics due to filtering
+    assert len(hub._devices) == 1, f"Expected 1 device (system device), got {len(hub._devices)}"
+    system_device = hub._devices["123_system_0"]
+    assert len(system_device._metrics) == 0, f"Expected 0 metrics on system device due to filtering, got {len(system_device._metrics)}"
+
+@pytest.mark.asyncio
+async def test_no_filtered_message_placeholder(create_mocked_hub_with_device_filter):
+    """Test that the Hub correctly filters MQTT messages for generator2 device type."""
+    hub: Hub = await create_mocked_hub_with_device_filter([DeviceType.GENERATOR0])
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/settings/0/Settings/Generator1/Soc/Enabled", "{\"value\": 1}")
+    await finalize_injection(hub)
+
+    # Validate the Hub's state - only system device exists, generator message was filtered
+    assert len(hub._devices) == 2, f"Expected 2 devices (system and generator1), got {len(hub._devices)}"
+    system_device = hub._devices["123_system_0"]
+    assert system_device.device_type.value[0] == "system", f"Expected system device, got {system_device.device_type.value}"
+
+
+@pytest.mark.asyncio
+async def test_filtered_message_placeholder(create_mocked_hub_with_device_filter):
+    """Test that the Hub correctly filters MQTT messages for generator1 device type."""
+    hub: Hub = await create_mocked_hub_with_device_filter([DeviceType.GENERATOR1])
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/settings/0/Settings/Generator1/Soc/Enabled", "{\"value\": 1}")
+    await finalize_injection(hub)
+
+    # Validate the Hub's state - only system device exists, generator message was filtered
+    assert len(hub._devices) == 1, f"Expected 1 device (system device), got {len(hub._devices)}"
+    system_device = hub._devices["123_system_0"]
+    assert system_device.device_type.value[0] == "system", f"Expected system device, got {system_device.device_type.value}"
