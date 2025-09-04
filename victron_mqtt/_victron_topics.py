@@ -578,6 +578,48 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
     ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Info/MaxChargeCurrent",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_max_charge_current",
+        name="Battery maximum charge current allowed",
+        metric_type=MetricType.CURRENT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Info/MaxDischargeCurrent",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_max_discharge_current",
+        name="Battery maximum discharge current allowed",
+        metric_type=MetricType.CURRENT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Info/MaxChargeVoltage",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_max_charge_voltage",
+        name="Battery maximum charging voltage allowed",
+        metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/System/MinVoltageCellId",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_min_voltage_cell_id",
+        name="Battery minimum voltage cell ID",
+        value_type=ValueType.STRING,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/System/MaxVoltageCellId",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_max_voltage_cell_id",
+        name="Battery maximum voltage cell ID",
+        value_type=ValueType.STRING,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Voltages/Diff",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_cell_voltage_deviation",
+        name="Battery cell voltage deviation",
+        metric_type=MetricType.VOLTAGE,
+    ),
     # inverter
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Mode",
