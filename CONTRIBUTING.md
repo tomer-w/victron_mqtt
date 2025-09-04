@@ -337,7 +337,7 @@ For metrics that can be controlled (switches, selects, numbers), use appropriate
 
 ```bash
 # Run the test suite
-hatch test
+python -m pytest tests/static_test.py tests/static_hub_test.py tests/parsed_topics_test.py
 ```
 
 ### Best Practices
