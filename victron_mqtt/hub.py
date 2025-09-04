@@ -284,7 +284,8 @@ class Hub:
             return
         if rc == 0:
             _LOGGER.info("Connected to MQTT broker successfully")
-            self._loop.call_soon_threadsafe(self._connected_event.set)
+            if self._loop.is_running():
+                self._loop.call_soon_threadsafe(self._connected_event.set)
         else:
             _LOGGER.error("Failed to connect with error code: %s. flags: %s", rc, flags)
 
@@ -331,7 +332,8 @@ class Hub:
                     except Exception as exc:
                         _LOGGER.error("Error calling _on_new_metric callback %s", exc, exc_info=True)
                 self._new_metrics.clear()
-                self._loop.call_soon_threadsafe(self._first_refresh_event.set)
+                if self._loop.is_running():
+                    self._loop.call_soon_threadsafe(self._first_refresh_event.set)
                 return
             else:
                 log_debug("Not our echo: %s", echo)
@@ -350,7 +352,8 @@ class Hub:
 
         self._installation_id = parsed_topic.installation_id
         log_debug("Installation ID received: %s. Original topic: %s", self._installation_id, topic)
-        self._loop.call_soon_threadsafe(self._installation_id_event.set)
+        if self._loop.is_running():
+            self._loop.call_soon_threadsafe(self._installation_id_event.set)
 
     def _handle_normal_message(self, topic: str, payload: str, log_debug) -> None:
         """Handle regular MQTT message."""
@@ -396,6 +399,8 @@ class Hub:
         if self._client.is_connected():
             self._client.disconnect()
             _LOGGER.info("Disconnected from MQTT broker")
+            # Give a small delay to allow any pending MQTT messages to be processed
+            await asyncio.sleep(0.1)
         self._client = None
 
     async def _keepalive(self) -> None:
@@ -487,7 +492,8 @@ class Hub:
                 _LOGGER.info("Full publish completed, unsubscribing from notification")
                 if self._client is not None:
                     self._unsubscribe("#")
-                self._loop.call_soon_threadsafe(self._first_refresh_event.set)
+                if self._loop.is_running():
+                    self._loop.call_soon_threadsafe(self._first_refresh_event.set)
                 return
 
             topic_parts = topic.split("/")
@@ -511,7 +517,8 @@ class Hub:
                 self._installation_id = payload_json.get("value")
                 _LOGGER.info("Installation ID received: %s", self._installation_id)
                 if self._installation_id_event is not None:
-                    self._loop.call_soon_threadsafe(self._installation_id_event.set)
+                    if self._loop.is_running():
+                        self._loop.call_soon_threadsafe(self._installation_id_event.set)
         except Exception as exc:
             _LOGGER.error("Error processing installation ID message: %s", exc)
 
@@ -689,7 +696,8 @@ class Hub:
         _LOGGER.warning("Connection to MQTT broker failed")
         self._connected_failed_attempts += 1
         if self._connected_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
-            self._loop.call_soon_threadsafe(self._connected_event.set)
+            if self._loop.is_running():
+                self._loop.call_soon_threadsafe(self._connected_event.set)
 
     @staticmethod
     def expand_topic_list(topic_list: list[TopicDescriptor]) -> list[TopicDescriptor]:
