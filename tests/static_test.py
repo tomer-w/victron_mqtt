@@ -261,3 +261,33 @@ def test_victron_enum_in_init():
 
     assert not missing_enums, f"The following VictronEnum-derived enums are missing in __init__.py's __all__: {missing_enums}"
 
+def test_topics_are_sorted_alphabetically():
+    """Ensure TopicDescriptor entries are sorted alphabetically by topic field."""
+    topics = get_topics()
+    MetricKind = get_metric_kind()
+    
+    # Separate attributes from other topics
+    attributes = [topic for topic in topics if topic.message_type == MetricKind.ATTRIBUTE]
+    other_topics = [topic for topic in topics if topic.message_type != MetricKind.ATTRIBUTE]
+    
+    errors = []
+    
+    # Check that attributes are sorted alphabetically
+    if len(attributes) > 1:
+        for i in range(1, len(attributes)):
+            current_topic = attributes[i].topic
+            previous_topic = attributes[i-1].topic
+            if current_topic < previous_topic:
+                errors.append(f"Attribute topics not in alphabetical order: '{previous_topic}' should come after '{current_topic}'")
+    
+    # Check that all other topics are sorted alphabetically
+    if len(other_topics) > 1:
+        for i in range(1, len(other_topics)):
+            current_topic = other_topics[i].topic
+            previous_topic = other_topics[i-1].topic
+            if current_topic < previous_topic:
+                errors.append(f"Topics not in alphabetical order: '{previous_topic}' should come after '{current_topic}'")
+    
+    if errors:
+        pytest.fail("\n".join(errors))
+
