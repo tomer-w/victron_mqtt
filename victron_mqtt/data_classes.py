@@ -43,7 +43,7 @@ class TopicDescriptor:
     min_max_range: RangeType = RangeType.STATIC
     min: float | int | None = None
     max: float | int | None = None
-    increment: float | int | None = None
+    step: float | int | None = None
     is_adjustable_suffix: str | None = None
     key_values: dict[str, str] = field(default_factory=dict)
     experimental: bool = False
@@ -62,7 +62,7 @@ class TopicDescriptor:
             f"precision={self.precision}, "
             f"min={self.min}, "
             f"max={self.max}, "
-            f"increment={self.increment}, "
+            f"step={self.step}, "
             f"enum={self.enum}, "
             f"is_adjustable_suffix={self.is_adjustable_suffix}, "
             f"key_values={self.key_values}, "

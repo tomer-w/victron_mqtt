@@ -13,7 +13,7 @@ from victron_mqtt import Hub, Device, Metric
 import os
 
 from victron_mqtt.constants import MetricKind, OperationMode
-from victron_mqtt.switch import Switch
+from victron_mqtt.writable_metric import WritableMetric
 
 DEFAULT_HOST = "venus.local."
 DEFAULT_PORT = 1883
@@ -95,7 +95,7 @@ class AttributeViewerDialog(simpledialog.Dialog):
             except AttributeError:
                 continue
 
-        if isinstance(self.instance, Switch) and self.instance.metric_kind == MetricKind.SELECT:
+        if isinstance(self.instance, WritableMetric) and self.instance.metric_kind == MetricKind.SELECT:
             assert self.instance.enum_values is not None
             ttk.Label(master, text="State:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
             self.switch_var = tk.StringVar(value=self.instance.value)
@@ -106,7 +106,7 @@ class AttributeViewerDialog(simpledialog.Dialog):
         return master
 
     def apply(self):
-        if isinstance(self.instance, Switch):
+        if isinstance(self.instance, WritableMetric):
             self.instance.set(self.switch_var.get())
 
 class MetricContainer:

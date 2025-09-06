@@ -2050,7 +2050,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         min=0.25,
         max=3.5,
-        increment=0.125,
+        step=0.125,
         precision=3,
     ),
     TopicDescriptor(

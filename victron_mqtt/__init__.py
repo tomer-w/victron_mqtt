@@ -6,14 +6,14 @@ from .constants import MetricNature, MetricType, MetricKind, VictronEnum, RangeT
 from .device import Device
 from .hub import Hub, CannotConnectError, ProgrammingError, NotConnectedError
 from .metric import Metric
-from .switch import Switch
+from .writable_metric import WritableMetric
 from ._victron_enums import DeviceType, State, InverterMode, GenericOnOff, EvChargerMode, GenericAlarmEnum, FluidType, TemperatureType, TemperatureStatus, ESSMode, MultiState, DESSReactiveStrategy, DESSStrategy, DESSErrorCode, DESSRestrictions, VictronDeviceEnum, GeneratorRunningByConditionCode, DigitalInputInputState, DigitalInputType, DigitalInputState, PhoenixInverterMode, ErrorCode
 
 __all__ = [
     "Hub",
     "Device",
     "Metric",
-    "Switch",
+    "writable_metric",
     "MetricNature",
     "MetricType",
     "DeviceType",

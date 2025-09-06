@@ -15,7 +15,7 @@ from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_
 from .constants import MetricKind, RangeType
 from .metric import Metric
 from ._victron_enums import DeviceType
-from .switch import Switch
+from .writable_metric import WritableMetric
 from .data_classes import ParsedTopic, TopicDescriptor
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,7 +109,7 @@ class Device:
             )
             return None
 
-        # It is metric or switch
+        # It is metric or WritableMetric
         is_adjustable = False
         new_topic_desc = topic_desc
         if topic_desc.message_type != MetricKind.SENSOR and topic_desc.is_adjustable_suffix:
@@ -195,19 +195,19 @@ class Device:
                 new_topic_desc.min = int(min_value)
 
         if topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
-            metric = Switch(metric_id, short_id, new_topic_desc, topic, parsed_topic, hub)
+            metric = WritableMetric(metric_id, short_id, new_topic_desc, topic, parsed_topic, hub)
         else:
             metric = Metric(metric_id, short_id, new_topic_desc, parsed_topic)
         self._metrics[metric_id] = metric
 
         return metric, True
 
-    def get_metric_from_unique_id(self, unique_id: str) -> Metric | Switch | None:
+    def get_metric_from_unique_id(self, unique_id: str) -> Metric | WritableMetric | None:
         """Get a metric from a unique id."""
         return self._metrics.get(unique_id)
 
     @property
-    def metrics(self) -> list[Metric | Switch]:
+    def metrics(self) -> list[Metric | WritableMetric]:
         """Returns the list of metrics on this device."""
         return list(self._metrics.values())
 

@@ -9,7 +9,7 @@ import asyncio
 from collections.abc import Callable
 import logging
 
-from .constants import MetricKind, MetricNature, MetricType, RangeType
+from .constants import MetricKind, MetricNature, MetricType
 from .data_classes import ParsedTopic, TopicDescriptor
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,18 +109,6 @@ class Metric:
     def precision(self) -> int | None:
         """Returns the precision of the metric."""
         return self._descriptor.precision
-
-    @property
-    def min_value(self) -> int | float | RangeType | None:
-        return self._descriptor.min
-
-    @property
-    def max_value(self) -> int | float | RangeType | None:
-        return self._descriptor.max
-
-    @property
-    def enum_values(self) -> list[str] | None:
-        return [e.string for e in self._descriptor.enum] if self._descriptor.enum else None
 
     @property
     def unique_id(self) -> str:

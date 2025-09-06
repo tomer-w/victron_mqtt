@@ -16,7 +16,7 @@ from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.reasoncodes import ReasonCode
 from paho.mqtt.properties import Properties
 
-from victron_mqtt.switch import Switch
+from .writable_metric import WritableMetric
 
 from ._victron_topics import topics
 from ._victron_enums import DeviceType
@@ -265,7 +265,7 @@ class Hub:
         assert self._installation_id is not None, "Installation ID must be set before publishing"
         assert device_id is not None, "Device ID must be provided"
         topic = topic_desc.topic.replace("{installation_id}", self._installation_id).replace("{device_id}", device_id)
-        payload = Switch._wrap_payload(topic_desc, value)
+        payload = WritableMetric._wrap_payload(topic_desc, value)
         self._publish(topic, payload)
 
     def _on_log(self, client: MQTTClient, userdata: Any, level:int, buf:str) -> None:

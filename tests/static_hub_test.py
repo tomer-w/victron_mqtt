@@ -6,7 +6,7 @@ from victron_mqtt._victron_enums import DeviceType, GenericOnOff
 from victron_mqtt.hub import Hub
 from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
 from victron_mqtt.metric import Metric
-from victron_mqtt.switch import Switch
+from victron_mqtt.writable_metric import WritableMetric
 from victron_mqtt._victron_topics import topics
 import json
 import logging
@@ -183,12 +183,12 @@ async def test_dynamic_min_max_message(create_mocked_hub):
 
     # Validate that the device has the metric we published
     device = list(hub._devices.values())[0]
-    metric = device.get_metric_from_unique_id("123_system_0_system_ac_power_set_point")
-    assert metric is not None, "Metric should exist in the device"
-    assert isinstance(metric, Switch), f"Expected metric to be of type Switch, got {type(metric)}"
-    assert metric.value == 50, f"Expected metric value to be 50, got {metric.value}"
-    assert metric.min_value == -1000000, f"Expected metric min to be -1000000, got {metric.min_value}"
-    assert metric.max_value == 1000000, f"Expected metric max to be 1000000, got {metric.max_value}"
+    writable_metric = device.get_metric_from_unique_id("123_system_0_system_ac_power_set_point")
+    assert writable_metric is not None, "WritableMetric should exist in the device"
+    assert isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
+    assert writable_metric.value == 50, f"Expected writable_metric value to be 50, got {writable_metric.value}"
+    assert writable_metric.min_value == -1000000, f"Expected writable_metric min to be -1000000, got {writable_metric.min_value}"
+    assert writable_metric.max_value == 1000000, f"Expected writable_metric max to be 1000000, got {writable_metric.max_value}"
 
 @pytest.mark.asyncio
 async def test_number_message(create_mocked_hub):
@@ -203,9 +203,9 @@ async def test_number_message(create_mocked_hub):
 
     # Validate that the device has the metric we published
     device = hub._devices["123_evcharger_170"]
-    switch = device.get_metric_from_unique_id("123_evcharger_170_evcharger_set_current")
-    assert isinstance(switch, Switch), f"Expected switch to be of type Switch, got {type(switch)}"
-    assert switch.value == 100, f"Expected switch value to be 100, got {switch.value}"
+    writable_metric = device.get_metric_from_unique_id("123_evcharger_170_evcharger_set_current")
+    assert isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
+    assert writable_metric.value == 100, f"Expected writable_metric value to be 100, got {writable_metric.value}"
 
     # Patch the publish method to track calls
     published = {}
@@ -219,7 +219,7 @@ async def test_number_message(create_mocked_hub):
     hub._publish = mock__publish
 
     # Set the value, which should trigger a publish
-    switch.value = 42
+    writable_metric.value = 42
 
     # Validate that publish was called with the correct topic and value
     assert published, "Expected publish to be called after setting value"
@@ -248,10 +248,10 @@ async def test_placeholder_adjustable_on(create_mocked_hub):
     # Validate that the device has the metric we published
     device = hub._devices["123_vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
-    assert isinstance(metric, Switch), f"Expected metric to be of type Switch, got {type(metric)}"
-    assert metric is not None, "Metric should exist in the device"
-    assert metric.value == 100, f"Expected metric value to be 100, got {metric.value}"
+    writable_metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
+    assert isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
+    assert writable_metric is not None, "WritableMetric should exist in the device"
+    assert writable_metric.value == 100, f"Expected writable_metric value to be 100, got {writable_metric.value}"
     # Ensure cleanup happens even if the test fails
 
 @pytest.mark.asyncio
@@ -270,10 +270,10 @@ async def test_placeholder_adjustable_off(create_mocked_hub):
     # Validate that the device has the metric we published
     device = hub._devices["123_vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
-    assert not isinstance(metric, Switch), f"Expected metric to be of type Metric, got {type(metric)}"
-    assert metric is not None, "Metric should exist in the device"
-    assert metric.value == 100, f"Expected metric value to be 100, got {metric.value}"
+    writable_metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
+    assert not isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type Metric, got {type(writable_metric)}"
+    assert writable_metric is not None, "WritableMetric should exist in the device"
+    assert writable_metric.value == 100, f"Expected writable_metric value to be 100, got {writable_metric.value}"
     # Ensure cleanup happens even if the test fails
 
 @pytest.mark.asyncio
@@ -289,10 +289,10 @@ async def test_placeholder_adjustable_on_reverse(create_mocked_hub):
     # Validate that the device has the metric we published
     device = hub._devices["123_vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
-    assert isinstance(metric, Switch), f"Expected metric to be of type Switch, got {type(metric)}"
-    assert metric is not None, "Metric should exist in the device"
-    assert metric.value == 100, f"Expected metric value to be 100, got {metric.value}"
+    writable_metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
+    assert isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
+    assert writable_metric is not None, "WritableMetric should exist in the device"
+    assert writable_metric.value == 100, f"Expected writable_metric value to be 100, got {writable_metric.value}"
     # Ensure cleanup happens even if the test fails
 
 @pytest.mark.asyncio
@@ -308,10 +308,10 @@ async def test_placeholder_adjustable_off_reverse(create_mocked_hub):
     # Validate that the device has the metric we published
     device = hub._devices["123_vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
-    assert not isinstance(metric, Switch), f"Expected metric to be of type Metric, got {type(metric)}"
-    assert metric is not None, "Metric should exist in the device"
-    assert metric.value == 100, f"Expected metric value to be 100, got {metric.value}"
+    writable_metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
+    assert not isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
+    assert writable_metric is not None, "WritableMetric should exist in the device"
+    assert writable_metric.value == 100, f"Expected writable_metric value to be 100, got {writable_metric.value}"
     # Ensure cleanup happens even if the test fails
 
 
@@ -565,7 +565,7 @@ async def test_read_only_creates_plain_metrics(create_mocked_hub_read_only):
     device = hub._devices["123_evcharger_170"]
     metric = device.get_metric_from_unique_id("123_evcharger_170_evcharger_set_current")
     assert metric is not None, "Metric should exist in the device"
-    assert not isinstance(metric, Switch), "In READ_ONLY mode the metric should NOT be a Switch"
+    assert not isinstance(metric, WritableMetric), "In READ_ONLY mode the metric should NOT be a WritableMetric"
     assert isinstance(metric, Metric), "In READ_ONLY mode the metric should be a plain Metric"
 
 @pytest.mark.asyncio
