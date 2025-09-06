@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, EvChargerMode, MultiState, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum
+from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, EvChargerMode, MultiState, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum, ESSState, ESSModeHub4 
 
 # Good sources for topics is:
 # https://github.com/victronenergy/venus/wiki/dbus
@@ -2069,4 +2069,20 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         experimental=True,
     ),
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/State",
+        message_type=MetricKind.SELECT,
+        short_id="system_ess_batterylife_state",
+        name="ESS BatteryLife State",
+        value_type=ValueType.ENUM,
+        enum=ESSState,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/Hub4Mode",
+        message_type=MetricKind.SELECT,
+        short_id="system_ess_mode",
+        name="ESS Mode (Hub4)",
+        value_type=ValueType.ENUM,
+        enum=ESSModeHub4,
+    )
 ]
