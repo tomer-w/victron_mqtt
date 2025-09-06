@@ -1569,7 +1569,7 @@ topics: List[TopicDescriptor] = [
         name="GPS Altitude",
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.FLOAT,
-        precision=None # Use full precision of GPS device
+        precision=2
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Connected",
@@ -1602,6 +1602,7 @@ topics: List[TopicDescriptor] = [
         short_id="gps_speed",
         name="GPS Speed",
         metric_nature=MetricNature.INSTANTANEOUS,
+        unit_of_measurement="m/s",
         metric_type=MetricType.SPEED,
         value_type=ValueType.FLOAT,
     ),
