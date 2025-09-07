@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, EvChargerMode, MultiState, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum, ESSState, ESSModeHub4 
+from ._victron_enums import AcActiveInputSource, DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, EvChargerMode, MultiState, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum, ESSState, ESSModeHub4 
 
 # Good sources for topics is:
 # https://github.com/victronenergy/venus/wiki/dbus
@@ -1482,6 +1482,15 @@ topics: List[TopicDescriptor] = [
         name="Switch {output} State",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+    ),
+    # System topics
+    TopicDescriptor(
+        topic="N/{installation_id}/system/{device_id}/Ac/ActiveIn/Source",
+        message_type=MetricKind.SENSOR,
+        short_id="system_ac_active_input_source",
+        name="AC Active Input Source",
+        value_type=ValueType.ENUM,
+        enum=AcActiveInputSource,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Ac/Consumption/NumberOfPhases",

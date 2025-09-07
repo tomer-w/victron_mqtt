@@ -264,3 +264,11 @@ class ESSModeHub4(VictronEnum):
     PhaseCompensationEnabled = (1, "Optimized mode or 'keep batteries charged' and phase compensation enabled")
     PhaseCompensationDisabled = (2, "Optimized mode or 'keep batteries charged' and phase compensation disabled")
     ExternalControl = (3, "External control")
+
+class AcActiveInputSource(VictronEnum):
+    """AC Active Input Source Enum"""
+    Unknown = (0, "Unknown")
+    Grid = (1, "Grid")
+    Generator = (2, "Generator")
+    ShorePower = (3, "Shore power")
+    NotConnected = (240, "Not connected")
