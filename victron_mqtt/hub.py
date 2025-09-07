@@ -258,14 +258,17 @@ class Hub:
             _LOGGER.error("Failed to connect to MQTT broker: %s", exc, exc_info=True)
             raise CannotConnectError(f"Failed to connect to MQTT broker: {exc}") from exc
 
-    def publish(self, topic_short_id: str, device_id: str, value: str | float | int) -> None:
+    def publish(self, topic_short_id: str, device_id: str, value: str | float | int | None) -> None:
         """Publish a message to the MQTT broker."""
         _LOGGER.info("Publishing message to topic_short_id: %s, device_id: %s, value: %s", topic_short_id, device_id, value)
-        topic_desc = self._service_active_topics[topic_short_id]
+        topic_desc = self._service_active_topics.get(topic_short_id)
+        if topic_desc is None:
+            _LOGGER.error("No active topic found for topic_short_id: %s", topic_short_id)
+            raise TopicNotFoundError(f"No active topic found for topic_short_id: {topic_short_id}")
         assert self._installation_id is not None, "Installation ID must be set before publishing"
         assert device_id is not None, "Device ID must be provided"
         topic = topic_desc.topic.replace("{installation_id}", self._installation_id).replace("{device_id}", device_id)
-        payload = WritableMetric._wrap_payload(topic_desc, value)
+        payload = WritableMetric._wrap_payload(topic_desc, value) if value is not None else ""
         self._publish(topic, payload)
 
     def _on_log(self, client: MQTTClient, userdata: Any, level:int, buf:str) -> None:
@@ -761,3 +764,6 @@ class ProgrammingError(Exception):
 
 class NotConnectedError(Exception):
     """Error to indicate that we expected to be connected at this stage but is not."""
+
+class TopicNotFoundError(Exception):
+    """Error to indicate that we expected to find a topic but it is not present."""

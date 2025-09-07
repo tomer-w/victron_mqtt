@@ -3,7 +3,7 @@ import pytest_asyncio
 import asyncio
 from unittest.mock import MagicMock, patch
 from victron_mqtt._victron_enums import DeviceType, GenericOnOff
-from victron_mqtt.hub import Hub
+from victron_mqtt.hub import Hub, TopicNotFoundError
 from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
 from victron_mqtt.metric import Metric
 from victron_mqtt.writable_metric import WritableMetric
@@ -590,8 +590,23 @@ async def test_publish(create_mocked_hub_experimental):
     # Ensure the underlying client's publish was called with the expected values
     mocked_client.publish.assert_any_call(expected_topic, expected_payload)
 
-# Device Type Filter Tests
+@pytest.mark.asyncio
+async def test_publish_topic_not_found(create_mocked_hub_experimental):
+    hub: Hub = create_mocked_hub_experimental
+    mocked_client: MagicMock = hub._client # type: ignore
 
+    # Clear any previous publish calls recorded by the mocked client
+    if hasattr(mocked_client.publish, 'reset_mock'):
+        mocked_client.publish.reset_mock()
+
+    # Call the publish helper which should result in an internal client.publish call
+    with pytest.raises(TopicNotFoundError):
+        hub.publish("NO TOPIC", "170", 1)
+
+    # Finalize injection to allow any keepalive/full-publish flows to complete
+    await finalize_injection(hub)
+
+# Device Type Filter Tests
 @pytest.fixture
 def create_mocked_hub_with_device_filter():
     """Fixture factory that returns a function to create mocked Hub with device filter."""

@@ -4,7 +4,7 @@ A Asynchronous Python API client for the Victron Venus OS.
 
 from .constants import MetricNature, MetricType, MetricKind, VictronEnum, RangeType, OperationMode
 from .device import Device
-from .hub import Hub, CannotConnectError, ProgrammingError, NotConnectedError
+from .hub import Hub, CannotConnectError, ProgrammingError, NotConnectedError, TopicNotFoundError
 from .metric import Metric
 from .writable_metric import WritableMetric
 from ._victron_enums import DeviceType, State, InverterMode, GenericOnOff, EvChargerMode, GenericAlarmEnum, FluidType, TemperatureType, TemperatureStatus, ESSMode, MultiState, DESSReactiveStrategy, DESSStrategy, DESSErrorCode, DESSRestrictions, VictronDeviceEnum, GeneratorRunningByConditionCode, DigitalInputInputState, DigitalInputType, DigitalInputState, PhoenixInverterMode, ErrorCode, ESSState, ESSModeHub4, AcActiveInputSource
@@ -21,6 +21,7 @@ __all__ = [
     "CannotConnectError",
     "ProgrammingError",
     "NotConnectedError",
+    "TopicNotFoundError",
     "VictronEnum",
     "GenericOnOff",
     "EvChargerMode",
