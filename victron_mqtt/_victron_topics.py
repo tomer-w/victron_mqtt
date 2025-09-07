@@ -1056,6 +1056,17 @@ topics: List[TopicDescriptor] = [
         min_max_range=RangeType.DYNAMIC,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxFeedInPower",
+        message_type=MetricKind.NUMBER,
+        short_id="system_ess_max_feed_in_power",
+        name="ESS max feed-in power",
+        metric_type=MetricType.POWER,
+        value_type=ValueType.INT,
+        min_max_range=RangeType.DYNAMIC,
+        min=-1,
+        max=1000000,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/OvervoltageFeedIn",
         message_type=MetricKind.SWITCH,
         short_id="system_settings_overvoltage_feedin",
