@@ -57,6 +57,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.STRING,
     ),
     # all other topics (sorted alphabetically)
+    # Alternator topics
     TopicDescriptor(
         topic="N/{installation_id}/alternator/{device_id}/Dc/0/Current",
         message_type=MetricKind.SENSOR,
@@ -99,6 +100,7 @@ topics: List[TopicDescriptor] = [
         name="Input Voltage",
         metric_type=MetricType.VOLTAGE,
     ),
+    # Battery topics
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Alarms/CellImbalance",
         message_type=MetricKind.SENSOR,
@@ -373,6 +375,7 @@ topics: List[TopicDescriptor] = [
         name="Battery cell voltage deviation",
         metric_type=MetricType.VOLTAGE,
     ),
+    # DC Load topics
     TopicDescriptor(
         topic="N/{installation_id}/dcload/{device_id}/Dc/0/Current",
         message_type=MetricKind.SENSOR,
@@ -422,6 +425,7 @@ topics: List[TopicDescriptor] = [
         name="DC System Auxiliary Voltage",
         metric_type=MetricType.VOLTAGE,
     ),
+    # Digital Input topics
     TopicDescriptor(
         topic="N/{installation_id}/digitalinput/{device_id}/Alarm",
         message_type=MetricKind.SENSOR,
@@ -462,6 +466,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=DigitalInputType,
     ),
+    # EV Charger topics
     TopicDescriptor(
         topic="N/{installation_id}/evcharger/{device_id}/Ac/{phase}/Power",
         message_type=MetricKind.SENSOR,
@@ -574,6 +579,7 @@ topics: List[TopicDescriptor] = [
         precision=1,
         experimental=True,
     ),
+    # GPS topics
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Altitude",
         message_type=MetricKind.SENSOR,
@@ -646,6 +652,7 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.SPEED,
         value_type=ValueType.FLOAT,
     ),
+    # Grid topics
     TopicDescriptor(
         topic="N/{installation_id}/grid/{device_id}/Ac/Current",
         message_type=MetricKind.SENSOR,
@@ -744,6 +751,7 @@ topics: List[TopicDescriptor] = [
         name="Grid voltage {phase} to {next_phase}",
         metric_type=MetricType.VOLTAGE,
     ),
+    # Inverter topics (Like Phoenix)
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Ac/Out/{phase}/I",
         message_type=MetricKind.SENSOR,
@@ -852,6 +860,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=State,
     ),
+    # Multi RS Solar topics
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ac/In/1/{phase}/I",
         message_type=MetricKind.SENSOR,
@@ -968,6 +977,7 @@ topics: List[TopicDescriptor] = [
         name="Total PV Yield",
         metric_type=MetricType.ENERGY,
     ),
+    # PV Inverter topics
     TopicDescriptor(
         topic="N/{installation_id}/pvinverter/{device_id}/Ac/Energy/Forward",
         message_type=MetricKind.SENSOR,
@@ -1009,6 +1019,27 @@ topics: List[TopicDescriptor] = [
         short_id="pvinverter_voltage_{phase}",
         name="Voltage {phase}",
         metric_type=MetricType.VOLTAGE,
+    ),
+    # Settings topics
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/AcExportLimit",
+        message_type=MetricKind.NUMBER,
+        short_id="system_ac_export_limit",
+        name="AC Export Limit",
+        metric_type=MetricType.CURRENT,
+        value_type=ValueType.INT,
+        min=-1,  # -1 means not set
+        max=100,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/AcInputLimit",
+        message_type=MetricKind.NUMBER,
+        short_id="system_ac_input_limit",
+        name="AC Input Limit",
+        metric_type=MetricType.CURRENT,
+        value_type=ValueType.INT,
+        min=-1,  # -1 means not set
+        max=100,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/AcPowerSetPoint",
@@ -1074,6 +1105,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
+    # Generator settings topics
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/Enabled",
         message_type=MetricKind.SWITCH,
@@ -1288,6 +1320,7 @@ topics: List[TopicDescriptor] = [
         max=1800,
         experimental=True,
     ),
+    # System Setup topics
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/SystemSetup/MaxChargeCurrent",
         message_type=MetricKind.NUMBER,
@@ -1318,6 +1351,7 @@ topics: List[TopicDescriptor] = [
         max=60,
         experimental=True,
     ),
+    # Solar Charger topics
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/Dc/0/Current",
         message_type=MetricKind.SENSOR,
@@ -1477,6 +1511,7 @@ topics: List[TopicDescriptor] = [
         name="Total Yield",
         metric_type=MetricType.ENERGY,
     ),
+    # Switch topics
     TopicDescriptor(
         topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/Dimming",
         message_type=MetricKind.NUMBER,
@@ -1757,6 +1792,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
+    # Tank topics
     TopicDescriptor(
         topic="N/{installation_id}/tank/{device_id}/BatteryVoltage",
         message_type=MetricKind.SENSOR,
@@ -1800,6 +1836,7 @@ topics: List[TopicDescriptor] = [
         name="Temperature",
         metric_type=MetricType.TEMPERATURE,
     ),
+    # Temperature sensor topics
     TopicDescriptor(
         topic="N/{installation_id}/temperature/{device_id}/BatteryVoltage",
         message_type=MetricKind.SENSOR,
@@ -1859,6 +1896,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=TemperatureType,
     ),
+    # VEBus topics
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/CurrentLimit",
         message_type=MetricKind.NUMBER,

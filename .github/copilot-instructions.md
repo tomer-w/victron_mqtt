@@ -42,6 +42,9 @@ class DeviceType(VictronDeviceEnum):
     DC_SYSTEM = ("dcsystem", "DC System")
 ```
 
+### Notes
+1. No need to add SETTINGS to the DeviceType Enum as it is handled differently.
+
 2. **Follow the naming convention**:
    - First parameter: lowercase string matching the MQTT topic device type
    - Second parameter: human-readable display name
