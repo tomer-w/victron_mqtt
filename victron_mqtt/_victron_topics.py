@@ -1898,6 +1898,14 @@ topics: List[TopicDescriptor] = [
     ),
     # VEBus topics
     TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/ActiveInput",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_inverter_active_input",
+        name="Inverter active AC input",
+        value_type=ValueType.ENUM,
+        enum=AcActiveInputSource,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/CurrentLimit",
         message_type=MetricKind.NUMBER,
         short_id="vebus_inverter_current_limit",
@@ -1946,6 +1954,13 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.FREQUENCY,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Ac/Out/{phase}/I",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_inverter_output_current_{phase}",
+        name="Inverter output current {phase}",
+        metric_type=MetricType.CURRENT,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/Out/{phase}/P",
         message_type=MetricKind.SENSOR,
         short_id="vebus_inverter_output_power_{phase}",
@@ -1958,6 +1973,13 @@ topics: List[TopicDescriptor] = [
         short_id="vebus_inverter_output_apparent_power_{phase}",
         name="Inverter output apparent power {phase}",
         metric_type=MetricType.APPARENT_POWER,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Ac/Out/{phase}/V",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_inverter_output_voltage_{phase}",
+        name="Inverter output voltage {phase}",
+        metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Alarms/GridLost",
