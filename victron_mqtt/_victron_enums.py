@@ -258,7 +258,6 @@ class ESSState(VictronEnum):
     #Optimized mode without BatteryLife:
     SelfConsumptionSoCAboveMin = (10, "Self consumption, SoC at or above minimum SoC")
     SelfConsumptionSoCBelowMin = (11, "Self consumption, SoC is below minimum SoC")
-    Recharge = (12, "Recharge, SOC dropped 5% or more below minimum SoC")
 
 class ESSModeHub4(VictronEnum):
     PhaseCompensationEnabled = (1, "Optimized mode or 'keep batteries charged' and phase compensation enabled")

@@ -510,6 +510,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
+    #Generator topics
     TopicDescriptor(
         topic="N/{installation_id}/generator/{device_id}/AccumulatedRuntime",
         message_type=MetricKind.SENSOR,
@@ -1028,6 +1029,22 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/State",
+        message_type=MetricKind.SELECT,
+        short_id="system_ess_batterylife_state",
+        name="ESS BatteryLife State",
+        value_type=ValueType.ENUM,
+        enum=ESSState,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/Hub4Mode",
+        message_type=MetricKind.SELECT,
+        short_id="system_ess_mode",
+        name="ESS Mode (Hub4)",
+        value_type=ValueType.ENUM,
+        enum=ESSModeHub4,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxDischargePower",
@@ -2061,6 +2078,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=State,
     ),
+    # All service topics comes last
     TopicDescriptor(
         topic="W/{installation_id}/generator/{device_id}/ServiceCounterReset",
         message_type=MetricKind.SERVICE,
@@ -2069,20 +2087,4 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         experimental=True,
     ),
-    TopicDescriptor(
-        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/State",
-        message_type=MetricKind.SELECT,
-        short_id="system_ess_batterylife_state",
-        name="ESS BatteryLife State",
-        value_type=ValueType.ENUM,
-        enum=ESSState,
-    ),
-    TopicDescriptor(
-        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/Hub4Mode",
-        message_type=MetricKind.SELECT,
-        short_id="system_ess_mode",
-        name="ESS Mode (Hub4)",
-        value_type=ValueType.ENUM,
-        enum=ESSModeHub4,
-    )
 ]
