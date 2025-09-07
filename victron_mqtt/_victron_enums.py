@@ -241,3 +241,26 @@ class DigitalInputState(VictronEnum):
     Alarm = (9, "Alarm")
     Running = (10, "Running")
     Stopped = (11, "Stopped")
+    
+class ESSState(VictronEnum):
+    #Optimized mode with BatteryLife:
+    # 1 is Value set by the GUI when BatteryLife is enabled. Hub4Control uses it to find the right BatteryLife state (values 2-7) based on system state
+    WithBatteryLife = (1, "Optimized mode with BatteryLife")
+    SelfConsumption = (2, "Self consumption")
+    SelfConsumptionSoCExceeds85= (3, "Self consumption, SoC exceeds 85%")
+    SelfConsumptionSoCat100 = (4, "Self consumption, SoC at 100%")
+    SoCBelowBatteryLifeDynamicSoClimit = (5, "SoC below BatteryLife dynamic SoC limit")
+    SoCBelowSoCLimit24Hours = (6, "SoC has been below SoC limit for more than 24 hours. Charging with battery with 5amps")
+    Sustain = (7, "Multi/Quattro is in sustain")
+    Recharge = (8, "Recharge, SOC dropped 5% or more below MinSOC")
+    #Keep batteries charged mode:
+    KeepBatteriesCharged = (9, "'Keep batteries charged' mode enabled")
+    #Optimized mode without BatteryLife:
+    SelfConsumptionSoCAboveMin = (10, "Self consumption, SoC at or above minimum SoC")
+    SelfConsumptionSoCBelowMin = (11, "Self consumption, SoC is below minimum SoC")
+    Recharge = (12, "Recharge, SOC dropped 5% or more below minimum SoC")
+
+class ESSModeHub4(VictronEnum):
+    PhaseCompensationEnabled = (1, "Optimized mode or 'keep batteries charged' and phase compensation enabled")
+    PhaseCompensationDisabled = (2, "Optimized mode or 'keep batteries charged' and phase compensation disabled")
+    ExternalControl = (3, "External control")
