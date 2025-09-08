@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import AcActiveInputSource, DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, EvChargerMode, MultiState, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum, ESSState, ESSModeHub4 
+from ._victron_enums import AcActiveInputSource, DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, EvChargerMode, MppOperationMode, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum, ESSState, ESSModeHub4 
 
 # Good sources for topics is:
 # https://github.com/victronenergy/venus/wiki/dbus
@@ -931,8 +931,8 @@ topics: List[TopicDescriptor] = [
         short_id="multirssolar_mppt_{mpptnumber}_state",
         name="MPPT {mpptnumber} state",
         value_type=ValueType.ENUM,
-        enum=MultiState,
-    ),     
+        enum=MppOperationMode,
+    ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Pv/{mpptnumber}/P",
         message_type=MetricKind.SENSOR,
@@ -1472,13 +1472,42 @@ topics: List[TopicDescriptor] = [
         short_id="solarcharger_mppt_operation_mode",
         name="Solar Charger MPPT Operation Mode",
         value_type=ValueType.ENUM,
-        enum=MultiState,
+        enum=MppOperationMode,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/Pv/V",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_voltage",
         name="PV Bus Voltage",
+        metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/solarcharger/{device_id}/Pv/{tracker}/MppOperationMode",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_tracker_{tracker}_operation_mode",
+        name="PV Tracker {tracker} Operation Mode",
+        value_type=ValueType.ENUM,
+        enum=MppOperationMode,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/solarcharger/{device_id}/Pv/{tracker}/Name",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_tracker_{tracker}_name",
+        name="PV Tracker {tracker} Name",
+        value_type=ValueType.STRING,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/solarcharger/{device_id}/Pv/{tracker}/P",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_tracker_{tracker}_power",
+        name="PV Tracker {tracker} Power",
+        metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/solarcharger/{device_id}/Pv/{tracker}/V",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_tracker_{tracker}_voltage",
+        name="PV Tracker {tracker} Voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
@@ -1664,7 +1693,7 @@ topics: List[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Dc/Pv/Power",
         message_type=MetricKind.SENSOR,
-        short_id="solarcharger_power",
+        short_id="system_dc_pv_power",
         name="PV Power",
         metric_type=MetricType.POWER,
     ),

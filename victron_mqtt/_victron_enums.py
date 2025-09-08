@@ -112,7 +112,7 @@ class FluidType(VictronEnum):
     HydraulicOil = (10, "Hydraulic oil")
     RawWater = (11, "Raw water")
     
-class MultiState(VictronEnum):
+class MppOperationMode(VictronEnum):
     Off = (0, "Off")
     VoltageCurrentLimited = (1, "Voltage/current limited")
     MPPTActive = (2, "MPPT active")
