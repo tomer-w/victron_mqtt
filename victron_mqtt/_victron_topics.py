@@ -1320,6 +1320,14 @@ topics: List[TopicDescriptor] = [
         max=1800,
         experimental=True,
     ),
+    # Relay Custom Name topics
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/Relay/{relay}/CustomName",
+        message_type=MetricKind.SENSOR,
+        short_id="system_relay_{relay}_custom_name",
+        name="Relay {relay} Custom Name",
+        value_type=ValueType.STRING,
+    ),
     # System Setup topics
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/SystemSetup/MaxChargeCurrent",
@@ -1549,6 +1557,13 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=0,
         max=100,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/Settings/CustomName",
+        message_type=MetricKind.SENSOR,
+        short_id="switch_{output}_custom_name",
+        name="Switch {output} Custom Name",
+        value_type=ValueType.STRING,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/State",

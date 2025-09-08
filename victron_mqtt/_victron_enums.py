@@ -28,6 +28,7 @@ class DeviceType(VictronDeviceEnum):
     TRANSFER_SWITCH = ("TransferSwitch", "Transfer Switch")
     DIGITAL_INPUT = ("digitalinput", "Digital Input")
     DC_SYSTEM = ("dcsystem", "DC System")
+    RELAY = ("Relay", "<Not used>", "system") # Should be mapped to SYSTEM
 
 class GenericOnOff(VictronEnum):
     """On/Off  Enum"""
