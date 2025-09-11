@@ -100,7 +100,7 @@ class Device:
             value = unwrap_bool(payload)
             if value is None:
                 log_debug(
-                    "Ignoring null metric value for device %s metric %s", 
+                    "Ignoring null fallback_to_metric_topic value for device %s metric %s", 
                     self.unique_id, topic_desc.short_id
                 )
                 return None

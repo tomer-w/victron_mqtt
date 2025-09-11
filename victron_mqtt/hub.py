@@ -253,7 +253,6 @@ class Hub:
             if self._installation_id is None:
                 _LOGGER.info("No installation ID provided, attempting to read from device")
                 self._installation_id = await self._read_installation_id()
-            self._setup_subscriptions()
             self._start_keep_alive_loop()
             _LOGGER.info("Connected. Installation ID: %s", self._installation_id)
         except Exception as exc:
@@ -289,6 +288,7 @@ class Hub:
             return
         if rc == 0:
             _LOGGER.info("Connected to MQTT broker successfully")
+            self._setup_subscriptions()
             if self._loop.is_running():
                 self._loop.call_soon_threadsafe(self._connected_event.set)
         else:
