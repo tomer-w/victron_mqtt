@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Callable, Tuple
@@ -36,9 +37,6 @@ class Device:
         self._serial_number = None
         self._firmware_version = None
         self._custom_name = None
-        self._fallback_is_adjustable_first_map: dict[ParsedTopic, bool] = {}
-        self._fallback_data_first_map: dict[ParsedTopic, Any] = {} # Any is payload
-        self._fallback_handled_set: set[str] = set()
 
         _LOGGER.debug("Device %s initialized", unique_id)
 
@@ -90,7 +88,7 @@ class Device:
             _LOGGER.warning("Unhandled device property %s for %s", short_id, self.unique_id)
 
 
-    def handle_message(self, fallback_to_metric_topic: bool, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop, hub: Hub, log_debug: Callable[..., None]) -> Tuple[Device,Metric] | None:
+    def handle_message(self, fallback_to_metric_topic: bool, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop, log_debug: Callable[..., None]) -> MetricPlaceholder | FallbackPlaceholder | None:
         """Handle a message."""
         log_debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 
@@ -100,65 +98,25 @@ class Device:
 
         if fallback_to_metric_topic:
             value = unwrap_bool(payload)
+            if value is None:
+                log_debug(
+                    "Ignoring null metric value for device %s metric %s", 
+                    self.unique_id, topic_desc.short_id
+                )
+                return None
+            return FallbackPlaceholder(device=self, metric_id=topic_desc.short_id, parsed_topic=parsed_topic, topic_descriptor=topic_desc, value=value)
         else:
             value = Device._unwrap_payload(topic_desc, payload)
-        if value is None:
-            log_debug(
-                "Ignoring null metric value for device %s metric %s", 
-                self.unique_id, topic_desc.short_id
-            )
-            return None
-
-        # It is metric or WritableMetric
-        is_adjustable = False
-        new_topic_desc = topic_desc
-        if topic_desc.message_type != MetricKind.SENSOR and topic_desc.is_adjustable_suffix:
-            data_topic = topic.rsplit('/', 1)[0] + '/' + topic_desc.topic.rsplit('/', 1)[1] if fallback_to_metric_topic else topic # need to move from the IsAdjustable topic to the original one
-            if fallback_to_metric_topic and data_topic in self._fallback_handled_set:
-                log_debug("Already handled fallback for %s", data_topic)
-                return None
-            if data_topic not in self._fallback_handled_set:
-                if fallback_to_metric_topic:
-                    assert isinstance(value, bool)
-                    data_parsed_topic = ParsedTopic.from_topic(data_topic)
-                    assert data_parsed_topic is not None
-                    stored_payload = self._fallback_data_first_map.pop(data_parsed_topic, None)
-                    if stored_payload is None:
-                        _LOGGER.info("Setting fallback for %s to %s", data_parsed_topic, value)
-                        self._fallback_is_adjustable_first_map[data_parsed_topic] = value
-                        return None
-                    is_adjustable = value
-                    # Setting all the values to restore state
-                    payload = stored_payload
-                    value = Device._unwrap_payload(topic_desc, payload)
-                    parsed_topic = data_parsed_topic
-                    topic = data_topic
-                    _LOGGER.info("parsed_topic %s is ready. is_adjustable=%s", data_parsed_topic, is_adjustable)
-                else:
-                    is_adjustable = self._fallback_is_adjustable_first_map.pop(parsed_topic, None)
-                    if is_adjustable is None:
-                        _LOGGER.info("No is_adjustable for %s yet. Storing topic_desc=%s, value=%s", parsed_topic, topic_desc, value)
-                        self._fallback_data_first_map[parsed_topic] = payload
-                        return None
-                    _LOGGER.info("Got both topic and isAdjustable value (%s) for %s", is_adjustable, topic_desc)
-                self._fallback_handled_set.add(data_topic)
-                if not is_adjustable:
-                    new_topic_desc = copy.deepcopy(topic_desc)  # Deep copy
-                    new_topic_desc.message_type = MetricKind.SENSOR
-        elif fallback_to_metric_topic and topic_desc.message_type == MetricKind.SENSOR:
-            # if this is fallback to metric topic and the message type is sensor (which probably mean we are in READ_ONLY mode) we can just skip it
-            log_debug("Skipping fallback to metric topic for %s", topic_desc)
-            return
 
         parsed_topic.finalize_topic_fields(topic_desc)
         short_id = parsed_topic.short_id
         metric_id = f"{self.unique_id}_{short_id}"
-
-        metric, created = self._get_or_create_metric(metric_id, short_id, topic, parsed_topic, new_topic_desc, hub, payload)
-        metric._handle_message(value, event_loop, log_debug)
-        if created:
-            return self, metric
-        return None
+        metric = self._metrics.get(metric_id)
+        if metric:
+            metric._handle_message(value, event_loop, log_debug)
+            return None
+        assert value is not None, f"Value must not be None. topic={topic}, payload={payload}"
+        return MetricPlaceholder(self, metric_id, parsed_topic, topic_desc, payload, value)
 
     @staticmethod
     def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | bool | type[Enum] | None:
@@ -171,36 +129,50 @@ class Device:
         else:
             return unwrapper(payload)
 
-    def _get_or_create_metric(
-        self, metric_id: str, short_id: str, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, hub: Hub, payload: str
-    ) -> Tuple[Metric, bool]:
-        """Get or create a metric."""
-        metric = self._metrics.get(metric_id)
-        if metric is not None:
-            return metric, False
+    @staticmethod
+    def _is_same_adjustable_topics(topic: str, adjustable_topic: str) -> bool:
+        """Check if two topics are the same, considering adjustable suffixes."""
+        return topic.rsplit('/', 1)[0] == adjustable_topic.rsplit('/', 1)[0]
 
-        _LOGGER.info("Creating new metric: metric_id=%s, short_id=%s", metric_id, short_id)
-        new_topic_desc = topic_desc
-        if topic_desc.min_max_range == RangeType.DYNAMIC:
-            max_value = unwrap_float(payload, topic_desc.precision, "max")
+    def add_placeholder(self, metric_placeholder: MetricPlaceholder, all_metrics: dict[str, Metric], fallback_placeholders: list[FallbackPlaceholder], hub: Hub) -> Metric:
+        _LOGGER.info("Creating new metric from: %s", metric_placeholder)
+
+        new_topic_desc = metric_placeholder.topic_descriptor
+
+        if new_topic_desc.is_adjustable_suffix:
+            # If the topic is adjustable, we need to decide if it should be writable or not.
+            # If there is a fallback placeholder for the same adjustable topic, and its value is False,
+            # then we switch the topic to read-only (sensor).
+            _LOGGER.info("Topic %s is adjustable", new_topic_desc.topic)
+            fallback_placeholder = next((fp for fp in fallback_placeholders if Device._is_same_adjustable_topics(fp.parsed_topic.full_topic, metric_placeholder.parsed_topic.full_topic)), None)
+            if fallback_placeholder and not fallback_placeholder.value:
+                _LOGGER.info("Switching topic from writable to read-only. topic=%s", new_topic_desc.topic)
+                new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
+                new_topic_desc.message_type = MetricKind.SENSOR
+    
+        # Handle dynamic min/max range
+        if new_topic_desc.min_max_range == RangeType.DYNAMIC:
+            max_value = unwrap_float(metric_placeholder.payload, new_topic_desc.precision, "max")
             if max_value is not None:
-                _LOGGER.info("Setting dynamic max value to %s for %s", max_value, topic_desc)
+                _LOGGER.info("Setting dynamic max value to %s for %s", max_value, new_topic_desc)
                 new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
                 new_topic_desc.max = int(max_value)
 
-            min_value = unwrap_float(payload, topic_desc.precision, "min")
+            min_value = unwrap_float(metric_placeholder.payload, new_topic_desc.precision, "min")
             if min_value is not None:
-                _LOGGER.info("Setting dynamic min value to %s for %s", min_value, topic_desc)
+                _LOGGER.info("Setting dynamic min value to %s for %s", min_value, new_topic_desc)
                 new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
                 new_topic_desc.min = int(min_value)
 
-        if topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
-            metric = WritableMetric(metric_id, short_id, new_topic_desc, topic, parsed_topic, hub)
+        assert metric_placeholder.topic_descriptor.name is not None
+        name = ParsedTopic.replace_ids(metric_placeholder.topic_descriptor.name, metric_placeholder.parsed_topic.key_values)
+        if new_topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
+            metric = WritableMetric(metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic, hub)
         else:
-            metric = Metric(metric_id, short_id, new_topic_desc, parsed_topic)
-        self._metrics[metric_id] = metric
-
-        return metric, True
+            metric = Metric(metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic)
+        metric._handle_message(metric_placeholder.value, None, _LOGGER.debug)
+        self._metrics[metric_placeholder.metric_id] = metric
+        return metric
 
     def get_metric_from_unique_id(self, unique_id: str) -> Metric | WritableMetric | None:
         """Get a metric from a unique id."""
@@ -263,3 +235,27 @@ class Device:
     def custom_name(self) -> str | None:
         """Return the custom name for devices."""
         return self._custom_name
+
+
+@dataclass
+class MetricPlaceholder:
+    device: Device
+    metric_id: str
+    parsed_topic: ParsedTopic
+    topic_descriptor: TopicDescriptor
+    payload: str
+    value: str | float | int | bool | type[Enum]
+
+    def __repr__(self) -> str:
+        return f"MetricPlaceholder(device={self.device}, metric_id={self.metric_id}, parsed_topic={self.parsed_topic}, topic_descriptor={self.topic_descriptor}, payload={self.payload}, value={self.value})"
+    
+@dataclass
+class FallbackPlaceholder:
+    device: Device
+    metric_id: str
+    parsed_topic: ParsedTopic
+    topic_descriptor: TopicDescriptor
+    value: str | float | int | bool | type[Enum]
+
+    def __repr__(self) -> str:
+        return f"FallbackPlaceholder(device={self.device}, metric_id={self.metric_id}, parsed_topic={self.parsed_topic}, topic_descriptor={self.topic_descriptor}, value={self.value})"

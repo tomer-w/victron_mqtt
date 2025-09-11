@@ -22,17 +22,17 @@ _LOGGER = logging.getLogger(__name__)
 class WritableMetric(Metric):
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, unique_id: str, short_id: str, descriptor: TopicDescriptor, topic: str, parsed_topic: ParsedTopic, hub: Hub) -> None:
+    def __init__(self, unique_id: str, name: str, descriptor: TopicDescriptor, parsed_topic: ParsedTopic, hub: Hub) -> None:
         """Initialize the WritableMetric."""
         _LOGGER.debug(
             "Creating new WritableMetric: unique_id=%s, type=%s, nature=%s",
             unique_id, descriptor.metric_type, descriptor.metric_nature
         )
         self._hub = hub
-        assert topic.startswith("N")
-        self._write_topic = "W" + topic[1:]
-        super().__init__(unique_id, short_id, descriptor, parsed_topic)
-    
+        assert parsed_topic.full_topic.startswith("N")
+        self._write_topic = "W" + parsed_topic.full_topic[1:]
+        super().__init__(unique_id, name, descriptor, parsed_topic)
+
     def __repr__(self) -> str:
         return f"WritableMetric({super().__repr__()}, write_topic = {self._write_topic})"
 

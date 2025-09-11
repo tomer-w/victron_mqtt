@@ -20,7 +20,6 @@ def test_parsed_topic_with_pattern():
     parsed_topic.finalize_topic_fields(descriptor)
     # Validate the ParsedTopic instance additional fields after matching description
     assert parsed_topic.key_values["relay"] == "1", "Relay ID should match"
-    assert parsed_topic.name == "Relay 1 state", "Name should match"
     assert parsed_topic.short_id == "system_relay_1", "Short ID should match"
 
 
@@ -42,7 +41,6 @@ def test_parsed_topic_with_phase():
     parsed_topic.finalize_topic_fields(descriptor)
     # Validate the ParsedTopic instance additional fields after matching description
     assert parsed_topic.key_values["phase"] == "L1", "Phase should match"
-    assert parsed_topic.name == "Genset Load L1", "Name should match"
     assert parsed_topic.short_id == "system_generator_load_L1", "Short ID should match"
 
 def test_parsed_topic_with_next_phase():
@@ -63,7 +61,6 @@ def test_parsed_topic_with_next_phase():
     parsed_topic.finalize_topic_fields(descriptor)
     # Validate the ParsedTopic instance additional fields after matching description
     assert parsed_topic.key_values["phase"] == "L3", "Phase should match"
-    assert parsed_topic.name == "Grid voltage L3 to L1", "Name should match"
     assert parsed_topic.short_id == "grid_voltage_L3_L1", "Short ID should match"
 
 def test_parsed_topic_with_phase_and_placeholder():
@@ -84,7 +81,6 @@ def test_parsed_topic_with_phase_and_placeholder():
     parsed_topic.finalize_topic_fields(descriptor)
     # Validate the ParsedTopic instance additional fields after matching description
     assert parsed_topic.key_values["phase"] == "L1", "Phase should match"
-    assert parsed_topic.name == "AC Out 1 Current on L1", "Name should match"
     assert parsed_topic.short_id == "multirssolar_acout_1_current_L1", "Short ID should match"
 
 def test_settings_parsed_topic():
@@ -104,7 +100,6 @@ def test_settings_parsed_topic():
 
     parsed_topic.finalize_topic_fields(descriptor)
     # Validate the ParsedTopic instance additional fields after matching description
-    assert parsed_topic.name == "AC Power Setpoint", "Name should match"
     assert parsed_topic.short_id == "system_ac_power_set_point", "Short ID should match"
 
 
@@ -125,5 +120,4 @@ def test_settings_parsed_topic_2():
 
     parsed_topic.finalize_topic_fields(descriptor)
     # Validate the ParsedTopic instance additional fields after matching description
-    assert parsed_topic.name == "ESS max charge current", "Name should match"
     assert parsed_topic.short_id == "system_ess_max_charge_current", "Short ID should match"

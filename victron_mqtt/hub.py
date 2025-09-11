@@ -8,7 +8,7 @@ import random
 import ssl
 import re
 import string
-from typing import Any, Callable, Optional, Tuple
+from typing import Any, Callable, Optional
 
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import Client as MQTTClient, PayloadType
@@ -22,7 +22,7 @@ from ._victron_topics import topics
 from ._victron_enums import DeviceType
 from .constants import TOPIC_INSTALLATION_ID, MetricKind, OperationMode
 from .data_classes import ParsedTopic, TopicDescriptor, topic_to_device_type
-from .device import Device
+from .device import Device, FallbackPlaceholder, MetricPlaceholder
 from .metric import Metric
 
 _LOGGER = logging.getLogger(__name__)
@@ -147,7 +147,9 @@ class Hub:
         random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
         self._client_id = f"victron_mqtt-{random_string}-{self._instance_id}"
         self._keepalive_counter = 0
-        self._new_metrics: list[Tuple[Device, Metric]] = []
+        self._metrics_placeholders: list[MetricPlaceholder] = []
+        self._fallback_placeholders: list[FallbackPlaceholder] = []
+        self._all_metrics: dict[str, Metric] = {}
 
         # Filter the active topics
         metrics_active_topics: list[TopicDescriptor] = []
@@ -325,16 +327,23 @@ class Hub:
             # Check if it matches our client ID so we got full cycle or refresh
             if echo and echo.startswith(self._client_id):
                 log_debug("Full publish completed: %s", echo)
+                new_metrics: list[Metric] = []
+                for metric_placeholder in self._metrics_placeholders:
+                    metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._all_metrics, self._fallback_placeholders, self)
+                    self._all_metrics[metric.short_id] = metric
+                    new_metrics.append(metric)
                 # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
-                for device, new_metric in self._new_metrics:
+                for metric in new_metrics:
+                    metric.phase2_init(self._all_metrics)
                     try:
                         if callable(self._on_new_metric):
                             if self._loop.is_running():
                                 # If the event loop is running, schedule the callback
-                                self._loop.call_soon_threadsafe(self._on_new_metric, self, device, new_metric)
+                                self._loop.call_soon_threadsafe(self._on_new_metric, self, metric_placeholder.device, metric)
                     except Exception as exc:
                         _LOGGER.error("Error calling _on_new_metric callback %s", exc, exc_info=True)
-                self._new_metrics.clear()
+                self._metrics_placeholders.clear()
+                self._fallback_placeholders.clear()
                 if self._loop.is_running():
                     self._loop.call_soon_threadsafe(self._first_refresh_event.set)
                 return
@@ -387,9 +396,11 @@ class Hub:
                 return
 
         device = self._get_or_create_device(parsed_topic, desc)
-        tuple = device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload, self._loop, self, log_debug)
-        if tuple:
-            self._new_metrics.append(tuple)
+        metric_place_holder = device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload, self._loop, log_debug)
+        if isinstance(metric_place_holder, MetricPlaceholder):
+            self._metrics_placeholders.append(metric_place_holder)
+        elif isinstance(metric_place_holder, FallbackPlaceholder):
+            self._fallback_placeholders.append(metric_place_holder)
 
     async def disconnect(self) -> None:
         """Disconnect from the hub."""

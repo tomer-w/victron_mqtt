@@ -263,23 +263,22 @@ class ParsedTopic:
         return self._short_id
 
     @property
-    def name(self) -> str:
-        assert self._name is not None
-        return self._name
-
-    @property
     def key_values(self) -> dict[str, str]:
         assert self._key_values is not None
         return self._key_values
 
     def _replace_ids(self, string: str) -> str:
+        return ParsedTopic.replace_ids(string, self.key_values)
+
+    @staticmethod
+    def replace_ids(string: str, key_values: dict[str, str]) -> str:
         """Replace placeholders in the string with matched items from self.key_values."""
         import re
 
         def replace_match(match):
             key = match.group(1)
-            if key in self.key_values:
-                return self.key_values[key]
+            if key in key_values:
+                return key_values[key]
             return match.group(0)  # Leave the placeholder unchanged if no match
 
         # Match {key} in the string

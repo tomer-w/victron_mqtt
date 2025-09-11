@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class Metric:
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, unique_id: str, short_id: str, descriptor: TopicDescriptor, parsed_topic: ParsedTopic) -> None:
+    def __init__(self, unique_id: str, name: str, descriptor: TopicDescriptor, parsed_topic: ParsedTopic) -> None:
         """Initialize the sensor."""
         _LOGGER.debug(
             "Creating new metric: unique_id=%s, type=%s, nature=%s",
@@ -30,8 +30,8 @@ class Metric:
         self._descriptor = descriptor
         self._unique_id = unique_id
         self._value = None
-        self._short_id = short_id
-        self._name = parsed_topic.name
+        self._short_id = parsed_topic.short_id
+        self._name = name
         self._key_values: dict[str, str] = parsed_topic.key_values
         self._on_update: Callable | None = None
         _LOGGER.debug("Metric %s initialized", repr(self))
@@ -46,13 +46,42 @@ class Metric:
             f"value={self.value}, "
             f"generic_short_id={self.generic_short_id}, "
             f"short_id={self.short_id}, "
-            f"name={self.name}, "
+            f"name={self._name}, "
             f"{key_values_part})"
             )
 
     def __str__(self) -> str:
         """Return the string representation of the metric."""
         return self.formatted_value
+
+    def phase2_init(self, all_metrics: dict[str, Metric]) -> None:
+        """Second phase of initializing the metric."""
+        self._name = Metric._replace_ids(self._name, self._key_values, all_metrics)
+
+    @staticmethod
+    def _replace_ids(string: str,  key_values: dict[str, str], all_metrics: dict[str, Metric]) -> str:
+        """Replace placeholders in the string with matched items from self.key_values."""
+        import re
+
+        def replace_match(match):
+            moniker = match.group('moniker')
+            key, suffix = moniker.split(':', 1)
+            assert key and suffix, f"Invalid moniker format: {moniker} in topic: {string}"
+            metric = all_metrics.get(suffix)
+            if metric:
+                result = str(metric.value)
+                key_values[key] = result
+            return f"{{{key}}}"
+
+        # Match {key:name_with_nested_{placeholder}} in the string
+        pattern = re.compile(r"\{(?P<moniker>[^:]+:(?:[^{}]|{[^{}]*})+)\}")
+        temp = pattern.sub(replace_match, string)
+        if temp != string:
+            _LOGGER.debug("Replaced complex placeholders in topic: %s", string)
+            return temp
+
+        return ParsedTopic.replace_ids(string, key_values)
+
 
     @property
     def formatted_value(self) -> str:
@@ -78,8 +107,9 @@ class Metric:
     @property
     def name(self) -> str:
         """Returns the short id of the metric."""
+        assert self._name is not None, f"Metric name is None for metric: {repr(self)}"
         return self._name
-
+    
     @property
     def generic_short_id(self) -> str:
         """Returns the generic short id of the metric."""
@@ -130,7 +160,7 @@ class Metric:
         """Sets the on_update callback."""
         self._on_update = value
 
-    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop, log_debug: Callable[..., None]):
+    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]):
         """Handle a message."""
         if value != self._value:
             log_debug(
@@ -147,6 +177,9 @@ class Metric:
             return
 
         self._value = value
+
+        if not event_loop:
+            return
 
         try:
             if callable(self._on_update):
