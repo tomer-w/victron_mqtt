@@ -150,6 +150,7 @@ class Hub:
         self._metrics_placeholders: list[MetricPlaceholder] = []
         self._fallback_placeholders: list[FallbackPlaceholder] = []
         self._all_metrics: dict[str, Metric] = {}
+        self._first_connect = True
 
         # Filter the active topics
         metrics_active_topics: list[TopicDescriptor] = []
@@ -253,6 +254,15 @@ class Hub:
             if self._installation_id is None:
                 _LOGGER.info("No installation ID provided, attempting to read from device")
                 self._installation_id = await self._read_installation_id()
+            # First we need to replace the installation ID in the subscription topics
+            new_list: list[str] = []
+            for topic in self._subscription_list:
+                new_topic = topic.replace("{installation_id}", self._installation_id)
+                new_list.append(new_topic)
+            self._subscription_list = new_list
+            # First setup subscriptions will happen here as we need the installation ID.
+            # Later we will do it from the connect callback
+            self._setup_subscriptions()
             self._start_keep_alive_loop()
             _LOGGER.info("Connected. Installation ID: %s", self._installation_id)
         except Exception as exc:
@@ -559,7 +569,7 @@ class Hub:
 
     @staticmethod
     def _remove_placeholders(topic: str) -> str:
-        return re.sub(r'\{[^}]+\}', '+', topic)
+        return re.sub(r'\{(?!installation_id\})[^}]+\}', '+', topic)
 
     @staticmethod
     def _remove_placeholders_map(topic: str) -> str:
@@ -611,6 +621,10 @@ class Hub:
 
     def _setup_subscriptions(self) -> None:
         """Subscribe to list of topics."""
+        if self._first_connect:
+            self._first_connect = False
+            _LOGGER.info("Installation ID is not set, skipping subscription setup")
+            return
         _LOGGER.info("Setting up MQTT subscriptions")
         assert self._client is not None
         if not self._client.is_connected():
@@ -618,7 +632,7 @@ class Hub:
         #topic_list = [(topic, 0) for topic in topic_map]
         for topic in self._subscription_list:
             self._subscribe(topic)
-        assert self.installation_id is not None 
+        assert self.installation_id is not None
         self._subscribe(f"N/{self.installation_id}/full_publish_completed")
         _LOGGER.info("Subscribed to full_publish_completed notification")
 

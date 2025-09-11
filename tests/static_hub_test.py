@@ -37,7 +37,12 @@ async def create_mocked_hub_internal(installation_id=None, operation_mode: Opera
     """Helper function to create and return a mocked Hub object."""
     with patch('victron_mqtt.hub.mqtt.Client') as mock_client:
         hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id = installation_id, operation_mode=operation_mode, device_type_exclude_filter=device_type_exclude_filter)
-        mocked_client = mock_client.return_value
+        mocked_client = MagicMock()
+        mock_client.return_value = mocked_client
+
+        # Set up required mock methods
+        mocked_client.subscribe = MagicMock()
+        mocked_client.is_connected.return_value = True
 
         # Set the mocked client explicitly to prevent overwriting
         hub._client = mocked_client
@@ -66,6 +71,10 @@ async def create_mocked_hub_internal(installation_id=None, operation_mode: Opera
                     None,
                     MagicMock(topic="N/123/system/0/Serial", payload=b'{"value": "123"}')
                 )
+                return
+            assert "{installation_id}" not in topic
+            assert not topic.startswith("N/+")
+
         mocked_client.subscribe = MagicMock(name="subscribe", side_effect=mock_subscribe)
 
         def mock_publish(topic, value):
@@ -713,3 +722,33 @@ async def test_remote_name_exists(create_mocked_hub):
     assert metric.name == "Switch {output} State", "Expected metric name to be 'Switch {output} State', got {metric.name}"
     assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "bla"
+    
+@pytest.mark.asyncio
+async def test_on_connect_sets_up_subscriptions():
+    """Test that subscriptions are set up after _on_connect callback."""
+    # Create a hub with installation_id
+    hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id="test123")
+    
+    # Create a MagicMock instance with proper method mocks
+    from paho.mqtt.client import Client
+    mocked_client: MagicMock = MagicMock(spec=Client)
+    mocked_client.is_connected.return_value = True
+    
+    # Set required properties
+    hub._client = mocked_client
+    hub._first_connect = False  # Mark as not first connect to allow subscriptions
+    hub._loop = asyncio.get_running_loop()  # Set the event loop
+    
+    # Call _on_connect directly with successful connection (rc=0)
+    hub._on_connect_internal(mocked_client, None, {}, 0, None)
+
+    # Get expected number of subscriptions
+    expected_calls = len(hub._subscription_list) + 1  # +1 for full_publish_completed
+    
+    # Get the actual subscription calls
+    actual_calls = mocked_client.subscribe.call_count
+    assert actual_calls == expected_calls, f"Expected {expected_calls} subscribe calls, got {actual_calls}"
+
+    # Verify the full_publish_completed subscription was made
+    full_publish_topic = "N/test123/full_publish_completed"
+    mocked_client.subscribe.assert_any_call(full_publish_topic)
