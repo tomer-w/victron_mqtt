@@ -760,3 +760,18 @@ async def test_on_connect_sets_up_subscriptions():
     # Verify the full_publish_completed subscription was made
     full_publish_topic = "N/test123/full_publish_completed"
     mocked_client.subscribe.assert_any_call(full_publish_topic)
+
+@pytest.mark.asyncio
+async def test_null_message(create_mocked_hub):
+    """Test that the Hub correctly filters MQTT messages for generator1 device type."""
+    hub: Hub = create_mocked_hub
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/evcharger/170/SetCurrent", "{\"value\": null}")
+    await finalize_injection(hub)
+
+    # Validate the Hub's state - only system device exists, evcharger message was filtered
+    assert len(hub._devices) == 2, f"Expected 2 device (system device), got {len(hub._devices)}"
+    device = hub._devices["123_evcharger_170"]
+    assert device.metrics == [], f"Expected 0 metrics on evcharger device due to null message, got {len(device._metrics)}"
+

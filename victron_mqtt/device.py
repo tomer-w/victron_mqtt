@@ -107,6 +107,12 @@ class Device:
             return FallbackPlaceholder(device=self, metric_id=topic_desc.short_id, parsed_topic=parsed_topic, topic_descriptor=topic_desc, value=value)
         else:
             value = Device._unwrap_payload(topic_desc, payload)
+            if value is None:
+                log_debug(
+                    "Ignoring null fallback_to_metric_topic value for device %s metric %s", 
+                    self.unique_id, topic_desc.short_id
+                )
+                return None
 
         parsed_topic.finalize_topic_fields(topic_desc)
         short_id = parsed_topic.short_id
