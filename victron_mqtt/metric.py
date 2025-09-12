@@ -9,6 +9,8 @@ import asyncio
 from collections.abc import Callable
 import logging
 
+from tomlkit import string
+
 from .constants import MetricKind, MetricNature, MetricType
 from .data_classes import ParsedTopic, TopicDescriptor
 
@@ -34,6 +36,8 @@ class Metric:
         self._name = name
         self._key_values: dict[str, str] = parsed_topic.key_values
         self._on_update: Callable | None = None
+        self._generic_name: str | None = None
+        self._generic_short_id: str | None = None
         _LOGGER.debug("Metric %s initialized", repr(self))
 
     def __repr__(self) -> str:
@@ -44,8 +48,9 @@ class Metric:
             f"Metric(unique_id={self.unique_id}, "
             f"descriptor={self._descriptor}, "
             f"value={self.value}, "
-            f"generic_short_id={self.generic_short_id}, "
-            f"short_id={self.short_id}, "
+            f"generic_short_id={self._generic_short_id}, "
+            f"short_id={self._short_id}, "
+            f"generic_name={self._generic_name}, "
             f"name={self._name}, "
             f"{key_values_part})"
             )
@@ -56,32 +61,50 @@ class Metric:
 
     def phase2_init(self, all_metrics: dict[str, Metric]) -> None:
         """Second phase of initializing the metric."""
-        self._name = Metric._replace_ids(self._name, self._key_values, all_metrics)
+        assert self._descriptor.name is not None, f"name must be set for topic: {self._descriptor.topic}"
+        name_temp = ParsedTopic.replace_ids(self._descriptor.name, self._key_values)
+        self._name = Metric._replace_ids(name_temp, self._key_values, all_metrics)
+        self._generic_name = Metric._replace_generic_ids(self._descriptor.name)
+        self._generic_short_id = Metric._replace_generic_ids(self._descriptor.short_id)
 
     @staticmethod
-    def _replace_ids(string: str,  key_values: dict[str, str], all_metrics: dict[str, Metric]) -> str:
-        """Replace placeholders in the string with matched items from self.key_values."""
-        import re
-
+    def _replace_generic_ids(orig_str: str) -> str:
         def replace_match(match):
             moniker = match.group('moniker')
             key, suffix = moniker.split(':', 1)
-            assert key and suffix, f"Invalid moniker format: {moniker} in topic: {string}"
+            assert key and suffix, f"Invalid moniker format: {moniker} in topic: {orig_str}"
+            return f"{{{key}}}"
+
+        return Metric._replace_ids_internal(orig_str, replace_match)
+
+    @staticmethod
+    def _replace_ids(orig_str: str,  key_values: dict[str, str], all_metrics: dict[str, Metric]) -> str:
+        def replace_match(match):
+            moniker = match.group('moniker')
+            key, suffix = moniker.split(':', 1)
+            assert key and suffix, f"Invalid moniker format: {moniker} in topic: {orig_str}"
             metric = all_metrics.get(suffix)
             if metric:
                 result = str(metric.value)
                 key_values[key] = result
-            return f"{{{key}}}"
+                return result
+            return key_values[key]
+
+        temp = Metric._replace_ids_internal(orig_str, replace_match)
+        if temp != orig_str:
+            _LOGGER.debug("Replaced complex placeholders in topic: %s", orig_str)
+            return temp
+
+        return ParsedTopic.replace_ids(orig_str, key_values)
+
+    @staticmethod
+    def _replace_ids_internal(orig_str: str, match_func) -> str:
+        """Replace placeholders in the string with matched items from self.key_values."""
+        import re
 
         # Match {key:name_with_nested_{placeholder}} in the string
         pattern = re.compile(r"\{(?P<moniker>[^:]+:(?:[^{}]|{[^{}]*})+)\}")
-        temp = pattern.sub(replace_match, string)
-        if temp != string:
-            _LOGGER.debug("Replaced complex placeholders in topic: %s", string)
-            return temp
-
-        return ParsedTopic.replace_ids(string, key_values)
-
+        return pattern.sub(match_func, orig_str)
 
     @property
     def formatted_value(self) -> str:
@@ -111,9 +134,16 @@ class Metric:
         return self._name
     
     @property
+    def generic_name(self) -> str:
+        """Returns the generic name of the metric."""
+        assert self._generic_name is not None, f"Metric generic_name is None for metric: {repr(self)}"
+        return self._generic_name
+
+    @property
     def generic_short_id(self) -> str:
         """Returns the generic short id of the metric."""
-        return self._descriptor.short_id
+        assert self._generic_short_id is not None, f"Metric generic_short_id is None for metric: {repr(self)}"
+        return self._generic_short_id
 
     @property
     def unit_of_measurement(self) -> str | None:

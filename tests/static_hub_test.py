@@ -158,7 +158,10 @@ async def test_phase_message(create_mocked_hub):
     assert metric.generic_short_id == "grid_energy_forward_{phase}", f"Expected metric generic_short_id to be 'grid_energy_forward_{{phase}}', got {metric.generic_short_id}"
     assert metric.unique_id == "123_grid_30_grid_energy_forward_L1", f"Expected metric unique_id to be '123_grid_30_grid_energy_forward_L1', got {metric.unique_id}"
     assert metric.name == "Grid consumption on L1", f"Expected metric name to be 'Grid consumption on L1', got {metric.name}"
+    assert metric.generic_name == "Grid consumption on {phase}", f"Expected metric generic_name to be 'Grid consumption on {{phase}}', got {metric.generic_name}"
     assert metric.unit_of_measurement == "kWh", f"Expected metric unit_of_measurement to be 'kWh', got {metric.unit_of_measurement}"
+    assert metric.key_values["phase"] == "L1"
+
 
 @pytest.mark.asyncio
 async def test_placeholder_message(create_mocked_hub):
@@ -177,6 +180,8 @@ async def test_placeholder_message(create_mocked_hub):
     metric = device.get_metric_from_unique_id("123_system_0_system_relay_0")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric.value}"
+    assert metric.name == "Relay 0 state", f"Expected metric name to be 'Relay 0 state', got {metric.name}"
+    assert metric.generic_name == "Relay {relay} state", f"Expected metric generic_name to be 'Relay {{relay}} state', got {metric.generic_name}"
 
 @pytest.mark.asyncio
 async def test_dynamic_min_max_message(create_mocked_hub):
@@ -393,6 +398,7 @@ async def test_expend_message_2(create_mocked_hub):
     assert metric.generic_short_id == "battery_cell_{cell_id}_voltage"
     assert metric.key_values["cell_id"] == "3"
     assert metric.value == 3.331, f"Expected metric value to be 3.331, got {metric.value}"
+    assert metric.generic_name == "Battery cell {cell_id} voltage", f"Expected metric generic_name to be 'Battery cell {{cell_id}} voltage', got {metric.generic_name}"
 
 @pytest.mark.asyncio
 async def test_same_message_events(create_mocked_hub):
@@ -698,7 +704,8 @@ async def test_remote_name_dont_exists(create_mocked_hub):
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
     metric = device.get_metric_from_unique_id("123_switch_170_switch_1_state")
     assert metric is not None, "metric should exist in the device"
-    assert metric.name == "Switch {output} State", "Expected metric name to be 'Switch {output} State', got {metric.name}"
+    assert metric.name == "Switch 1 State", "Expected metric name to be 'Switch 1 State', got {metric.name}"
+    assert metric.generic_name == "Switch {output} State", "Expected metric generic_name to be 'Switch {output} State', got {metric.generic_name}"
     assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "1"
 
@@ -719,10 +726,11 @@ async def test_remote_name_exists(create_mocked_hub):
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
     metric = device.get_metric_from_unique_id("123_switch_170_switch_1_state")
     assert metric is not None, "metric should exist in the device"
-    assert metric.name == "Switch {output} State", "Expected metric name to be 'Switch {output} State', got {metric.name}"
+    assert metric.name == "Switch bla State", "Expected metric name to be 'Switch bla State', got {metric.name}"
+    assert metric.generic_name == "Switch {output} State", "Expected metric name to be 'Switch {output} State', got {metric.name}"
     assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "bla"
-    
+
 @pytest.mark.asyncio
 async def test_on_connect_sets_up_subscriptions():
     """Test that subscriptions are set up after _on_connect callback."""
