@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import logging
 
+from .id_utils import replace_complex_id_to_simple
 from ._victron_enums import DeviceType
 from .constants import MetricKind, MetricNature, MetricType, RangeType, ValueType, VictronEnum
 
@@ -47,6 +48,7 @@ class TopicDescriptor:
     is_adjustable_suffix: str | None = None
     key_values: dict[str, str] = field(default_factory=dict)
     experimental: bool = False
+    generic_name: str | None = None
 
     def __repr__(self) -> str:
         """Return a string representation of the topic."""
@@ -55,6 +57,7 @@ class TopicDescriptor:
             f"message_type={self.message_type}, "
             f"short_id={self.short_id}, "
             f"name={self.name}, "
+            f"generic_name={self.generic_name}, "
             f"unit_of_measurement={self.unit_of_measurement}, "
             f"metric_type={self.metric_type}, "
             f"metric_nature={self.metric_nature}, "
@@ -73,6 +76,7 @@ class TopicDescriptor:
         assert self.message_type == MetricKind.ATTRIBUTE or self.name is not None
         if self.value_type != ValueType.FLOAT:
             self.precision = None
+        self.generic_name = replace_complex_id_to_simple(self.name) if self.name else None
         # Voltage default
         if self.metric_type == MetricType.VOLTAGE:
             if self.unit_of_measurement is None:
