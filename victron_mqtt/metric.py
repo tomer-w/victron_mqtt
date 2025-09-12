@@ -39,7 +39,7 @@ class Metric:
         self._generic_short_id: str | None = None
         _LOGGER.debug("Metric %s initialized", repr(self))
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         """Return the string representation of the metric."""
         key_values_str = ", ".join(f"{k}={v}" for k, v in self._key_values.items())
         key_values_part = f"key_values={{{key_values_str}}}" if key_values_str else "key_values={}"
@@ -53,10 +53,6 @@ class Metric:
             f"name={self._name}, "
             f"{key_values_part})"
             )
-
-    def __str__(self) -> str:
-        """Return the string representation of the metric."""
-        return self.formatted_value
 
     def phase2_init(self, all_metrics: dict[str, Metric]) -> None:
         """Second phase of initializing the metric."""

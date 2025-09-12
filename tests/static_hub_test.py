@@ -522,19 +522,22 @@ async def test_new_metric(create_mocked_hub):
 
     # Inject messages after the event is set
     inject_message(hub, "N/123/system/170/Dc/System/Power", "{\"value\": 1.1234}")
+    inject_message(hub, "N/123/gps/170/Position/Latitude", "{\"value\": 2.3456}")
     await finalize_injection(hub, disconnect=False)
 
     # Wait for the callback to be triggered
     await asyncio.sleep(0.1)  # Allow event loop to process the callback
 
     # Validate that the on_new_metric callback was called
-    hub.on_new_metric.assert_called_once()
+    hub.on_new_metric.assert_any_call(hub, hub._devices["123_system_170"], hub._devices["123_system_170"].get_metric_from_unique_id("123_system_170_system_dc_consumption"))
+    hub.on_new_metric.assert_called_with(hub, hub._devices["123_gps_170"], hub._devices["123_gps_170"].get_metric_from_unique_id("123_gps_170_gps_latitude"))
+    assert hub.on_new_metric.call_count == 2, "on_new_metric should be called exactly twice"
 
     # Check that we got the callback only once
     await hub._keepalive()
     # Wait for the callback to be triggered
     await asyncio.sleep(0.1)  # Allow event loop to process the callback
-    hub.on_new_metric.assert_called_once()
+    assert hub.on_new_metric.call_count == 2, "on_new_metric should be called exactly twice"
 
     # Validate that the device has the metric we published
     device = hub._devices["123_system_170"]

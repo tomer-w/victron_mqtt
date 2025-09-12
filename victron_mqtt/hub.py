@@ -337,19 +337,19 @@ class Hub:
             # Check if it matches our client ID so we got full cycle or refresh
             if echo and echo.startswith(self._client_id):
                 log_debug("Full publish completed: %s", echo)
-                new_metrics: list[Metric] = []
+                new_metrics: list[tuple[Device, Metric]] = []
                 for metric_placeholder in self._metrics_placeholders:
                     metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._all_metrics, self._fallback_placeholders, self)
                     self._all_metrics[metric.short_id] = metric
-                    new_metrics.append(metric)
+                    new_metrics.append((metric_placeholder.device, metric))
                 # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
-                for metric in new_metrics:
+                for device, metric in new_metrics:
                     metric.phase2_init(self._all_metrics)
                     try:
                         if callable(self._on_new_metric):
                             if self._loop.is_running():
                                 # If the event loop is running, schedule the callback
-                                self._loop.call_soon_threadsafe(self._on_new_metric, self, metric_placeholder.device, metric)
+                                self._loop.call_soon_threadsafe(self._on_new_metric, self, device, metric)
                     except Exception as exc:
                         _LOGGER.error("Error calling _on_new_metric callback %s", exc, exc_info=True)
                 self._metrics_placeholders.clear()

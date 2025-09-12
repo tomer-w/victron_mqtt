@@ -141,7 +141,7 @@ class Device:
         return topic.rsplit('/', 1)[0] == adjustable_topic.rsplit('/', 1)[0]
 
     def add_placeholder(self, metric_placeholder: MetricPlaceholder, all_metrics: dict[str, Metric], fallback_placeholders: list[FallbackPlaceholder], hub: Hub) -> Metric:
-        _LOGGER.info("Creating new metric from: %s", metric_placeholder)
+        _LOGGER.info("Creating new metric on device %s from: %s", self, metric_placeholder)
 
         new_topic_desc = metric_placeholder.topic_descriptor
 
