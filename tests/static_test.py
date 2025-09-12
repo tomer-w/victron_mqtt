@@ -291,3 +291,25 @@ def test_topics_are_sorted_alphabetically():
     if errors:
         pytest.fail("\n".join(errors))
 
+def test_name_references_exist():
+    """Test that when a topic name contains a reference like {key:short_id}, the referenced short_id exists."""
+    topics = get_topics()
+    errors = []
+    
+    # First collect all short_ids
+    short_ids = {descriptor.short_id for descriptor in topics}
+    
+    # Check each topic's name for references
+    for descriptor in topics:
+        if descriptor.name:
+            # Look for patterns like {key:short_id}
+            import re
+            references = re.findall(r'\{(?P<moniker>[^:]+:(?:[^{}]|{[^{}]*})+)\}', descriptor.name)
+            for ref_short_id in references:
+                ref = ref_short_id.split(":", 1)[1]
+                if ref not in short_ids:
+                    errors.append(f"Topic '{descriptor.topic}' name references non-existent short_id '{ref_short_id}' in name '{descriptor.name}'")
+    
+    if errors:
+        pytest.fail("\n".join(errors))
+
