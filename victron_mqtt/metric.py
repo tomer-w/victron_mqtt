@@ -54,33 +54,32 @@ class Metric:
             f"{key_values_part})"
             )
 
-    def phase2_init(self, all_metrics: dict[str, Metric]) -> None:
+    def phase2_init(self, device_id: str, all_metrics: dict[str, Metric]) -> None:
         """Second phase of initializing the metric."""
         assert self._descriptor.name is not None, f"name must be set for topic: {self._descriptor.topic}"
         name_temp = ParsedTopic.replace_ids(self._descriptor.name, self._key_values)
-        self._name = Metric._replace_ids(name_temp, self._key_values, all_metrics)
+        self._name = self._replace_ids(name_temp, device_id, all_metrics)
         self._generic_name = self._descriptor.generic_name
         self._generic_short_id = replace_complex_id_to_simple(self._descriptor.short_id)
 
-    @staticmethod
-    def _replace_ids(orig_str: str,  key_values: dict[str, str], all_metrics: dict[str, Metric]) -> str:
+    def _replace_ids(self, orig_str: str, device_id: str, all_metrics: dict[str, Metric]) -> str:
         def replace_match(match):
             moniker = match.group('moniker')
             key, suffix = moniker.split(':', 1)
             assert key and suffix, f"Invalid moniker format: {moniker} in topic: {orig_str}"
-            metric = all_metrics.get(suffix)
+            metric = all_metrics.get(f"{device_id}_{suffix}")
             if metric:
                 result = str(metric.value)
-                key_values[key] = result
+                self.key_values[key] = result
                 return result
-            return key_values[key]
+            return self.key_values[key]
 
         temp = replace_complex_ids(orig_str, replace_match)
         if temp != orig_str:
             _LOGGER.debug("Replaced complex placeholders in topic: %s", orig_str)
             return temp
 
-        return ParsedTopic.replace_ids(orig_str, key_values)
+        return ParsedTopic.replace_ids(orig_str, self.key_values)
 
     @property
     def formatted_value(self) -> str:

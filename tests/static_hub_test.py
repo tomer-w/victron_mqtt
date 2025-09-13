@@ -735,6 +735,39 @@ async def test_remote_name_exists(create_mocked_hub):
     assert metric.key_values["output"] == "bla"
 
 @pytest.mark.asyncio
+async def test_remote_name_exists_two_devices(create_mocked_hub):
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    hub: Hub = create_mocked_hub
+
+    inject_message(hub, "N/123/switch/170/SwitchableOutput/output_1/State", "{\"value\": 1}")
+    inject_message(hub, "N/123/switch/170/SwitchableOutput/output_1/Settings/CustomName", "{\"value\": \"bla\"}")
+    inject_message(hub, "N/123/switch/155/SwitchableOutput/output_1/State", "{\"value\": 1}")
+    inject_message(hub, "N/123/switch/155/SwitchableOutput/output_1/Settings/CustomName", "{\"value\": \"foo\"}")
+    await finalize_injection(hub)
+
+    # Validate the Hub's state
+    assert len(hub._devices) == 3, f"Expected 3 device, got {len(hub._devices)}"
+
+    # Validate that the device has the metric we published
+    device = hub._devices["123_switch_170"]
+    assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
+    metric = device.get_metric_from_unique_id("123_switch_170_switch_1_state")
+    assert metric is not None, "metric should exist in the device"
+    assert metric.name == "Switch bla State", "Expected metric name to be 'Switch bla State', got {metric.name}"
+    assert metric.generic_name == "Switch {output} State", "Expected metric name to be 'Switch {output} State', got {metric.name}"
+    assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
+    assert metric.key_values["output"] == "bla"
+
+    device = hub._devices["123_switch_155"]
+    assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
+    metric = device.get_metric_from_unique_id("123_switch_155_switch_1_state")
+    assert metric is not None, "metric should exist in the device"
+    assert metric.name == "Switch foo State", "Expected metric name to be 'Switch foo State', got {metric.name}"
+    assert metric.generic_name == "Switch {output} State", "Expected metric name to be 'Switch {output} State', got {metric.name}"
+    assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
+    assert metric.key_values["output"] == "foo"
+
+@pytest.mark.asyncio
 async def test_on_connect_sets_up_subscriptions():
     """Test that subscriptions are set up after _on_connect callback."""
     # Create a hub with installation_id

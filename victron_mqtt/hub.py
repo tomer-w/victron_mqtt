@@ -340,11 +340,11 @@ class Hub:
                 new_metrics: list[tuple[Device, Metric]] = []
                 for metric_placeholder in self._metrics_placeholders:
                     metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._all_metrics, self._fallback_placeholders, self)
-                    self._all_metrics[metric.short_id] = metric
+                    self._all_metrics[metric.unique_id] = metric
                     new_metrics.append((metric_placeholder.device, metric))
                 # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
                 for device, metric in new_metrics:
-                    metric.phase2_init(self._all_metrics)
+                    metric.phase2_init(device.unique_id, self._all_metrics)
                     try:
                         if callable(self._on_new_metric):
                             if self._loop.is_running():
