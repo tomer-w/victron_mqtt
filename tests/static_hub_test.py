@@ -768,6 +768,28 @@ async def test_remote_name_exists_two_devices(create_mocked_hub):
     assert metric.key_values["output"] == "foo"
 
 @pytest.mark.asyncio
+async def test_remote_name_exists_2(create_mocked_hub):
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    hub: Hub = create_mocked_hub
+
+    inject_message(hub, "N/123/solarcharger/170/Pv/2/Name", "{\"value\": \"bar\"}")
+    inject_message(hub, "N/123/solarcharger/170/Pv/2/P", "{\"value\": 1}")
+    await finalize_injection(hub)
+
+    # Validate the Hub's state
+    assert len(hub._devices) == 2, f"Expected 2 device, got {len(hub._devices)}"
+
+    # Validate that the device has the metric we published
+    device = hub._devices["123_solarcharger_170"]
+    assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
+    metric = device.get_metric_from_unique_id("123_solarcharger_170_solarcharger_tracker_2_power")
+    assert metric is not None, "metric should exist in the device"
+    assert metric.name == "PV Tracker bar Power", "Expected metric name to be 'PV Tracker bar Power', got {metric.name}"
+    assert metric.generic_name == "PV Tracker {tracker} Power", "Expected metric name to be 'PV Tracker {tracker} Power', got {metric.name}"
+    assert metric.value == 1, f"Expected metric value to be 1, got {metric.value}"
+    assert metric.key_values["tracker"] == "bar"
+
+@pytest.mark.asyncio
 async def test_on_connect_sets_up_subscriptions():
     """Test that subscriptions are set up after _on_connect callback."""
     # Create a hub with installation_id
