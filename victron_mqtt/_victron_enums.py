@@ -68,6 +68,10 @@ class State(VictronEnum):
     AutoEqualize = (247, "Auto Equalize / Recondition")
     BatterySafe = (248, "Battery Safe")
     ExternalControl = (252, "External Control")
+    Discharging = (256, "Discharging")
+    SustainAlt = (257, "Sustain Alt")
+    Recharging = (258, "Recharging")
+    ScheduledRecharging = (259, "Scheduled Recharging")
 
 class GenericAlarmEnum(VictronEnum):
     NoAlarm = (0, "No Alarm")

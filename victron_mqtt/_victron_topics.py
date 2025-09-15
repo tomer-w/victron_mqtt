@@ -1836,6 +1836,14 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
+    TopicDescriptor(
+        topic="N/{installation_id}/system/{device_id}/SystemState/State",
+        message_type=MetricKind.SENSOR,
+        short_id="system_state",
+        name="System state",
+        value_type=ValueType.ENUM,
+        enum=State,
+    ),
     # Tank topics
     TopicDescriptor(
         topic="N/{installation_id}/tank/{device_id}/BatteryVoltage",
