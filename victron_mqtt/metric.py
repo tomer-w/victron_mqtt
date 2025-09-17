@@ -161,7 +161,7 @@ class Metric:
         return self._on_update
 
     @on_update.setter
-    def on_update(self, value: Callable):
+    def on_update(self, value: Callable | None) -> None:
         """Sets the on_update callback."""
         self._on_update = value
 
