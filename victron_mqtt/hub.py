@@ -333,29 +333,29 @@ class Hub:
         topic = self._remove_topic_prefix(topic)
 
         if "full_publish_completed" in topic:
-            self._handle_full_publish_message(payload, log_debug)
+            self._handle_full_publish_message(payload)
             return
 
         if self._installation_id is None and not self._installation_id_event.is_set():
-            self._handle_installation_id_message(topic, log_debug)
+            self._handle_installation_id_message(topic)
 
         self._handle_normal_message(topic, payload, log_debug)
 
-    def _handle_full_publish_message(self, payload: str, log_debug) -> None:
+    def _handle_full_publish_message(self, payload: str) -> None:
         """Handle full publish message."""
         echo = self.get_keepalive_echo(payload)
         if not echo:
             if self._first_full_publish:
                 _LOGGER.error("No echo found in keepalive message: %s. Probably old Venus OS version", payload)
             else:
-                log_debug("No echo found in keepalive message: %s. Probably old Venus OS version", payload)
+                _LOGGER.debug("No echo found in keepalive message: %s. Probably old Venus OS version", payload)
 
         # Check if it matches our client ID so we got full cycle or refresh
         if echo and not echo.startswith(self._client_id):
-            log_debug("Not our echo: %s", echo)
+            _LOGGER.debug("Not our echo: %s", echo)
             return
         
-        log_debug("Full publish completed: %s", echo)
+        _LOGGER.debug("Full publish completed: %s", echo)
         new_metrics: list[tuple[Device, Metric]] = []
         for metric_placeholder in self._metrics_placeholders:
             metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._all_metrics, self._fallback_placeholders, self)
@@ -375,9 +375,9 @@ class Hub:
         self._fallback_placeholders.clear()
         # Trace the version once
         if self._first_full_publish:
-            platform_device = self._devices.get(f"{self.installation_id}_platform_0")
+            platform_device = self._devices.get(f"{self.installation_id}_system_0")
             if platform_device:
-                version_metric = platform_device.get_metric_from_unique_id(f"{self.installation_id}_platform_0_platform_firmware_installed_version")
+                version_metric = platform_device.get_metric_from_unique_id(f"{self.installation_id}_system_0_platform_firmware_installed_version")
                 if version_metric and version_metric.value:
                     if version_metric.value[0] == "v":
                         try:
@@ -390,19 +390,23 @@ class Hub:
                             _LOGGER.error("Firmware version format not float: %s", version_metric.value)
                     else:
                         _LOGGER.error("Firmware version format not supported: %s", version_metric.value)
+                else:
+                    _LOGGER.warning("Version metric not found: %s", self._installation_id)
+            else:
+                _LOGGER.warning("System device not found: %s", self._installation_id)
         if self._loop.is_running():
             self._loop.call_soon_threadsafe(self._first_refresh_event.set)
         self._first_full_publish = False
 
-    def _handle_installation_id_message(self, topic: str, log_debug) -> None:
+    def _handle_installation_id_message(self, topic: str) -> None:
         """Handle installation ID message."""
         parsed_topic = ParsedTopic.from_topic(topic)
         if parsed_topic is None:
-            log_debug("Ignoring installation ID handling - could not parse topic: %s", topic)
+            _LOGGER.info("Ignoring installation ID handling - could not parse topic: %s", topic)
             return
 
         self._installation_id = parsed_topic.installation_id
-        log_debug("Installation ID received: %s. Original topic: %s", self._installation_id, topic)
+        _LOGGER.info("Installation ID received: %s. Original topic: %s", self._installation_id, topic)
         if self._loop.is_running():
             self._loop.call_soon_threadsafe(self._installation_id_event.set)
 
