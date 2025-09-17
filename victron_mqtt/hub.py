@@ -375,9 +375,11 @@ class Hub:
         self._fallback_placeholders.clear()
         # Trace the version once
         if self._first_full_publish:
-            platform_device = self._devices.get(f"{self.installation_id}_system_0")
+            system_device_name = f"{self.installation_id}_system_0"
+            platform_device = self._devices.get(system_device_name)
             if platform_device:
-                version_metric = platform_device.get_metric_from_unique_id(f"{self.installation_id}_system_0_platform_firmware_installed_version")
+                version_metric_name = f"{system_device_name}_platform_venus_firmware_installed_version"
+                version_metric = platform_device.get_metric_from_unique_id(version_metric_name)
                 if version_metric and version_metric.value:
                     if version_metric.value[0] == "v":
                         try:
@@ -391,9 +393,9 @@ class Hub:
                     else:
                         _LOGGER.error("Firmware version format not supported: %s", version_metric.value)
                 else:
-                    _LOGGER.warning("Version metric not found: %s", self._installation_id)
+                    _LOGGER.warning("Version metric not found: %s", version_metric_name)
             else:
-                _LOGGER.warning("System device not found: %s", self._installation_id)
+                _LOGGER.warning("System device not found: %s", system_device_name)
         if self._loop.is_running():
             self._loop.call_soon_threadsafe(self._first_refresh_event.set)
         self._first_full_publish = False
