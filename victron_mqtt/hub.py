@@ -151,6 +151,7 @@ class Hub:
         self._fallback_placeholders: list[FallbackPlaceholder] = []
         self._all_metrics: dict[str, Metric] = {}
         self._first_connect = True
+        self._first_full_publish = True
 
         # Filter the active topics
         metrics_active_topics: list[TopicDescriptor] = []
@@ -332,38 +333,66 @@ class Hub:
         topic = self._remove_topic_prefix(topic)
 
         if "full_publish_completed" in topic:
-            # Check if this is our full publish completed message
-            echo = self.get_keepalive_echo(payload)
-            # Check if it matches our client ID so we got full cycle or refresh
-            if echo and echo.startswith(self._client_id):
-                log_debug("Full publish completed: %s", echo)
-                new_metrics: list[tuple[Device, Metric]] = []
-                for metric_placeholder in self._metrics_placeholders:
-                    metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._all_metrics, self._fallback_placeholders, self)
-                    self._all_metrics[metric.unique_id] = metric
-                    new_metrics.append((metric_placeholder.device, metric))
-                # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
-                for device, metric in new_metrics:
-                    metric.phase2_init(device.unique_id, self._all_metrics)
-                    try:
-                        if callable(self._on_new_metric):
-                            if self._loop.is_running():
-                                # If the event loop is running, schedule the callback
-                                self._loop.call_soon_threadsafe(self._on_new_metric, self, device, metric)
-                    except Exception as exc:
-                        _LOGGER.error("Error calling _on_new_metric callback %s", exc, exc_info=True)
-                self._metrics_placeholders.clear()
-                self._fallback_placeholders.clear()
-                if self._loop.is_running():
-                    self._loop.call_soon_threadsafe(self._first_refresh_event.set)
-                return
-            else:
-                log_debug("Not our echo: %s", echo)
+            self._handle_full_publish_message(payload, log_debug)
+            return
 
         if self._installation_id is None and not self._installation_id_event.is_set():
             self._handle_installation_id_message(topic, log_debug)
 
         self._handle_normal_message(topic, payload, log_debug)
+
+    def _handle_full_publish_message(self, payload: str, log_debug) -> None:
+        """Handle full publish message."""
+        echo = self.get_keepalive_echo(payload)
+        if not echo:
+            if self._first_full_publish:
+                _LOGGER.error("No echo found in keepalive message: %s. Probably old Venus OS version", payload)
+            else:
+                log_debug("No echo found in keepalive message: %s. Probably old Venus OS version", payload)
+
+        # Check if it matches our client ID so we got full cycle or refresh
+        if echo and not echo.startswith(self._client_id):
+            log_debug("Not our echo: %s", echo)
+            return
+        
+        log_debug("Full publish completed: %s", echo)
+        new_metrics: list[tuple[Device, Metric]] = []
+        for metric_placeholder in self._metrics_placeholders:
+            metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._all_metrics, self._fallback_placeholders, self)
+            self._all_metrics[metric.unique_id] = metric
+            new_metrics.append((metric_placeholder.device, metric))
+        # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
+        for device, metric in new_metrics:
+            metric.phase2_init(device.unique_id, self._all_metrics)
+            try:
+                if callable(self._on_new_metric):
+                    if self._loop.is_running():
+                        # If the event loop is running, schedule the callback
+                        self._loop.call_soon_threadsafe(self._on_new_metric, self, device, metric)
+            except Exception as exc:
+                _LOGGER.error("Error calling _on_new_metric callback %s", exc, exc_info=True)
+        self._metrics_placeholders.clear()
+        self._fallback_placeholders.clear()
+        # Trace the version once
+        if self._first_full_publish:
+            platform_device = self._devices.get(f"{self.installation_id}_platform_0")
+            if platform_device:
+                version_metric = platform_device.get_metric_from_unique_id(f"{self.installation_id}_platform_0_platform_firmware_installed_version")
+                if version_metric and version_metric.value:
+                    if version_metric.value[0] == "v":
+                        try:
+                            firmware_version = float(version_metric.value[1:])
+                            if firmware_version < 3.5:
+                                _LOGGER.warning("Firmware version is below v3.5: %s", version_metric.value)
+                            else:
+                                _LOGGER.info("Firmware version is good enough: %s", version_metric.value)
+                        except (ValueError, TypeError):
+                            _LOGGER.error("Firmware version format not float: %s", version_metric.value)
+                    else:
+                        _LOGGER.error("Firmware version format not supported: %s", version_metric.value)
+        if self._loop.is_running():
+            self._loop.call_soon_threadsafe(self._first_refresh_event.set)
+        self._first_full_publish = False
 
     def _handle_installation_id_message(self, topic: str, log_debug) -> None:
         """Handle installation ID message."""
@@ -693,9 +722,9 @@ class Hub:
         return device.get_metric_from_unique_id(unique_id)
 
     @property
-    def devices(self) -> list[Device]:
+    def devices(self) -> dict[str, Device]:
         "Return a list of devices attached to the hub. Requires initialize_devices_and_metrics() to be called first."
-        return list(self._devices.values())
+        return dict(self._devices)
 
     @property
     def installation_id(self) -> str | None:

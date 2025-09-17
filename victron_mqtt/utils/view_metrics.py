@@ -203,7 +203,7 @@ class App:
         if not self._client:
             return
             
-        devices = sorted(self._client.devices, key=lambda x: x.unique_id)
+        devices = sorted(self._client.devices.values(), key=lambda x: x.unique_id)
         for device in devices:
             device_item = self.tree.insert(
                 "",

@@ -49,7 +49,7 @@ async def test_devices_and_metrics(config_host, config_port, config_username, co
     await hub.wait_for_first_refresh()
     assert len(hub.devices) > 0
 
-    for device in hub.devices:
+    for device in hub.devices.values():
         assert device.device_type is not None
         if device.device_type is None or device.device_type == DeviceType.GENERATOR:
             continue

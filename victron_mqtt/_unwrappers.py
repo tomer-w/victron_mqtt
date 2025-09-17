@@ -49,7 +49,7 @@ def unwrap_float(json_str: str, precision: int | None, json_value: str = "value"
     """Unwrap a float value from a JSON string."""
     try:
         data = json.loads(json_str)
-        if data[json_value] is None:
+        if data.get(json_value) is None:
             return None
         value = float(data[json_value])
         return value if precision is None else round(value, precision)

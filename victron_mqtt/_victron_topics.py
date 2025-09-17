@@ -977,6 +977,21 @@ topics: List[TopicDescriptor] = [
         name="Total PV Yield",
         metric_type=MetricType.ENERGY,
     ),
+    # Platform topics
+    TopicDescriptor(
+        topic="N/{installation_id}/platform/{device_id}/Firmware/Installed/Version",
+        message_type=MetricKind.SENSOR,
+        value_type=ValueType.STRING,
+        short_id="platform_venus_firmware_installed_version",
+        name="Firmware Venus Installed Version",
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/platform/{device_id}/Firmware/Online/AvailableVersion",
+        message_type=MetricKind.SENSOR,
+        value_type=ValueType.STRING,
+        short_id="platform_venus_firmware_available_version",
+        name="Firmware Venus Available Version",
+    ),
     # PV Inverter topics
     TopicDescriptor(
         topic="N/{installation_id}/pvinverter/{device_id}/Ac/Energy/Forward",
