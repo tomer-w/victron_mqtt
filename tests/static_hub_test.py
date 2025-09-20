@@ -833,3 +833,19 @@ async def test_null_message(create_mocked_hub):
     device = hub.devices["123_evcharger_170"]
     assert device.metrics == [], f"Expected 0 metrics on evcharger device due to null message, got {len(device._metrics)}"
 
+@pytest.mark.asyncio
+async def test_formula_message(create_mocked_hub):
+    """Test that the Hub correctly filters MQTT messages for generator1 device type."""
+    hub: Hub = create_mocked_hub
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 120}")
+    await finalize_injection(hub)
+
+    # Validate the Hub's state - only system device exists, evcharger message was filtered
+    assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
+    device = hub.devices["123_system_0"]
+    assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
+    metric = device.get_metric_from_unique_id("123_system_0_system_dc_battery_power")
+    assert metric is not None, "metric should exist in the device"
+    assert metric.value == 120, f"Expected metric value to be 120, got {metric.value}"

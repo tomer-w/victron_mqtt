@@ -6,7 +6,7 @@ import asyncio
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Tuple
+from typing import TYPE_CHECKING, Callable
 import copy
 
 if TYPE_CHECKING:
@@ -24,10 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 class Device:
     """Class to represent a Victron device."""
 
-    def __init__(self, unique_id: str, parsed_topic: ParsedTopic, descriptor: TopicDescriptor) -> None:
+    def __init__(self, full_unique_id: str, short_unique_id: str, parsed_topic: ParsedTopic, descriptor: TopicDescriptor) -> None:
         """Initialize."""
         self._descriptor = descriptor
-        self._unique_id = unique_id
+        self._full_unique_id = full_unique_id
+        self._short_unique_id = short_unique_id
         self._metrics: dict[str, Metric] = {}
         self._device_type = parsed_topic.device_type
         self._device_id = parsed_topic.device_id
@@ -38,12 +39,13 @@ class Device:
         self._firmware_version = None
         self._custom_name = None
 
-        _LOGGER.debug("Device %s initialized", unique_id)
+        _LOGGER.debug("Device %s initialized", self._full_unique_id)
 
     def __repr__(self) -> str:
         """Return a string representation of the device."""
         return (
-            f"Device(unique_id={self.unique_id}, "
+            f"Device(full_unique_id={self._full_unique_id}, "
+            f"short_unique_id={self._short_unique_id}, "
             f"name={self.name}, "
             f"model={self.model}, "
             f"manufacturer={self.manufacturer}, "
@@ -88,7 +90,7 @@ class Device:
             _LOGGER.warning("Unhandled device property %s for %s", short_id, self.unique_id)
 
 
-    def handle_message(self, fallback_to_metric_topic: bool, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop, log_debug: Callable[..., None]) -> MetricPlaceholder | FallbackPlaceholder | None:
+    def handle_message(self, fallback_to_metric_topic: bool, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop, log_debug: Callable[..., None], hub: Hub) -> MetricPlaceholder | FallbackPlaceholder | None:
         """Handle a message."""
         log_debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 
@@ -119,7 +121,7 @@ class Device:
         metric_id = f"{self.unique_id}_{short_id}"
         metric = self._metrics.get(metric_id)
         if metric:
-            metric._handle_message(value, event_loop, log_debug)
+            metric._handle_message(value, event_loop, log_debug, hub)
             return None
         assert value is not None, f"Value must not be None. topic={topic}, payload={payload}"
         return MetricPlaceholder(self, metric_id, parsed_topic, topic_desc, payload, value)
@@ -172,12 +174,21 @@ class Device:
 
         assert metric_placeholder.topic_descriptor.name is not None
         name = ParsedTopic.replace_ids(metric_placeholder.topic_descriptor.name, metric_placeholder.parsed_topic.key_values)
+        assert metric_placeholder.parsed_topic.device_type is not None, "device_type must be set for metric"
+
         if new_topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
             metric = WritableMetric(metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic, hub)
         else:
-            metric = Metric(metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic)
-        metric._handle_message(metric_placeholder.value, None, _LOGGER.debug)
+            metric = Metric(metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic.short_id, metric_placeholder.parsed_topic.key_values)
+        metric._handle_message(metric_placeholder.value, None, _LOGGER.debug, hub)
         self._metrics[metric_placeholder.metric_id] = metric
+        return metric
+
+    def add_formula_metric(self, topic_desc: TopicDescriptor, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]) -> Metric:
+        assert topic_desc.name is not None, "name must be set for topic"
+        metric = Metric(topic_desc.short_id, topic_desc.name, topic_desc, topic_desc.short_id, {})
+        metric._handle_formula(event_loop, log_debug)
+        self._metrics[topic_desc.short_id] = metric
         return metric
 
     def get_metric_from_unique_id(self, unique_id: str) -> Metric | WritableMetric | None:
@@ -192,7 +203,12 @@ class Device:
     @property
     def unique_id(self) -> str:
         """Return the unique id of the device."""
-        return self._unique_id
+        return self._full_unique_id
+
+    @property
+    def short_unique_id(self) -> str:
+        """Return the short unique id of the device."""
+        return self._short_unique_id
 
     @property
     def name(self) -> str | None:

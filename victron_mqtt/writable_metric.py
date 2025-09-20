@@ -31,7 +31,7 @@ class WritableMetric(Metric):
         self._hub = hub
         assert parsed_topic.full_topic.startswith("N")
         self._write_topic = "W" + parsed_topic.full_topic[1:]
-        super().__init__(unique_id, name, descriptor, parsed_topic)
+        super().__init__(unique_id, name, descriptor, parsed_topic.short_id, parsed_topic.key_values)
 
     def __repr__(self) -> str:
         return f"WritableMetric({super().__repr__()}, write_topic = {self._write_topic})"

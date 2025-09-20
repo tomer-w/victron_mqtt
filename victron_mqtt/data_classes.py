@@ -14,6 +14,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def topic_to_device_type(topic_parts: list[str]) -> DeviceType | None:
     """Extract the device type from the topic."""
+    if topic_parts[0] == "$$func":
+        result = DeviceType.from_code(topic_parts[1])
+        assert result is None or isinstance(result, DeviceType)
+        return result
     if len(topic_parts) < 2:
         return None
     native_device_type = topic_parts[2]
@@ -45,7 +49,9 @@ class TopicDescriptor:
     is_adjustable_suffix: str | None = None
     key_values: dict[str, str] = field(default_factory=dict)
     experimental: bool = False
+    depends_on: list[str] = field(default_factory=list)
     generic_name: str | None = None
+    is_formula: bool = False  # True if this topic is calculated from other topics
 
     def __repr__(self) -> str:
         """Return a string representation of the topic."""
@@ -65,6 +71,7 @@ class TopicDescriptor:
             f"step={self.step}, "
             f"enum={self.enum}, "
             f"is_adjustable_suffix={self.is_adjustable_suffix}, "
+            f"depends_on={self.depends_on}, "
             f"key_values={self.key_values}, "
             f"experimental={self.experimental})"
         )
@@ -74,6 +81,7 @@ class TopicDescriptor:
         if self.value_type != ValueType.FLOAT:
             self.precision = None
         self.generic_name = replace_complex_id_to_simple(self.name) if self.name else None
+        self.is_formula = True if self.topic.startswith("$$func/") else False
         # Voltage default
         if self.metric_type == MetricType.VOLTAGE:
             if self.unit_of_measurement is None:

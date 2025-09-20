@@ -8,10 +8,15 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import logging
+from typing import TYPE_CHECKING
 
 from .id_utils import replace_complex_id_to_simple, replace_complex_ids
 from .constants import MetricKind, MetricNature, MetricType
 from .data_classes import ParsedTopic, TopicDescriptor
+from . import _victron_formulas as formulas
+
+if TYPE_CHECKING:
+    from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,24 +24,24 @@ _LOGGER = logging.getLogger(__name__)
 class Metric:
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, unique_id: str, name: str, descriptor: TopicDescriptor, parsed_topic: ParsedTopic) -> None:
+    def __init__(self, unique_id: str, name: str, descriptor: TopicDescriptor, short_id: str, key_values: dict[str, str]) -> None:
         """Initialize the sensor."""
         _LOGGER.debug(
             "Creating new metric: unique_id=%s, type=%s, nature=%s",
             unique_id, descriptor.metric_type, descriptor.metric_nature
         )
         assert descriptor.name is not None, "name must be set for metric"
-        assert parsed_topic.device_type is not None, "device_type must be set for metric"
         
         self._descriptor = descriptor
         self._unique_id = unique_id
         self._value = None
-        self._short_id = parsed_topic.short_id
+        self._short_id = short_id
         self._name = name
-        self._key_values: dict[str, str] = parsed_topic.key_values
+        self._key_values: dict[str, str] = key_values
         self._on_update: Callable | None = None
         self._generic_name: str | None = None
         self._generic_short_id: str | None = None
+        self._dependencies: list[Metric] = []
         _LOGGER.debug("Metric %s initialized", repr(self))
 
     def __str__(self) -> str:
@@ -80,6 +85,10 @@ class Metric:
             return temp
 
         return ParsedTopic.replace_ids(orig_str, self.key_values)
+
+    def add_dependency(self, metric: Metric) -> None:
+        """Add a dependency to the metric."""
+        self._dependencies.append(metric)
 
     @property
     def formatted_value(self) -> str:
@@ -165,7 +174,7 @@ class Metric:
         """Sets the on_update callback."""
         self._on_update = value
 
-    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]):
+    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None], hub: Hub | None):
         """Handle a message."""
         if value != self._value:
             log_debug(
@@ -193,3 +202,17 @@ class Metric:
                     event_loop.call_soon_threadsafe(self._on_update, self)
         except Exception as exc:
             log_debug("Error calling callback %s", exc, exc_info=True)
+
+        if self._descriptor.is_formula:
+            for dependency in self._dependencies:
+                dependency._handle_formula(event_loop, log_debug)
+
+    def _handle_formula(self, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]):
+        assert self._descriptor.is_formula, "Metric is not a formula"
+        func_name = self._descriptor.topic.split('/')[-1]
+        func = getattr(formulas, func_name)
+        value = func()
+        if isinstance(value, formulas.LastReading):
+            value = value.value
+        if value is not None:
+            self._handle_message(value, event_loop, log_debug, hub=None)
