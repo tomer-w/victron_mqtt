@@ -851,3 +851,7 @@ async def test_formula_message(create_mocked_hub_experimental):
     metric = device.get_metric_from_unique_id("123_system_0_system_dc_battery_power")
     assert metric is not None, "metric should exist in the device"
     assert metric.value == 120, f"Expected metric value to be 120, got {metric.value}"
+
+    metric = device.get_metric_from_unique_id("123_system_0_system_dc_battery_charge_power")
+    assert metric is not None, "metric should exist in the device"
+    assert metric.value == 0.0, f"Expected metric value to be 0.0, got {metric.value}"

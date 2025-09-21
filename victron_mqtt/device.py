@@ -9,12 +9,14 @@ import logging
 from typing import TYPE_CHECKING, Callable
 import copy
 
+
 if TYPE_CHECKING:
     from .hub import Hub
 
 from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_float, unwrap_int_seconds_to_hours
 from .constants import MetricKind, RangeType
 from .metric import Metric
+from .formula_metric import FormulaMetric
 from ._victron_enums import DeviceType
 from .writable_metric import WritableMetric
 from .data_classes import ParsedTopic, TopicDescriptor
@@ -121,7 +123,7 @@ class Device:
         metric_id = f"{self.unique_id}_{short_id}"
         metric = self._metrics.get(metric_id)
         if metric:
-            metric._handle_message(value, event_loop, log_debug, hub)
+            metric._handle_message(value, event_loop, log_debug)
             return None
         assert value is not None, f"Value must not be None. topic={topic}, payload={payload}"
         return MetricPlaceholder(self, metric_id, parsed_topic, topic_desc, payload, value)
@@ -180,15 +182,15 @@ class Device:
             metric = WritableMetric(self, metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic, hub)
         else:
             metric = Metric(self, metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic.short_id, metric_placeholder.parsed_topic.key_values)
-        metric._handle_message(metric_placeholder.value, None, _LOGGER.debug, hub)
-        self._metrics[metric_placeholder.metric_id] = metric
+        metric._handle_message(metric_placeholder.value, None, _LOGGER.debug)
+        self._metrics[metric.unique_id] = metric
         return metric
 
-    def add_formula_metric(self, topic_desc: TopicDescriptor, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]) -> Metric:
+    def add_formula_metric(self, topic_desc: TopicDescriptor) -> FormulaMetric:
         assert topic_desc.name is not None, "name must be set for topic"
-        metric = Metric(self, topic_desc.short_id, topic_desc.name, topic_desc, topic_desc.short_id, {})
-        metric._handle_formula(event_loop, log_debug)
-        self._metrics[topic_desc.short_id] = metric
+        metric_id = f"{self.unique_id}_{topic_desc.short_id}"
+        metric = FormulaMetric(self, metric_id, topic_desc.name, topic_desc)
+        self._metrics[metric.unique_id] = metric
         return metric
 
     def get_metric_from_unique_id(self, unique_id: str) -> Metric | WritableMetric | None:

@@ -13,11 +13,10 @@ from typing import TYPE_CHECKING
 from .id_utils import replace_complex_id_to_simple, replace_complex_ids
 from .constants import MetricKind, MetricNature, MetricType
 from .data_classes import ParsedTopic, TopicDescriptor
-from . import _victron_formulas as formulas
 
 if TYPE_CHECKING:
-    from .hub import Hub
     from .device import Device
+    from .formula_metric import FormulaMetric
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +41,7 @@ class Metric:
         self._on_update: Callable | None = None
         self._generic_name: str | None = None
         self._generic_short_id: str | None = None
-        self._dependencies: list[Metric] = []
+        self._depend_on_me: list[FormulaMetric] = []
         _LOGGER.debug("Metric %s initialized", repr(self))
 
     def __str__(self) -> str:
@@ -59,6 +58,9 @@ class Metric:
             f"name={self._name}, "
             f"{key_values_part})"
             )
+
+    def __repr__(self) -> str:
+        return self.__str__()
 
     def phase2_init(self, device_id: str, all_metrics: dict[str, Metric]) -> None:
         """Second phase of initializing the metric."""
@@ -87,9 +89,9 @@ class Metric:
 
         return ParsedTopic.replace_ids(orig_str, self.key_values)
 
-    def add_dependency(self, metric: Metric) -> None:
+    def add_dependency(self, formula_metric: FormulaMetric) -> None:
         """Add a dependency to the metric."""
-        self._dependencies.append(metric)
+        self._depend_on_me.append(formula_metric)
 
     @property
     def formatted_value(self) -> str:
@@ -175,7 +177,7 @@ class Metric:
         """Sets the on_update callback."""
         self._on_update = value
 
-    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None], hub: Hub | None):
+    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]):
         """Handle a message."""
         if value != self._value:
             log_debug(
@@ -202,16 +204,5 @@ class Metric:
             except Exception as exc:
                 log_debug("Error calling callback %s", exc, exc_info=True)
 
-        if self._descriptor.is_formula:
-            for dependency in self._dependencies:
-                dependency._handle_formula(event_loop, log_debug)
-
-    def _handle_formula(self, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]):
-        assert self._descriptor.is_formula, "Metric is not a formula"
-        func_name = self._descriptor.topic.split('/')[-1]
-        func = getattr(formulas, func_name)
-        value = func()
-        if isinstance(value, formulas.LastReading):
-            value = value.value
-        if value is not None:
-            self._handle_message(value, event_loop, log_debug, hub=None)
+        for dependency in self._depend_on_me:
+            dependency._handle_formula(event_loop, log_debug)

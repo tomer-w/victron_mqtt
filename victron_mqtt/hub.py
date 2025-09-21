@@ -390,35 +390,33 @@ class Hub:
                 assert first_dependency_metric is not None, f"Dependency metric not found: {topic.depends_on[0]}"
                 device = first_dependency_metric._device
                 if device:
-                    metric = device.add_formula_metric(topic, self._loop, _LOGGER.debug)
+                    metric = device.add_formula_metric(topic)
+                    depends_on: dict[str, Metric] = {}
                     for dependency in topic.depends_on:
                         dependency_metric = self._all_metrics.get(dependency)
                         if dependency_metric:
-                            metric.add_dependency(dependency_metric)
+                            metric.add_dependency(metric)
+                            depends_on[dependency] = dependency_metric
+                    metric.phase2_init(depends_on, self._loop, _LOGGER.debug)
 
         # Trace the version once
         if self._first_full_publish:
-            system_device_name = "system_0"
-            platform_device = self._devices.get(system_device_name)
-            if platform_device:
-                version_metric_name = f"{system_device_name}_platform_venus_firmware_installed_version"
-                version_metric = platform_device.get_metric_from_unique_id(version_metric_name)
-                if version_metric and version_metric.value:
-                    if version_metric.value[0] == "v":
-                        try:
-                            firmware_version = float(version_metric.value[1:])
-                            if firmware_version < 3.5:
-                                _LOGGER.warning("Firmware version is below v3.5: %s", version_metric.value)
-                            else:
-                                _LOGGER.info("Firmware version is good enough: %s", version_metric.value)
-                        except (ValueError, TypeError):
-                            _LOGGER.error("Firmware version format not float: %s", version_metric.value)
-                    else:
-                        _LOGGER.error("Firmware version format not supported: %s", version_metric.value)
+            version_metric_name = "system_0_platform_venus_firmware_installed_version"
+            version_metric = self._all_metrics.get(version_metric_name)
+            if version_metric and version_metric.value:
+                if version_metric.value[0] == "v":
+                    try:
+                        firmware_version = float(version_metric.value[1:])
+                        if firmware_version < 3.5:
+                            _LOGGER.warning("Firmware version is below v3.5: %s", version_metric.value)
+                        else:
+                            _LOGGER.info("Firmware version is good enough: %s", version_metric.value)
+                    except (ValueError, TypeError):
+                        _LOGGER.error("Firmware version format not float: %s", version_metric.value)
                 else:
-                    _LOGGER.warning("Version metric not found: %s", version_metric_name)
+                    _LOGGER.error("Firmware version format not supported: %s", version_metric.value)
             else:
-                _LOGGER.warning("System device not found: %s", system_device_name)
+                _LOGGER.warning("Version metric not found: %s", version_metric_name)
         if self._loop.is_running():
             self._loop.call_soon_threadsafe(self._first_refresh_event.set)
         self._first_full_publish = False

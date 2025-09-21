@@ -1,32 +1,37 @@
 
 from __future__ import annotations
+from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING
+
+from .constants import FormulaPersistentState, FormulaTransientState
 
 if TYPE_CHECKING:
-    from .device import Device
+    from .metric import Metric
 
-class LastReading(NamedTuple):
+@dataclass
+class LRSLastReading(FormulaTransientState):
     timestamp: datetime
-    value: float
+    value: float | None
     accumulated_energy: float
 
-def get_system_battery_power(installation_id: str, devices: dict[str, Device]) -> float | None:
-    system_device_name = f"{installation_id}_system_0"
-    system_device = devices.get(system_device_name)
-    if system_device:
-        system_dc_battery_power_metric_name = f"{system_device_name}_system_dc_battery_power"
-        system_dc_battery_power_metric = system_device.get_metric_from_unique_id(system_dc_battery_power_metric_name)
-        if system_dc_battery_power_metric and system_dc_battery_power_metric.value:
-            return system_dc_battery_power_metric.value
-    return None
+@dataclass
+class LRSPersistentState(FormulaPersistentState):
+    accumulated_energy: float | None
+
+def get_system_battery_power(depends_on: dict[str, Metric]) -> float | None:
+    system_dc_battery_power_metric_name = "system_0_system_dc_battery_power"
+    system_dc_battery_power_metric = depends_on.get(system_dc_battery_power_metric_name)
+    assert system_dc_battery_power_metric is not None, "Missing system DC battery power metric"
+    assert system_dc_battery_power_metric.value is not None, "System DC battery power metric has no value"
+    return system_dc_battery_power_metric.value
 
 def calculate_rolling_riemann_sum(
     current_power: float, 
     current_time: datetime,
-    last_reading: LastReading | None,
+    last_reading: LRSLastReading | None,
     time_interval: float
-) -> LastReading:
+) -> LRSLastReading:
     """
     Calculate the Left Riemann Sum using only the last reading.
     
@@ -44,7 +49,7 @@ def calculate_rolling_riemann_sum(
     
     if last_reading is None:
         # First reading, no energy accumulated yet
-        return LastReading(current_time, current_power, 0.0)
+        return LRSLastReading(current_time, current_power, 0.0)
         
     # Calculate time difference
     dt = (current_time - last_reading.timestamp).total_seconds()
@@ -52,10 +57,10 @@ def calculate_rolling_riemann_sum(
     dt = min(dt, time_interval)
     
     # Left Riemann sum uses the left (previous) value
-    interval_energy = last_reading.value * dt if last_reading.value > 0 else 0.0
+    interval_energy = last_reading.value * dt if last_reading.value is not None and last_reading.value > 0 else 0.0
     
     # Create new last reading with updated accumulated energy
-    new_last_reading = LastReading(
+    new_last_reading = LRSLastReading(
         timestamp=current_time,
         value=current_power,
         accumulated_energy=last_reading.accumulated_energy + interval_energy
@@ -64,16 +69,14 @@ def calculate_rolling_riemann_sum(
     return new_last_reading
 
 def system_dc_battery_charge_power(
-    installation_id: str, 
-    devices: dict[str, Device],
-    last_reading: LastReading | None,
-    time_interval: float) -> tuple[float, LastReading | None]:
+    depends_on: dict[str, Metric],
+    transient_state: FormulaTransientState | None,
+    persistent_state: FormulaPersistentState | None) -> tuple[float, FormulaTransientState, FormulaPersistentState]:
     """
     Calculate current power and accumulated energy using rolling Left Riemann Sum.
     
     Args:
-        installation_id: The installation ID
-        devices: Dictionary of available devices
+        depends_on: Dictionary of metrics to depend on
         last_reading: Previous reading with accumulated energy
         time_interval: Time interval in seconds for the Riemann sum calculation
         
@@ -82,11 +85,20 @@ def system_dc_battery_charge_power(
         - accumulated_energy: Total energy accumulated since first reading
         - new_last_reading: Updated last reading with accumulated energy
     """
-    current_power = get_system_battery_power(installation_id, devices)
-    
+    current_power = get_system_battery_power(depends_on)
+ 
+    if not transient_state:
+        transient_state = LRSLastReading(timestamp=datetime.now(), value=current_power, accumulated_energy=0.0)
+    if not persistent_state:
+        persistent_state = LRSPersistentState(accumulated_energy=0.0)
+
+    assert isinstance(transient_state, LRSLastReading)
+    assert isinstance(persistent_state, LRSPersistentState)
+
     # If we don't have a current power reading, we can't calculate energy
     if current_power is None:
-        return last_reading.accumulated_energy if last_reading else 0.0, last_reading
+        current_power = 0.0
+        return transient_state.accumulated_energy, transient_state, persistent_state
     
     if current_power < 0:
         current_power = 0.0  # Only consider charging power for energy accumulation
@@ -96,8 +108,8 @@ def system_dc_battery_charge_power(
     new_last_reading = calculate_rolling_riemann_sum(
         current_power=current_power,
         current_time=current_time,
-        last_reading=last_reading,
-        time_interval=time_interval
+        last_reading=transient_state,
+        time_interval=30
     )
-    
-    return new_last_reading.accumulated_energy, new_last_reading
+    persistent_state.accumulated_energy = new_last_reading.accumulated_energy
+    return new_last_reading.accumulated_energy, new_last_reading, persistent_state
