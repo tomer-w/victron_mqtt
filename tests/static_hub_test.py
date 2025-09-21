@@ -248,7 +248,7 @@ async def test_number_message(create_mocked_hub):
     # Restore the original publish method
     hub._publish = orig__publish
 
-    hub.disconnect()
+    await hub.disconnect()
 
 
 @pytest.mark.asyncio
