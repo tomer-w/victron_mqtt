@@ -851,7 +851,7 @@ async def test_formula_message(mock_datetime, create_mocked_hub_experimental):
     # Validate the Hub's state - only system device exists, evcharger message was filtered
     assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
     device = hub.devices["system_0"]
-    assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
+    assert len(device._metrics) == 3, f"Expected 3 metrics, got {len(device._metrics)}"
     metric1 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_power")
     assert metric1 is not None, "metric should exist in the device"
     assert metric1.value == 120, f"Expected metric value to be 120, got {metric1.value}"
@@ -860,9 +860,24 @@ async def test_formula_message(mock_datetime, create_mocked_hub_experimental):
     assert metric2 is not None, "metric should exist in the device"
     assert metric2.value == 0.0, f"Expected metric value to be 0.0, got {metric2.value}"
 
+    metric3 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_discharge_power")
+    assert metric3 is not None, "metric should exist in the device"
+    assert metric3.value == 0.0, f"Expected metric value to be 0.0, got {metric2.value}"
+
     fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=15)
     mock_datetime.now.return_value = fixed_time
     inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 80}")
     assert metric2.value == 1800.0, f"Expected metric value to be 1800.0, got {metric2.value}"
+
+    fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=30)
+    mock_datetime.now.return_value = fixed_time
+    inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -100}")
+    assert metric2.value == 3000.0, f"Expected metric value to be 1800.0, got {metric2.value}"
+
+    fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=45)
+    mock_datetime.now.return_value = fixed_time
+    inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -200}")
+    assert metric2.value == 3000.0, f"Expected metric value to be 3000.0, got {metric2.value}"
+    assert metric3.value == 1500.0, f"Expected metric value to be 1500.0, got {metric2.value}"
 
     await hub.disconnect()

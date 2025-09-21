@@ -68,10 +68,32 @@ def calculate_rolling_riemann_sum(
     
     return new_last_reading
 
+def system_dc_battery_discharge_power(
+    depends_on: dict[str, Metric],
+    transient_state: FormulaTransientState | None,
+    persistent_state: FormulaPersistentState | None) -> tuple[float, FormulaTransientState, FormulaPersistentState]:
+    
+    current_power = get_system_battery_power(depends_on)
+    if current_power > 0:
+        current_power = 0.0
+    else:
+        current_power = current_power * -1
+    return system_dc_battery_charge_power_internal(current_power, transient_state, persistent_state)
+
 def system_dc_battery_charge_power(
     depends_on: dict[str, Metric],
     transient_state: FormulaTransientState | None,
     persistent_state: FormulaPersistentState | None) -> tuple[float, FormulaTransientState, FormulaPersistentState]:
+
+    current_power = get_system_battery_power(depends_on)
+    if current_power < 0:
+        current_power = 0.0  # Only consider charging power for energy accumulation
+    return system_dc_battery_charge_power_internal(current_power, transient_state, persistent_state)
+
+def system_dc_battery_charge_power_internal(
+    current_power: float,
+    transient_state: FormulaTransientState | None,
+    persistent_state: FormulaPersistentState | None,) -> tuple[float, FormulaTransientState, FormulaPersistentState]:
     """
     Calculate current power and accumulated energy using rolling Left Riemann Sum.
     
@@ -84,18 +106,13 @@ def system_dc_battery_charge_power(
         Tuple of (accumulated_energy, new_last_reading):
         - accumulated_energy: Total energy accumulated since first reading
         - new_last_reading: Updated last reading with accumulated energy
-    """
+    """ 
     assert transient_state is None or isinstance(transient_state, LRSLastReading)
-    current_power = get_system_battery_power(depends_on)
- 
     if not persistent_state:
         persistent_state = LRSPersistentState(accumulated_energy=0.0)
 
     assert isinstance(persistent_state, LRSPersistentState)
     
-    if current_power < 0:
-        current_power = 0.0  # Only consider charging power for energy accumulation
-
     # Calculate rolling Riemann sum
     current_time = datetime.now()
     new_last_reading = calculate_rolling_riemann_sum(

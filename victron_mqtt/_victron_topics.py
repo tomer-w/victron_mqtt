@@ -1780,6 +1780,15 @@ topics: List[TopicDescriptor] = [
         experimental=True
     ),
     TopicDescriptor(
+        topic="$$func/system/system_dc_battery_discharge_power",
+        depends_on=["system_0_system_dc_battery_power"], # TODO: Fix device resolution hack
+        message_type=MetricKind.SENSOR,
+        short_id="system_dc_battery_discharge_power",
+        name="DC Battery Discharge Power",
+        metric_type=MetricType.POWER,
+        experimental=True
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Dc/Battery/Soc",
         message_type=MetricKind.SENSOR,
         short_id="system_dc_battery_soc",
