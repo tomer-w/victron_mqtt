@@ -17,6 +17,7 @@ from . import _victron_formulas as formulas
 
 if TYPE_CHECKING:
     from .hub import Hub
+    from .device import Device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,14 +25,14 @@ _LOGGER = logging.getLogger(__name__)
 class Metric:
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, unique_id: str, name: str, descriptor: TopicDescriptor, short_id: str, key_values: dict[str, str]) -> None:
+    def __init__(self, device: Device, unique_id: str, name: str, descriptor: TopicDescriptor, short_id: str, key_values: dict[str, str]) -> None:
         """Initialize the sensor."""
         _LOGGER.debug(
             "Creating new metric: unique_id=%s, type=%s, nature=%s",
             unique_id, descriptor.metric_type, descriptor.metric_nature
         )
         assert descriptor.name is not None, "name must be set for metric"
-        
+        self._device = device
         self._descriptor = descriptor
         self._unique_id = unique_id
         self._value = None
@@ -192,16 +193,14 @@ class Metric:
 
         self._value = value
 
-        if not event_loop:
-            return
-
-        try:
-            if callable(self._on_update):
-                if event_loop.is_running():
-                    # If the event loop is running, schedule the callback
-                    event_loop.call_soon_threadsafe(self._on_update, self)
-        except Exception as exc:
-            log_debug("Error calling callback %s", exc, exc_info=True)
+        if event_loop:
+            try:
+                if callable(self._on_update):
+                    if event_loop.is_running():
+                        # If the event loop is running, schedule the callback
+                        event_loop.call_soon_threadsafe(self._on_update, self)
+            except Exception as exc:
+                log_debug("Error calling callback %s", exc, exc_info=True)
 
         if self._descriptor.is_formula:
             for dependency in self._dependencies:

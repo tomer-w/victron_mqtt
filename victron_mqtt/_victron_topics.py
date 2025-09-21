@@ -1777,6 +1777,7 @@ topics: List[TopicDescriptor] = [
         short_id="system_dc_battery_charge_power",
         name="DC Battery Charge Power",
         metric_type=MetricType.POWER,
+        experimental=True
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Dc/Battery/Soc",

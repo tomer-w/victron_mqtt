@@ -346,8 +346,7 @@ class Hub:
         if not topic.depends_on:
             return True
         for dependency in topic.depends_on:
-            dependency_metric_name = f"{self.installation_id}_{dependency}"
-            dependency_metric = self._all_metrics.get(dependency_metric_name)
+            dependency_metric = self._all_metrics.get(dependency)
             if dependency_metric is None:
                 return False
         return True
@@ -369,12 +368,12 @@ class Hub:
         _LOGGER.debug("Full publish completed: %s", echo)
         new_metrics: list[tuple[Device, Metric]] = []
         for metric_placeholder in self._metrics_placeholders:
-            metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._all_metrics, self._fallback_placeholders, self)
-            self._all_metrics[metric.unique_id] = metric
+            metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._fallback_placeholders, self)
+            self._all_metrics[f"{metric_placeholder.device.short_unique_id}_{metric.short_id}"] = metric
             new_metrics.append((metric_placeholder.device, metric))
         # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
         for device, metric in new_metrics:
-            metric.phase2_init(device.unique_id, self._all_metrics)
+            metric.phase2_init(device.short_unique_id, self._all_metrics)
             try:
                 if callable(self._on_new_metric):
                     if self._loop.is_running():
@@ -387,12 +386,13 @@ class Hub:
         # Activate formula entities
         for topic in self._pending_formula_topics:
             if self.is_dependency_met(topic):
-                device = self._devices.get(f"{self.installation_id}_system_0")
+                first_dependency_metric = self._all_metrics.get(topic.depends_on[0])
+                assert first_dependency_metric is not None, f"Dependency metric not found: {topic.depends_on[0]}"
+                device = first_dependency_metric._device
                 if device:
                     metric = device.add_formula_metric(topic, self._loop, _LOGGER.debug)
                     for dependency in topic.depends_on:
-                        dependency_metric_name = f"{self.installation_id}_{dependency}"
-                        dependency_metric = self._all_metrics.get(dependency_metric_name)
+                        dependency_metric = self._all_metrics.get(dependency)
                         if dependency_metric:
                             metric.add_dependency(dependency_metric)
 

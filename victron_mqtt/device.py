@@ -142,7 +142,7 @@ class Device:
         """Check if two topics are the same, considering adjustable suffixes."""
         return topic.rsplit('/', 1)[0] == adjustable_topic.rsplit('/', 1)[0]
 
-    def add_placeholder(self, metric_placeholder: MetricPlaceholder, all_metrics: dict[str, Metric], fallback_placeholders: list[FallbackPlaceholder], hub: Hub) -> Metric:
+    def add_placeholder(self, metric_placeholder: MetricPlaceholder, fallback_placeholders: list[FallbackPlaceholder], hub: Hub) -> Metric:
         _LOGGER.info("Creating new metric on device: %s", metric_placeholder)
 
         new_topic_desc = metric_placeholder.topic_descriptor
@@ -177,16 +177,16 @@ class Device:
         assert metric_placeholder.parsed_topic.device_type is not None, "device_type must be set for metric"
 
         if new_topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
-            metric = WritableMetric(metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic, hub)
+            metric = WritableMetric(self, metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic, hub)
         else:
-            metric = Metric(metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic.short_id, metric_placeholder.parsed_topic.key_values)
+            metric = Metric(self, metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic.short_id, metric_placeholder.parsed_topic.key_values)
         metric._handle_message(metric_placeholder.value, None, _LOGGER.debug, hub)
         self._metrics[metric_placeholder.metric_id] = metric
         return metric
 
     def add_formula_metric(self, topic_desc: TopicDescriptor, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]) -> Metric:
         assert topic_desc.name is not None, "name must be set for topic"
-        metric = Metric(topic_desc.short_id, topic_desc.name, topic_desc, topic_desc.short_id, {})
+        metric = Metric(self, topic_desc.short_id, topic_desc.name, topic_desc, topic_desc.short_id, {})
         metric._handle_formula(event_loop, log_debug)
         self._metrics[topic_desc.short_id] = metric
         return metric
