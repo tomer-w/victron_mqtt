@@ -205,4 +205,5 @@ class Metric:
                 log_debug("Error calling callback %s", exc, exc_info=True)
 
         for dependency in self._depend_on_me:
+            assert self != dependency, f"Circular dependency detected: {self}"
             dependency._handle_formula(event_loop, log_debug)

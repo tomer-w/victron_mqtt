@@ -2,6 +2,7 @@ import pytest
 import pytest_asyncio
 import asyncio
 from unittest.mock import MagicMock, patch
+from datetime import datetime
 from victron_mqtt._victron_enums import DeviceType, GenericOnOff
 from victron_mqtt.hub import Hub, TopicNotFoundError
 from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
@@ -546,8 +547,6 @@ async def test_new_metric(create_mocked_hub):
     metric = device.get_metric_from_unique_id("123_system_170_system_dc_consumption")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 1.1, f"Expected metric value to be 1.1, got {metric.value}"
-
-
     await hub.disconnect()
 
 @pytest.mark.asyncio
@@ -836,22 +835,34 @@ async def test_null_message(create_mocked_hub):
     assert device.metrics == [], f"Expected 0 metrics on evcharger device due to null message, got {len(device._metrics)}"
 
 @pytest.mark.asyncio
-async def test_formula_message(create_mocked_hub_experimental):
+@patch('victron_mqtt._victron_formulas.datetime')
+async def test_formula_message(mock_datetime, create_mocked_hub_experimental):
     """Test that the Hub correctly filters MQTT messages for generator1 device type."""
+    # Mock datetime.now() to return a fixed time
+    fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=0)
+    mock_datetime.now.return_value = fixed_time
+
     hub: Hub = create_mocked_hub_experimental
 
     # Inject messages after the event is set
     inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 120}")
-    await finalize_injection(hub)
+    await finalize_injection(hub, disconnect=False)
 
     # Validate the Hub's state - only system device exists, evcharger message was filtered
     assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
     device = hub.devices["system_0"]
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
-    metric = device.get_metric_from_unique_id("123_system_0_system_dc_battery_power")
-    assert metric is not None, "metric should exist in the device"
-    assert metric.value == 120, f"Expected metric value to be 120, got {metric.value}"
+    metric1 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_power")
+    assert metric1 is not None, "metric should exist in the device"
+    assert metric1.value == 120, f"Expected metric value to be 120, got {metric1.value}"
 
-    metric = device.get_metric_from_unique_id("123_system_0_system_dc_battery_charge_power")
-    assert metric is not None, "metric should exist in the device"
-    assert metric.value == 0.0, f"Expected metric value to be 0.0, got {metric.value}"
+    metric2 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_charge_power")
+    assert metric2 is not None, "metric should exist in the device"
+    assert metric2.value == 0.0, f"Expected metric value to be 0.0, got {metric2.value}"
+
+    fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=15)
+    mock_datetime.now.return_value = fixed_time
+    inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 80}")
+    assert metric2.value == 1800.0, f"Expected metric value to be 1800.0, got {metric2.value}"
+
+    await hub.disconnect()

@@ -19,7 +19,7 @@ class LRSLastReading(FormulaTransientState):
 class LRSPersistentState(FormulaPersistentState):
     accumulated_energy: float | None
 
-def get_system_battery_power(depends_on: dict[str, Metric]) -> float | None:
+def get_system_battery_power(depends_on: dict[str, Metric]) -> float:
     system_dc_battery_power_metric_name = "system_0_system_dc_battery_power"
     system_dc_battery_power_metric = depends_on.get(system_dc_battery_power_metric_name)
     assert system_dc_battery_power_metric is not None, "Missing system DC battery power metric"
@@ -85,20 +85,13 @@ def system_dc_battery_charge_power(
         - accumulated_energy: Total energy accumulated since first reading
         - new_last_reading: Updated last reading with accumulated energy
     """
+    assert transient_state is None or isinstance(transient_state, LRSLastReading)
     current_power = get_system_battery_power(depends_on)
  
-    if not transient_state:
-        transient_state = LRSLastReading(timestamp=datetime.now(), value=current_power, accumulated_energy=0.0)
     if not persistent_state:
         persistent_state = LRSPersistentState(accumulated_energy=0.0)
 
-    assert isinstance(transient_state, LRSLastReading)
     assert isinstance(persistent_state, LRSPersistentState)
-
-    # If we don't have a current power reading, we can't calculate energy
-    if current_power is None:
-        current_power = 0.0
-        return transient_state.accumulated_energy, transient_state, persistent_state
     
     if current_power < 0:
         current_power = 0.0  # Only consider charging power for energy accumulation

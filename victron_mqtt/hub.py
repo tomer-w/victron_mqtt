@@ -395,7 +395,7 @@ class Hub:
                     for dependency in topic.depends_on:
                         dependency_metric = self._all_metrics.get(dependency)
                         if dependency_metric:
-                            metric.add_dependency(metric)
+                            dependency_metric.add_dependency(metric)
                             depends_on[dependency] = dependency_metric
                     metric.phase2_init(depends_on, self._loop, _LOGGER.debug)
 
