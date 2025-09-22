@@ -3,7 +3,7 @@
 from enum import Enum
 from typing import NamedTuple, Self
 
-from attr import dataclass
+from dataclasses import dataclass
 
 TOPIC_INSTALLATION_ID = "N/+/system/0/Serial"
 

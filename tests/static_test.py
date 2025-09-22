@@ -167,6 +167,12 @@ def test_topic_pattern_structure():
     errors = []
     for descriptor in topics:
         topic = descriptor.topic
+        # Skip formula topics which have special structure
+        if topic.startswith('$$func'):
+            topic_parts = topic.split('/')
+            if len(topic_parts) < 3:
+                errors.append(f"Topic '{topic}' has invalid structure (too few parts)")
+            continue
         topic_parts = topic.split('/')
         if len(topic_parts) < 4:
             errors.append(f"Topic '{topic}' has invalid structure (too few parts)")
@@ -226,14 +232,21 @@ def test_valid_device_type_in_topic():
         if descriptor.message_type == MetricKind.ATTRIBUTE:
             continue
         topic_parts = descriptor.topic.split('/')
-        if len(topic_parts) > 2:
-            device_type = topic_parts[2]
-            if device_type != "settings" and device_type not in valid_device_types:
-                errors.append(f"Topic '{descriptor.topic}' has invalid device_type '{device_type}' not defined in DeviceType")
-            if len(topic_parts) > 5 and topic_parts[2] == 'settings':
-                actual_device_type = topic_parts[5]
-                if actual_device_type not in valid_device_types:
-                    errors.append(f"Settings topic '{descriptor.topic}' has invalid actual_device_type '{actual_device_type}' not defined in DeviceType")
+        if len(topic_parts) <= 2:
+            errors.append(f"Topic '{descriptor.topic}' has invalid structure (too few parts)")
+            continue
+        if topic_parts[0] == "$$func":
+            actual_device_type = topic_parts[1]
+            if actual_device_type not in valid_device_types:
+                errors.append(f"Formula topic '{descriptor.topic}' has invalid actual_device_type '{actual_device_type}' not defined in DeviceType")
+            continue
+        device_type = topic_parts[2]
+        if device_type != "settings" and device_type not in valid_device_types:
+            errors.append(f"Topic '{descriptor.topic}' has invalid device_type '{device_type}' not defined in DeviceType")
+        if len(topic_parts) > 5 and topic_parts[2] == 'settings':
+            actual_device_type = topic_parts[5]
+            if actual_device_type not in valid_device_types:
+                errors.append(f"Settings topic '{descriptor.topic}' has invalid actual_device_type '{actual_device_type}' not defined in DeviceType")
     if errors:
         pytest.fail("\n".join(errors))
 
@@ -268,7 +281,7 @@ def test_topics_are_sorted_alphabetically():
     
     # Separate attributes from other topics
     attributes = [topic for topic in topics if topic.message_type == MetricKind.ATTRIBUTE]
-    other_topics = [topic for topic in topics if topic.message_type != MetricKind.ATTRIBUTE]
+    other_topics = [topic for topic in topics if topic.message_type != MetricKind.ATTRIBUTE and not topic.topic.startswith("$$func/")]
     
     errors = []
     
