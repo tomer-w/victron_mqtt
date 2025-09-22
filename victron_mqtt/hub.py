@@ -379,9 +379,6 @@ class Hub:
             metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._fallback_placeholders, self)
             self._all_metrics[metric._hub_unique_id] = metric
             new_metrics.append((metric_placeholder.device, metric))
-        # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
-        for device, metric in new_metrics:
-            metric.phase2_init(device.short_unique_id, self._all_metrics)
         self._metrics_placeholders.clear()
         self._fallback_placeholders.clear()
         # Activate formula entities
@@ -399,12 +396,14 @@ class Hub:
                         for dependency_metric in dependencies:
                             dependency_metric.add_dependency(metric)
                             depends_on[dependency_metric._hub_unique_id] = dependency_metric
-                        metric.phase2_init(depends_on, self._loop, _LOGGER.debug)
+                        metric.init(depends_on, self._loop, _LOGGER.debug)
                         _LOGGER.info("Formula metric created: %s", metric)
                         new_formula_metrics.append((device, metric))
             # Send all new metrics to clients
             new_metrics.extend(new_formula_metrics)
+        # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
         for device, metric in new_metrics:
+            metric.phase2_init(device.short_unique_id, self._all_metrics)
             try:
                 if callable(self._on_new_metric):
                     if self._loop.is_running():

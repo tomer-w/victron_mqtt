@@ -36,7 +36,7 @@ class FormulaMetric(Metric):
         self.persistent_state: FormulaPersistentState | None = None
         super().__init__(device, unique_id, name, descriptor, descriptor.short_id, {})
 
-    def phase2_init(self, depends_on: dict[str, Metric], event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]) -> None:
+    def init(self, depends_on: dict[str, Metric], event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]) -> None:
         self._depends_on = depends_on
         self._handle_formula(event_loop, log_debug)
 

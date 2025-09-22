@@ -863,10 +863,14 @@ async def test_formula_message(mock_datetime, create_mocked_hub_experimental):
     metric2 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_charge_power")
     assert metric2 is not None, "metric should exist in the device"
     assert metric2.value == 0.0, f"Expected metric value to be 0.0, got {metric2.value}"
+    assert metric2.generic_short_id == "system_dc_battery_charge_power", f"Expected generic_short_id to be 'system_dc_battery_charge_power', got {metric2.generic_short_id}"
+    assert metric2.name == "DC Battery Charge Power", f"Expected name to be 'DC Battery Charge Power', got {metric2.name}"
 
     metric3 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_discharge_power")
     assert metric3 is not None, "metric should exist in the device"
     assert metric3.value == 0.0, f"Expected metric value to be 0.0, got {metric2.value}"
+    assert metric3.generic_short_id == "system_dc_battery_discharge_power", f"Expected generic_short_id to be 'system_dc_battery_discharge_power', got {metric2.generic_short_id}"
+    assert metric3.name == "DC Battery Discharge Power", f"Expected name to be 'DC Battery Discharge Power', got {metric2.name}"
 
     fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=15)
     mock_datetime.now.return_value = fixed_time
