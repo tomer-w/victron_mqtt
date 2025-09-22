@@ -16,6 +16,8 @@ from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.reasoncodes import ReasonCode
 from paho.mqtt.properties import Properties
 
+from victron_mqtt.formula_metric import FormulaMetric
+
 from .writable_metric import WritableMetric
 
 from ._victron_topics import topics
@@ -214,6 +216,8 @@ class Hub:
         subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(topic)) for topic in expanded_topics if topic.is_adjustable_suffix and not topic.is_formula]
         self._subscription_list = subscription_list1 + subscription_list2
         self._pending_formula_topics: list[TopicDescriptor] = [topic for topic in expanded_topics if topic.is_formula]
+        for topic in self._pending_formula_topics:
+            _LOGGER.info("Formula topic detected: %s", topic.topic)
         self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2, client_id=self._client_id)
         _LOGGER.info("Hub initialized. Client ID: %s", self._client_id)
 
@@ -348,6 +352,7 @@ class Hub:
         for dependency in topic.depends_on:
             dependency_metric = self._all_metrics.get(dependency)
             if dependency_metric is None:
+                _LOGGER.debug("Formula topic %s is missing dependency metric: %s", topic.topic, dependency)
                 return False
         return True
 
@@ -384,21 +389,28 @@ class Hub:
         self._metrics_placeholders.clear()
         self._fallback_placeholders.clear()
         # Activate formula entities
+        formula_metrics_added: list[FormulaMetric] = []
         for topic in self._pending_formula_topics:
+            _LOGGER.debug("Trying to resolve formula topic: %s", topic)
             if self.is_dependency_met(topic):
+                _LOGGER.info("Formula topic resolved: %s", topic)
                 first_dependency_metric = self._all_metrics.get(topic.depends_on[0])
                 assert first_dependency_metric is not None, f"Dependency metric not found: {topic.depends_on[0]}"
                 device = first_dependency_metric._device
-                if device:
-                    metric = device.add_formula_metric(topic)
-                    depends_on: dict[str, Metric] = {}
-                    for dependency in topic.depends_on:
-                        dependency_metric = self._all_metrics.get(dependency)
-                        if dependency_metric:
-                            dependency_metric.add_dependency(metric)
-                            depends_on[dependency] = dependency_metric
-                    metric.phase2_init(depends_on, self._loop, _LOGGER.debug)
-
+                assert device is not None, f"Device has to be found for metric: {first_dependency_metric}"
+                metric = device.add_formula_metric(topic)                
+                depends_on: dict[str, Metric] = {}
+                for dependency in topic.depends_on:
+                    dependency_metric = self._all_metrics.get(dependency)
+                    if dependency_metric:
+                        dependency_metric.add_dependency(metric)
+                        depends_on[dependency] = dependency_metric
+                metric.phase2_init(depends_on, self._loop, _LOGGER.debug)
+                _LOGGER.info("Formula metric created: %s", metric)
+                formula_metrics_added.append(metric)
+        for metric in formula_metrics_added:
+            _LOGGER.info("Formula metric added: %s", metric)
+            self._pending_formula_topics.remove(metric._descriptor)
         # Trace the version once
         if self._first_full_publish:
             version_metric_name = "system_0_platform_venus_firmware_installed_version"

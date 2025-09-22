@@ -40,8 +40,11 @@ class FormulaMetric(Metric):
         self._depends_on = depends_on
         self._handle_formula(event_loop, log_debug)
 
+    def __str__(self) -> str:
+        return f"FormulaMetric({super().__str__()}, transient_state={self.transient_state}, persistent_state={self.persistent_state})"
+
     def __repr__(self) -> str:
-        return f"FormulaMetric({super().__repr__()}, transient_state={self.transient_state}, persistent_state={self.persistent_state})"
+        return self.__str__()
     
     @property
     def value(self):

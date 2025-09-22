@@ -34,8 +34,11 @@ class WritableMetric(Metric):
         self._write_topic = "W" + parsed_topic.full_topic[1:]
         super().__init__(device, unique_id, name, descriptor, parsed_topic.short_id, parsed_topic.key_values)
 
+    def __str__(self) -> str:
+        return f"WritableMetric({super().__str__()}, write_topic = {self._write_topic})"
+
     def __repr__(self) -> str:
-        return f"WritableMetric({super().__repr__()}, write_topic = {self._write_topic})"
+        return self.__str__()
 
     @property
     def min_value(self) -> int | float | RangeType | None:
