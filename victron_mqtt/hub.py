@@ -8,7 +8,7 @@ import random
 import ssl
 import re
 import string
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Tuple
 
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import Client as MQTTClient, PayloadType
@@ -346,15 +346,18 @@ class Hub:
 
         self._handle_normal_message(topic, payload, log_debug)
 
-    def is_dependency_met(self, topic: TopicDescriptor) -> bool:
+    def is_dependency_met(self, topic: TopicDescriptor, relevant_device: Device) -> Tuple[bool, list[Metric]]:
         if not topic.depends_on:
-            return True
+            return True, []
+        dependencies: list[Metric] = []
         for dependency in topic.depends_on:
-            dependency_metric = self._all_metrics.get(dependency)
+            metric_name = f"{relevant_device.short_unique_id}_{dependency}"
+            dependency_metric = self._all_metrics.get(metric_name)
             if dependency_metric is None:
-                _LOGGER.debug("Formula topic %s is missing dependency metric: %s", topic.topic, dependency)
-                return False
-        return True
+                _LOGGER.debug("Formula topic %s is missing dependency metric: %s", topic.topic, metric_name)
+                return False, []
+            dependencies.append(dependency_metric)
+        return True, dependencies
 
     def _handle_full_publish_message(self, payload: str) -> None:
         """Handle full publish message."""
@@ -374,11 +377,34 @@ class Hub:
         new_metrics: list[tuple[Device, Metric]] = []
         for metric_placeholder in self._metrics_placeholders:
             metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._fallback_placeholders, self)
-            self._all_metrics[f"{metric_placeholder.device.short_unique_id}_{metric.short_id}"] = metric
+            self._all_metrics[metric._hub_unique_id] = metric
             new_metrics.append((metric_placeholder.device, metric))
         # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
         for device, metric in new_metrics:
             metric.phase2_init(device.short_unique_id, self._all_metrics)
+        self._metrics_placeholders.clear()
+        self._fallback_placeholders.clear()
+        # Activate formula entities
+        if len(new_metrics) > 0:
+            new_formula_metrics: list[tuple[Device, Metric]] = []
+            for topic in self._pending_formula_topics:
+                _LOGGER.debug("Trying to resolve formula topic: %s", topic)
+                relevant_devices: list[Device] = [device for device in self._devices.values() if device.device_type.code == topic.topic.split("/")[1]]
+                for device in relevant_devices:
+                    is_met, dependencies = self.is_dependency_met(topic, device)
+                    if is_met:
+                        _LOGGER.info("Formula topic resolved: %s", topic)
+                        metric = device.add_formula_metric(topic)
+                        depends_on: dict[str, Metric] = {}
+                        for dependency_metric in dependencies:
+                            dependency_metric.add_dependency(metric)
+                            depends_on[dependency_metric._hub_unique_id] = dependency_metric
+                        metric.phase2_init(depends_on, self._loop, _LOGGER.debug)
+                        _LOGGER.info("Formula metric created: %s", metric)
+                        new_formula_metrics.append((device, metric))
+            # Send all new metrics to clients
+            new_metrics.extend(new_formula_metrics)
+        for device, metric in new_metrics:
             try:
                 if callable(self._on_new_metric):
                     if self._loop.is_running():
@@ -386,31 +412,6 @@ class Hub:
                         self._loop.call_soon_threadsafe(self._on_new_metric, self, device, metric)
             except Exception as exc:
                 _LOGGER.error("Error calling _on_new_metric callback %s", exc, exc_info=True)
-        self._metrics_placeholders.clear()
-        self._fallback_placeholders.clear()
-        # Activate formula entities
-        formula_metrics_added: list[FormulaMetric] = []
-        for topic in self._pending_formula_topics:
-            _LOGGER.debug("Trying to resolve formula topic: %s", topic)
-            if self.is_dependency_met(topic):
-                _LOGGER.info("Formula topic resolved: %s", topic)
-                first_dependency_metric = self._all_metrics.get(topic.depends_on[0])
-                assert first_dependency_metric is not None, f"Dependency metric not found: {topic.depends_on[0]}"
-                device = first_dependency_metric._device
-                assert device is not None, f"Device has to be found for metric: {first_dependency_metric}"
-                metric = device.add_formula_metric(topic)                
-                depends_on: dict[str, Metric] = {}
-                for dependency in topic.depends_on:
-                    dependency_metric = self._all_metrics.get(dependency)
-                    if dependency_metric:
-                        dependency_metric.add_dependency(metric)
-                        depends_on[dependency] = dependency_metric
-                metric.phase2_init(depends_on, self._loop, _LOGGER.debug)
-                _LOGGER.info("Formula metric created: %s", metric)
-                formula_metrics_added.append(metric)
-        for metric in formula_metrics_added:
-            _LOGGER.info("Formula metric added: %s", metric)
-            self._pending_formula_topics.remove(metric._descriptor)
         # Trace the version once
         if self._first_full_publish:
             version_metric_name = "system_0_platform_venus_firmware_installed_version"

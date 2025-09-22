@@ -514,9 +514,9 @@ async def test_float_precision_none(create_mocked_hub):
     assert metric.value == 1.0123456789, f"Expected metric value to be 1.0123456789, got {metric.value}"
 
 @pytest.mark.asyncio
-async def test_new_metric(create_mocked_hub):
+async def test_new_metric(create_mocked_hub_experimental):
     """Test that the Hub correctly triggers the on_new_metric callback."""
-    hub: Hub = create_mocked_hub
+    hub: Hub = create_mocked_hub_experimental
 
     # Mock the on_new_metric callback
     def on_new_metric_mock(hub, device, metric):
@@ -525,6 +525,7 @@ async def test_new_metric(create_mocked_hub):
 
     # Inject messages after the event is set
     inject_message(hub, "N/123/system/170/Dc/System/Power", "{\"value\": 1.1234}")
+    inject_message(hub, "N/123/system/170/Dc/Battery/Power", "{\"value\": 120}") # Will generate also formula metrics.
     inject_message(hub, "N/123/gps/170/Position/Latitude", "{\"value\": 2.3456}")
     await finalize_injection(hub, disconnect=False)
 
@@ -533,14 +534,17 @@ async def test_new_metric(create_mocked_hub):
 
     # Validate that the on_new_metric callback was called
     hub.on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_consumption"))
-    hub.on_new_metric.assert_called_with(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric_from_unique_id("123_gps_170_gps_latitude"))
-    assert hub.on_new_metric.call_count == 2, "on_new_metric should be called exactly twice"
+    hub.on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_power"))
+    hub.on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric_from_unique_id("123_gps_170_gps_latitude"))
+    hub.on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_charge_power"))
+    hub.on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_discharge_power"))
+    assert hub.on_new_metric.call_count == 5, "on_new_metric should be called exactly 5 times"
 
     # Check that we got the callback only once
     await hub._keepalive()
     # Wait for the callback to be triggered
     await asyncio.sleep(0.1)  # Allow event loop to process the callback
-    assert hub.on_new_metric.call_count == 2, "on_new_metric should be called exactly twice"
+    assert hub.on_new_metric.call_count == 5, "on_new_metric should be called exactly 5 times"
 
     # Validate that the device has the metric we published
     device = hub.devices["system_170"]

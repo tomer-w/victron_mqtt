@@ -42,6 +42,7 @@ class Metric:
         self._generic_name: str | None = None
         self._generic_short_id: str | None = None
         self._depend_on_me: list[FormulaMetric] = []
+        self._hub_unique_id: str = f"{device.short_unique_id}_{self._short_id}"
         _LOGGER.debug("Metric %s initialized", repr(self))
 
     def __str__(self) -> str:

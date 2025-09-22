@@ -20,8 +20,7 @@ class LRSPersistentState(FormulaPersistentState):
     accumulated_energy: float | None
 
 def get_system_battery_power(depends_on: dict[str, Metric]) -> float:
-    system_dc_battery_power_metric_name = "system_0_system_dc_battery_power"
-    system_dc_battery_power_metric = depends_on.get(system_dc_battery_power_metric_name)
+    system_dc_battery_power_metric = list(depends_on.values())[0]
     assert system_dc_battery_power_metric is not None, "Missing system DC battery power metric"
     assert system_dc_battery_power_metric.value is not None, "System DC battery power metric has no value"
     return system_dc_battery_power_metric.value

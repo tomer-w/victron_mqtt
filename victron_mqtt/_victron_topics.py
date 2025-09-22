@@ -1772,7 +1772,7 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="$$func/system/system_dc_battery_charge_power",
-        depends_on=["system_0_system_dc_battery_power"], # TODO: Fix device resolution hack
+        depends_on=["system_dc_battery_power"],
         message_type=MetricKind.SENSOR,
         short_id="system_dc_battery_charge_power",
         name="DC Battery Charge Power",
@@ -1782,7 +1782,7 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="$$func/system/system_dc_battery_discharge_power",
-        depends_on=["system_0_system_dc_battery_power"], # TODO: Fix device resolution hack
+        depends_on=["system_dc_battery_power"],
         message_type=MetricKind.SENSOR,
         short_id="system_dc_battery_discharge_power",
         name="DC Battery Discharge Power",
