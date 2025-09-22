@@ -875,17 +875,17 @@ async def test_formula_message(mock_datetime, create_mocked_hub_experimental):
     fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=15)
     mock_datetime.now.return_value = fixed_time
     inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 80}")
-    assert metric2.value == 1800.0, f"Expected metric value to be 1800.0, got {metric2.value}"
+    assert metric2.value == 0.5, f"Expected metric value to be 0.5, got {metric2.value}"
 
     fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=30)
     mock_datetime.now.return_value = fixed_time
     inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -100}")
-    assert metric2.value == 3000.0, f"Expected metric value to be 1800.0, got {metric2.value}"
+    assert metric2.value == 0.8, f"Expected metric value to be 0.8, got {metric2.value}"
 
     fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=45)
     mock_datetime.now.return_value = fixed_time
     inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -200}")
-    assert metric2.value == 3000.0, f"Expected metric value to be 3000.0, got {metric2.value}"
-    assert metric3.value == 1500.0, f"Expected metric value to be 1500.0, got {metric2.value}"
+    assert metric2.value == 0.8, f"Expected metric value to be 0.8, got {metric2.value}"
+    assert metric3.value == 0.4, f"Expected metric value to be 0.4, got {metric3.value}"
 
     await hub.disconnect()

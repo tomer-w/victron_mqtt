@@ -1776,7 +1776,8 @@ topics: List[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="system_dc_battery_charge_power",
         name="DC Battery Charge Power",
-        metric_type=MetricType.POWER,
+        metric_type=MetricType.ENERGY,
+        unit_of_measurement="Wh",
         precision=1,
         experimental=True
     ),
@@ -1786,7 +1787,8 @@ topics: List[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="system_dc_battery_discharge_power",
         name="DC Battery Discharge Power",
-        metric_type=MetricType.POWER,
+        metric_type=MetricType.ENERGY,
+        unit_of_measurement="Wh",
         precision=1,
         experimental=True
     ),

@@ -33,15 +33,15 @@ def calculate_rolling_riemann_sum(
 ) -> LRSLastReading:
     """
     Calculate the Left Riemann Sum using only the last reading.
-    
+
     Args:
         current_power: Current power reading
         current_time: Current timestamp
         last_reading: Previous reading with its accumulated energy
         time_interval: Maximum time interval to consider
-        
+
     Returns:
-        new_last_reading: Updated last reading with accumulated energy
+        new_last_reading: Updated last reading with accumulated energy in hours
     """
     # Only consider positive power for charging
     current_power = max(0, current_power)
@@ -52,11 +52,20 @@ def calculate_rolling_riemann_sum(
         
     # Calculate time difference
     dt = (current_time - last_reading.timestamp).total_seconds()
-    # Use the minimum of actual time difference and requested interval
+    assert dt >= 0, f"Negative time difference: {dt}"
+    # Use the minimum of actual time difference and requested interval (both in seconds)
     dt = min(dt, time_interval)
-    
-    # Left Riemann sum uses the left (previous) value
-    interval_energy = last_reading.value * dt if last_reading.value is not None and last_reading.value > 0 else 0.0
+
+    # Convert dt from seconds to hours for Wh (W * hours = Wh)
+    dt_hours = dt / 3600.0
+
+    # Left Riemann sum uses the left (previous) value. Only positive previous
+    # power contributes to accumulated charging energy.
+    interval_energy = (
+        last_reading.value * dt_hours
+        if last_reading.value is not None and last_reading.value > 0
+        else 0.0
+    )
     
     # Create new last reading with updated accumulated energy
     new_last_reading = LRSLastReading(
