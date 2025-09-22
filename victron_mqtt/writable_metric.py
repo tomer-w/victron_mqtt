@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from victron_mqtt.constants import RangeType
 if TYPE_CHECKING:
     from .hub import Hub
+    from .device import Device
 from .metric import Metric
 from ._unwrappers import VALUE_TYPE_WRAPPER, wrap_enum
 from .data_classes import ParsedTopic, TopicDescriptor
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 class WritableMetric(Metric):
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, unique_id: str, name: str, descriptor: TopicDescriptor, parsed_topic: ParsedTopic, hub: Hub) -> None:
+    def __init__(self, device: Device, unique_id: str, name: str, descriptor: TopicDescriptor, parsed_topic: ParsedTopic, hub: Hub) -> None:
         """Initialize the WritableMetric."""
         _LOGGER.debug(
             "Creating new WritableMetric: unique_id=%s, type=%s, nature=%s",
@@ -31,7 +32,7 @@ class WritableMetric(Metric):
         self._hub = hub
         assert parsed_topic.full_topic.startswith("N")
         self._write_topic = "W" + parsed_topic.full_topic[1:]
-        super().__init__(unique_id, name, descriptor, parsed_topic)
+        super().__init__(device, unique_id, name, descriptor, parsed_topic.short_id, parsed_topic.key_values)
 
     def __repr__(self) -> str:
         return f"WritableMetric({super().__repr__()}, write_topic = {self._write_topic})"

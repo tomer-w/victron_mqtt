@@ -1,7 +1,9 @@
 """Constants for the victron venus OS client."""
 
 from enum import Enum
-from typing import Self
+from typing import NamedTuple, Self
+
+from dataclasses import dataclass
 
 TOPIC_INSTALLATION_ID = "N/+/system/0/Serial"
 
@@ -72,7 +74,13 @@ class OperationMode(Enum):
     FULL = "full"
     EXPERIMENTAL = "experimental"
 
+@dataclass
+class FormulaTransientState:
+    pass
 
+@dataclass
+class FormulaPersistentState:
+    pass
 
 PLACEHOLDER_PHASE = "{phase}"
 PLACEHOLDER_NEXT_PHASE = "{next_phase}"

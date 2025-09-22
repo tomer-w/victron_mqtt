@@ -210,9 +210,10 @@ class Hub:
             [desc for desc in expanded_topics if desc.is_adjustable_suffix],
             lambda desc: Hub._remove_placeholders_map(merge_is_adjustable_suffix(desc))
         )
-        subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in expanded_topics]
-        subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(desc)) for desc in expanded_topics if desc.is_adjustable_suffix]
+        subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in expanded_topics if not topic.is_formula]
+        subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(topic)) for topic in expanded_topics if topic.is_adjustable_suffix and not topic.is_formula]
         self._subscription_list = subscription_list1 + subscription_list2
+        self._pending_formula_topics: list[TopicDescriptor] = [topic for topic in expanded_topics if topic.is_formula]
         self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2, client_id=self._client_id)
         _LOGGER.info("Hub initialized. Client ID: %s", self._client_id)
 
@@ -341,6 +342,15 @@ class Hub:
 
         self._handle_normal_message(topic, payload, log_debug)
 
+    def is_dependency_met(self, topic: TopicDescriptor) -> bool:
+        if not topic.depends_on:
+            return True
+        for dependency in topic.depends_on:
+            dependency_metric = self._all_metrics.get(dependency)
+            if dependency_metric is None:
+                return False
+        return True
+
     def _handle_full_publish_message(self, payload: str) -> None:
         """Handle full publish message."""
         echo = self.get_keepalive_echo(payload)
@@ -358,12 +368,12 @@ class Hub:
         _LOGGER.debug("Full publish completed: %s", echo)
         new_metrics: list[tuple[Device, Metric]] = []
         for metric_placeholder in self._metrics_placeholders:
-            metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._all_metrics, self._fallback_placeholders, self)
-            self._all_metrics[metric.unique_id] = metric
+            metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._fallback_placeholders, self)
+            self._all_metrics[f"{metric_placeholder.device.short_unique_id}_{metric.short_id}"] = metric
             new_metrics.append((metric_placeholder.device, metric))
         # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
         for device, metric in new_metrics:
-            metric.phase2_init(device.unique_id, self._all_metrics)
+            metric.phase2_init(device.short_unique_id, self._all_metrics)
             try:
                 if callable(self._on_new_metric):
                     if self._loop.is_running():
@@ -373,29 +383,40 @@ class Hub:
                 _LOGGER.error("Error calling _on_new_metric callback %s", exc, exc_info=True)
         self._metrics_placeholders.clear()
         self._fallback_placeholders.clear()
+        # Activate formula entities
+        for topic in self._pending_formula_topics:
+            if self.is_dependency_met(topic):
+                first_dependency_metric = self._all_metrics.get(topic.depends_on[0])
+                assert first_dependency_metric is not None, f"Dependency metric not found: {topic.depends_on[0]}"
+                device = first_dependency_metric._device
+                if device:
+                    metric = device.add_formula_metric(topic)
+                    depends_on: dict[str, Metric] = {}
+                    for dependency in topic.depends_on:
+                        dependency_metric = self._all_metrics.get(dependency)
+                        if dependency_metric:
+                            dependency_metric.add_dependency(metric)
+                            depends_on[dependency] = dependency_metric
+                    metric.phase2_init(depends_on, self._loop, _LOGGER.debug)
+
         # Trace the version once
         if self._first_full_publish:
-            system_device_name = f"{self.installation_id}_system_0"
-            platform_device = self._devices.get(system_device_name)
-            if platform_device:
-                version_metric_name = f"{system_device_name}_platform_venus_firmware_installed_version"
-                version_metric = platform_device.get_metric_from_unique_id(version_metric_name)
-                if version_metric and version_metric.value:
-                    if version_metric.value[0] == "v":
-                        try:
-                            firmware_version = float(version_metric.value[1:])
-                            if firmware_version < 3.5:
-                                _LOGGER.warning("Firmware version is below v3.5: %s", version_metric.value)
-                            else:
-                                _LOGGER.info("Firmware version is good enough: %s", version_metric.value)
-                        except (ValueError, TypeError):
-                            _LOGGER.error("Firmware version format not float: %s", version_metric.value)
-                    else:
-                        _LOGGER.error("Firmware version format not supported: %s", version_metric.value)
+            version_metric_name = "system_0_platform_venus_firmware_installed_version"
+            version_metric = self._all_metrics.get(version_metric_name)
+            if version_metric and version_metric.value:
+                if version_metric.value[0] == "v":
+                    try:
+                        firmware_version = float(version_metric.value[1:])
+                        if firmware_version < 3.5:
+                            _LOGGER.warning("Firmware version is below v3.5: %s", version_metric.value)
+                        else:
+                            _LOGGER.info("Firmware version is good enough: %s", version_metric.value)
+                    except (ValueError, TypeError):
+                        _LOGGER.error("Firmware version format not float: %s", version_metric.value)
                 else:
-                    _LOGGER.warning("Version metric not found: %s", version_metric_name)
+                    _LOGGER.error("Firmware version format not supported: %s", version_metric.value)
             else:
-                _LOGGER.warning("System device not found: %s", system_device_name)
+                _LOGGER.warning("Version metric not found: %s", version_metric_name)
         if self._loop.is_running():
             self._loop.call_soon_threadsafe(self._first_refresh_event.set)
         self._first_full_publish = False
@@ -441,7 +462,7 @@ class Hub:
                 return
 
         device = self._get_or_create_device(parsed_topic, desc)
-        metric_place_holder = device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload, self._loop, log_debug)
+        metric_place_holder = device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload, self._loop, log_debug, self)
         if isinstance(metric_place_holder, MetricPlaceholder):
             self._metrics_placeholders.append(metric_place_holder)
         elif isinstance(metric_place_holder, FallbackPlaceholder):
@@ -691,40 +712,37 @@ class Hub:
 
     def _get_or_create_device(self, parsed_topic: ParsedTopic, desc: TopicDescriptor) -> Device:
         """Get or create a device based on topic."""
-        unique_id = self._create_device_unique_id(
+        full_unique_id, short_unique_id = self._create_device_unique_id(
             parsed_topic.installation_id,
             parsed_topic.device_type.code,
             parsed_topic.device_id,
         )
-        device = self._devices.get(unique_id)
+        device = self._devices.get(short_unique_id)
         if device is None:
-            _LOGGER.info("Creating new device: unique_id=%s, parsed_topic=%s", unique_id, parsed_topic)
+            _LOGGER.info("Creating new device: unique_id=%s, parsed_topic=%s", full_unique_id, parsed_topic)
             device = Device(
-                unique_id,
+                full_unique_id,
+                short_unique_id,
                 parsed_topic,
                 desc,
             )
-            self._devices[unique_id] = device
+            self._devices[short_unique_id] = device
         return device
 
-    def _create_device_unique_id(self, installation_id: str, device_type: str, device_id: str) -> str:
+    def _create_device_unique_id(self, installation_id: str, device_type: str, device_id: str) -> tuple[str, str]:
         """Create a unique ID for a device."""
-        unique_id = f"{installation_id}_{device_type}_{device_id}"
-        return unique_id
-
-    def get_device_from_unique_id(self, unique_id: str) -> Device:
-        """Get a device from a unique id."""
-        device = self._devices.get(unique_id)
-        if device is None:
-            raise KeyError(f"Device with unique id {unique_id} not found.")
-        return device
+        short_unique_id = f"{device_type}_{device_id}"
+        full_unique_id = f"{installation_id}_{short_unique_id}"
+        return full_unique_id, short_unique_id
 
     def _get_device_unique_id_from_metric_unique_id(self, unique_id: str) -> str:
         return "_".join(unique_id.split("_")[:3])
 
     def get_metric_from_unique_id(self, unique_id: str) -> Metric | None:
         """Get a metric from a unique id."""
-        device = self.get_device_from_unique_id(self._get_device_unique_id_from_metric_unique_id(unique_id))
+        device = self._devices.get(self._get_device_unique_id_from_metric_unique_id(unique_id))
+        if device is None:
+            return None
         return device.get_metric_from_unique_id(unique_id)
 
     @property

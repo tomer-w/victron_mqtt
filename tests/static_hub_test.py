@@ -2,6 +2,7 @@ import pytest
 import pytest_asyncio
 import asyncio
 from unittest.mock import MagicMock, patch
+from datetime import datetime
 from victron_mqtt._victron_enums import DeviceType, GenericOnOff
 from victron_mqtt.hub import Hub, TopicNotFoundError
 from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
@@ -149,8 +150,9 @@ async def test_phase_message(create_mocked_hub):
     assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_grid_30"]
+    device = hub.devices["grid_30"]
     assert device.device_type == DeviceType.GRID, f"Expected metric type to be 'grid', got {device.device_type}"
+    assert device.unique_id == "123_grid_30", f"Expected device unique_id to be '123_grid_30', got {device.unique_id}"
     metric = device.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
@@ -176,7 +178,8 @@ async def test_placeholder_message(create_mocked_hub):
     assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
-    device =hub.devices["123_system_0"]
+    device =hub.devices["system_0"]
+    assert device.unique_id == "123_system_0", f"Expected 123_system_0. Got {device.unique_id}"
     metric = device.get_metric_from_unique_id("123_system_0_system_relay_0")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric.value}"
@@ -218,7 +221,7 @@ async def test_number_message(create_mocked_hub):
     assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_evcharger_170"]
+    device = hub.devices["evcharger_170"]
     writable_metric = device.get_metric_from_unique_id("123_evcharger_170_evcharger_set_current")
     assert isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
     assert writable_metric.value == 100, f"Expected writable_metric value to be 100, got {writable_metric.value}"
@@ -245,7 +248,7 @@ async def test_number_message(create_mocked_hub):
     # Restore the original publish method
     hub._publish = orig__publish
 
-    hub.disconnect()
+    await hub.disconnect()
 
 
 @pytest.mark.asyncio
@@ -262,7 +265,7 @@ async def test_placeholder_adjustable_on(create_mocked_hub):
     assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_vebus_170"]
+    device = hub.devices["vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
     writable_metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
     assert isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
@@ -284,7 +287,7 @@ async def test_placeholder_adjustable_off(create_mocked_hub):
     assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_vebus_170"]
+    device = hub.devices["vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
     metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
     assert not isinstance(metric, WritableMetric), f"Expected metric to be of type Metric, got {type(metric)}"
@@ -303,7 +306,7 @@ async def test_placeholder_adjustable_on_reverse(create_mocked_hub):
     await finalize_injection(hub)
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_vebus_170"]
+    device = hub.devices["vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
     writable_metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
     assert isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
@@ -322,7 +325,7 @@ async def test_placeholder_adjustable_off_reverse(create_mocked_hub):
     await finalize_injection(hub)
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_vebus_170"]
+    device = hub.devices["vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
     writable_metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
     assert not isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
@@ -342,7 +345,7 @@ async def test_today_message(create_mocked_hub):
     await finalize_injection(hub)
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_solarcharger_290"]
+    device = hub.devices["solarcharger_290"]
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
 
     metric = device.get_metric_from_unique_id("123_solarcharger_290_solarcharger_max_power_today")
@@ -375,7 +378,7 @@ async def test_expend_message(create_mocked_hub):
     await finalize_injection(hub)
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_switch_170"]
+    device = hub.devices["switch_170"]
     metric = device.get_metric_from_unique_id("123_switch_170_switch_2_state")
     assert metric is not None, "Metric should exist in the device"
     assert metric.generic_short_id == "switch_{output}_state"
@@ -392,7 +395,7 @@ async def test_expend_message_2(create_mocked_hub):
     await finalize_injection(hub)
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_battery_170"]
+    device = hub.devices["battery_170"]
     metric = device.get_metric_from_unique_id("123_battery_170_battery_cell_3_voltage")
     assert metric is not None, "Metric should exist in the device"
     assert metric.generic_short_id == "battery_cell_{cell_id}_voltage"
@@ -410,7 +413,7 @@ async def test_same_message_events(create_mocked_hub):
     await finalize_injection(hub, False)
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_grid_30"]
+    device = hub.devices["grid_30"]
     metric = device.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
@@ -436,7 +439,7 @@ async def test_existing_installation_id(create_mocked_hub_with_installation_id):
     await finalize_injection(hub)
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_switch_170"]
+    device = hub.devices["switch_170"]
     metric = device.get_metric_from_unique_id("123_switch_170_switch_2_state")
     assert metric is not None, "Metric should exist in the device"
     assert metric.generic_short_id == "switch_{output}_state"
@@ -454,7 +457,7 @@ async def test_multiple_hubs(create_mocked_hub_with_installation_id, create_mock
     await finalize_injection(hub1, disconnect=False)
 
     # Validate that the device has the metric we published
-    device1 = hub1.devices["123_switch_170"]
+    device1 = hub1.devices["switch_170"]
     metric1 = device1.get_metric_from_unique_id("123_switch_170_switch_2_state")
     assert metric1 is not None, "Metric should exist in the device"
     assert metric1.generic_short_id == "switch_{output}_state"
@@ -470,7 +473,7 @@ async def test_multiple_hubs(create_mocked_hub_with_installation_id, create_mock
     assert len(hub2.devices) == 1, f"Expected 1 device, got {len(hub1.devices)}"
 
     # Validate that the device has the metric we published
-    device2 = hub2.devices["123_switch_170"]
+    device2 = hub2.devices["switch_170"]
     metric2 = device2.get_metric_from_unique_id("123_switch_170_switch_2_state")
     assert metric2 is not None, "Metric should exist in the device"
     assert metric2.generic_short_id == "switch_{output}_state"
@@ -490,7 +493,7 @@ async def test_float_precision(create_mocked_hub):
     await finalize_injection(hub)
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_system_170"]
+    device = hub.devices["system_170"]
     metric = device.get_metric_from_unique_id("123_system_170_system_dc_consumption")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 1.1, f"Expected metric value to be 1.1, got {metric.value}"
@@ -505,7 +508,7 @@ async def test_float_precision_none(create_mocked_hub):
     await finalize_injection(hub)
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_gps_170"]
+    device = hub.devices["gps_170"]
     metric = device.get_metric_from_unique_id("123_gps_170_gps_latitude")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 1.0123456789, f"Expected metric value to be 1.0123456789, got {metric.value}"
@@ -529,8 +532,8 @@ async def test_new_metric(create_mocked_hub):
     await asyncio.sleep(0.1)  # Allow event loop to process the callback
 
     # Validate that the on_new_metric callback was called
-    hub.on_new_metric.assert_any_call(hub, hub.devices["123_system_170"], hub.devices["123_system_170"].get_metric_from_unique_id("123_system_170_system_dc_consumption"))
-    hub.on_new_metric.assert_called_with(hub, hub.devices["123_gps_170"], hub.devices["123_gps_170"].get_metric_from_unique_id("123_gps_170_gps_latitude"))
+    hub.on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_consumption"))
+    hub.on_new_metric.assert_called_with(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric_from_unique_id("123_gps_170_gps_latitude"))
     assert hub.on_new_metric.call_count == 2, "on_new_metric should be called exactly twice"
 
     # Check that we got the callback only once
@@ -540,12 +543,10 @@ async def test_new_metric(create_mocked_hub):
     assert hub.on_new_metric.call_count == 2, "on_new_metric should be called exactly twice"
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_system_170"]
+    device = hub.devices["system_170"]
     metric = device.get_metric_from_unique_id("123_system_170_system_dc_consumption")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 1.1, f"Expected metric value to be 1.1, got {metric.value}"
-
-
     await hub.disconnect()
 
 @pytest.mark.asyncio
@@ -558,7 +559,7 @@ async def test_experimental_metrics_not_created_by_default(create_mocked_hub):
     await finalize_injection(hub)
 
     # The experimental topic should not have created a device or metric
-    assert "123_generator_170" not in hub.devices, "Experimental topic should not create devices/metrics when operation_mode is not EXPERIMENTAL"
+    assert "generator_170" not in hub.devices, "Experimental topic should not create devices/metrics when operation_mode is not EXPERIMENTAL"
 
 @pytest.mark.asyncio
 async def test_experimental_metrics_created_when_needed(create_mocked_hub_experimental):
@@ -570,7 +571,7 @@ async def test_experimental_metrics_created_when_needed(create_mocked_hub_experi
     await finalize_injection(hub)
 
     # The experimental topic should not have created a device or metric
-    assert "123_generator_170" in hub.devices, "Experimental topic should not create devices/metrics when operation_mode is not EXPERIMENTAL"
+    assert "generator_170" in hub.devices, "Experimental topic should not create devices/metrics when operation_mode is not EXPERIMENTAL"
 
 @pytest.mark.asyncio
 async def test_read_only_creates_plain_metrics(create_mocked_hub_read_only):
@@ -581,8 +582,8 @@ async def test_read_only_creates_plain_metrics(create_mocked_hub_read_only):
     await finalize_injection(hub)
 
     # Validate the Hub's state
-    assert "123_evcharger_170" in hub.devices, "Device should be created"
-    device = hub.devices["123_evcharger_170"]
+    assert "evcharger_170" in hub.devices, "Device should be created"
+    device = hub.devices["evcharger_170"]
     metric = device.get_metric_from_unique_id("123_evcharger_170_evcharger_set_current")
     assert metric is not None, "Metric should exist in the device"
     assert not isinstance(metric, WritableMetric), "In READ_ONLY mode the metric should NOT be a WritableMetric"
@@ -645,7 +646,7 @@ async def test_filtered_message(create_mocked_hub_with_device_filter):
 
     # Validate the Hub's state
     assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
-    assert "123_system_0" in hub.devices, "Expected only the system device to exist"
+    assert "system_0" in hub.devices, "Expected only the system device to exist"
 
 @pytest.mark.asyncio
 async def test_filtered_message_system(create_mocked_hub_with_device_filter):
@@ -658,7 +659,7 @@ async def test_filtered_message_system(create_mocked_hub_with_device_filter):
 
     # Validate the Hub's state - system device exists but has no metrics due to filtering
     assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
-    system_device = hub.devices["123_system_0"]
+    system_device = hub.devices["system_0"]
     assert len(system_device._metrics) == 0, f"Expected 0 metrics on system device due to filtering, got {len(system_device._metrics)}"
 
 @pytest.mark.asyncio
@@ -672,7 +673,7 @@ async def test_no_filtered_message_placeholder(create_mocked_hub_with_device_fil
 
     # Validate the Hub's state - only system device exists, generator message was filtered
     assert len(hub.devices) == 2, f"Expected 2 devices (system and generator1), got {len(hub.devices)}"
-    system_device = hub.devices["123_system_0"]
+    system_device = hub.devices["system_0"]
     assert system_device.device_type.value[0] == "system", f"Expected system device, got {system_device.device_type.value}"
 
 
@@ -687,7 +688,7 @@ async def test_filtered_message_placeholder(create_mocked_hub_with_device_filter
 
     # Validate the Hub's state - only system device exists, generator message was filtered
     assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
-    system_device = hub.devices["123_system_0"]
+    system_device = hub.devices["system_0"]
     assert system_device.device_type.value[0] == "system", f"Expected system device, got {system_device.device_type.value}"
 
 
@@ -703,7 +704,7 @@ async def test_remote_name_dont_exists(create_mocked_hub):
     assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_switch_170"]
+    device = hub.devices["switch_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
     metric = device.get_metric_from_unique_id("123_switch_170_switch_1_state")
     assert metric is not None, "metric should exist in the device"
@@ -725,7 +726,7 @@ async def test_remote_name_exists(create_mocked_hub):
     assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_switch_170"]
+    device = hub.devices["switch_170"]
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
     metric = device.get_metric_from_unique_id("123_switch_170_switch_1_state")
     assert metric is not None, "metric should exist in the device"
@@ -749,7 +750,7 @@ async def test_remote_name_exists_twodevices(create_mocked_hub):
     assert len(hub.devices) == 3, f"Expected 3 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_switch_170"]
+    device = hub.devices["switch_170"]
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
     metric = device.get_metric_from_unique_id("123_switch_170_switch_1_state")
     assert metric is not None, "metric should exist in the device"
@@ -758,7 +759,7 @@ async def test_remote_name_exists_twodevices(create_mocked_hub):
     assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "bla"
 
-    device = hub.devices["123_switch_155"]
+    device = hub.devices["switch_155"]
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
     metric = device.get_metric_from_unique_id("123_switch_155_switch_1_state")
     assert metric is not None, "metric should exist in the device"
@@ -780,7 +781,7 @@ async def test_remote_name_exists_2(create_mocked_hub):
     assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
-    device = hub.devices["123_solarcharger_170"]
+    device = hub.devices["solarcharger_170"]
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
     metric = device.get_metric_from_unique_id("123_solarcharger_170_solarcharger_tracker_2_power")
     assert metric is not None, "metric should exist in the device"
@@ -830,6 +831,53 @@ async def test_null_message(create_mocked_hub):
 
     # Validate the Hub's state - only system device exists, evcharger message was filtered
     assert len(hub.devices) == 2, f"Expected 2 device (system device), got {len(hub.devices)}"
-    device = hub.devices["123_evcharger_170"]
+    device = hub.devices["evcharger_170"]
     assert device.metrics == [], f"Expected 0 metrics on evcharger device due to null message, got {len(device._metrics)}"
 
+@pytest.mark.asyncio
+@patch('victron_mqtt._victron_formulas.datetime')
+async def test_formula_message(mock_datetime, create_mocked_hub_experimental):
+    """Test that the Hub correctly filters MQTT messages for generator1 device type."""
+    # Mock datetime.now() to return a fixed time
+    fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=0)
+    mock_datetime.now.return_value = fixed_time
+
+    hub: Hub = create_mocked_hub_experimental
+
+    # Inject messages after the event is set
+    inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 120}")
+    await finalize_injection(hub, disconnect=False)
+
+    # Validate the Hub's state - only system device exists, evcharger message was filtered
+    assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
+    device = hub.devices["system_0"]
+    assert len(device._metrics) == 3, f"Expected 3 metrics, got {len(device._metrics)}"
+    metric1 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_power")
+    assert metric1 is not None, "metric should exist in the device"
+    assert metric1.value == 120, f"Expected metric value to be 120, got {metric1.value}"
+
+    metric2 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_charge_power")
+    assert metric2 is not None, "metric should exist in the device"
+    assert metric2.value == 0.0, f"Expected metric value to be 0.0, got {metric2.value}"
+
+    metric3 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_discharge_power")
+    assert metric3 is not None, "metric should exist in the device"
+    assert metric3.value == 0.0, f"Expected metric value to be 0.0, got {metric2.value}"
+
+    fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=15)
+    mock_datetime.now.return_value = fixed_time
+    inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 80}")
+    assert metric2.value == 1800.0, f"Expected metric value to be 1800.0, got {metric2.value}"
+
+    fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=30)
+    mock_datetime.now.return_value = fixed_time
+    inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -100}")
+    assert metric2.value == 3000.0, f"Expected metric value to be 1800.0, got {metric2.value}"
+
+    fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=45)
+    mock_datetime.now.return_value = fixed_time
+    inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -200}")
+    assert metric2.value == 3000.0, f"Expected metric value to be 3000.0, got {metric2.value}"
+    assert metric3.value == 1500.0, f"Expected metric value to be 1500.0, got {metric2.value}"
+
+    await hub.disconnect()
