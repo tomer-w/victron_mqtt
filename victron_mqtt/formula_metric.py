@@ -51,5 +51,7 @@ class FormulaMetric(Metric):
         func_name = self._descriptor.topic.split('/')[-1]
         func = getattr(formulas, func_name)
         value, self.transient_state, self.persistent_state = func(self._depends_on, self.transient_state, self.persistent_state)
+        if self._descriptor.precision is not None:
+            value = round(value, self._descriptor.precision)
         if value is not None:
             self._handle_message(value, event_loop, log_debug)
