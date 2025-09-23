@@ -418,7 +418,11 @@ class Hub:
             if version_metric and version_metric.value:
                 if version_metric.value[0] == "v":
                     try:
-                        firmware_version = float(version_metric.value[1:])
+                        # Accept versions like 'v3.70' and 'v3.70~15' by stripping any '~' suffix
+                        ver_str = version_metric.value[1:]
+                        if "~" in ver_str:
+                            ver_str = ver_str.split("~", 1)[0]
+                        firmware_version = float(ver_str)
                         if firmware_version < 3.5:
                             _LOGGER.warning("Firmware version is below v3.5: %s", version_metric.value)
                         else:
