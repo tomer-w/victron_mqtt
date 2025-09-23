@@ -536,8 +536,8 @@ async def test_new_metric(create_mocked_hub_experimental):
     hub.on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_consumption"))
     hub.on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_power"))
     hub.on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric_from_unique_id("123_gps_170_gps_latitude"))
-    hub.on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_charge_power"))
-    hub.on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_discharge_power"))
+    hub.on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_charge_energy"))
+    hub.on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_discharge_energy"))
     assert hub.on_new_metric.call_count == 5, "on_new_metric should be called exactly 5 times"
 
     # Check that we got the callback only once
@@ -860,17 +860,17 @@ async def test_formula_message(mock_datetime, create_mocked_hub_experimental):
     assert metric1 is not None, "metric should exist in the device"
     assert metric1.value == 120, f"Expected metric value to be 120, got {metric1.value}"
 
-    metric2 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_charge_power")
+    metric2 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_charge_energy")
     assert metric2 is not None, "metric should exist in the device"
     assert metric2.value == 0.0, f"Expected metric value to be 0.0, got {metric2.value}"
-    assert metric2.generic_short_id == "system_dc_battery_charge_power", f"Expected generic_short_id to be 'system_dc_battery_charge_power', got {metric2.generic_short_id}"
-    assert metric2.name == "DC Battery Charge Power", f"Expected name to be 'DC Battery Charge Power', got {metric2.name}"
+    assert metric2.generic_short_id == "system_dc_battery_charge_energy", f"Expected generic_short_id to be 'system_dc_battery_charge_energy', got {metric2.generic_short_id}"
+    assert metric2.name == "DC Battery Charge Energy", f"Expected name to be 'DC Battery Charge Energy', got {metric2.name}"
 
-    metric3 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_discharge_power")
+    metric3 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_discharge_energy")
     assert metric3 is not None, "metric should exist in the device"
-    assert metric3.value == 0.0, f"Expected metric value to be 0.0, got {metric2.value}"
-    assert metric3.generic_short_id == "system_dc_battery_discharge_power", f"Expected generic_short_id to be 'system_dc_battery_discharge_power', got {metric2.generic_short_id}"
-    assert metric3.name == "DC Battery Discharge Power", f"Expected name to be 'DC Battery Discharge Power', got {metric2.name}"
+    assert metric3.value == 0.0, f"Expected metric value to be 0.0, got {metric3.value}"
+    assert metric3.generic_short_id == "system_dc_battery_discharge_energy", f"Expected generic_short_id to be 'system_dc_battery_discharge_energy', got {metric3.generic_short_id}"
+    assert metric3.name == "DC Battery Discharge Energy", f"Expected name to be 'DC Battery Discharge Energy', got {metric3.name}"
 
     fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=15)
     mock_datetime.now.return_value = fixed_time
