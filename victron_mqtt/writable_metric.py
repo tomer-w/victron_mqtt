@@ -29,10 +29,9 @@ class WritableMetric(Metric):
             "Creating new WritableMetric: unique_id=%s, type=%s, nature=%s",
             unique_id, descriptor.metric_type, descriptor.metric_nature
         )
-        self._hub = hub
         assert parsed_topic.full_topic.startswith("N")
         self._write_topic = "W" + parsed_topic.full_topic[1:]
-        super().__init__(device, unique_id, name, descriptor, parsed_topic.short_id, parsed_topic.key_values)
+        super().__init__(device, unique_id, name, descriptor, parsed_topic.short_id, parsed_topic.key_values, hub)
 
     def __str__(self) -> str:
         return f"WritableMetric({super().__str__()}, write_topic = {self._write_topic})"

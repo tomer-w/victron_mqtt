@@ -1777,8 +1777,7 @@ topics: List[TopicDescriptor] = [
         short_id="system_dc_battery_charge_energy",
         name="DC Battery Charge Energy",
         metric_type=MetricType.ENERGY,
-        unit_of_measurement="Wh",
-        precision=1,
+        precision=3,
         experimental=True
     ),
     TopicDescriptor(
@@ -1788,8 +1787,7 @@ topics: List[TopicDescriptor] = [
         short_id="system_dc_battery_discharge_energy",
         name="DC Battery Discharge Energy",
         metric_type=MetricType.ENERGY,
-        unit_of_measurement="Wh",
-        precision=1,
+        precision=3,
         experimental=True
     ),
     TopicDescriptor(

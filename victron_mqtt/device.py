@@ -181,15 +181,15 @@ class Device:
         if new_topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
             metric = WritableMetric(self, metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic, hub)
         else:
-            metric = Metric(self, metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic.short_id, metric_placeholder.parsed_topic.key_values)
+            metric = Metric(self, metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic.short_id, metric_placeholder.parsed_topic.key_values, hub)
         metric._handle_message(metric_placeholder.value, None, _LOGGER.debug)
         self._metrics[metric.unique_id] = metric
         return metric
 
-    def add_formula_metric(self, topic_desc: TopicDescriptor) -> FormulaMetric:
+    def add_formula_metric(self, topic_desc: TopicDescriptor, hub: Hub) -> FormulaMetric:
         assert topic_desc.name is not None, "name must be set for topic"
         metric_id = f"{self.unique_id}_{topic_desc.short_id}"
-        metric = FormulaMetric(self, metric_id, topic_desc.name, topic_desc)
+        metric = FormulaMetric(self, metric_id, topic_desc.name, topic_desc, hub)
         self._metrics[metric.unique_id] = metric
         return metric
 

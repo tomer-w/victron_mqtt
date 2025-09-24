@@ -7,11 +7,12 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from typing import TYPE_CHECKING, Callable, NamedTuple
+from typing import TYPE_CHECKING, Callable
 
 from victron_mqtt.constants import FormulaPersistentState, FormulaTransientState
 
 if TYPE_CHECKING:
+    from .hub import Hub
     from .device import Device
 
 from .metric import Metric
@@ -24,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 class FormulaMetric(Metric):
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, device: Device, unique_id: str, name: str, descriptor: TopicDescriptor) -> None:
+    def __init__(self, device: Device, unique_id: str, name: str, descriptor: TopicDescriptor, hub: Hub) -> None:
         """Initialize the FormulaMetric."""
         _LOGGER.debug(
             "Creating new FormulaMetric: unique_id=%s, type=%s, nature=%s",
@@ -34,7 +35,7 @@ class FormulaMetric(Metric):
         self._depends_on: dict[str, Metric] = {}
         self.transient_state: FormulaTransientState | None = None
         self.persistent_state: FormulaPersistentState | None = None
-        super().__init__(device, unique_id, name, descriptor, descriptor.short_id, {})
+        super().__init__(device, unique_id, name, descriptor, descriptor.short_id, {}, hub)
 
     def init(self, depends_on: dict[str, Metric], event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]) -> None:
         self._depends_on = depends_on

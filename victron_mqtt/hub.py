@@ -16,8 +16,6 @@ from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.reasoncodes import ReasonCode
 from paho.mqtt.properties import Properties
 
-from victron_mqtt.formula_metric import FormulaMetric
-
 from .writable_metric import WritableMetric
 
 from ._victron_topics import topics
@@ -79,8 +77,63 @@ class Hub:
         topic_log_info: str | None = None,
         operation_mode: OperationMode = OperationMode.FULL,
         device_type_exclude_filter: list[DeviceType] | None = None,
+        update_frequency_seconds: int | None = None
     ) -> None:
-        """Initialize."""
+        """
+        Initialize a Hub instance for communicating with a Venus OS MQTT broker.
+
+        Parameters
+        ----------
+        host: str
+            MQTT broker hostname or IP address.
+        port: int
+            MQTT broker port (1-65535).
+        username: str | None
+            Username for MQTT authentication, or None for anonymous access.
+        password: str | None
+            Password for MQTT authentication, or None.
+        use_ssl: bool
+            If True, an SSL/TLS context will be configured when connecting.
+        installation_id: str | None
+            If provided, used to replace `{installation_id}` placeholders in topics.
+            If None, the installation id will be discovered from the broker when
+            `connect()` is called.
+        model_name: str | None
+            Optional device model name used for informational purposes.
+        serial: str | None
+            Optional device serial identifier (defaults to "noserial").
+        topic_prefix: str | None
+            Optional prefix that is prepended to every subscribe/publish topic.
+        topic_log_info: str | None
+            Optional substring used to elevate logging level for matching topics.
+        operation_mode: OperationMode
+            Controls which TopicDescriptor entries are active (e.g. FULL, READ_ONLY,
+            EXPERIMENTAL).
+        device_type_exclude_filter: list[DeviceType] | None
+            Optional list of device types to exclude from subscriptions.
+        update_frequency_seconds: int | None
+            Optional update frequency used by metrics.
+            if None = Update only when source data change
+            if 0 = Update as new mqtt data received
+            if > 0 = Update at the specified interval (in seconds) even if no new data is received
+
+        Behavior
+        --------
+        - Performs strict parameter validation and raises `ValueError` or `TypeError`
+          for invalid values or types.
+        - Builds internal topic maps and subscription lists from the package-level
+          `topics` list, applying operation mode and device type filters.
+        - Generates a unique MQTT client id and creates (but does not connect)
+          a paho-mqtt Client instance. No network operations occur during
+          initialization; call `connect()` to establish the MQTT connection.
+
+        Raises
+        ------
+        ValueError
+            If `host` is empty or `port` is out of the valid range.
+        TypeError
+            If an argument has an incorrect type.
+        """
         global running_client_id
         self._instance_id = running_client_id
         running_client_id += 1
@@ -120,9 +173,11 @@ class Hub:
             for device_type in device_type_exclude_filter:
                 if not isinstance(device_type, DeviceType):
                     raise TypeError(f"device_type_filter must contain only DeviceType instances, got type={type(device_type).__name__}, value={device_type!r}")
+        if update_frequency_seconds is not None and not isinstance(update_frequency_seconds, int):
+            raise TypeError(f"update_frequency_seconds must be an integer or None, got type={type(update_frequency_seconds).__name__}, value={update_frequency_seconds!r}")
         _LOGGER.info(
-            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s)",
-            self._instance_id, host, port, username, use_ssl, installation_id, model_name, topic_prefix, operation_mode, device_type_exclude_filter
+            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s)",
+            self._instance_id, host, port, username, use_ssl, installation_id, model_name, topic_prefix, operation_mode, device_type_exclude_filter, update_frequency_seconds
         )
         self._model_name = model_name
         self.host = host
@@ -154,6 +209,7 @@ class Hub:
         self._all_metrics: dict[str, Metric] = {}
         self._first_connect = True
         self._first_full_publish = True
+        self._update_frequency_seconds = update_frequency_seconds
 
         # Filter the active topics
         metrics_active_topics: list[TopicDescriptor] = []
@@ -391,7 +447,7 @@ class Hub:
                     is_met, dependencies = self.is_dependency_met(topic, device)
                     if is_met:
                         _LOGGER.info("Formula topic resolved: %s", topic)
-                        metric = device.add_formula_metric(topic)
+                        metric = device.add_formula_metric(topic, self)
                         depends_on: dict[str, Metric] = {}
                         for dependency_metric in dependencies:
                             dependency_metric.add_dependency(metric)
@@ -525,16 +581,27 @@ class Hub:
     async def _keepalive_loop(self) -> None:
         """Run keepalive every 30 seconds."""
         _LOGGER.info("Starting keepalive loop")
+        count = 0
         while True:
             try:
                 await self._keepalive()
                 await asyncio.sleep(30)
+                # We should keep alive all metrics every 60 seconds
+                count += 1
+                if count % 2 == 0:
+                    self._keepalive_metrics()
             except asyncio.CancelledError:
                 _LOGGER.info("Keepalive loop canceled")
                 raise
             except Exception as exc:
                 _LOGGER.error("Error in keepalive loop: %s", exc, exc_info=True)
                 await asyncio.sleep(5)  # Short delay before retrying
+
+    def _keepalive_metrics(self) -> None:
+        """Keep alive all metrics."""
+        _LOGGER.debug("Keeping alive all metrics")
+        for metric in self._all_metrics.values():
+            metric._keepalive(self._loop, _LOGGER.debug)
 
     def _start_keep_alive_loop(self) -> None:
         """Start the keep_alive loop."""
@@ -756,10 +823,9 @@ class Hub:
 
     def get_metric_from_unique_id(self, unique_id: str) -> Metric | None:
         """Get a metric from a unique id."""
-        device = self._devices.get(self._get_device_unique_id_from_metric_unique_id(unique_id))
-        if device is None:
-            return None
-        return device.get_metric_from_unique_id(unique_id)
+        id_without_installation = unique_id.split("_", 1)[-1]
+        metric = self._all_metrics.get(id_without_installation)
+        return metric
 
     @property
     def devices(self) -> dict[str, Device]:
@@ -826,7 +892,7 @@ class Hub:
         return self._on_new_metric
 
     @on_new_metric.setter
-    def on_new_metric(self, value: CallbackOnNewMetric):
+    def on_new_metric(self, value: CallbackOnNewMetric | None):
         """Sets the on_new_metric callback."""
         self._on_new_metric = value
 

@@ -118,8 +118,8 @@ class MetricContainer:
         self._tree_view = tree_view
         self._parent_item = parent_item
 
-    def _update(self, metric: Metric):  # pylint: disable=unused-argument
-        formatted = self._metric.formatted_value
+    def _update(self, metric: Metric, value):  # pylint: disable=unused-argument
+        formatted = self._metric.format_value(value)
         if self._tree_view.exists(self._parent_item):
             self._tree_view.item(self._parent_item, values=(formatted,))
         
@@ -203,21 +203,21 @@ class App:
         if not self._client:
             return
             
-        devices = sorted(self._client.devices.values(), key=lambda x: x.unique_id)
+        devices = sorted(self._client.devices.values(), key=lambda x: x.short_unique_id)
         for device in devices:
             device_item = self.tree.insert(
                 "",
                 "end",
                 text=f"{device.name} (ID: {device.device_id})" if device.device_id != "0" else device.name or "",
                 values=(device.serial_number, ""),
-                iid="D" + device.unique_id,
+                iid="D" + device.short_unique_id,
             )
             metrics = sorted(device.metrics, key=lambda x: x.short_id)
             for metric in metrics:
                 metric_item = self.tree.insert(
                     device_item,
                     "end",
-                    text=metric.short_id or "",
+                    text=metric.name or "",
                     values=(metric.formatted_value,),
                     iid="M" + metric.unique_id,
                 )
@@ -230,7 +230,7 @@ class App:
         item = self.tree.selection()[0]
         unique_id = item[1:]
         if item[0] == "D":
-            device = self._client.get_device_from_unique_id(unique_id)
+            device = self._client.devices.get(unique_id)
             if device is not None:
                 AttributeViewerDialog(self.root, device)
         elif item[0] == "M":
