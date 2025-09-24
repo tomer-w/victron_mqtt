@@ -953,7 +953,7 @@ async def test_null_message():
     assert device.metrics == [], f"Expected 0 metrics on evcharger device due to null message, got {len(device._metrics)}"
 
 @pytest.mark.asyncio
-@patch('victron_mqtt._victron_formulas.datetime')
+@patch('victron_mqtt.formula_common.datetime')
 async def test_formula_message(mock_datetime):
     """Test that the Hub correctly filters MQTT messages for generator1 device type."""
     # Mock datetime.now() to return a fixed time

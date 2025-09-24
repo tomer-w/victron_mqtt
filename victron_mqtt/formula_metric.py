@@ -54,8 +54,19 @@ class FormulaMetric(Metric):
     def _handle_formula(self, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]):
         func_name = self._descriptor.topic.split('/')[-1]
         func = getattr(formulas, func_name)
-        value, self.transient_state, self.persistent_state = func(self._depends_on, self.transient_state, self.persistent_state)
+        # Formula functions may return None to indicate no value/update.
+        result = func(self._depends_on, self.transient_state, self.persistent_state)
+        if result is None:
+            log_debug("Formula %s returned None", func_name)
+            self._handle_message(None, event_loop, log_debug)
+            return
+        
+        try:
+            value, self.transient_state, self.persistent_state = result
+        except Exception:  # pragma: no cover - defensive logging for unexpected return shapes
+            _LOGGER.error("Unexpected return value from formula %s: %r", func_name, result)
+            return
+        
         if self._descriptor.precision is not None:
             value = round(value, self._descriptor.precision)
-        if value is not None:
-            self._handle_message(value, event_loop, log_debug)
+        self._handle_message(value, event_loop, log_debug)
