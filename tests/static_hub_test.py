@@ -513,6 +513,11 @@ async def test_metric_keepalive_no_updates(mock_time):
     assert metric.on_update.call_count == 1, "on_update should be called as metric updated to None"
     magic_mock.assert_called_with(metric, None)
 
+    inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}")
+    await asyncio.sleep(0.01)  # Allow event loop to process any scheduled callbacks
+    assert metric.on_update.call_count == 2, "on_update should be called as metric updates back to value"
+    magic_mock.assert_called_with(metric, 42)
+
     await hub.disconnect()
 
 @pytest.mark.asyncio

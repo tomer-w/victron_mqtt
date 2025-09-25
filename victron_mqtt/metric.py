@@ -191,7 +191,7 @@ class Metric:
 
     def _keepalive(self, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]):
         """Reset metrics value if no updates or send last values if they got skipped"""
-        silence_timeout = 60 if self._hub._update_frequency_seconds is None else self._hub._update_frequency_seconds * 3
+        silence_timeout = min(60, self._hub._update_frequency_seconds * 3) if self._hub._update_frequency_seconds is not None else 60
         now = time.time()
         elapsed = now - self._last_seen
         if elapsed > silence_timeout:
