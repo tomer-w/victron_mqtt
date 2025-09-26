@@ -176,8 +176,8 @@ class Hub:
         if update_frequency_seconds is not None and not isinstance(update_frequency_seconds, int):
             raise TypeError(f"update_frequency_seconds must be an integer or None, got type={type(update_frequency_seconds).__name__}, value={update_frequency_seconds!r}")
         _LOGGER.info(
-            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s)",
-            self._instance_id, host, port, username, use_ssl, installation_id, model_name, topic_prefix, operation_mode, device_type_exclude_filter, update_frequency_seconds
+            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, topic_log_info=%s)",
+            self._instance_id, host, port, username, use_ssl, installation_id, model_name, topic_prefix, operation_mode, device_type_exclude_filter, update_frequency_seconds, topic_log_info
         )
         self._model_name = model_name
         self.host = host
@@ -601,7 +601,11 @@ class Hub:
         """Keep alive all metrics."""
         _LOGGER.debug("Keeping alive all metrics")
         for metric in self._all_metrics.values():
-            metric._keepalive(self._loop, _LOGGER.debug)
+            # Determine log level based on the substring
+            is_info_level = self._topic_log_info and self._topic_log_info in metric._descriptor.topic
+            log_debug = _LOGGER.info if is_info_level else _LOGGER.debug
+            
+            metric._keepalive(self._loop, log_debug)
 
     def _start_keep_alive_loop(self) -> None:
         """Start the keep_alive loop."""

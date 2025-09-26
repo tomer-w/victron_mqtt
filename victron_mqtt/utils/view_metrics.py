@@ -184,7 +184,7 @@ class App:
 
     async def _async_connect(self, server: str, port: int, username: str | None, password: str | None, use_ssl: bool) -> bool:
         try:
-            self._client = Hub(server, port, username, password, use_ssl, topic_log_info=self._log_topic, operation_mode=OperationMode.EXPERIMENTAL)
+            self._client = Hub(server, port, username, password, use_ssl, topic_log_info=self._log_topic, operation_mode=OperationMode.EXPERIMENTAL, update_frequency_seconds=3)
             await self._client.connect()
             await self._client.wait_for_first_refresh()
             self._fill_tree()

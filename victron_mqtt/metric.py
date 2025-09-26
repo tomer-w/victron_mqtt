@@ -47,7 +47,7 @@ class Metric:
         self._depend_on_me: list[FormulaMetric] = []
         self._hub_unique_id: str = f"{device.short_unique_id}_{self._short_id}"
         self._hub = hub
-        self._last_update: float = 0
+        self._last_notified: float = 0
         self._last_seen: float = 0
 
         _LOGGER.debug("Metric %s initialized", repr(self))
@@ -191,55 +191,64 @@ class Metric:
 
     def _keepalive(self, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]):
         """Reset metrics value if no updates or send last values if they got skipped"""
-        silence_timeout = min(60, self._hub._update_frequency_seconds * 3) if self._hub._update_frequency_seconds is not None else 60
+        silence_timeout = max(60, self._hub._update_frequency_seconds * 3) if self._hub._update_frequency_seconds is not None else 60
         now = time.time()
         elapsed = now - self._last_seen
-        if elapsed > silence_timeout:
+        if elapsed > silence_timeout and self._value is not None:
             log_debug("Metric %s has been silent for %.2fs, resetting", self.unique_id, elapsed)
-            self._handle_message(None, event_loop, log_debug)
-        elif self._last_seen > self._last_update:
-            log_debug("Metric %s has been updated at %.2f but not published since %.2fs, re-publishing", self.unique_id, self._last_update, self._last_seen)
-            self._handle_message(self._value, event_loop, log_debug)
+            self._handle_message(None, event_loop, log_debug, update_last_seen=False) #Dont update the last_seen as it wasnt seen
+            return
+        if self._last_seen > self._last_notified:
+            log_debug("Metric %s has been updated at %.2f but not published since %.2fs, re-publishing", self.unique_id, self._last_notified, self._last_seen)
+            self._handle_message(self._value, event_loop, log_debug, update_last_seen=False, force=True)
+            return
+        log_debug("Metric is active and up-to-date: %s", self.unique_id)
 
-
-    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]):
+    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None], update_last_seen: bool = True, force: bool = False):
         """Handle a message."""
         now = time.time()
-        self._last_seen = now
+        if update_last_seen:
+            self._last_seen = now
+        should_notify = False
 
-        changed = False
-        if value != self._value:
+        # In case of zero update frequency, always consider changed when MQTT message is received
+        # also if this is the first time the metric is being notified
+        if force or self._hub._update_frequency_seconds == 0 or self._last_notified == 0:
+            should_notify = True
+            force = True
+        elif value != self._value:
             log_debug(
                 "Metric %s value changed: %s -> %s %s",
                 self.unique_id, self._value, value,
                 self._descriptor.unit_of_measurement or ''
             )
-            changed = True
-            self._value = value
+            should_notify = True
+            if self._value is None:
+                log_debug("Metric updated to non-None value. forcing it. metric: %s", self.unique_id)
+                force = True
         else:
             log_debug(
                 "Metric %s value unchanged: %s %s",
                 self.unique_id, value,
                 self._descriptor.unit_of_measurement or ''
             )
+        self._value = value
 
-        # In case of zero update frequency, always consider changed when MQTT message is received
-        if self._hub._update_frequency_seconds == 0:
-            changed = True
         # In case of non-zero update frequency, respect the update frequency limit only for numerical values
-        elif self._hub._update_frequency_seconds is not None and isinstance(value, (float, int)):
-            elapsed = now - self._last_update
+        if not force and self._hub._update_frequency_seconds is not None and isinstance(value, (float, int)):
+            elapsed = now - self._last_notified
             if elapsed < self._hub._update_frequency_seconds:
                 _LOGGER.debug(
                     "Update for %s skipped due to frequency limit (%.2fs < %ds)",
                     self.unique_id, elapsed, self._hub._update_frequency_seconds
                 )
-                changed = False
+                should_notify = False
             else:
-                changed = True
+                # This happens when the last time was before the update frequency passed so now we do really need to notify on it
+                should_notify = True
 
-        if changed and event_loop and callable(self._on_update) and event_loop.is_running():
-            self._last_update = now
+        if should_notify and event_loop and callable(self._on_update) and event_loop.is_running():
+            self._last_notified = now
             try:
                 # If the event loop is running, schedule the callback
                 event_loop.call_soon_threadsafe(self._on_update, self, self.value)
