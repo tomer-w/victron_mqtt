@@ -204,8 +204,8 @@ class Hub:
         random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
         self._client_id = f"victron_mqtt-{random_string}-{self._instance_id}"
         self._keepalive_counter = 0
-        self._metrics_placeholders: list[MetricPlaceholder] = []
-        self._fallback_placeholders: list[FallbackPlaceholder] = []
+        self._metrics_placeholders: dict[str, MetricPlaceholder] = {}
+        self._fallback_placeholders: dict[str, FallbackPlaceholder] = {}
         self._all_metrics: dict[str, Metric] = {}
         self._first_connect = True
         self._first_full_publish = True
@@ -431,10 +431,12 @@ class Hub:
         
         _LOGGER.debug("Full publish completed: %s", echo)
         new_metrics: list[tuple[Device, Metric]] = []
-        for metric_placeholder in self._metrics_placeholders:
-            metric = metric_placeholder.device.add_placeholder(metric_placeholder, self._fallback_placeholders, self)
-            self._all_metrics[metric._hub_unique_id] = metric
-            new_metrics.append((metric_placeholder.device, metric))
+        if len(self._metrics_placeholders) > 0:
+            fallback_placeholders_list = list(self._fallback_placeholders.values())
+            for metric_placeholder in self._metrics_placeholders.values():
+                metric = metric_placeholder.device.add_placeholder(metric_placeholder, fallback_placeholders_list, self)
+                self._all_metrics[metric._hub_unique_id] = metric
+                new_metrics.append((metric_placeholder.device, metric))
         self._metrics_placeholders.clear()
         self._fallback_placeholders.clear()
         # Activate formula entities
@@ -534,11 +536,17 @@ class Hub:
                 return
 
         device = self._get_or_create_device(parsed_topic, desc)
-        metric_place_holder = device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload, self._loop, log_debug, self)
-        if isinstance(metric_place_holder, MetricPlaceholder):
-            self._metrics_placeholders.append(metric_place_holder)
-        elif isinstance(metric_place_holder, FallbackPlaceholder):
-            self._fallback_placeholders.append(metric_place_holder)
+        placeholder = device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload, self._loop, log_debug, self)
+        if isinstance(placeholder, MetricPlaceholder):
+            existing_placeholder = self._metrics_placeholders.get(placeholder.metric_id)
+            if existing_placeholder:
+                log_debug("Replacing existing metric placeholder: %s", existing_placeholder)
+            self._metrics_placeholders[placeholder.metric_id] = placeholder
+        elif isinstance(placeholder, FallbackPlaceholder):
+            existing_placeholder = self._fallback_placeholders.get(placeholder.metric_id)
+            if existing_placeholder:
+                log_debug("Replacing existing fallback placeholder: %s", existing_placeholder)
+            self._fallback_placeholders[placeholder.metric_id] = placeholder
 
     async def disconnect(self) -> None:
         """Disconnect from the hub."""
