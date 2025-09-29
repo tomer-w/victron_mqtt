@@ -1083,3 +1083,19 @@ async def test_formula_message(mock_datetime):
     assert metric3.value == 0.4, f"Expected metric value to be 0.4, got {metric3.value}"
 
     await hub.disconnect()
+
+@pytest.mark.asyncio
+async def test_heartbeat_message():
+    """Test that the Hub correctly filters MQTT messages for generator1 device type."""
+    hub: Hub = await create_mocked_hub()
+
+    # Inject messages after the event is set
+    await inject_message(hub, "N/123/heartbeat", "{\"value\": 42}")
+    await finalize_injection(hub)
+
+    # Validate the Hub's state - only system device exists, evcharger message was filtered
+    assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
+    device = hub.devices["system_0"]
+    metric = device.get_metric_from_unique_id("123_system_0_system_heartbeat")
+    assert metric is not None, "metric should exist in the device"
+    assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"

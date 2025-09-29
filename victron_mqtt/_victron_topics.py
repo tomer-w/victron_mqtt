@@ -751,6 +751,14 @@ topics: List[TopicDescriptor] = [
         name="Grid voltage {phase} to {next_phase}",
         metric_type=MetricType.VOLTAGE,
     ),
+    # GX system heartbeat
+    TopicDescriptor(
+        topic="N/{installation_id}/heartbeat",
+        message_type=MetricKind.SENSOR,
+        short_id="system_heartbeat",
+        name="GX system heartbeat",
+        value_type=ValueType.INT,
+    ),
     # Heatpump topics
     TopicDescriptor(
         topic="N/{installation_id}/heatpump/{device_id}/Ac/Current",

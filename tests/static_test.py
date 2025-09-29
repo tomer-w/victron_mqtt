@@ -174,13 +174,13 @@ def test_topic_pattern_structure():
                 errors.append(f"Topic '{topic}' has invalid structure (too few parts)")
             continue
         topic_parts = topic.split('/')
-        if len(topic_parts) < 4:
+        if len(topic_parts) < 3:
             errors.append(f"Topic '{topic}' has invalid structure (too few parts)")
         if descriptor.message_type != MetricKind.SERVICE and not topic.startswith('N/{installation_id}/'):
             errors.append(f"Topic '{topic}' must start with 'N{{installation_id}}/'")
         elif descriptor.message_type == MetricKind.SERVICE and not topic.startswith('W/{installation_id}/'):
             errors.append(f"Service topic '{topic}' must start with 'W{{installation_id}}/'")
-        if not topic.find('N/{device_id}/') == -1:
+        if not topic.find('N/{device_id}/') == -1 and len(topic_parts) > 3:
             errors.append(f"Topic '{topic}' must include 'N{{device_id}}/'")
     if errors:
         pytest.fail("\n".join(errors))
@@ -239,6 +239,8 @@ def test_valid_device_type_in_topic():
             actual_device_type = topic_parts[1]
             if actual_device_type not in valid_device_types:
                 errors.append(f"Formula topic '{descriptor.topic}' has invalid actual_device_type '{actual_device_type}' not defined in DeviceType")
+            continue
+        if len(topic_parts) == 3: # root topic without device_type
             continue
         device_type = topic_parts[2]
         if device_type != "settings" and device_type not in valid_device_types:

@@ -18,6 +18,8 @@ def topic_to_device_type(topic_parts: list[str]) -> DeviceType | None:
         result = DeviceType.from_code(topic_parts[1])
         assert result is None or isinstance(result, DeviceType)
         return result
+    if len(topic_parts) == 3 and topic_parts[2] == "heartbeat":
+        return DeviceType.SYSTEM
     if len(topic_parts) < 2:
         return None
     native_device_type = topic_parts[2]
@@ -221,25 +223,30 @@ class ParsedTopic:
         full_topic = topic
         topic_parts = topic.split("/")
 
-        if len(topic_parts) < 4:  # noqa: PLR2004"
+        if len(topic_parts) < 3:  # noqa: PLR2004"
+            return None
+        elif len(topic_parts) == 3 and topic_parts[2] != "heartbeat":  # noqa: PLR2004"
             return None
 
-        wildcard_topic_parts = topic_parts.copy()
-
         installation_id = topic_parts[1]
-        wildcard_topic_parts[1] = "##installation_id##"
         device_type = topic_to_device_type(topic_parts)
-        if device_type is None: # This can happen as we register for the attribute topics
+        wildcard_topic_parts = topic_parts.copy()
+        wildcard_topic_parts[1] = "##installation_id##"
+        if device_type is None: # This can happen as we register for the attribute topics so we get them for devices we dont have topics for
             _LOGGER.debug("Unknown device type for topic: %s", topic)
             # If the device type is unknown, we cannot create a ParsedTopic
             return None
 
-        device_id = topic_parts[3]
-        wildcard_topic_parts[3] = "##device_id##"
-
-        wildcards_with_device_type = ParsedTopic.normalize_topic("/".join(wildcard_topic_parts))
-        wildcard_topic_parts[2] = "##device_type##"
-        wildcards_without_device_type = ParsedTopic.normalize_topic("/".join(wildcard_topic_parts))
+        #Special handling for root topic. Currently only: N/##installation_id##/heartbeat
+        if len(topic_parts) == 3:
+            device_id = "0"
+            wildcards_without_device_type = wildcards_with_device_type = ParsedTopic.normalize_topic("/".join(wildcard_topic_parts))
+        else:
+            device_id = topic_parts[3]
+            wildcard_topic_parts[3] = "##device_id##"
+            wildcards_with_device_type = ParsedTopic.normalize_topic("/".join(wildcard_topic_parts))
+            wildcard_topic_parts[2] = "##device_type##"
+            wildcards_without_device_type = ParsedTopic.normalize_topic("/".join(wildcard_topic_parts))
 
         return cls(
             installation_id,

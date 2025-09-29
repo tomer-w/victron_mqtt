@@ -121,3 +121,22 @@ def test_settings_parsed_topic_2():
     parsed_topic.finalize_topic_fields(descriptor)
     # Validate the ParsedTopic instance additional fields after matching description
     assert parsed_topic.short_id == "system_ess_max_charge_current", "Short ID should match"
+
+def test_parsed_root_topic():
+    # Find the TopicDescriptor with the desired topic
+    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/heartbeat"), None)
+    assert descriptor is not None, "TopicDescriptor with the specified topic not found"
+
+    # Create a ParsedTopic instance
+    topic = "N/123/heartbeat"
+    parsed_topic = ParsedTopic.from_topic(topic)
+    assert parsed_topic is not None, "ParsedTopic should not be None"
+
+    # Validate the ParsedTopic instance
+    assert parsed_topic.installation_id == "123", "Installation ID should match"
+    assert parsed_topic.device_id == "0", "Device ID should always be 0 for root topics"
+    assert parsed_topic.device_type == DeviceType.SYSTEM, "Device type should always be SYSTEM for root topics"
+
+    parsed_topic.finalize_topic_fields(descriptor)
+    # Validate the ParsedTopic instance additional fields after matching description
+    assert parsed_topic.short_id == "system_heartbeat", "Short ID should match"

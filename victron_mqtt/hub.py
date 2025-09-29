@@ -255,6 +255,9 @@ class Hub:
         def build_multi_map(items, key_func):
             result = {}
             for item in items:
+                # No need to index formula topics, they are discovered by _pending_formula_topics
+                if item.is_formula:
+                    continue
                 key = key_func(item)
                 if key in result:
                     existing = result[key]
