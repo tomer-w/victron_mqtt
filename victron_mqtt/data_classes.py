@@ -42,7 +42,7 @@ class TopicDescriptor:
     metric_type: MetricType = MetricType.NONE
     metric_nature: MetricNature = MetricNature.NONE
     value_type: ValueType | None = None
-    precision: int | None = 2
+    precision: int | None = None
     enum: type[VictronEnum] | None = None
     min_max_range: RangeType = RangeType.STATIC
     min: float | int | None = None
@@ -80,8 +80,6 @@ class TopicDescriptor:
     
     def __post_init__(self):
         assert self.message_type == MetricKind.ATTRIBUTE or self.name is not None
-        if self.value_type != ValueType.FLOAT:
-            self.precision = None
         self.generic_name = replace_complex_id_to_simple(self.name) if self.name else None
         self.is_formula = True if self.topic.startswith("$$func/") else False
         # Voltage default
@@ -174,6 +172,9 @@ class TopicDescriptor:
                 self.precision = 1
             if self.metric_nature == MetricNature.NONE:
                 self.metric_nature = MetricNature.INSTANTANEOUS
+        # General initialization
+        if self.value_type != ValueType.FLOAT:
+            self.precision = None
 
 
 @dataclass

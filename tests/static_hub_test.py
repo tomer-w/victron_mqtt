@@ -1043,7 +1043,7 @@ async def test_formula_message(mock_datetime):
     hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
 
     # Inject messages after the event is set
-    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 120}")
+    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 1200}")
     await finalize_injection(hub, disconnect=False)
 
     # Validate the Hub's state - only system device exists, evcharger message was filtered
@@ -1052,7 +1052,7 @@ async def test_formula_message(mock_datetime):
     assert len(device._metrics) == 3, f"Expected 3 metrics, got {len(device._metrics)}"
     metric1 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_power")
     assert metric1 is not None, "metric should exist in the device"
-    assert metric1.value == 120, f"Expected metric value to be 120, got {metric1.value}"
+    assert metric1.value == 1200, f"Expected metric value to be 1200, got {metric1.value}"
 
     metric2 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_charge_energy")
     assert metric2 is not None, "metric should exist in the device"
@@ -1068,19 +1068,19 @@ async def test_formula_message(mock_datetime):
 
     fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=15)
     mock_datetime.now.return_value = fixed_time
-    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 80}")
-    assert metric2.value == 0.5, f"Expected metric value to be 0.5, got {metric2.value}"
+    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 800}")
+    assert metric2.value == 0.005, f"Expected metric value to be 0.005, got {metric2.value}"
 
     fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=30)
     mock_datetime.now.return_value = fixed_time
-    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -100}")
-    assert metric2.value == 0.8, f"Expected metric value to be 0.8, got {metric2.value}"
+    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -1000}")
+    assert metric2.value == 0.008, f"Expected metric value to be 0.008, got {metric2.value}"
 
     fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=45)
     mock_datetime.now.return_value = fixed_time
-    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -200}")
-    assert metric2.value == 0.8, f"Expected metric value to be 0.8, got {metric2.value}"
-    assert metric3.value == 0.4, f"Expected metric value to be 0.4, got {metric3.value}"
+    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -2000}")
+    assert metric2.value == 0.008, f"Expected metric value to be 0.008, got {metric2.value}"
+    assert metric3.value == 0.004, f"Expected metric value to be 0.004, got {metric3.value}"
 
     await hub.disconnect()
 

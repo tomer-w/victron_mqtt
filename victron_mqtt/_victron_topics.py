@@ -279,7 +279,8 @@ topics: List[TopicDescriptor] = [
         name="Battery State of Health",
         unit_of_measurement="%",
         metric_type=MetricType.PERCENTAGE,
-        value_type=ValueType.FLOAT
+        value_type=ValueType.FLOAT,
+        precision=1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/System/MaxCellTemperature",
@@ -605,6 +606,7 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         metric_type=MetricType.HEADING,
         value_type=ValueType.FLOAT,
+        precision=2,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Fix",
@@ -651,6 +653,7 @@ topics: List[TopicDescriptor] = [
         unit_of_measurement="m/s",
         metric_type=MetricType.SPEED,
         value_type=ValueType.FLOAT,
+        precision=2,
     ),
     # Grid topics
     TopicDescriptor(
@@ -1431,7 +1434,7 @@ topics: List[TopicDescriptor] = [
         short_id="system_ess_max_charge_voltage",
         name="ESS max charge voltage",
         metric_type=MetricType.VOLTAGE,
-        value_type=ValueType.FLOAT,
+        value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
     ),
     TopicDescriptor(

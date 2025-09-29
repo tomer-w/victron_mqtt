@@ -17,7 +17,7 @@ def system_dc_battery_discharge_power(
         if current_power > 0:
             current_power = 0.0
         else:
-            current_power = current_power * -1
+            current_power = current_power * -1 / 1000
         return current_power
 
     return left_riemann_sum_internal(depends_on, adjust_power_for_discharging, transient_state, persistent_state)
@@ -30,7 +30,7 @@ def system_dc_battery_charge_power(
     def adjust_power_for_charging(current_power: float) -> float:
         if current_power < 0:
             current_power = 0.0  # Only consider charging power for energy accumulation
-        return current_power
+        return current_power / 1000
 
     return left_riemann_sum_internal(depends_on, adjust_power_for_charging, transient_state, persistent_state)
 
