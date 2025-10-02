@@ -270,11 +270,15 @@ class ParsedTopic:
     def make_hub_unique_id(cls, device_short_unique_id: str, short_id: str) -> str:
         return f"{device_short_unique_id}_{short_id}"
 
-    def finalize_topic_fields(self, device_short_unique_id, topic_desc: TopicDescriptor) -> None:
+    @classmethod
+    def make_device_short_unique_id(cls, device_type: str, device_id: str) -> str:
+        return f"{device_type}_{device_id}"
+
+    def finalize_topic_fields(self, topic_desc: TopicDescriptor) -> None:
         self._key_values = self.get_key_values(topic_desc)
         self._key_values.update(topic_desc.key_values)
         self._short_id = self._replace_ids(topic_desc.short_id)
-        self._hub_unique_id = ParsedTopic.make_hub_unique_id(device_short_unique_id, self._short_id)
+        self._hub_unique_id = ParsedTopic.make_hub_unique_id(ParsedTopic.make_device_short_unique_id(self.device_type.code, self.device_id), self._short_id)
         assert topic_desc.name is not None, f"TopicDescriptor name is None for topic: {topic_desc.topic}"
         self._name = self._replace_ids(topic_desc.name)
 

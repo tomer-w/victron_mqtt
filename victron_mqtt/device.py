@@ -100,7 +100,7 @@ class Device:
             self._set_device_property_from_topic(parsed_topic, topic_desc, payload)
             return None
 
-        parsed_topic.finalize_topic_fields(self.short_unique_id,topic_desc)
+        parsed_topic.finalize_topic_fields(topic_desc)
         if fallback_to_metric_topic:
             value = unwrap_bool(payload)
             if value is None:

@@ -845,7 +845,7 @@ class Hub:
 
     def _create_device_unique_id(self, installation_id: str, device_type: str, device_id: str) -> tuple[str, str]:
         """Create a unique ID for a device."""
-        short_unique_id = f"{device_type}_{device_id}"
+        short_unique_id = ParsedTopic.make_device_short_unique_id(device_type, device_id)
         full_unique_id = f"{installation_id}_{short_unique_id}"
         return full_unique_id, short_unique_id
 
