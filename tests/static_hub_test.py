@@ -123,7 +123,7 @@ async def test_hub_message_handling():
     await inject_message(hub, "N/device/123/metric/456", "{\"value\": 42}")
 
     # Validate the Hub's state
-    assert len(hub.devices) == 1, "No devices should be created"
+    assert len(hub.devices) == 0, "No devices should be created"
 
     await finalize_injection(hub)
 
@@ -137,7 +137,7 @@ async def test_phase_message():
     await finalize_injection(hub)
 
     # Validate the Hub's state
-    assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
+    assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
@@ -210,7 +210,7 @@ async def test_number_message():
     await finalize_injection(hub, False)
 
     # Validate the Hub's state
-    assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
+    assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
     device = hub.devices["evcharger_170"]
@@ -256,7 +256,7 @@ async def test_placeholder_adjustable_on():
         await finalize_injection(hub)
 
     # Validate the Hub's state
-    assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
+    assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
     device = hub.devices["vebus_170"]
@@ -280,7 +280,7 @@ async def test_placeholder_adjustable_off():
         await finalize_injection(hub)
 
     # Validate the Hub's state
-    assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
+    assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
     device = hub.devices["vebus_170"]
@@ -841,8 +841,7 @@ async def test_filtered_message():
     await inject_message(hub, "N/123/evcharger/170/SetCurrent", "{\"value\": 100}")
 
     # Validate the Hub's state
-    assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
-    assert "system_0" in hub.devices, "Expected only the system device to exist"
+    assert len(hub.devices) == 0, f"Expected no devices, got {len(hub.devices)}"
 
 @pytest.mark.asyncio
 async def test_filtered_message_system():
@@ -854,9 +853,7 @@ async def test_filtered_message_system():
     await finalize_injection(hub)
 
     # Validate the Hub's state - system device exists but has no metrics due to filtering
-    assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
-    system_device = hub.devices["system_0"]
-    assert len(system_device._metrics) == 0, f"Expected 0 metrics on system device due to filtering, got {len(system_device._metrics)}"
+    assert len(hub.devices) == 0, f"Expected 0 device, got {len(hub.devices)}"
 
 @pytest.mark.asyncio
 async def test_no_filtered_message_placeholder():
@@ -868,9 +865,7 @@ async def test_no_filtered_message_placeholder():
     await finalize_injection(hub)
 
     # Validate the Hub's state - only system device exists, generator message was filtered
-    assert len(hub.devices) == 2, f"Expected 2 devices (system and generator1), got {len(hub.devices)}"
-    system_device = hub.devices["system_0"]
-    assert system_device.device_type.value[0] == "system", f"Expected system device, got {system_device.device_type.value}"
+    assert len(hub.devices) == 0, f"Expected no devices, got {len(hub.devices)}"
 
 
 @pytest.mark.asyncio
@@ -883,9 +878,7 @@ async def test_filtered_message_placeholder():
     await finalize_injection(hub)
 
     # Validate the Hub's state - only system device exists, generator message was filtered
-    assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
-    system_device = hub.devices["system_0"]
-    assert system_device.device_type.value[0] == "system", f"Expected system device, got {system_device.device_type.value}"
+    assert len(hub.devices) == 0, f"Expected no devices, got {len(hub.devices)}"
 
 
 @pytest.mark.asyncio
@@ -897,7 +890,7 @@ async def test_remote_name_dont_exists():
     await finalize_injection(hub)
 
     # Validate the Hub's state
-    assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
+    assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
     device = hub.devices["switch_170"]
@@ -920,7 +913,7 @@ async def test_remote_name_exists():
         await finalize_injection(hub)
 
         # Validate the Hub's state
-        assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
+        assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
 
         # Validate that the device has the metric we published
         device = hub.devices["switch_170"]
@@ -933,7 +926,7 @@ async def test_remote_name_exists():
         assert metric.key_values["output"] == "bla"
 
 @pytest.mark.asyncio
-async def test_remote_name_exists_twodevices():
+async def test_remote_name_exists_two_devices():
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
     with patch.object(Hub, "_keepalive_loop", new=_async_noop):
         hub: Hub = await create_mocked_hub()
@@ -945,7 +938,7 @@ async def test_remote_name_exists_twodevices():
         await finalize_injection(hub)
 
         # Validate the Hub's state
-        assert len(hub.devices) == 3, f"Expected 3 device, got {len(hub.devices)}"
+        assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
 
         # Validate that the device has the metric we published
         device = hub.devices["switch_170"]
@@ -976,7 +969,7 @@ async def test_remote_name_exists_2():
     await finalize_injection(hub)
 
     # Validate the Hub's state
-    assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
+    assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
     device = hub.devices["solarcharger_170"]
@@ -1020,7 +1013,6 @@ async def test_on_connect_sets_up_subscriptions():
 
 @pytest.mark.asyncio
 async def test_null_message():
-    """Test that the Hub correctly filters MQTT messages for generator1 device type."""
     hub: Hub = await create_mocked_hub()
 
     # Inject messages after the event is set
@@ -1028,14 +1020,11 @@ async def test_null_message():
     await finalize_injection(hub)
 
     # Validate the Hub's state - only system device exists, evcharger message was filtered
-    assert len(hub.devices) == 2, f"Expected 2 device (system device), got {len(hub.devices)}"
-    device = hub.devices["evcharger_170"]
-    assert device.metrics == [], f"Expected 0 metrics on evcharger device due to null message, got {len(device._metrics)}"
+    assert len(hub.devices) == 0, f"Expected no devices, got {len(hub.devices)}"
 
 @pytest.mark.asyncio
 @patch('victron_mqtt.formula_common.datetime')
 async def test_formula_message(mock_datetime):
-    """Test that the Hub correctly filters MQTT messages for generator1 device type."""
     # Mock datetime.now() to return a fixed time
     fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=0)
     mock_datetime.now.return_value = fixed_time
@@ -1099,3 +1088,60 @@ async def test_heartbeat_message():
     metric = device.get_metric_from_unique_id("123_system_0_system_heartbeat")
     assert metric is not None, "metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
+
+
+@pytest.mark.asyncio
+async def test_depends_on_regular_exists_same_round():
+    """Test that the Hub correctly filters MQTT messages for generator1 device type."""
+    with patch.object(Hub, "_keepalive_loop", new=_async_noop):
+        hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
+
+        # Inject messages after the event is set
+        await inject_message(hub, "N/123/settings/0/Settings/Generator1/BatteryVoltage/Enabled", "{\"value\": 0}")
+        await inject_message(hub, "N/123/generator/1/AutoStartEnabled", "{\"value\": 1}")
+        await finalize_injection(hub)
+
+        # Validate the Hub's state - only system device exists, evcharger message was filtered
+        assert len(hub.devices) == 2, f"Expected 2 devices (Generator1 and generator), got {len(hub.devices)}"
+        device = hub.devices["Generator1_0"]
+        metric = device.get_metric_from_unique_id("123_Generator1_0_generator_1_start_on_voltage_enabled")
+        assert metric is not None, "metric should exist in the device"
+        assert metric.value == GenericOnOff.Off, f"Expected metric value to be GenericOnOff.Off, got {metric.value}"
+
+    await hub.disconnect()
+
+@pytest.mark.asyncio
+async def test_depends_on_regular_exists_two_rounds():
+    """Test that the Hub correctly filters MQTT messages for generator1 device type."""
+    with patch.object(Hub, "_keepalive_loop", new=_async_noop):
+        hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
+
+        # Inject messages after the event is set
+        await inject_message(hub, "N/123/generator/1/AutoStartEnabled", "{\"value\": 1}")
+        await finalize_injection(hub, disconnect=False)
+        await inject_message(hub, "N/123/settings/0/Settings/Generator1/BatteryVoltage/Enabled", "{\"value\": 0}")
+        await finalize_injection(hub, disconnect=False)
+
+        # Validate the Hub's state - only system device exists, evcharger message was filtered
+        assert len(hub.devices) == 2, f"Expected 2 devices (Generator1 and generator), got {len(hub.devices)}"
+        device = hub.devices["Generator1_0"]
+        metric = device.get_metric_from_unique_id("123_Generator1_0_generator_1_start_on_voltage_enabled")
+        assert metric is not None, "metric should exist in the device"
+        assert metric.value == GenericOnOff.Off, f"Expected metric value to be GenericOnOff.Off, got {metric.value}"
+
+    await hub.disconnect()
+
+@pytest.mark.asyncio
+async def test_depends_on_regular_dont_exists():
+    """Test that the Hub correctly filters MQTT messages for generator1 device type."""
+    with patch.object(Hub, "_keepalive_loop", new=_async_noop):
+        hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
+
+        # Inject messages after the event is set
+        await inject_message(hub, "N/123/settings/0/Settings/Generator1/BatteryVoltage/Enabled", "{\"value\": 0}")
+        await finalize_injection(hub)
+
+        # Validate the Hub's state - only system device exists, evcharger message was filtered
+        assert len(hub.devices) == 0, f"Expected 0 devices, got {len(hub.devices)}"
+
+    await hub.disconnect()

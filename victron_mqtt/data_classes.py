@@ -51,6 +51,9 @@ class TopicDescriptor:
     is_adjustable_suffix: str | None = None
     key_values: dict[str, str] = field(default_factory=dict)
     experimental: bool = False
+    # Depends on format is different for regular and formula topics:
+    # For regular topics, the depends_on list contains the {device_id}_{metric_short_id} of the metric it depends on
+    # For formula topics, the depends_on list contains the {device_type}_{metric_short_id} of the metrics it depends on as it will be generated for all device ids from the specific device type
     depends_on: list[str] = field(default_factory=list)
     generic_name: str | None = None
     is_formula: bool = False  # True if this topic is calculated from other topics
@@ -187,6 +190,11 @@ class ParsedTopic:
     wildcards_with_device_type: str
     wildcards_without_device_type: str
     full_topic: str
+    
+    def __post_init__(self):
+        self._short_id: str | None = None
+        self._name: str | None = None
+        self._key_values: dict[str, str] = {}
 
     def __repr__(self) -> str:
         """Return a string representation of the parsed topic."""
@@ -258,10 +266,15 @@ class ParsedTopic:
             full_topic,
         )
 
-    def finalize_topic_fields(self, topic_desc: TopicDescriptor) -> None:
+    @classmethod
+    def make_hub_unique_id(cls, device_short_unique_id: str, short_id: str) -> str:
+        return f"{device_short_unique_id}_{short_id}"
+
+    def finalize_topic_fields(self, device_short_unique_id, topic_desc: TopicDescriptor) -> None:
         self._key_values = self.get_key_values(topic_desc)
         self._key_values.update(topic_desc.key_values)
         self._short_id = self._replace_ids(topic_desc.short_id)
+        self._hub_unique_id = ParsedTopic.make_hub_unique_id(device_short_unique_id, self._short_id)
         assert topic_desc.name is not None, f"TopicDescriptor name is None for topic: {topic_desc.topic}"
         self._name = self._replace_ids(topic_desc.name)
 
@@ -277,11 +290,17 @@ class ParsedTopic:
 
     @property
     def short_id(self) -> str:
+        assert self._short_id is not None, f"short_id is None for topic: {self.full_topic}"
         return self._short_id
 
     @property
+    def hub_unique_id(self) -> str:
+        assert self._hub_unique_id is not None, f"hub_unique_id is None for topic: {self.full_topic}"
+        return self._hub_unique_id
+
+    @property
     def key_values(self) -> dict[str, str]:
-        assert self._key_values is not None
+        assert self._key_values is not None, f"key_values is None for topic: {self.full_topic}"
         return self._key_values
 
     def _replace_ids(self, string: str) -> str:

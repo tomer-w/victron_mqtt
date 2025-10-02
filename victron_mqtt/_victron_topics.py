@@ -1204,6 +1204,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/QuietHoursStartValue",
@@ -1213,6 +1214,7 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/QuietHoursStopValue",
@@ -1222,6 +1224,7 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StartTimer",
@@ -1232,6 +1235,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StartValue",
@@ -1241,6 +1245,7 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StopTimer",
@@ -1251,6 +1256,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StopValue",
@@ -1260,6 +1266,7 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/CoolDownTime",
@@ -1271,6 +1278,7 @@ topics: List[TopicDescriptor] = [
         min=0,
         max=600,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/GeneratorStopTime",
@@ -1282,6 +1290,7 @@ topics: List[TopicDescriptor] = [
         min=0,
         max=600,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/InverterHighTemp/Enabled",
@@ -1291,6 +1300,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/InverterHighTemp/StartTimer",
@@ -1301,6 +1311,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/InverterHighTemp/StopTimer",
@@ -1311,6 +1322,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/QuietHours/Enabled",
@@ -1320,6 +1332,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/ServiceInterval",
@@ -1331,6 +1344,7 @@ topics: List[TopicDescriptor] = [
         min=0,
         max=500,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/Enabled",
@@ -1340,6 +1354,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStartValue",
@@ -1349,6 +1364,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStopValue",
@@ -1358,6 +1374,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StartTimer",
@@ -1369,6 +1386,7 @@ topics: List[TopicDescriptor] = [
         min=0,
         max=10000,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StartValue",
@@ -1378,6 +1396,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StopTimer",
@@ -1389,6 +1408,7 @@ topics: List[TopicDescriptor] = [
         min=0,
         max=10000,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StopValue",
@@ -1398,6 +1418,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/WarmUpTime",
@@ -1409,6 +1430,7 @@ topics: List[TopicDescriptor] = [
         min=0,
         max=1800,
         experimental=True,
+        depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     # Relay Custom Name topics
     TopicDescriptor(

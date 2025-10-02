@@ -100,6 +100,7 @@ class Device:
             self._set_device_property_from_topic(parsed_topic, topic_desc, payload)
             return None
 
+        parsed_topic.finalize_topic_fields(self.short_unique_id,topic_desc)
         if fallback_to_metric_topic:
             value = unwrap_bool(payload)
             if value is None:
@@ -108,17 +109,16 @@ class Device:
                     self.unique_id, topic_desc.short_id
                 )
                 return None
-            return FallbackPlaceholder(device=self, metric_id=topic_desc.short_id, parsed_topic=parsed_topic, topic_descriptor=topic_desc, value=value)
+            return FallbackPlaceholder(device=self, parsed_topic=parsed_topic, topic_descriptor=topic_desc, value=value)
         else:
             value = Device._unwrap_payload(topic_desc, payload)
             if value is None:
                 log_debug(
-                    "Ignoring null fallback_to_metric_topic value for device %s metric %s", 
+                    "Ignoring null topic value for device %s metric %s", 
                     self.unique_id, topic_desc.short_id
                 )
                 return None
 
-        parsed_topic.finalize_topic_fields(topic_desc)
         short_id = parsed_topic.short_id
         metric_id = f"{self.unique_id}_{short_id}"
         metric = self._metrics.get(metric_id)
@@ -126,7 +126,7 @@ class Device:
             metric._handle_message(value, event_loop, log_debug)
             return None
         assert value is not None, f"Value must not be None. topic={topic}, payload={payload}"
-        return MetricPlaceholder(self, metric_id, parsed_topic, topic_desc, payload, value)
+        return MetricPlaceholder(self, parsed_topic, topic_desc, payload, value)
 
     @staticmethod
     def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | bool | type[Enum] | None:
@@ -179,17 +179,16 @@ class Device:
         assert metric_placeholder.parsed_topic.device_type is not None, "device_type must be set for metric"
 
         if new_topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT]:
-            metric = WritableMetric(self, metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic, hub)
+            metric = WritableMetric(self, name, new_topic_desc, metric_placeholder.parsed_topic, hub)
         else:
-            metric = Metric(self, metric_placeholder.metric_id, name, new_topic_desc, metric_placeholder.parsed_topic.short_id, metric_placeholder.parsed_topic.key_values, hub)
+            metric = Metric(self, name, new_topic_desc, metric_placeholder.parsed_topic.hub_unique_id, metric_placeholder.parsed_topic.short_id, metric_placeholder.parsed_topic.key_values, hub)
         metric._handle_message(metric_placeholder.value, None, _LOGGER.debug)
         self._metrics[metric.unique_id] = metric
         return metric
 
     def add_formula_metric(self, topic_desc: TopicDescriptor, hub: Hub) -> FormulaMetric:
         assert topic_desc.name is not None, "name must be set for topic"
-        metric_id = f"{self.unique_id}_{topic_desc.short_id}"
-        metric = FormulaMetric(self, metric_id, topic_desc.name, topic_desc, hub)
+        metric = FormulaMetric(self, topic_desc.name, topic_desc, hub)
         self._metrics[metric.unique_id] = metric
         return metric
 
@@ -264,22 +263,20 @@ class Device:
 @dataclass
 class MetricPlaceholder:
     device: Device
-    metric_id: str
     parsed_topic: ParsedTopic
     topic_descriptor: TopicDescriptor
     payload: str
     value: str | float | int | bool | type[Enum]
 
     def __repr__(self) -> str:
-        return f"MetricPlaceholder(device={self.device}, metric_id={self.metric_id}, parsed_topic={self.parsed_topic}, topic_descriptor={self.topic_descriptor}, payload={self.payload}, value={self.value})"
+        return f"MetricPlaceholder(device={self.device}, parsed_topic={self.parsed_topic}, topic_descriptor={self.topic_descriptor}, payload={self.payload}, value={self.value})"
     
 @dataclass
 class FallbackPlaceholder:
     device: Device
-    metric_id: str
     parsed_topic: ParsedTopic
     topic_descriptor: TopicDescriptor
     value: str | float | int | bool | type[Enum]
 
     def __repr__(self) -> str:
-        return f"FallbackPlaceholder(device={self.device}, metric_id={self.metric_id}, parsed_topic={self.parsed_topic}, topic_descriptor={self.topic_descriptor}, value={self.value})"
+        return f"FallbackPlaceholder(device={self.device}, parsed_topic={self.parsed_topic}, topic_descriptor={self.topic_descriptor}, value={self.value})"

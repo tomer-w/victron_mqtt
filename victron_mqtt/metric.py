@@ -27,16 +27,17 @@ CallbackOnUpdate = Callable[["Metric", Any], None]
 class Metric:
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, device: Device, unique_id: str, name: str, descriptor: TopicDescriptor, short_id: str, key_values: dict[str, str], hub: Hub) -> None:
+    def __init__(self, device: Device, name: str, descriptor: TopicDescriptor, hub_unique_id: str, short_id: str, key_values: dict[str, str], hub: Hub) -> None:
         """Initialize the sensor."""
         _LOGGER.debug(
-            "Creating new metric: unique_id=%s, type=%s, nature=%s",
-            unique_id, descriptor.metric_type, descriptor.metric_nature
+            "Creating new metric: short_id=%s, type=%s, nature=%s",
+            short_id, descriptor.metric_type, descriptor.metric_nature
         )
         assert descriptor.name is not None, "name must be set for metric"
         self._device = device
         self._descriptor = descriptor
-        self._unique_id = unique_id
+        self._hub_unique_id = hub_unique_id
+        self._unique_id = f"{hub.installation_id}_{self._hub_unique_id}"
         self._value = None
         self._short_id = short_id
         self._name = name
@@ -45,7 +46,6 @@ class Metric:
         self._generic_name: str | None = None
         self._generic_short_id: str | None = None
         self._depend_on_me: list[FormulaMetric] = []
-        self._hub_unique_id: str = f"{device.short_unique_id}_{self._short_id}"
         self._hub = hub
         self._last_notified: float = 0
         self._last_seen: float = 0
