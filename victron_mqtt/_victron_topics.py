@@ -1797,6 +1797,13 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/system/{device_id}/Control/ScheduledSoc",
+        message_type=MetricKind.SENSOR,
+        short_id="system_control_scheduled_soc",
+        name="Scheduled SOC",
+        metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Dc/Battery/Current",
         message_type=MetricKind.SENSOR,
         short_id="system_dc_battery_current",
