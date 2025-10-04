@@ -47,7 +47,7 @@ class Device:
         """Return a string representation of the device."""
         return (
             f"Device(full_unique_id={self._full_unique_id}, "
-            f"short_unique_id={self._short_unique_id}, "
+            #f"short_unique_id={self._short_unique_id}, "
             f"name={self.name}, "
             f"model={self.model}, "
             f"manufacturer={self.manufacturer}, "
