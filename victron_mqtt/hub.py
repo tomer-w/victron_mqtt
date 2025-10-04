@@ -464,6 +464,9 @@ class Hub:
                 _LOGGER.debug("Trying to resolve formula topic: %s", topic)
                 relevant_devices: list[Device] = [device for device in self._devices.values() if device.device_type.code == topic.topic.split("/")[1]]
                 for device in relevant_devices:
+                    metric_name = ParsedTopic.make_hub_unique_id(device.short_unique_id, topic.short_id)
+                    if self._all_metrics.get(metric_name) is not None:
+                        continue
                     is_met, dependencies = self.is_formula_dependency_met(topic, device)
                     if not is_met:
                         continue
@@ -475,6 +478,7 @@ class Hub:
                         depends_on[dependency_metric._hub_unique_id] = dependency_metric
                     metric.init(depends_on, self._loop, _LOGGER.debug)
                     _LOGGER.info("Formula metric created: %s", metric)
+                    self._all_metrics[metric._hub_unique_id] = metric
                     new_formula_metrics.append((device, metric))
             # Send all new metrics to clients
             new_metrics.extend(new_formula_metrics)

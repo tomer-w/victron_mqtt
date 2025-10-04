@@ -755,6 +755,47 @@ async def test_new_metric_duplicate_messages():
     await hub.disconnect()
 
 @pytest.mark.asyncio
+async def test_new_metric_duplicate_formula_messages():
+    """Test that the Hub correctly triggers the on_new_metric callback."""
+    with patch.object(Hub, "_keepalive_loop", new=_async_noop):
+        hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
+
+        # Mock the on_new_metric callback
+        def on_new_metric_mock(hub, device, metric):
+            logger.debug(f"New metric added: Hub={hub}, Device={device}, Metric={repr(metric)}")
+        mock_on_new_metric = MagicMock(side_effect=on_new_metric_mock)
+        hub.on_new_metric = mock_on_new_metric
+
+        # Inject 1st message to generate formula metric
+        await inject_message(hub, "N/123/system/170/Dc/Battery/Power", "{\"value\": 120}") # Will generate also formula metrics.
+        await finalize_injection(hub, disconnect=False)
+
+        # Validate that the on_new_metric callback was called
+        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_power"))
+        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_charge_energy"))
+        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_discharge_energy"))
+        assert mock_on_new_metric.call_count == 3, "on_new_metric should be called exactly 3 times"
+
+        # Check that we got the callback only once
+        await hub._keepalive()
+        # Wait for the callback to be triggered
+        await asyncio.sleep(0.1)  # Allow event loop to process the callback
+        assert mock_on_new_metric.call_count == 3, "on_new_metric should be called exactly 3 times"
+
+        # Inject another message. Should generate this but not the formula metrics again
+        await inject_message(hub, "N/123/gps/170/Position/Latitude", "{\"value\": 2.3456}")
+        await finalize_injection(hub, disconnect=False)
+
+        # Check that we got the callback only once
+        await hub._keepalive()
+        # Wait for the callback to be triggered
+        await asyncio.sleep(0.1)  # Allow event loop to process the callback
+        mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric_from_unique_id("123_gps_170_gps_latitude"))
+        assert mock_on_new_metric.call_count == 4, "on_new_metric should be called exactly 4 times"
+
+    await hub.disconnect()
+
+@pytest.mark.asyncio
 async def test_experimental_metrics_not_created_by_default():
     """Ensure experimental topics do not create devices/metrics when operation_mode is not EXPERIMENTAL."""
     hub: Hub = await create_mocked_hub()
@@ -1070,6 +1111,9 @@ async def test_formula_message(mock_datetime):
     await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -2000}")
     assert metric2.value == 0.008, f"Expected metric value to be 0.008, got {metric2.value}"
     assert metric3.value == 0.004, f"Expected metric value to be 0.004, got {metric3.value}"
+
+    # Test the 2nd way to get metric
+    assert hub.get_metric_from_unique_id("123_system_0_system_dc_battery_discharge_energy") is not None
 
     await hub.disconnect()
 
