@@ -2291,6 +2291,13 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Dc/0/Temperature",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_inverter_dc_temperature",
+        name="Inverter DC temperature",
+        metric_type=MetricType.TEMPERATURE,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/In/P",
         message_type=MetricKind.SENSOR,
         short_id="vebus_device_{device_number}_input_power_l1",
