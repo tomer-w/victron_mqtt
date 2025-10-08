@@ -2,6 +2,7 @@
 
 import asyncio
 import copy
+from datetime import timedelta
 import json
 import logging
 import random
@@ -77,7 +78,8 @@ class Hub:
         topic_log_info: str | None = None,
         operation_mode: OperationMode = OperationMode.FULL,
         device_type_exclude_filter: list[DeviceType] | None = None,
-        update_frequency_seconds: int | None = None
+        update_frequency_seconds: int | None = None,
+        connect_timeout: timedelta = timedelta(seconds=25),
     ) -> None:
         """
         Initialize a Hub instance for communicating with a Venus OS MQTT broker.
@@ -173,11 +175,13 @@ class Hub:
             for device_type in device_type_exclude_filter:
                 if not isinstance(device_type, DeviceType):
                     raise TypeError(f"device_type_filter must contain only DeviceType instances, got type={type(device_type).__name__}, value={device_type!r}")
+        if connect_timeout is not None and not isinstance(connect_timeout, timedelta):
+            raise TypeError(f"connect_timeout must be a timedelta or None, got type={type(connect_timeout).__name__}, value={connect_timeout!r}")
         if update_frequency_seconds is not None and not isinstance(update_frequency_seconds, int):
             raise TypeError(f"update_frequency_seconds must be an integer or None, got type={type(update_frequency_seconds).__name__}, value={update_frequency_seconds!r}")
         _LOGGER.info(
-            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, topic_log_info=%s)",
-            self._instance_id, host, port, username, use_ssl, installation_id, model_name, topic_prefix, operation_mode, device_type_exclude_filter, update_frequency_seconds, topic_log_info
+            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, topic_log_info=%s, connect_timeout=%s)",
+            self._instance_id, host, port, username, use_ssl, installation_id, model_name, topic_prefix, operation_mode, device_type_exclude_filter, update_frequency_seconds, topic_log_info, connect_timeout
         )
         self._model_name = model_name
         self.host = host
@@ -195,11 +199,12 @@ class Hub:
         self._snapshot = {}
         self._keepalive_task = None
         self._connected_event = asyncio.Event()
-        self._connected_failed_attempts = 0
         self._on_new_metric: CallbackOnNewMetric | None = None
         self._topic_log_info = topic_log_info
         self._operation_mode = operation_mode
         self._device_type_exclude_filter = device_type_exclude_filter
+        self._update_frequency_seconds = update_frequency_seconds
+        self._connect_timeout = connect_timeout
         # The client ID is generated using a random string and the instance ID. It has to be unique between all clients connected to the same mqtt server. If not, they may reset each other connection.
         random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
         self._client_id = f"victron_mqtt-{random_string}-{self._instance_id}"
@@ -209,7 +214,8 @@ class Hub:
         self._all_metrics: dict[str, Metric] = {}
         self._first_connect = True
         self._first_full_publish = True
-        self._update_frequency_seconds = update_frequency_seconds
+        self._connect_failed_attempts = 0
+        self._connect_failed = False
 
         # Filter the active topics
         metrics_active_topics: list[TopicDescriptor] = []
@@ -295,13 +301,14 @@ class Hub:
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.VerifyMode.CERT_NONE
             self._client.tls_set_context(ssl_context)
-            
+        
         self._client.on_connect = self._on_connect
         self._client._on_disconnect = self._on_disconnect
         self._client.on_message = self._on_message
         self._client.on_connect_fail = self.on_connect_fail
         #self._client.on_log = self._on_log
-        self._connected_failed_attempts = 0
+        self._connect_failed_attempts = 0
+        self._connect_failed = False
         self._loop = asyncio.get_event_loop()
         #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop, name=name))
 
@@ -312,7 +319,10 @@ class Hub:
             self._client.connect_async(self.host, self.port)
             _LOGGER.info("Waiting for connection event")
             await self._wait_for_connect()
-            if self._connected_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
+            if self._client is None:
+                _LOGGER.error("Got request to disconnect while still connecting")
+                raise CannotConnectError("Got request to disconnect while still connecting")
+            if self._connect_failed:
                 _LOGGER.error("Failed to connect to MQTT broker")
                 raise CannotConnectError("Failed to connect to MQTT broker")
             _LOGGER.info("Successfully connected to MQTT broker at %s:%d", self.host, self.port)
@@ -813,7 +823,7 @@ class Hub:
     async def _wait_for_connect(self) -> None:
         """Wait for the first connection to complete."""
         try:
-            await asyncio.wait_for(self._connected_event.wait(), timeout=25)
+            await asyncio.wait_for(self._connected_event.wait(), timeout=self._connect_timeout.seconds)
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout waiting for first first connection")
             raise CannotConnectError("Timeout waiting for first connection")
@@ -893,8 +903,12 @@ class Hub:
     def on_connect_fail(self, client: MQTTClient, userdata: Any) -> None:
         """Handle connection failure callback."""
         _LOGGER.warning("Connection to MQTT broker failed")
-        self._connected_failed_attempts += 1
-        if self._connected_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
+        self._connect_failed_attempts += 1
+        # Check if we have reached the maximum number of failed attempts
+        # If we have a connect timeout than we will stop after CONNECT_MAX_FAILED_ATTEMPTS attempts
+        # If not, we will keep trying until we succeed or disconnect is called
+        if self._connect_timeout != timedelta.max and self._connect_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
+            self._connect_failed = True
             if self._loop.is_running():
                 self._loop.call_soon_threadsafe(self._connected_event.set)
 
