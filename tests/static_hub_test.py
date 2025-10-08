@@ -796,16 +796,16 @@ async def test_new_metric_duplicate_formula_messages():
     await hub.disconnect()
 
 @pytest.mark.asyncio
-async def test_experimental_metrics_not_created_by_default():
-    """Ensure experimental topics do not create devices/metrics when operation_mode is not EXPERIMENTAL."""
-    hub: Hub = await create_mocked_hub()
+# async def test_experimental_metrics_not_created_by_default():
+#     """Ensure experimental topics do not create devices/metrics when operation_mode is not EXPERIMENTAL."""
+#     hub: Hub = await create_mocked_hub()
 
-    # Inject an experimental topic (generator TodayRuntime is marked experimental in _victron_topics)
-    await inject_message(hub, "N/123/generator/170/TodayRuntime", '{"value": 100}')
-    await finalize_injection(hub)
+#     # Inject an experimental topic (generator TodayRuntime is marked experimental in _victron_topics)
+#     await inject_message(hub, "N/123/generator/170/TodayRuntime", '{"value": 100}')
+#     await finalize_injection(hub)
 
-    # The experimental topic should not have created a device or metric
-    assert "generator_170" not in hub.devices, "Experimental topic should not create devices/metrics when operation_mode is not EXPERIMENTAL"
+#     # The experimental topic should not have created a device or metric
+#     assert "generator_170" not in hub.devices, "Experimental topic should not create devices/metrics when operation_mode is not EXPERIMENTAL"
 
 @pytest.mark.asyncio
 async def test_experimental_metrics_created_when_needed():

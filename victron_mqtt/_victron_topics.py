@@ -527,7 +527,6 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.CUMULATIVE,
         value_type=ValueType.INT_SECONDS_TO_HOURS,
         precision=1,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/generator/{device_id}/AutoStartEnabled",
@@ -536,7 +535,6 @@ topics: List[TopicDescriptor] = [
         name="Generator auto start enabled",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/generator/{device_id}/ManualStart",
@@ -545,7 +543,6 @@ topics: List[TopicDescriptor] = [
         name="Generator manual start",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/generator/{device_id}/RunningByConditionCode",
@@ -555,7 +552,6 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.NONE,
         value_type=ValueType.ENUM,
         enum=GeneratorRunningByConditionCode,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/generator/{device_id}/ServiceCounter",
@@ -566,7 +562,6 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.TIME,
         metric_nature=MetricNature.CUMULATIVE,
         value_type=ValueType.INT_SECONDS_TO_HOURS,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/generator/{device_id}/TodayRuntime",
@@ -578,7 +573,6 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.INT_SECONDS_TO_HOURS,
         precision=1,
-        experimental=True,
     ),
     # GPS topics
     TopicDescriptor(
@@ -1203,7 +1197,6 @@ topics: List[TopicDescriptor] = [
         name="Generator start on voltage enabled",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1213,7 +1206,6 @@ topics: List[TopicDescriptor] = [
         name="Generator QH start on voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1223,7 +1215,6 @@ topics: List[TopicDescriptor] = [
         name="Generator QH stop on voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1234,7 +1225,6 @@ topics: List[TopicDescriptor] = [
         unit_of_measurement="s",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1244,7 +1234,6 @@ topics: List[TopicDescriptor] = [
         name="Generator start on voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1255,7 +1244,6 @@ topics: List[TopicDescriptor] = [
         unit_of_measurement="s",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1265,7 +1253,6 @@ topics: List[TopicDescriptor] = [
         name="Generator stop on voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1277,7 +1264,6 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=0,
         max=600,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1289,7 +1275,6 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=0,
         max=600,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1299,7 +1284,6 @@ topics: List[TopicDescriptor] = [
         name="Generator start on high temp enabled",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1310,7 +1294,6 @@ topics: List[TopicDescriptor] = [
         unit_of_measurement="s",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1321,7 +1304,6 @@ topics: List[TopicDescriptor] = [
         unit_of_measurement="s",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1331,7 +1313,6 @@ topics: List[TopicDescriptor] = [
         name="Generator quiet hours enabled",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1343,7 +1324,6 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT_SECONDS_TO_HOURS,
         min=0,
         max=500,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1353,7 +1333,6 @@ topics: List[TopicDescriptor] = [
         name="Generator start on SOC enabled",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1363,7 +1342,6 @@ topics: List[TopicDescriptor] = [
         name="Generator QH start on SOC",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1373,7 +1351,6 @@ topics: List[TopicDescriptor] = [
         name="Generator QH stop on SOC",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1385,7 +1362,6 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=0,
         max=10000,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1395,7 +1371,6 @@ topics: List[TopicDescriptor] = [
         name="Generator start on SOC",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1407,7 +1382,6 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=0,
         max=10000,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1417,7 +1391,6 @@ topics: List[TopicDescriptor] = [
         name="Generator stop on SOC",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     TopicDescriptor(
@@ -1429,7 +1402,6 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=0,
         max=1800,
-        experimental=True,
         depends_on=["generator_{gen_id}_generator_autorun"]
     ),
     # Relay Custom Name topics
@@ -1469,7 +1441,6 @@ topics: List[TopicDescriptor] = [
         precision=1,
         min=0,
         max=60,
-        experimental=True,
     ),
     # Solar Charger topics
     TopicDescriptor(
@@ -2303,7 +2274,6 @@ topics: List[TopicDescriptor] = [
         short_id="vebus_device_{device_number}_input_power_l1",
         name="VE.Bus device {device_number} line 1 input power",
         metric_type=MetricType.POWER,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/In/{phase}/P",
@@ -2311,7 +2281,6 @@ topics: List[TopicDescriptor] = [
         short_id="vebus_device_{device_number}_input_power_{phase}",
         name="VE.Bus device {device_number} line {phase} input power",
         metric_type=MetricType.POWER,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/Inverter/P",
@@ -2319,7 +2288,6 @@ topics: List[TopicDescriptor] = [
         short_id="vebus_device_{device_number}_inverted_power",
         name="VE.Bus device {device_number} inverted power",
         metric_type=MetricType.POWER,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/Out/P",
@@ -2327,7 +2295,6 @@ topics: List[TopicDescriptor] = [
         short_id="vebus_device_{device_number}_output_power_l1",
         name="VE.Bus device {device_number} line 1 output power",
         metric_type=MetricType.POWER,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/Out/{phase}/P",
@@ -2335,7 +2302,6 @@ topics: List[TopicDescriptor] = [
         short_id="vebus_device_{device_number}_output_power_{phase}",
         name="VE.Bus device {device_number} line {phase} output power",
         metric_type=MetricType.POWER,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Energy/AcIn1ToAcOut",
@@ -2449,6 +2415,5 @@ topics: List[TopicDescriptor] = [
         short_id="generator_service_counter_reset",
         name="Generator service counter reset",
         value_type=ValueType.INT,
-        experimental=True,
     ),
 ]
