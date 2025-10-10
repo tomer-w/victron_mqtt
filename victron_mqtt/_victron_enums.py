@@ -34,9 +34,14 @@ class DeviceType(VictronDeviceEnum):
 
 
 class GenericOnOff(VictronEnum):
-    """On/Off  Enum"""
+    """On/Off Enum"""
     Off = (0, "Off")
     On = (1, "On")
+
+class ChargerMode(VictronEnum):
+    """Charger Mode Enum"""
+    On = (1, "On")
+    Off = (4, "Off")
 
 class InverterMode(VictronEnum):
     """Inverter Mode Enum"""
