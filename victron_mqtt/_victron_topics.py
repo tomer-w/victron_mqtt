@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import AcActiveInputSource, DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, EvChargerMode, MppOperationMode, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum, ESSState, ESSModeHub4 
+from ._victron_enums import AcActiveInputSource, DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, ChargerMode, EvChargerMode, MppOperationMode, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum, ESSState, ESSModeHub4 
 
 # Good sources for topics is:
 # https://github.com/victronenergy/venus/wiki/dbus
@@ -80,25 +80,41 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/alternator/{device_id}/In/I",
+        topic="N/{installation_id}/alternator/{device_id}/Dc/In/I",
         message_type=MetricKind.SENSOR,
         short_id="alternator_input_current",
         name="Input Current",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/alternator/{device_id}/In/P",
+        topic="N/{installation_id}/alternator/{device_id}/Dc/In/P",
         message_type=MetricKind.SENSOR,
         short_id="alternator_input_power",
         name="Input Power",
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/alternator/{device_id}/In/V",
+        topic="N/{installation_id}/alternator/{device_id}/Dc/In/V",
         message_type=MetricKind.SENSOR,
         short_id="alternator_input_voltage",
         name="Input Voltage",
         metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/alternator/{device_id}/Mode",
+        message_type=MetricKind.SWITCH,
+        short_id="alternator_dc_charger_mode",
+        name="DC Charger Mode",
+        value_type=ValueType.ENUM,
+        enum=ChargerMode,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/alternator/{device_id}/State",
+        message_type=MetricKind.SENSOR,
+        short_id="alternator_dc_charger_state",
+        name="DC Charger State",
+        value_type=ValueType.ENUM,
+        enum=State,
     ),
     # Battery topics
     TopicDescriptor(
@@ -1555,7 +1571,7 @@ topics: List[TopicDescriptor] = [
         short_id="solarcharger_mode",
         name="Solar Charger Mode",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff,
+        enum=ChargerMode,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/MppOperationMode",
