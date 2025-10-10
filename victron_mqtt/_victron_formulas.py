@@ -40,7 +40,7 @@ def left_riemann_sum(
     persistent_state: FormulaPersistentState | None) -> tuple[float, FormulaTransientState, FormulaPersistentState] | None:   
 
     def adjust(input: float) -> float:
-        return input
+        return input / 1000  # Convert to kW
     
     return left_riemann_sum_internal(depends_on, adjust, transient_state, persistent_state)
 
