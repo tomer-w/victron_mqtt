@@ -341,8 +341,8 @@ class Hub:
             self._start_keep_alive_loop()
             _LOGGER.info("Connected. Installation ID: %s", self._installation_id)
         except Exception as exc:
-            _LOGGER.error("Failed to connect to MQTT broker: %s", exc, exc_info=True)
-            raise CannotConnectError(f"Failed to connect to MQTT broker: {exc}") from exc
+            _LOGGER.error("Failed to connect: %s", exc, exc_info=True)
+            raise CannotConnectError(f"Failed to connect: {exc}") from exc
 
     def publish(self, topic_short_id: str, device_id: str, value: str | float | int | None) -> None:
         """Publish a message to the MQTT broker."""
