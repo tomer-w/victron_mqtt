@@ -316,11 +316,9 @@ class Hub:
             _LOGGER.info("Waiting for connection event")
             await self._wait_for_connect()
             if self._client is None:
-                _LOGGER.error("Got request to disconnect while still connecting")
                 raise CannotConnectError("Got request to disconnect while still connecting")
             if self._connect_failed:
-                _LOGGER.error("Failed to connect to MQTT broker")
-                raise CannotConnectError("Failed to connect to MQTT broker")
+                raise CannotConnectError(f"Failed to connect to MQTT broker: {self.host}:{self.port}")
             _LOGGER.info("Successfully connected to MQTT broker at %s:%d", self.host, self.port)
             if self._installation_id is None:
                 _LOGGER.info("No installation ID provided, attempting to read from device")
