@@ -8,6 +8,9 @@ on:
   pull_request:
     # Only following types are handled by the action, but one can default to all as well
     types: [opened, reopened, synchronize]
+  release:
+    types:
+      - created
 
 permissions:
   contents: read
@@ -26,3 +29,28 @@ jobs:
       - uses: release-drafter/release-drafter@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update_release_notes:
+    needs: update_release_draft
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get previous tag
+        id: get_previous_tag
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
+          echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_ENV
+
+      - name: Get commit messages
+        id: get_commits
+        run: |
+          COMMITS=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"%s")
+          echo "commits=$COMMITS" >> $GITHUB_ENV
+
+      - name: Update release notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit ${{ github.event.release.tag_name }} --notes "$commits"
