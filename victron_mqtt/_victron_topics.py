@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import AcActiveInputSource, DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, ChargerMode, EvChargerMode, MppOperationMode, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum, ESSState, ESSModeHub4 
+from ._victron_enums import AcActiveInputSource, DESSMode, DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, ChargerMode, EvChargerMode, MppOperationMode, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum, ESSState, ESSModeHub4 
 
 # Good sources for topics is:
 # https://github.com/victronenergy/venus/wiki/dbus
@@ -1204,6 +1204,15 @@ topics: List[TopicDescriptor] = [
         name="PV DC Overvoltage FeedIn",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+    ),
+    # Dynamic ESS settings topics
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/DynamicEss/Mode",
+        message_type=MetricKind.SELECT,
+        short_id="system_settings_dess_mode",
+        name="DESS Mode",
+        value_type=ValueType.ENUM,
+        enum=DESSMode,
     ),
     # Generator settings topics
     TopicDescriptor(

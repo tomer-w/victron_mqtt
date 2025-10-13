@@ -31,6 +31,7 @@ class DeviceType(VictronDeviceEnum):
     RELAY = ("Relay", "<Not used>", "system") # Should be mapped to SYSTEM
     PLATFORM = ("platform", "Platform", "system") # For whatever reason some system topics are under platform
     HEATPUMP = ("heatpump", "Heat Pump")
+    DYNAMIC_ESS = ("DynamicEss", "Dynamic ESS", "system") # Dynamic ESS settings are under system
 
 
 class GenericOnOff(VictronEnum):
@@ -192,6 +193,14 @@ class DESSErrorCode(VictronEnum):
     NO_SCHEDULE = (3, "No Matching Schedule")
     SOC_LOW = (4, "SOC low")
     BATTRY_CAPACITY_NOT_CONFIGURED = (5,"Battery Capacity Not Configured")
+
+class DESSMode(VictronEnum):
+    """DESS Mode Enum"""
+    OFF = (0, "Off")
+    AUTO_VRM = (1, "Auto / VRM")
+    BUY = (2, "Buy")
+    SELL = (3, "Sell")
+    NODE_RED = (4, "Node-RED")
 
 class DESSRestrictions(VictronEnum):
     NO_RESTRICTIONS = (0, "No Restrictions between battery and the grid")

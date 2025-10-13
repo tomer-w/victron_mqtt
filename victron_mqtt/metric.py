@@ -60,9 +60,7 @@ class Metric:
             f"Metric(unique_id={self.unique_id}, "
             f"descriptor={self._descriptor}, "
             f"value={self.value}, "
-            #f"generic_short_id={self._generic_short_id}, "
             f"short_id={self._short_id}, "
-            #f"generic_name={self._generic_name}, "
             f"name={self._name}, "
             f"{key_values_part})"
             )

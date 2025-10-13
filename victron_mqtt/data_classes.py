@@ -64,21 +64,7 @@ class TopicDescriptor:
             f"TopicDescriptor(topic={self.topic},"
             f"message_type={self.message_type}, "
             f"short_id={self.short_id}, "
-            f"name={self.name}, "
-            # f"generic_name={self.generic_name}, "
-            # f"unit_of_measurement={self.unit_of_measurement}, "
-            # f"metric_type={self.metric_type}, "
-            # f"metric_nature={self.metric_nature}, "
-            # f"value_type={self.value_type}, "
-            # f"precision={self.precision}, "
-            # f"min={self.min}, "
-            # f"max={self.max}, "
-            # f"step={self.step}, "
-            # f"enum={self.enum}, "
-            # f"is_adjustable_suffix={self.is_adjustable_suffix}, "
-            # f"depends_on={self.depends_on}, "
-            # f"key_values={self.key_values}, "
-            # f"experimental={self.experimental})"
+            f"name={self.name})"
         )
     
     def __post_init__(self):
