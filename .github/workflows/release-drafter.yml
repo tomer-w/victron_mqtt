@@ -61,7 +61,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Get the latest draft release
-          DRAFT_RELEASE=$(gh release list --limit 50 --json isDraft,tagName,id | jq -r '.[] | select(.isDraft == true) | .tagName' | head -1)
+          DRAFT_RELEASE=$(gh release list --limit 50 --json isDraft,tagName | jq -r '.[] | select(.isDraft == true) | .tagName' | head -1)
           
           if [ -n "$DRAFT_RELEASE" ] && [ "$DRAFT_RELEASE" != "null" ]; then
             echo "Found draft release: $DRAFT_RELEASE"
