@@ -8,9 +8,6 @@ on:
   pull_request:
     # Only following types are handled by the action, but one can default to all as well
     types: [opened, reopened, synchronize]
-  release:
-    types:
-      - created
 
 permissions:
   contents: read
@@ -25,29 +22,17 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-      # Drafts your next Release notes as Pull Requests are merged into "main"
-      - uses: release-drafter/release-drafter@v6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  update_release_notes:
-    needs: update_release_draft
-    runs-on: ubuntu-latest
-    steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: Get previous tag
-        id: get_previous_tag
+      - name: Get previous tag and commit messages
+        id: get_changes
         run: |
-          CURRENT_TAG="${{ github.event.release.tag_name }}"
-          echo "Current release tag: $CURRENT_TAG"
-          
-          # Get all tags sorted by commit date (newest first), excluding the current tag
-          PREVIOUS_TAG=$(git tag --sort=-creatordate | grep -v "^$CURRENT_TAG$" | head -1)
+          # Get the most recent tag
+          PREVIOUS_TAG=$(git tag --sort=-creatordate | head -1)
           
           if [ -z "$PREVIOUS_TAG" ]; then
             echo "No previous tag found, using initial commit"
@@ -55,21 +40,39 @@ jobs:
           fi
           
           echo "Previous tag: $PREVIOUS_TAG"
-          echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_ENV
-
-      - name: Get commit messages
-        id: get_commits
-        run: |
-          CURRENT_TAG="${{ github.event.release.tag_name }}"
-          echo "Getting commits between $PREVIOUS_TAG and $CURRENT_TAG"
           
-          # Get commit messages between previous tag and current tag
-          COMMITS=$(git log $PREVIOUS_TAG..$CURRENT_TAG --pretty=format:"%s" | tr '\n' '; ')
-          echo "Found commits: $COMMITS"
-          echo "commits=$COMMITS" >> $GITHUB_ENV
+          # Get commit messages since the previous tag
+          COMMITS=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s" | head -20)
+          
+          # Save commits to environment variable
+          echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_ENV
+          echo "COMMITS<<EOF" >> $GITHUB_ENV
+          echo "$COMMITS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
-      - name: Update release notes
+      # Drafts your next Release notes as Pull Requests are merged into "main"
+      - uses: release-drafter/release-drafter@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update draft release with commit history
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release edit ${{ github.event.release.tag_name }} --notes "$commits"
+          # Create release notes content
+          echo "## Changes since $PREVIOUS_TAG" > release_notes.txt
+          echo "" >> release_notes.txt
+          echo "$COMMITS" >> release_notes.txt
+          echo "" >> release_notes.txt
+          echo "---" >> release_notes.txt
+          echo "*This release was automatically generated from commits since the last tag.*" >> release_notes.txt
+
+          # Get the latest draft release
+          DRAFT_RELEASE=$(gh release list --limit 1 --json isDraft,tagName,id | jq -r '.[] | select(.isDraft == true) | .tagName')
+          
+          if [ -n "$DRAFT_RELEASE" ]; then
+            echo "Updating draft release: $DRAFT_RELEASE"
+            gh release edit "$DRAFT_RELEASE" --notes-file release_notes.txt
+          else
+            echo "No draft release found to update"
+          fi
