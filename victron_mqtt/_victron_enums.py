@@ -55,7 +55,7 @@ class PhoenixInverterMode(VictronEnum):
     """Inverter Mode Enum"""
     INVERTER = (2, "Inverter")
     OFF = (4, "Off")
-    ECO = (4, "Eco")
+    ECO = (5, "Eco")
 
 class State(VictronEnum):
     """State Enum"""
