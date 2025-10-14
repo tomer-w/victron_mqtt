@@ -69,12 +69,27 @@ jobs:
             # Get current release notes
             CURRENT_NOTES=$(gh release view "$DRAFT_RELEASE" --json body -q .body)
             
-            # Create enhanced release notes
-            echo "$CURRENT_NOTES" > enhanced_notes.md
-            echo "" >> enhanced_notes.md
-            echo "## Commit History since $PREVIOUS_TAG" >> enhanced_notes.md
-            echo "" >> enhanced_notes.md
-            echo "$COMMITS" >> enhanced_notes.md
+            # Create enhanced release notes by merging commits into the Changes section
+            if echo "$CURRENT_NOTES" | grep -q "## Changes"; then
+              # Split the notes at the Changes section and insert commits
+              echo "$CURRENT_NOTES" | sed '/## Changes/,$!d' | sed '1!d' > enhanced_notes.md  # Header line
+              echo "" >> enhanced_notes.md
+              echo "### From Pull Requests:" >> enhanced_notes.md
+              echo "$CURRENT_NOTES" | sed -n '/## Changes/,/## Contributors/p' | sed '1d;$d' >> enhanced_notes.md
+              echo "" >> enhanced_notes.md
+              echo "### From Commits since $PREVIOUS_TAG:" >> enhanced_notes.md
+              echo "$COMMITS" >> enhanced_notes.md
+              echo "" >> enhanced_notes.md
+              # Add the rest of the notes (Contributors section onwards)
+              echo "$CURRENT_NOTES" | sed -n '/## Contributors/,$p' >> enhanced_notes.md
+            else
+              # Fallback if no Changes section found
+              echo "$CURRENT_NOTES" > enhanced_notes.md
+              echo "" >> enhanced_notes.md
+              echo "## Changes" >> enhanced_notes.md
+              echo "" >> enhanced_notes.md
+              echo "$COMMITS" >> enhanced_notes.md
+            fi
             echo "" >> enhanced_notes.md
             echo "---" >> enhanced_notes.md
             echo "*This release was automatically generated from pull requests and commits.*" >> enhanced_notes.md
