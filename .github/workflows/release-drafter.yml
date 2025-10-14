@@ -36,17 +36,28 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Get previous tag
         id: get_previous_tag
         run: |
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
+          # Check if there are any tags at all
+          if ! git tag -l | head -1; then
+            echo "No tags found, using initial commit"
+            PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
+          else
+            # Get the previous tag (second most recent)
+            PREVIOUS_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || git describe --tags --abbrev=0)
+          fi
           echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_ENV
 
       - name: Get commit messages
         id: get_commits
         run: |
-          COMMITS=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"%s")
+          # Get commit messages since the previous tag/commit
+          COMMITS=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"%s" | tr '\n' '; ')
           echo "commits=$COMMITS" >> $GITHUB_ENV
 
       - name: Update release notes
