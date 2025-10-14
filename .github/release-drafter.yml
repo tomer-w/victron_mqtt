@@ -37,9 +37,16 @@ template: |
 
   $CHANGES
 
+  ## Commit History since $PREVIOUS_TAG
+
+  $COMMITS
+
   ## Contributors
 
   $CONTRIBUTORS
+
+  ---
+  *This release was automatically generated from pull requests and commits.*
 autolabeler:
   - label: 'chore'
     files:

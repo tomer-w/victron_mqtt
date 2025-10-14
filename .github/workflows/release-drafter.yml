@@ -55,32 +55,5 @@ jobs:
         id: release_drafter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update draft release with commit history
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Create release notes content
-          echo "## Changes since $PREVIOUS_TAG" > release_notes.txt
-          echo "" >> release_notes.txt
-          echo "$COMMITS" >> release_notes.txt
-          echo "" >> release_notes.txt
-          echo "---" >> release_notes.txt
-          echo "*This release was automatically generated from commits since the last tag.*" >> release_notes.txt
-
-          # Get the latest draft release
-          DRAFT_RELEASE=$(gh release list --limit 50 --json isDraft,tagName,id | jq -r '.[] | select(.isDraft == true) | .tagName' | head -1)
-          
-          if [ -n "$DRAFT_RELEASE" ] && [ "$DRAFT_RELEASE" != "null" ]; then
-            echo "Updating draft release: $DRAFT_RELEASE"
-            gh release edit "$DRAFT_RELEASE" --notes-file release_notes.txt
-            echo "Draft release updated successfully"
-          else
-            echo "No draft release found. Checking all releases:"
-            gh release list --limit 10
-            echo "Creating a new draft release..."
-            # Create a new draft release if none exists
-            NEXT_VERSION=$(date +"%Y.%m.%d")
-            gh release create "v$NEXT_VERSION" --draft --title "v$NEXT_VERSION" --notes-file release_notes.txt
-            echo "Created new draft release: v$NEXT_VERSION"
-          fi
+          PREVIOUS_TAG: ${{ env.PREVIOUS_TAG }}
+          COMMITS: ${{ env.COMMITS }}
