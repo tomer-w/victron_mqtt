@@ -52,6 +52,7 @@ jobs:
 
       # Drafts your next Release notes as Pull Requests are merged into "main"
       - uses: release-drafter/release-drafter@v6
+        id: release_drafter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -68,11 +69,18 @@ jobs:
           echo "*This release was automatically generated from commits since the last tag.*" >> release_notes.txt
 
           # Get the latest draft release
-          DRAFT_RELEASE=$(gh release list --limit 1 --json isDraft,tagName,id | jq -r '.[] | select(.isDraft == true) | .tagName')
+          DRAFT_RELEASE=$(gh release list --limit 50 --json isDraft,tagName,id | jq -r '.[] | select(.isDraft == true) | .tagName' | head -1)
           
-          if [ -n "$DRAFT_RELEASE" ]; then
+          if [ -n "$DRAFT_RELEASE" ] && [ "$DRAFT_RELEASE" != "null" ]; then
             echo "Updating draft release: $DRAFT_RELEASE"
             gh release edit "$DRAFT_RELEASE" --notes-file release_notes.txt
+            echo "Draft release updated successfully"
           else
-            echo "No draft release found to update"
+            echo "No draft release found. Checking all releases:"
+            gh release list --limit 10
+            echo "Creating a new draft release..."
+            # Create a new draft release if none exists
+            NEXT_VERSION=$(date +"%Y.%m.%d")
+            gh release create "v$NEXT_VERSION" --draft --title "v$NEXT_VERSION" --notes-file release_notes.txt
+            echo "Created new draft release: v$NEXT_VERSION"
           fi
