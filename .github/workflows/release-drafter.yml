@@ -55,5 +55,33 @@ jobs:
         id: release_drafter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PREVIOUS_TAG: ${{ env.PREVIOUS_TAG }}
-          COMMITS: ${{ env.COMMITS }}
+
+      - name: Append commit history to draft release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the latest draft release
+          DRAFT_RELEASE=$(gh release list --limit 50 --json isDraft,tagName,id | jq -r '.[] | select(.isDraft == true) | .tagName' | head -1)
+          
+          if [ -n "$DRAFT_RELEASE" ] && [ "$DRAFT_RELEASE" != "null" ]; then
+            echo "Found draft release: $DRAFT_RELEASE"
+            
+            # Get current release notes
+            CURRENT_NOTES=$(gh release view "$DRAFT_RELEASE" --json body -q .body)
+            
+            # Create enhanced release notes
+            echo "$CURRENT_NOTES" > enhanced_notes.md
+            echo "" >> enhanced_notes.md
+            echo "## Commit History since $PREVIOUS_TAG" >> enhanced_notes.md
+            echo "" >> enhanced_notes.md
+            echo "$COMMITS" >> enhanced_notes.md
+            echo "" >> enhanced_notes.md
+            echo "---" >> enhanced_notes.md
+            echo "*This release was automatically generated from pull requests and commits.*" >> enhanced_notes.md
+            
+            # Update the draft release with enhanced notes
+            gh release edit "$DRAFT_RELEASE" --notes-file enhanced_notes.md
+            echo "Updated draft release with commit history"
+          else
+            echo "No draft release found to update"
+          fi
