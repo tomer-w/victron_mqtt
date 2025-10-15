@@ -42,7 +42,7 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/src"  // Include src in PYTHONPATH so Python can find the module
             },
-            "args": ["--verbose", "--log-file", "view_metrics.log", "--log-topic", "DynamicEss/ErrorCode"]
+            "args": ["--verbose", "--log-file", "view_metrics.log", "--log-topic", "/BatteryLife/Schedule/Charge"]
         },
         {
             "name": "dumb_mqtt_listener",
