@@ -74,10 +74,7 @@ jobs:
               # Split the notes at the Changes section and insert commits
               echo "$CURRENT_NOTES" | sed '/## Changes/,$!d' | sed '1!d' > enhanced_notes.md  # Header line
               echo "" >> enhanced_notes.md
-              echo "### From Pull Requests:" >> enhanced_notes.md
               echo "$CURRENT_NOTES" | sed -n '/## Changes/,/## Contributors/p' | sed '1d;$d' >> enhanced_notes.md
-              echo "" >> enhanced_notes.md
-              echo "### From Commits since $PREVIOUS_TAG:" >> enhanced_notes.md
               echo "$COMMITS" >> enhanced_notes.md
               echo "" >> enhanced_notes.md
               # Add the rest of the notes (Contributors section onwards)
