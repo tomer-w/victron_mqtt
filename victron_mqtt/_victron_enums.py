@@ -294,3 +294,17 @@ class AcActiveInputSource(VictronEnum):
     Generator = (2, "Generator")
     ShorePower = (3, "Shore power")
     NotConnected = (240, "Not connected")
+
+class ChargeSchedule(VictronEnum):
+    """Charge Schedule Enum"""
+    Disabled = (-1, "Disabled")
+    Sunday = (0, "Sunday")
+    Monday = (1, "Monday")
+    Tuesday = (2, "Tuesday")
+    Wednesday = (3, "Wednesday")
+    Thursday = (4, "Thursday")
+    Friday = (5, "Friday")
+    Saturday = (6, "Saturday")
+    EveryDay = (7, "Every day")
+    Weekdays = (8, "Weekdays")
+    Weekends = (9, "Weekends")

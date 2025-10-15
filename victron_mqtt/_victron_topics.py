@@ -5,7 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import AcActiveInputSource, DESSMode, DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, ChargerMode, EvChargerMode, MppOperationMode, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum, ESSState, ESSModeHub4 
+from ._victron_enums import AcActiveInputSource, ChargeSchedule, DESSMode, DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, ChargerMode, EvChargerMode, MppOperationMode, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum, ESSState, ESSModeHub4 
 
 # Good sources for topics is:
 # https://github.com/victronenergy/venus/wiki/dbus
@@ -1160,6 +1160,14 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Day",
+        message_type=MetricKind.SELECT,
+        short_id="system_ess_schedule_charge_{slot}_days",
+        name="ESS BatteryLife Schedule charge {slot} days",
+        value_type=ValueType.ENUM,
+        enum=ChargeSchedule,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/State",
