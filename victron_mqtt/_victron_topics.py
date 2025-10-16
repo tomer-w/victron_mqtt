@@ -2193,6 +2193,22 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Ac/State/IgnoreAcIn1",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_inverter_ignoreacin1_state",
+        name="State of IgnoreAcIn1",
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),    
+    TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Ac/Control/IgnoreAcIn1",
+        message_type=MetricKind.SWITCH,
+        short_id="vebus_inverter_ignoreacin1_onoff_control",
+        name="Control IgnoreAcIn1",
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Alarms/GridLost",
         message_type=MetricKind.SENSOR,
         short_id="vebus_inverter_alarm_grid_lost",
