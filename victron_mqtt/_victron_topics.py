@@ -1863,6 +1863,13 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/system/{device_id}/Dc/Pv/Current",
+        message_type=MetricKind.SENSOR,
+        short_id="system_dc_pv_current",
+        name="PV Current",
+        metric_type=MetricType.CURRENT,
+    ),
+    TopicDescriptor(
         topic="$$func/system/left_riemann_sum",
         depends_on=["system_dc_pv_power"],
         message_type=MetricKind.SENSOR,
