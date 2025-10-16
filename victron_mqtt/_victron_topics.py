@@ -5,7 +5,34 @@ Maps all the MQTT topics to either attributes or metrics.
 from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
-from ._victron_enums import AcActiveInputSource, ChargeSchedule, DESSMode, DESSReactiveStrategy, DESSStrategy, DigitalInputInputState, DigitalInputState, DigitalInputType, ESSMode, ErrorCode, FluidType, GeneratorRunningByConditionCode, InverterMode, GenericOnOff, ChargerMode, EvChargerMode, MppOperationMode, PhoenixInverterMode, State, TemperatureStatus, TemperatureType, DESSErrorCode, DESSRestrictions, GenericAlarmEnum, ESSState, ESSModeHub4 
+from ._victron_enums import (
+    AcActiveInputSource,
+    ChargeSchedule,
+    DESSMode,
+    DESSReactiveStrategy,
+    DESSStrategy,
+    DigitalInputInputState,
+    DigitalInputState,
+    DigitalInputType,
+    ESSMode,
+    ErrorCode,
+    FluidType,
+    GeneratorRunningByConditionCode,
+    InverterMode,
+    GenericOnOff,
+    ChargerMode,
+    EvChargerMode,
+    MppOperationMode,
+    PhoenixInverterMode,
+    State,
+    TemperatureStatus,
+    TemperatureType,
+    DESSErrorCode,
+    DESSRestrictions,
+    GenericAlarmEnum,
+    ESSState,
+    ESSModeHub4,
+)
 
 # Good sources for topics is:
 # https://github.com/victronenergy/venus/wiki/dbus
@@ -45,7 +72,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
-        topic = "N/{installation_id}/{device_type}/{device_id}/ProductName",
+        topic="N/{installation_id}/{device_type}/{device_id}/ProductName",
         message_type=MetricKind.ATTRIBUTE,
         short_id="model",
         value_type=ValueType.STRING,
@@ -532,7 +559,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
-    #Generator topics
+    # Generator topics
     TopicDescriptor(
         topic="N/{installation_id}/generator/{device_id}/AccumulatedRuntime",
         message_type=MetricKind.SENSOR,
@@ -598,7 +625,7 @@ topics: List[TopicDescriptor] = [
         name="GPS Altitude",
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.FLOAT,
-        precision=2
+        precision=2,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Connected",
@@ -642,7 +669,7 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         metric_type=MetricType.LOCATION,
         value_type=ValueType.FLOAT,
-        precision=None # Use full precision of GPS device
+        precision=None,  # Use full precision of GPS device
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Position/Longitude",
@@ -652,7 +679,7 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         metric_type=MetricType.LOCATION,
         value_type=ValueType.FLOAT,
-        precision=None # Use full precision of GPS device
+        precision=None,  # Use full precision of GPS device
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Speed",
@@ -702,7 +729,7 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/grid/{device_id}/Ac/PENVoltage", 
+        topic="N/{installation_id}/grid/{device_id}/Ac/PENVoltage",
         message_type=MetricKind.SENSOR,
         short_id="grid_voltage_pen",
         name="Grid voltage on PEN",
@@ -871,7 +898,7 @@ topics: List[TopicDescriptor] = [
         short_id="inverter_alarm_high_temperature",
         name="Inverter alarm HighTemperature",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/HighVoltage",
@@ -879,7 +906,7 @@ topics: List[TopicDescriptor] = [
         short_id="inverter_alarm_high_voltage",
         name="Inverter alarm HighVoltage",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/HighVoltageAcOut",
@@ -887,7 +914,7 @@ topics: List[TopicDescriptor] = [
         short_id="inverter_alarm_high_voltage_ac_out",
         name="Inverter alarm HighVoltageAcOut",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/LowTemperature",
@@ -895,7 +922,7 @@ topics: List[TopicDescriptor] = [
         short_id="inverter_alarm_low_temperature",
         name="Inverter alarm LowTemperature",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/LowVoltage",
@@ -903,7 +930,7 @@ topics: List[TopicDescriptor] = [
         short_id="inverter_alarm_low_voltage",
         name="Inverter alarm LowVoltage",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/LowVoltageAcOut",
@@ -911,7 +938,7 @@ topics: List[TopicDescriptor] = [
         short_id="inverter_alarm_low_voltage_ac_out",
         name="Inverter alarm LowVoltageAcOut",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/Overload",
@@ -919,7 +946,7 @@ topics: List[TopicDescriptor] = [
         short_id="inverter_alarm_overload",
         name="Inverter alarm Overload",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/Ripple",
@@ -927,7 +954,7 @@ topics: List[TopicDescriptor] = [
         short_id="inverter_alarm_ripple",
         name="Inverter alarm Ripple",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Mode",
@@ -989,7 +1016,7 @@ topics: List[TopicDescriptor] = [
         name="AC Out {output} Power on {phase}",
         metric_type=MetricType.POWER,
     ),
-     TopicDescriptor(
+    TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ac/Out/{output}/{phase}/V",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_acout_{output}_voltage_{phase}",
@@ -1002,7 +1029,7 @@ topics: List[TopicDescriptor] = [
         short_id="multirssolar_ess_ac_power_set_point",
         name="ESS AC Power Setpoint",
         metric_type=MetricType.POWER,
-    ),        
+    ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ess/InverterPowerSetpoint",
         message_type=MetricKind.SENSOR,
@@ -1025,7 +1052,7 @@ topics: List[TopicDescriptor] = [
         name="MPPT {mpptnumber} Power",
         metric_type=MetricType.POWER,
     ),
-        TopicDescriptor(
+    TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Pv/{mpptnumber}/V",
         message_type=MetricKind.SENSOR,
         short_id="multirssolar_mppt_{mpptnumber}_voltage",
@@ -1039,7 +1066,7 @@ topics: List[TopicDescriptor] = [
         name="ESS Mode",
         value_type=ValueType.ENUM,
         enum=ESSMode,
-    ),             
+    ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/State",
         message_type=MetricKind.SENSOR,
@@ -1230,7 +1257,7 @@ topics: List[TopicDescriptor] = [
         name="Generator start on voltage enabled",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/QuietHoursStartValue",
@@ -1239,7 +1266,7 @@ topics: List[TopicDescriptor] = [
         name="Generator QH start on voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/QuietHoursStopValue",
@@ -1248,7 +1275,7 @@ topics: List[TopicDescriptor] = [
         name="Generator QH stop on voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StartTimer",
@@ -1258,7 +1285,7 @@ topics: List[TopicDescriptor] = [
         unit_of_measurement="s",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StartValue",
@@ -1267,7 +1294,7 @@ topics: List[TopicDescriptor] = [
         name="Generator start on voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StopTimer",
@@ -1277,7 +1304,7 @@ topics: List[TopicDescriptor] = [
         unit_of_measurement="s",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StopValue",
@@ -1286,7 +1313,7 @@ topics: List[TopicDescriptor] = [
         name="Generator stop on voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/CoolDownTime",
@@ -1297,7 +1324,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=0,
         max=600,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/GeneratorStopTime",
@@ -1308,7 +1335,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=0,
         max=600,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/InverterHighTemp/Enabled",
@@ -1317,7 +1344,7 @@ topics: List[TopicDescriptor] = [
         name="Generator start on high temp enabled",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/InverterHighTemp/StartTimer",
@@ -1327,7 +1354,7 @@ topics: List[TopicDescriptor] = [
         unit_of_measurement="s",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/InverterHighTemp/StopTimer",
@@ -1337,7 +1364,7 @@ topics: List[TopicDescriptor] = [
         unit_of_measurement="s",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/QuietHours/Enabled",
@@ -1346,7 +1373,7 @@ topics: List[TopicDescriptor] = [
         name="Generator quiet hours enabled",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/ServiceInterval",
@@ -1357,7 +1384,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT_SECONDS_TO_HOURS,
         min=0,
         max=500,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/Enabled",
@@ -1366,7 +1393,7 @@ topics: List[TopicDescriptor] = [
         name="Generator start on SOC enabled",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStartValue",
@@ -1375,7 +1402,7 @@ topics: List[TopicDescriptor] = [
         name="Generator QH start on SOC",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStopValue",
@@ -1384,7 +1411,7 @@ topics: List[TopicDescriptor] = [
         name="Generator QH stop on SOC",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StartTimer",
@@ -1395,7 +1422,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=0,
         max=10000,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StartValue",
@@ -1404,7 +1431,7 @@ topics: List[TopicDescriptor] = [
         name="Generator start on SOC",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StopTimer",
@@ -1415,7 +1442,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=0,
         max=10000,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StopValue",
@@ -1424,7 +1451,7 @@ topics: List[TopicDescriptor] = [
         name="Generator stop on SOC",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/WarmUpTime",
@@ -1435,7 +1462,7 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=0,
         max=1800,
-        depends_on=["generator_{gen_id}_generator_autorun"]
+        depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     # Relay Custom Name topics
     TopicDescriptor(
@@ -1829,7 +1856,7 @@ topics: List[TopicDescriptor] = [
         name="DC Battery Charge Energy",
         metric_type=MetricType.ENERGY,
         precision=3,
-        experimental=True
+        experimental=True,
     ),
     TopicDescriptor(
         topic="$$func/system/system_dc_battery_discharge_power",
@@ -1839,7 +1866,7 @@ topics: List[TopicDescriptor] = [
         name="DC Battery Discharge Energy",
         metric_type=MetricType.ENERGY,
         precision=3,
-        experimental=True
+        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Dc/Battery/Soc",
@@ -1856,18 +1883,18 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/system/{device_id}/Dc/Pv/Power",
-        message_type=MetricKind.SENSOR,
-        short_id="system_dc_pv_power",
-        name="PV Power",
-        metric_type=MetricType.POWER,
-    ),
-    TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Dc/Pv/Current",
         message_type=MetricKind.SENSOR,
         short_id="system_dc_pv_current",
         name="PV Current",
         metric_type=MetricType.CURRENT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/system/{device_id}/Dc/Pv/Power",
+        message_type=MetricKind.SENSOR,
+        short_id="system_dc_pv_power",
+        name="PV Power",
+        metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
         topic="$$func/system/left_riemann_sum",
@@ -1907,7 +1934,7 @@ topics: List[TopicDescriptor] = [
         short_id="system_dynamicess_available",
         name="Dynamic ESS Available",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/DynamicEss/AvailableOverhead",
@@ -2134,7 +2161,7 @@ topics: List[TopicDescriptor] = [
         min=0,
         max=16,
         precision=1,
-        is_adjustable_suffix = "CurrentLimitIsAdjustable"
+        is_adjustable_suffix="CurrentLimitIsAdjustable",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/F",
@@ -2200,18 +2227,18 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/vebus/{device_id}/Ac/State/IgnoreAcIn1",
-        message_type=MetricKind.SENSOR,
-        short_id="vebus_inverter_ignoreacin1_state",
-        name="State of IgnoreAcIn1",
-        value_type=ValueType.ENUM,
-        enum=GenericOnOff,
-    ),    
-    TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/Control/IgnoreAcIn1",
         message_type=MetricKind.SWITCH,
         short_id="vebus_inverter_ignoreacin1_onoff_control",
         name="Control IgnoreAcIn1",
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Ac/State/IgnoreAcIn1",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_inverter_ignoreacin1_state",
+        name="State of IgnoreAcIn1",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
