@@ -297,7 +297,16 @@ class AcActiveInputSource(VictronEnum):
 
 class ChargeSchedule(VictronEnum):
     """Charge Schedule Enum"""
-    Disabled = (-7, "Disabled") # I do wonder about the negative values. The range seems to be -11 to 11
+    DisabledSunday= (-10, "Disabled (Sunday)")
+    DisabledWeekend= (-9, "Disabled (Weekend)")
+    DisabledWeekdays= (-8, "Disabled (Weekdays)")
+    DisabledEveryDay= (-7, "Disabled (Every day)")
+    DisabledSaturday= (-6, "Disabled (Saturday)")
+    DisabledFriday= (-5, "Disabled (Friday)")
+    DisabledThursday= (-4, "Disabled (Thursday)")
+    DisabledWednesday= (-3, "Disabled (Wednesday)")
+    DisabledTuesday= (-2, "Disabled (Tuesday)")
+    DisabledMonday= (-1, "Disabled (Monday)")
     Sunday = (0, "Sunday")
     Monday = (1, "Monday")
     Tuesday = (2, "Tuesday")
