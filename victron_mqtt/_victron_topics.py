@@ -549,7 +549,7 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.CURRENT,
         value_type=ValueType.INT,
         min=0,
-        max=16,
+        max=32,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/evcharger/{device_id}/StartStop",
