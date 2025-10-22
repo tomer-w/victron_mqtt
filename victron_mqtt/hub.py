@@ -287,9 +287,13 @@ class Hub:
         _LOGGER.info("Connecting to MQTT broker at %s:%d", self.host, self.port)
         assert self._client is not None
 
-        if self.username is not None:
+        # Based on https://community.victronenergy.com/t/cerbo-mqtt-webui-network-security-profile-configuration/34112
+        # it seems that Cerbos will not allow you to configure username, only passwords.
+        # still, you do need to put in some username to get the MQTT client work.
+        if self.password is not None:
+            username = "victron_mqtt" if self.username is None else self.username
             _LOGGER.info("Setting auth credentials for user: %s", self.username)
-            self._client.username_pw_set(self.username, self.password)
+            self._client.username_pw_set(username, self.password)
         
         if self.use_ssl:
             _LOGGER.info("Setting up SSL context")
