@@ -84,6 +84,70 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.STRING,
     ),
     # all other topics (sorted alphabetically)
+    # ACLoad topics
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/Current",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_current",
+        name="Load current",
+        metric_type=MetricType.CURRENT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/Energy/Forward",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_energy_forward",
+        name="Load consumption",
+        metric_type=MetricType.ENERGY,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/Frequency",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_frequency",
+        name="Load frequency",
+        metric_type=MetricType.FREQUENCY,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/Power",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_power",
+        name="Load power",
+        metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/Voltage",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_voltage",
+        name="Load voltage",
+        metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/{phase}/Current",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_current_{phase}",
+        name="Load current on {phase}",
+        metric_type=MetricType.CURRENT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/{phase}/Energy/Forward",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_energy_forward_{phase}",
+        name="Load consumption on {phase}",
+        metric_type=MetricType.ENERGY,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/{phase}/Power",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_power_{phase}",
+        name="Load power on {phase}",
+        metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/{phase}/Voltage",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_voltage_{phase}",
+        name="Load voltage on {phase}",
+        metric_type=MetricType.VOLTAGE,
+    ),
     # Alternator topics
     TopicDescriptor(
         topic="N/{installation_id}/alternator/{device_id}/Dc/0/Current",

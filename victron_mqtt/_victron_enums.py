@@ -32,6 +32,7 @@ class DeviceType(VictronDeviceEnum):
     PLATFORM = ("platform", "Platform", "system") # For whatever reason some system topics are under platform
     HEATPUMP = ("heatpump", "Heat Pump")
     DYNAMIC_ESS = ("DynamicEss", "Dynamic ESS", "system") # Dynamic ESS settings are under system
+    ACLOAD = ("acload", "AC Load")
 
 
 class GenericOnOff(VictronEnum):
