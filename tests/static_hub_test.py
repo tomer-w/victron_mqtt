@@ -1,8 +1,6 @@
 import pytest
-import pytest_asyncio
 import asyncio
 from unittest.mock import MagicMock, patch
-from datetime import datetime
 from victron_mqtt._victron_enums import DeviceType, GenericOnOff
 from victron_mqtt.hub import Hub, TopicNotFoundError
 from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
@@ -1064,11 +1062,10 @@ async def test_null_message():
     assert len(hub.devices) == 0, f"Expected no devices, got {len(hub.devices)}"
 
 @pytest.mark.asyncio
-@patch('victron_mqtt.formula_common.datetime')
-async def test_formula_message(mock_datetime):
-    # Mock datetime.now() to return a fixed time
-    fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=0)
-    mock_datetime.now.return_value = fixed_time
+@patch('victron_mqtt.formula_common.time')
+async def test_formula_message(mock_time):
+    # Mock time.monotonic() to return a fixed time
+    mock_time.monotonic.return_value = 0
 
     hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
 
@@ -1096,18 +1093,15 @@ async def test_formula_message(mock_datetime):
     assert metric3.generic_short_id == "system_dc_battery_discharge_energy", f"Expected generic_short_id to be 'system_dc_battery_discharge_energy', got {metric3.generic_short_id}"
     assert metric3.name == "DC Battery Discharge Energy", f"Expected name to be 'DC Battery Discharge Energy', got {metric3.name}"
 
-    fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=15)
-    mock_datetime.now.return_value = fixed_time
+    mock_time.monotonic.return_value = 15
     await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 800}")
     assert metric2.value == 0.005, f"Expected metric value to be 0.005, got {metric2.value}"
 
-    fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=30)
-    mock_datetime.now.return_value = fixed_time
+    mock_time.monotonic.return_value = 30
     await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -1000}")
     assert metric2.value == 0.008, f"Expected metric value to be 0.008, got {metric2.value}"
 
-    fixed_time = datetime(year=2025, month=1, day=1, hour=12, minute=0, second=45)
-    mock_datetime.now.return_value = fixed_time
+    mock_time.monotonic.return_value = 45
     await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -2000}")
     assert metric2.value == 0.008, f"Expected metric value to be 0.008, got {metric2.value}"
     assert metric3.value == 0.004, f"Expected metric value to be 0.004, got {metric3.value}"
@@ -1188,4 +1182,29 @@ async def test_depends_on_regular_dont_exists():
         # Validate the Hub's state - only system device exists, evcharger message was filtered
         assert len(hub.devices) == 0, f"Expected 0 devices, got {len(hub.devices)}"
 
+    await hub.disconnect()
+
+
+@pytest.mark.asyncio
+@patch('victron_mqtt.hub.time')
+async def test_old_cerbo(mock_time):
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    with patch.object(Hub, "_keepalive_loop", new=_async_noop):
+        # Mock time.monotonic() to return a fixed time
+        mock_time.monotonic.return_value = 0
+        hub: Hub = await create_mocked_hub()
+
+        # Inject messages after the event is set
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}")
+        mock_time.monotonic.return_value = 46
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 43}")
+
+        # Validate the Hub's state
+        assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
+
+        # Validate that the device has the metric we published
+        device = hub.devices["grid_30"]
+        metric = device.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
+        assert metric is not None, "Metric should exist in the device"
+        assert metric.value == 43, f"Expected metric value to be 43, got {metric.value}"
     await hub.disconnect()

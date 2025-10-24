@@ -88,8 +88,6 @@ jobs:
               echo "$COMMITS" >> enhanced_notes.md
             fi
             echo "" >> enhanced_notes.md
-            echo "---" >> enhanced_notes.md
-            echo "*This release was automatically generated from pull requests and commits.*" >> enhanced_notes.md
             
             # Update the draft release with enhanced notes
             gh release edit "$DRAFT_RELEASE" --notes-file enhanced_notes.md

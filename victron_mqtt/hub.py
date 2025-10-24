@@ -2,7 +2,6 @@
 
 import asyncio
 import copy
-from datetime import timedelta
 import json
 import logging
 import random
@@ -10,6 +9,7 @@ import ssl
 import re
 import string
 from typing import Any, Callable, Optional, Tuple
+import time
 
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import Client as MQTTClient, PayloadType
@@ -28,6 +28,7 @@ from .metric import Metric
 
 _LOGGER = logging.getLogger(__name__)
 CONNECT_MAX_FAILED_ATTEMPTS = 3
+FULL_PUBLISH_MIN_INTERVAL_SECONDS = 45
 
 # Modify the logger to include instance_id without changing the tracing level
 # class InstanceIDFilter(logging.Filter):
@@ -212,6 +213,9 @@ class Hub:
         self._first_full_publish = True
         self._connect_failed_attempts = 0
         self._connect_failed = False
+        # Track when _handle_full_publish_message was last invoked for our client
+        # Use monotonic time to avoid issues with system clock changes
+        self._last_full_publish_called: float = 0.0
 
         # Filter the active topics
         metrics_active_topics: list[TopicDescriptor] = []
@@ -311,6 +315,7 @@ class Hub:
         self._connect_failed = False
         self._loop = asyncio.get_event_loop()
         #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop, name=name))
+        self._last_full_publish_called = time.monotonic() # Initialize last full publish time
 
         try:
             _LOGGER.info("Starting paho mqtt")
@@ -413,6 +418,17 @@ class Hub:
 
         self._handle_normal_message(topic, payload, log_debug)
 
+        # Ensure _handle_full_publish_message runs at least once every interval.
+        # This is to handle old cerbo versions that do not send full publish completed messages.
+        # Issue #139 and #205
+        now = time.monotonic()
+        # If we've never called it or it's been longer than the configured interval,
+        # call _handle_full_publish_message with an empty payload to trigger periodic handling.
+        if now - self._last_full_publish_called >= FULL_PUBLISH_MIN_INTERVAL_SECONDS:
+            _LOGGER.debug("Periodic trigger: calling _handle_full_publish_message (last %.1fs ago)", now - self._last_full_publish_called)
+            # Use an empty JSON object.
+            self._handle_full_publish_message("{}")
+
     def is_formula_dependency_met(self, topic: TopicDescriptor, relevant_device: Device) -> Tuple[bool, list[Metric]]:
         if not topic.depends_on:
             return True, []
@@ -451,6 +467,8 @@ class Hub:
         if echo and not echo.startswith(self._client_id):
             _LOGGER.debug("Not our echo: %s", echo)
             return
+        # Update the last-called timestamp when we handled a full-publish for our client
+        self._last_full_publish_called = time.monotonic()
         
         _LOGGER.debug("Full publish completed: %s", echo)
         new_metrics: list[tuple[Device, Metric]] = []
@@ -955,9 +973,13 @@ class Hub:
     @staticmethod
     def get_keepalive_echo(value: str) -> str | None:
         """Extract the keepalive echo value from the published message."""
-        publish_completed_message = json.loads(value)
-        echo = publish_completed_message.get("full-publish-completed-echo", None)
-        return echo
+        try:
+            publish_completed_message = json.loads(value)
+            echo = publish_completed_message.get("full-publish-completed-echo", None)
+            return echo
+        except (json.JSONDecodeError, KeyError, ValueError, TypeError):
+            _LOGGER.error("Failed to extract keepalive echo: %s", value)
+            return None
 
 
 class CannotConnectError(Exception):

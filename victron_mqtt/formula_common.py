@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from datetime import datetime
+import time
 from typing import TYPE_CHECKING, Callable
 
 from .constants import FormulaPersistentState, FormulaTransientState
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 @dataclass
 class LRSLastReading(FormulaTransientState):
-    timestamp: datetime
+    timestamp: float
     value: float | None
     accumulated_value: float
 
@@ -25,7 +25,7 @@ def get_lrs_input(depends_on: dict[str, Metric]) -> float | None:
 
 def calculate_rolling_riemann_sum(
     current_reading: float, 
-    current_time: datetime,
+    current_time: float,
     last_reading: LRSLastReading | None,
     time_interval: float
 ) -> LRSLastReading:
@@ -49,7 +49,7 @@ def calculate_rolling_riemann_sum(
         return LRSLastReading(current_time, current_reading, 0.0)
         
     # Calculate time difference
-    dt = (current_time - last_reading.timestamp).total_seconds()
+    dt = current_time - last_reading.timestamp
     assert dt >= 0, f"Negative time difference: {dt}"
     # Use the minimum of actual time difference and requested interval (both in seconds)
     dt = min(dt, time_interval)
@@ -104,7 +104,7 @@ def left_riemann_sum_internal(
     assert isinstance(persistent_state, LRSPersistentState)
     
     # Calculate rolling Riemann sum
-    current_time = datetime.now()
+    current_time = time.monotonic()
     new_last_reading = calculate_rolling_riemann_sum(
         current_reading=current_reading,
         current_time=current_time,
