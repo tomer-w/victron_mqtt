@@ -35,7 +35,7 @@ class FormulaMetric(Metric):
         self._depends_on: dict[str, Metric] = {}
         self.transient_state: FormulaTransientState | None = None
         self.persistent_state: FormulaPersistentState | None = None
-        hub_unique_id = ParsedTopic.make_hub_unique_id(device.short_unique_id, descriptor.short_id)
+        hub_unique_id = ParsedTopic.make_hub_unique_id(device.unique_id, descriptor.short_id)
 
         super().__init__(device, name, descriptor, hub_unique_id, descriptor.short_id, {}, hub)
 

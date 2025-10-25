@@ -36,8 +36,7 @@ class Metric:
         assert descriptor.name is not None, "name must be set for metric"
         self._device = device
         self._descriptor = descriptor
-        self._hub_unique_id = hub_unique_id
-        self._unique_id = f"{hub.installation_id}_{self._hub_unique_id}"
+        self._unique_id = hub_unique_id
         self._value = None
         self._short_id = short_id
         self._name = name

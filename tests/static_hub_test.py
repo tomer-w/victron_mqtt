@@ -140,15 +140,15 @@ async def test_phase_message():
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
     assert device.device_type == DeviceType.GRID, f"Expected metric type to be 'grid', got {device.device_type}"
-    assert device.unique_id == "123_grid_30", f"Expected device unique_id to be '123_grid_30', got {device.unique_id}"
-    metric = device.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
-    metric2 = hub.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
+    assert device.unique_id == "grid_30", f"Expected device unique_id to be 'grid_30', got {device.unique_id}"
+    metric = device.get_metric("grid_energy_forward_L1")
+    metric2 = hub.get_metric("grid_30_grid_energy_forward_L1")
     assert metric == metric2, "Metrics should be equal"
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
     assert metric.short_id == "grid_energy_forward_L1", f"Expected metric short_id to be 'grid_energy_forward_L1', got {metric.short_id}"
     assert metric.generic_short_id == "grid_energy_forward_{phase}", f"Expected metric generic_short_id to be 'grid_energy_forward_{{phase}}', got {metric.generic_short_id}"
-    assert metric.unique_id == "123_grid_30_grid_energy_forward_L1", f"Expected metric unique_id to be '123_grid_30_grid_energy_forward_L1', got {metric.unique_id}"
+    assert metric.unique_id == "grid_30_grid_energy_forward_L1", f"Expected metric unique_id to be 'grid_30_grid_energy_forward_L1', got {metric.unique_id}"
     assert metric.name == "Grid consumption on L1", f"Expected metric name to be 'Grid consumption on L1', got {metric.name}"
     assert metric.generic_name == "Grid consumption on {phase}", f"Expected metric generic_name to be 'Grid consumption on {{phase}}', got {metric.generic_name}"
     assert metric.unit_of_measurement == "kWh", f"Expected metric unit_of_measurement to be 'kWh', got {metric.unit_of_measurement}"
@@ -168,9 +168,9 @@ async def test_placeholder_message():
     assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
-    device =hub.devices["system_0"]
-    assert device.unique_id == "123_system_0", f"Expected 123_system_0. Got {device.unique_id}"
-    metric = device.get_metric_from_unique_id("123_system_0_system_relay_0")
+    device = hub.devices["system_0"]
+    assert device.unique_id == "system_0", f"Expected system_0. Got {device.unique_id}"
+    metric = device.get_metric("system_relay_0")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric.value}"
     assert metric.name == "Relay 0 state", f"Expected metric name to be 'Relay 0 state', got {metric.name}"
@@ -190,7 +190,7 @@ async def test_dynamic_min_max_message():
 
     # Validate that the device has the metric we published
     device = list(hub.devices.values())[0]
-    writable_metric = device.get_metric_from_unique_id("123_system_0_system_ac_power_set_point")
+    writable_metric = device.get_metric("system_ac_power_set_point")
     assert writable_metric is not None, "WritableMetric should exist in the device"
     assert isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
     assert writable_metric.value == 50, f"Expected writable_metric value to be 50, got {writable_metric.value}"
@@ -212,7 +212,7 @@ async def test_number_message():
 
     # Validate that the device has the metric we published
     device = hub.devices["evcharger_170"]
-    writable_metric = device.get_metric_from_unique_id("123_evcharger_170_evcharger_set_current")
+    writable_metric = device.get_metric("evcharger_set_current")
     assert isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
     assert writable_metric.value == 100, f"Expected writable_metric value to be 100, got {writable_metric.value}"
 
@@ -259,7 +259,7 @@ async def test_placeholder_adjustable_on():
     # Validate that the device has the metric we published
     device = hub.devices["vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    writable_metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
+    writable_metric = device.get_metric("vebus_inverter_current_limit")
     assert isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
     assert writable_metric is not None, "WritableMetric should exist in the device"
     assert writable_metric.value == 100, f"Expected writable_metric value to be 100, got {writable_metric.value}"
@@ -283,7 +283,7 @@ async def test_placeholder_adjustable_off():
     # Validate that the device has the metric we published
     device = hub.devices["vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
+    metric = device.get_metric("vebus_inverter_current_limit")
     assert not isinstance(metric, WritableMetric), f"Expected metric to be of type Metric, got {type(metric)}"
     assert metric is not None, "metric should exist in the device"
     assert metric.value == 100, f"Expected metric value to be 100, got {metric.value}"
@@ -304,7 +304,7 @@ async def test_placeholder_adjustable_on_reverse():
     # Validate that the device has the metric we published
     device = hub.devices["vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    writable_metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
+    writable_metric = device.get_metric("vebus_inverter_current_limit")
     assert isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
     assert writable_metric is not None, "WritableMetric should exist in the device"
     assert writable_metric.value == 100, f"Expected writable_metric value to be 100, got {writable_metric.value}"
@@ -325,7 +325,7 @@ async def test_placeholder_adjustable_off_reverse():
     # Validate that the device has the metric we published
     device = hub.devices["vebus_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    writable_metric = device.get_metric_from_unique_id("123_vebus_170_vebus_inverter_current_limit")
+    writable_metric = device.get_metric("vebus_inverter_current_limit")
     assert not isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
     assert writable_metric is not None, "WritableMetric should exist in the device"
     assert writable_metric.value == 100, f"Expected writable_metric value to be 100, got {writable_metric.value}"
@@ -346,11 +346,11 @@ async def test_today_message():
     device = hub.devices["solarcharger_290"]
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
 
-    metric = device.get_metric_from_unique_id("123_solarcharger_290_solarcharger_max_power_today")
+    metric = device.get_metric("solarcharger_max_power_today")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 1, f"Expected metric value to be 1, got {metric.value}"
 
-    metric = device.get_metric_from_unique_id("123_solarcharger_290_solarcharger_max_power_yesterday")
+    metric = device.get_metric("solarcharger_max_power_yesterday")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 2, f"Expected metric value to be 2, got {metric.value}"
 
@@ -377,7 +377,7 @@ async def test_expend_message():
 
     # Validate that the device has the metric we published
     device = hub.devices["switch_170"]
-    metric = device.get_metric_from_unique_id("123_switch_170_switch_2_state")
+    metric = device.get_metric("switch_2_state")
     assert metric is not None, "Metric should exist in the device"
     assert metric.generic_short_id == "switch_{output}_state"
     assert metric.key_values["output"] == "2"
@@ -394,7 +394,7 @@ async def test_expend_message_2():
 
     # Validate that the device has the metric we published
     device = hub.devices["battery_170"]
-    metric = device.get_metric_from_unique_id("123_battery_170_battery_cell_3_voltage")
+    metric = device.get_metric("battery_cell_3_voltage")
     assert metric is not None, "Metric should exist in the device"
     assert metric.generic_short_id == "battery_cell_{cell_id}_voltage"
     assert metric.key_values["cell_id"] == "3"
@@ -412,7 +412,7 @@ async def test_same_message_events_none():
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
-    metric = device.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
+    metric = device.get_metric("grid_energy_forward_L1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
     metric.on_update = MagicMock()
@@ -440,7 +440,7 @@ async def test_same_message_events_zero():
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
-    metric = device.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
+    metric = device.get_metric("grid_energy_forward_L1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
     metric.on_update = MagicMock()
@@ -467,7 +467,7 @@ async def test_same_message_events_five(mock_time):
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
-    metric = device.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
+    metric = device.get_metric("grid_energy_forward_L1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
     metric.on_update = MagicMock()
@@ -505,7 +505,7 @@ async def test_metric_keepalive_update_frequency_5(mock_time):
 
         # Validate that the device has the metric we published
         device = hub.devices["grid_30"]
-        metric = device.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
+        metric = device.get_metric("grid_energy_forward_L1")
         assert metric is not None, "Metric should exist in the device"
         assert metric.value == 10, f"Expected metric value to be 10, got {metric.value}"
 
@@ -554,7 +554,7 @@ async def test_metric_keepalive_update_frequency_none(mock_time):
 
         # Validate that the device has the metric we published
         device = hub.devices["grid_30"]
-        metric = device.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
+        metric = device.get_metric("grid_energy_forward_L1")
         assert metric is not None, "Metric should exist in the device"
         assert metric.value == 10, f"Expected metric value to be 10, got {metric.value}"
 
@@ -604,7 +604,7 @@ async def test_existing_installation_id():
 
     # Validate that the device has the metric we published
     device = hub.devices["switch_170"]
-    metric = device.get_metric_from_unique_id("123_switch_170_switch_2_state")
+    metric = device.get_metric("switch_2_state")
     assert metric is not None, "Metric should exist in the device"
     assert metric.generic_short_id == "switch_{output}_state"
     assert metric.key_values["output"] == "2"
@@ -622,7 +622,7 @@ async def test_multiple_hubs():
 
     # Validate that the device has the metric we published
     device1 = hub1.devices["switch_170"]
-    metric1 = device1.get_metric_from_unique_id("123_switch_170_switch_2_state")
+    metric1 = device1.get_metric("switch_2_state")
     assert metric1 is not None, "Metric should exist in the device"
     assert metric1.generic_short_id == "switch_{output}_state"
     assert metric1.key_values["output"] == "2"
@@ -638,7 +638,7 @@ async def test_multiple_hubs():
 
     # Validate that the device has the metric we published
     device2 = hub2.devices["switch_170"]
-    metric2 = device2.get_metric_from_unique_id("123_switch_170_switch_2_state")
+    metric2 = device2.get_metric("switch_2_state")
     assert metric2 is not None, "Metric should exist in the device"
     assert metric2.generic_short_id == "switch_{output}_state"
     assert metric2.key_values["output"] == "2"
@@ -658,7 +658,7 @@ async def test_float_precision():
 
     # Validate that the device has the metric we published
     device = hub.devices["system_170"]
-    metric = device.get_metric_from_unique_id("123_system_170_system_dc_consumption")
+    metric = device.get_metric("system_dc_consumption")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 1.1, f"Expected metric value to be 1.1, got {metric.value}"
 
@@ -673,7 +673,7 @@ async def test_float_precision_none():
 
     # Validate that the device has the metric we published
     device = hub.devices["gps_170"]
-    metric = device.get_metric_from_unique_id("123_gps_170_gps_latitude")
+    metric = device.get_metric("gps_latitude")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 1.0123456789, f"Expected metric value to be 1.0123456789, got {metric.value}"
 
@@ -696,11 +696,11 @@ async def test_new_metric():
         await finalize_injection(hub, disconnect=False)
 
         # Validate that the on_new_metric callback was called
-        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_consumption"))
-        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_power"))
-        mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric_from_unique_id("123_gps_170_gps_latitude"))
-        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_charge_energy"))
-        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_discharge_energy"))
+        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_consumption"))
+        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_power"))
+        mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_latitude"))
+        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_charge_energy"))
+        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_discharge_energy"))
         assert mock_on_new_metric.call_count == 5, "on_new_metric should be called exactly 5 times"
 
         # Check that we got the callback only once
@@ -711,7 +711,7 @@ async def test_new_metric():
 
         # Validate that the device has the metric we published
         device = hub.devices["system_170"]
-        metric = device.get_metric_from_unique_id("123_system_170_system_dc_consumption")
+        metric = device.get_metric("system_dc_consumption")
         assert metric is not None, "Metric should exist in the device"
         assert metric.value == 1.1, f"Expected metric value to be 1.1, got {metric.value}"
     await hub.disconnect()
@@ -734,7 +734,7 @@ async def test_new_metric_duplicate_messages():
         await finalize_injection(hub, disconnect=False)
 
         # Validate that the on_new_metric callback was called
-        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_consumption"))
+        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_consumption"))
         assert mock_on_new_metric.call_count == 1, "on_new_metric should be called exactly 1 time"
 
         # Check that we got the callback only once
@@ -746,7 +746,7 @@ async def test_new_metric_duplicate_messages():
         # Validate that the device has the metric we published
         device = hub.devices["system_170"]
         assert len(device.metrics) == 1, "Device should have exactly 1 metric"
-        metric = device.get_metric_from_unique_id("123_system_170_system_dc_consumption")
+        metric = device.get_metric("system_dc_consumption")
         assert metric is not None, "Metric should exist in the device"
         assert metric.value == 2, f"Expected metric value to be 2, got {metric.value}"
 
@@ -769,9 +769,9 @@ async def test_new_metric_duplicate_formula_messages():
         await finalize_injection(hub, disconnect=False)
 
         # Validate that the on_new_metric callback was called
-        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_power"))
-        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_charge_energy"))
-        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric_from_unique_id("123_system_170_system_dc_battery_discharge_energy"))
+        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_power"))
+        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_charge_energy"))
+        mock_on_new_metric.assert_any_call(hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_discharge_energy"))
         assert mock_on_new_metric.call_count == 3, "on_new_metric should be called exactly 3 times"
 
         # Check that we got the callback only once
@@ -788,7 +788,7 @@ async def test_new_metric_duplicate_formula_messages():
         await hub._keepalive()
         # Wait for the callback to be triggered
         await asyncio.sleep(0.1)  # Allow event loop to process the callback
-        mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric_from_unique_id("123_gps_170_gps_latitude"))
+        mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_latitude"))
         assert mock_on_new_metric.call_count == 4, "on_new_metric should be called exactly 4 times"
 
     await hub.disconnect()
@@ -828,7 +828,7 @@ async def test_read_only_creates_plain_metrics():
     # Validate the Hub's state
     assert "evcharger_170" in hub.devices, "Device should be created"
     device = hub.devices["evcharger_170"]
-    metric = device.get_metric_from_unique_id("123_evcharger_170_evcharger_set_current")
+    metric = device.get_metric("evcharger_set_current")
     assert metric is not None, "Metric should exist in the device"
     assert not isinstance(metric, WritableMetric), "In READ_ONLY mode the metric should NOT be a WritableMetric"
     assert isinstance(metric, Metric), "In READ_ONLY mode the metric should be a plain Metric"
@@ -934,7 +934,7 @@ async def test_remote_name_dont_exists():
     # Validate that the device has the metric we published
     device = hub.devices["switch_170"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
-    metric = device.get_metric_from_unique_id("123_switch_170_switch_1_state")
+    metric = device.get_metric("switch_1_state")
     assert metric is not None, "metric should exist in the device"
     assert metric.name == "Switch 1 State", "Expected metric name to be 'Switch 1 State', got {metric.name}"
     assert metric.generic_name == "Switch {output} State", "Expected metric generic_name to be 'Switch {output} State', got {metric.generic_name}"
@@ -957,7 +957,7 @@ async def test_remote_name_exists():
         # Validate that the device has the metric we published
         device = hub.devices["switch_170"]
         assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
-        metric = device.get_metric_from_unique_id("123_switch_170_switch_1_state")
+        metric = device.get_metric("switch_1_state")
         assert metric is not None, "metric should exist in the device"
         assert metric.name == "Switch bla State", "Expected metric name to be 'Switch bla State', got {metric.name}"
         assert metric.generic_name == "Switch {output} State", "Expected metric name to be 'Switch {output} State', got {metric.name}"
@@ -982,7 +982,7 @@ async def test_remote_name_exists_two_devices():
         # Validate that the device has the metric we published
         device = hub.devices["switch_170"]
         assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
-        metric = device.get_metric_from_unique_id("123_switch_170_switch_1_state")
+        metric = device.get_metric("switch_1_state")
         assert metric is not None, "metric should exist in the device"
         assert metric.name == "Switch bla State", "Expected metric name to be 'Switch bla State', got {metric.name}"
         assert metric.generic_name == "Switch {output} State", "Expected metric name to be 'Switch {output} State', got {metric.name}"
@@ -991,7 +991,7 @@ async def test_remote_name_exists_two_devices():
 
         device = hub.devices["switch_155"]
         assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
-        metric = device.get_metric_from_unique_id("123_switch_155_switch_1_state")
+        metric = device.get_metric("switch_1_state")
         assert metric is not None, "metric should exist in the device"
         assert metric.name == "Switch foo State", "Expected metric name to be 'Switch foo State', got {metric.name}"
         assert metric.generic_name == "Switch {output} State", "Expected metric name to be 'Switch {output} State', got {metric.name}"
@@ -1013,7 +1013,7 @@ async def test_remote_name_exists_2():
     # Validate that the device has the metric we published
     device = hub.devices["solarcharger_170"]
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
-    metric = device.get_metric_from_unique_id("123_solarcharger_170_solarcharger_tracker_2_power")
+    metric = device.get_metric("solarcharger_tracker_2_power")
     assert metric is not None, "metric should exist in the device"
     assert metric.name == "PV Tracker bar Power", "Expected metric name to be 'PV Tracker bar Power', got {metric.name}"
     assert metric.generic_name == "PV Tracker {tracker} Power", "Expected metric name to be 'PV Tracker {tracker} Power', got {metric.name}"
@@ -1077,17 +1077,17 @@ async def test_formula_message(mock_time):
     assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
     device = hub.devices["system_0"]
     assert len(device._metrics) == 3, f"Expected 3 metrics, got {len(device._metrics)}"
-    metric1 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_power")
+    metric1 = device.get_metric("system_dc_battery_power")
     assert metric1 is not None, "metric should exist in the device"
     assert metric1.value == 1200, f"Expected metric value to be 1200, got {metric1.value}"
 
-    metric2 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_charge_energy")
+    metric2 = device.get_metric("system_dc_battery_charge_energy")
     assert metric2 is not None, "metric should exist in the device"
     assert metric2.value == 0.0, f"Expected metric value to be 0.0, got {metric2.value}"
     assert metric2.generic_short_id == "system_dc_battery_charge_energy", f"Expected generic_short_id to be 'system_dc_battery_charge_energy', got {metric2.generic_short_id}"
     assert metric2.name == "DC Battery Charge Energy", f"Expected name to be 'DC Battery Charge Energy', got {metric2.name}"
 
-    metric3 = device.get_metric_from_unique_id("123_system_0_system_dc_battery_discharge_energy")
+    metric3 = device.get_metric("system_dc_battery_discharge_energy")
     assert metric3 is not None, "metric should exist in the device"
     assert metric3.value == 0.0, f"Expected metric value to be 0.0, got {metric3.value}"
     assert metric3.generic_short_id == "system_dc_battery_discharge_energy", f"Expected generic_short_id to be 'system_dc_battery_discharge_energy', got {metric3.generic_short_id}"
@@ -1107,7 +1107,7 @@ async def test_formula_message(mock_time):
     assert metric3.value == 0.004, f"Expected metric value to be 0.004, got {metric3.value}"
 
     # Test the 2nd way to get metric
-    assert hub.get_metric_from_unique_id("123_system_0_system_dc_battery_discharge_energy") is not None
+    assert hub.get_metric("system_0_system_dc_battery_discharge_energy") is not None
 
     await hub.disconnect()
 
@@ -1123,7 +1123,7 @@ async def test_heartbeat_message():
     # Validate the Hub's state - only system device exists, evcharger message was filtered
     assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
     device = hub.devices["system_0"]
-    metric = device.get_metric_from_unique_id("123_system_0_system_heartbeat")
+    metric = device.get_metric("system_heartbeat")
     assert metric is not None, "metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
 
@@ -1142,7 +1142,7 @@ async def test_depends_on_regular_exists_same_round():
         # Validate the Hub's state - only system device exists, evcharger message was filtered
         assert len(hub.devices) == 2, f"Expected 2 devices (Generator1 and generator), got {len(hub.devices)}"
         device = hub.devices["Generator1_0"]
-        metric = device.get_metric_from_unique_id("123_Generator1_0_generator_1_start_on_voltage_enabled")
+        metric = device.get_metric("generator_1_start_on_voltage_enabled")
         assert metric is not None, "metric should exist in the device"
         assert metric.value == GenericOnOff.Off, f"Expected metric value to be GenericOnOff.Off, got {metric.value}"
 
@@ -1163,7 +1163,7 @@ async def test_depends_on_regular_exists_two_rounds():
         # Validate the Hub's state - only system device exists, evcharger message was filtered
         assert len(hub.devices) == 2, f"Expected 2 devices (Generator1 and generator), got {len(hub.devices)}"
         device = hub.devices["Generator1_0"]
-        metric = device.get_metric_from_unique_id("123_Generator1_0_generator_1_start_on_voltage_enabled")
+        metric = device.get_metric("generator_1_start_on_voltage_enabled")
         assert metric is not None, "metric should exist in the device"
         assert metric.value == GenericOnOff.Off, f"Expected metric value to be GenericOnOff.Off, got {metric.value}"
 
@@ -1204,7 +1204,7 @@ async def test_old_cerbo(mock_time):
 
         # Validate that the device has the metric we published
         device = hub.devices["grid_30"]
-        metric = device.get_metric_from_unique_id("123_grid_30_grid_energy_forward_L1")
+        metric = device.get_metric("grid_energy_forward_L1")
         assert metric is not None, "Metric should exist in the device"
         assert metric.value == 43, f"Expected metric value to be 43, got {metric.value}"
     await hub.disconnect()

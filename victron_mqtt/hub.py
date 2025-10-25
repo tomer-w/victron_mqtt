@@ -434,10 +434,10 @@ class Hub:
             return True, []
         dependencies: list[Metric] = []
         for dependency in topic.depends_on:
-            metric_name = ParsedTopic.make_hub_unique_id(relevant_device.short_unique_id, dependency)
-            dependency_metric = self._all_metrics.get(metric_name)
+            metric_id = ParsedTopic.make_hub_unique_id(relevant_device.unique_id, dependency)
+            dependency_metric = self._all_metrics.get(metric_id)
             if dependency_metric is None:
-                _LOGGER.debug("Formula topic %s is missing dependency metric: %s", topic.topic, metric_name)
+                _LOGGER.debug("Formula topic %s is missing dependency metric: %s", topic.topic, metric_id)
                 return False, []
             dependencies.append(dependency_metric)
         return True, dependencies
@@ -446,11 +446,11 @@ class Hub:
         if not metric_placeholder.topic_descriptor.depends_on:
             return True
         for dependency in metric_placeholder.topic_descriptor.depends_on:
-            metric_name = ParsedTopic.replace_ids(dependency, metric_placeholder.parsed_topic.key_values)
-            dependency_metric = self._all_metrics.get(metric_name)
-            dependency_placeholder = self._metrics_placeholders.get(metric_name)
+            metric_id = ParsedTopic.replace_ids(dependency, metric_placeholder.parsed_topic.key_values)
+            dependency_metric = self._all_metrics.get(metric_id)
+            dependency_placeholder = self._metrics_placeholders.get(metric_id)
             if dependency_metric is None and dependency_placeholder is None:
-                _LOGGER.debug("Regular topic %s is missing dependency metric: %s", metric_placeholder.parsed_topic.full_topic, metric_name)
+                _LOGGER.debug("Regular topic %s is missing dependency metric: %s", metric_placeholder.parsed_topic.full_topic, metric_id)
                 return False
         return True
 
@@ -478,8 +478,8 @@ class Hub:
                 # Check if depedency met, if not, the topic will get ignored
                 if not self.is_regular_dependency_met(metric_placeholder):
                     continue
-                metric = metric_placeholder.device.add_placeholder(metric_placeholder, fallback_placeholders_list, self)
-                self._all_metrics[metric._hub_unique_id] = metric
+                metric = metric_placeholder.device._create_metric_from_placeholder(metric_placeholder, fallback_placeholders_list, self)
+                self._all_metrics[metric.unique_id] = metric
                 new_metrics.append((metric_placeholder.device, metric))
         self._metrics_placeholders.clear()
         self._fallback_placeholders.clear()
@@ -490,8 +490,8 @@ class Hub:
                 _LOGGER.debug("Trying to resolve formula topic: %s", topic)
                 relevant_devices: list[Device] = [device for device in self._devices.values() if device.device_type.code == topic.topic.split("/")[1]]
                 for device in relevant_devices:
-                    metric_name = ParsedTopic.make_hub_unique_id(device.short_unique_id, topic.short_id)
-                    if self._all_metrics.get(metric_name) is not None:
+                    metric_id = ParsedTopic.make_hub_unique_id(device.unique_id, topic.short_id)
+                    if self._all_metrics.get(metric_id) is not None:
                         continue
                     is_met, dependencies = self.is_formula_dependency_met(topic, device)
                     if not is_met:
@@ -501,16 +501,16 @@ class Hub:
                     depends_on: dict[str, Metric] = {}
                     for dependency_metric in dependencies:
                         dependency_metric.add_dependency(metric)
-                        depends_on[dependency_metric._hub_unique_id] = dependency_metric
+                        depends_on[dependency_metric.unique_id] = dependency_metric
                     metric.init(depends_on, self._loop, _LOGGER.debug)
                     _LOGGER.info("Formula metric created: %s", metric)
-                    self._all_metrics[metric._hub_unique_id] = metric
+                    self._all_metrics[metric.unique_id] = metric
                     new_formula_metrics.append((device, metric))
             # Send all new metrics to clients
             new_metrics.extend(new_formula_metrics)
         # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
         for device, metric in new_metrics:
-            metric.phase2_init(device.short_unique_id, self._all_metrics)
+            metric.phase2_init(device.unique_id, self._all_metrics)
             try:
                 if callable(self._on_new_metric):
                     if self._loop.is_running():
@@ -856,36 +856,21 @@ class Hub:
 
     def _get_or_create_device(self, parsed_topic: ParsedTopic, desc: TopicDescriptor) -> Device:
         """Get or create a device based on topic."""
-        full_unique_id, short_unique_id = self._create_device_unique_id(
-            parsed_topic.installation_id,
-            parsed_topic.device_type.code,
-            parsed_topic.device_id,
-        )
-        device = self._devices.get(short_unique_id)
+        device_unique_id = parsed_topic.get_device_unique_id()
+        device = self._devices.get(device_unique_id)
         if device is None:
-            _LOGGER.info("Creating new device: unique_id=%s, parsed_topic=%s", full_unique_id, parsed_topic)
+            _LOGGER.info("Creating new device: unique_id=%s, parsed_topic=%s", device_unique_id, parsed_topic)
             device = Device(
-                full_unique_id,
-                short_unique_id,
+                device_unique_id,
                 parsed_topic,
                 desc,
             )
-            self._devices[short_unique_id] = device
+            self._devices[device_unique_id] = device
         return device
 
-    def _create_device_unique_id(self, installation_id: str, device_type: str, device_id: str) -> tuple[str, str]:
-        """Create a unique ID for a device."""
-        short_unique_id = ParsedTopic.make_device_short_unique_id(device_type, device_id)
-        full_unique_id = f"{installation_id}_{short_unique_id}"
-        return full_unique_id, short_unique_id
-
-    def _get_device_unique_id_from_metric_unique_id(self, unique_id: str) -> str:
-        return "_".join(unique_id.split("_")[:3])
-
-    def get_metric_from_unique_id(self, unique_id: str) -> Metric | None:
+    def get_metric(self, unique_id: str) -> Metric | None:
         """Get a metric from a unique id."""
-        id_without_installation = unique_id.split("_", 1)[-1]
-        metric = self._all_metrics.get(id_without_installation)
+        metric = self._all_metrics.get(unique_id)
         return metric
 
     @property

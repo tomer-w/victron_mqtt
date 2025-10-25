@@ -26,11 +26,10 @@ _LOGGER = logging.getLogger(__name__)
 class Device:
     """Class to represent a Victron device."""
 
-    def __init__(self, full_unique_id: str, short_unique_id: str, parsed_topic: ParsedTopic, descriptor: TopicDescriptor) -> None:
+    def __init__(self, unique_id: str, parsed_topic: ParsedTopic, descriptor: TopicDescriptor) -> None:
         """Initialize."""
         self._descriptor = descriptor
-        self._full_unique_id = full_unique_id
-        self._short_unique_id = short_unique_id
+        self._unique_id = unique_id
         self._metrics: dict[str, Metric] = {}
         self._device_type = parsed_topic.device_type
         self._device_id = parsed_topic.device_id
@@ -41,13 +40,12 @@ class Device:
         self._firmware_version = None
         self._custom_name = None
 
-        _LOGGER.debug("Device %s initialized", self._full_unique_id)
+        _LOGGER.debug("Device %s initialized", self._unique_id)
 
     def __repr__(self) -> str:
         """Return a string representation of the device."""
         return (
-            f"Device(full_unique_id={self._full_unique_id}, "
-            #f"short_unique_id={self._short_unique_id}, "
+            f"Device(full_unique_id={self.unique_id}, "
             f"name={self.name}, "
             f"model={self.model}, "
             f"manufacturer={self.manufacturer}, "
@@ -119,9 +117,7 @@ class Device:
                 )
                 return None
 
-        short_id = parsed_topic.short_id
-        metric_id = f"{self.unique_id}_{short_id}"
-        metric = self._metrics.get(metric_id)
+        metric = self._metrics.get(parsed_topic.short_id)
         if metric:
             metric._handle_message(value, event_loop, log_debug)
             return None
@@ -144,7 +140,7 @@ class Device:
         """Check if two topics are the same, considering adjustable suffixes."""
         return topic.rsplit('/', 1)[0] == adjustable_topic.rsplit('/', 1)[0]
 
-    def add_placeholder(self, metric_placeholder: MetricPlaceholder, fallback_placeholders: list[FallbackPlaceholder], hub: Hub) -> Metric:
+    def _create_metric_from_placeholder(self, metric_placeholder: MetricPlaceholder, fallback_placeholders: list[FallbackPlaceholder], hub: Hub) -> Metric:
         _LOGGER.info("Creating new metric on device: %s", metric_placeholder)
 
         new_topic_desc = metric_placeholder.topic_descriptor
@@ -183,18 +179,18 @@ class Device:
         else:
             metric = Metric(self, name, new_topic_desc, metric_placeholder.parsed_topic.hub_unique_id, metric_placeholder.parsed_topic.short_id, metric_placeholder.parsed_topic.key_values, hub)
         metric._handle_message(metric_placeholder.value, None, _LOGGER.debug)
-        self._metrics[metric.unique_id] = metric
+        self._metrics[metric.short_id] = metric
         return metric
 
     def add_formula_metric(self, topic_desc: TopicDescriptor, hub: Hub) -> FormulaMetric:
         assert topic_desc.name is not None, "name must be set for topic"
         metric = FormulaMetric(self, topic_desc.name, topic_desc, hub)
-        self._metrics[metric.unique_id] = metric
+        self._metrics[metric.short_id] = metric
         return metric
 
-    def get_metric_from_unique_id(self, unique_id: str) -> Metric | WritableMetric | None:
+    def get_metric(self, short_id: str) -> Metric | WritableMetric | None:
         """Get a metric from a unique id."""
-        return self._metrics.get(unique_id)
+        return self._metrics.get(short_id)
 
     @property
     def metrics(self) -> list[Metric | WritableMetric]:
@@ -204,12 +200,7 @@ class Device:
     @property
     def unique_id(self) -> str:
         """Return the unique id of the device."""
-        return self._full_unique_id
-
-    @property
-    def short_unique_id(self) -> str:
-        """Return the short unique id of the device."""
-        return self._short_unique_id
+        return self._unique_id
 
     @property
     def name(self) -> str | None:
