@@ -92,6 +92,15 @@ async def _async_noop(self):
     """Async no-op used to mock out Hub._keepalive_loop in a single test."""
     return None
 
+async def _sleep_short(mock_time: MagicMock | None = None):
+    """Async no-op used to mock out Hub._keepalive_loop in a single test."""
+    if mock_time:
+        times = count(0, 0.05)  # Start at 0, increment by 0.05 each call
+        mock_time.side_effect = lambda: next(times)
+    await asyncio.sleep(0.01)  # Allow event loop to process any scheduled callbacks
+    if mock_time:
+        mock_time.side_effect = None
+
 async def _hub_disconnect(hub: Hub, mock_time: MagicMock | None = None):
     """Async no-op used to mock out Hub._keepalive_loop in a single test."""
     logger.info("calling hub.disconnect()")
@@ -107,12 +116,8 @@ async def _hub_disconnect(hub: Hub, mock_time: MagicMock | None = None):
 async def inject_message(hub_instance, topic, payload, mock_time: MagicMock | None = None):
     """Helper function to inject a single MQTT message into the Hub."""
     hub_instance._client.on_message(None, None, MagicMock(topic=topic, payload=payload.encode()))
-    if mock_time:
-        times = count(0, 0.05)  # Start at 0, increment by 0.05 each call
-        mock_time.side_effect = lambda: next(times)
-    await asyncio.sleep(0.01)  # Allow event loop to process any scheduled callbacks
-    if mock_time:
-        mock_time.side_effect = None
+    await _sleep_short(mock_time)
+
 
 
 async def finalize_injection(hub: Hub, disconnect: bool = True, mock_time: MagicMock | None = None):
@@ -552,7 +557,7 @@ async def test_metric_keepalive_update_frequency_5(mock_time):
         # Invalidate all metrics, as the silent period is 60 seconds we need to go higher
         mock_time.return_value = 76
         hub._keepalive_metrics()
-        await asyncio.sleep(0.01)  # Allow event loop to process any scheduled callbacks
+        await _sleep_short(mock_time)
         assert metric.on_update.call_count == 2, "on_update should be called as metric updated to None"
         magic_mock.assert_called_with(metric, None)
 
@@ -606,7 +611,7 @@ async def test_metric_keepalive_update_frequency_none(mock_time):
         # Invalidate all metrics, as the silent period is 60 seconds we need to go higher
         mock_time.return_value = 76
         hub._keepalive_metrics()
-        await asyncio.sleep(0.01)  # Allow event loop to process any scheduled callbacks
+        await _sleep_short(mock_time)
         assert metric.on_update.call_count == 3, "on_update should be called as metric updated to None"
         magic_mock.assert_called_with(metric, None)
 
@@ -731,7 +736,7 @@ async def test_new_metric():
         # Check that we got the callback only once
         await hub._keepalive()
         # Wait for the callback to be triggered
-        await asyncio.sleep(0.1)  # Allow event loop to process the callback
+        await _sleep_short()
         assert mock_on_new_metric.call_count == 5, "on_new_metric should be called exactly 5 times"
 
         # Validate that the device has the metric we published
@@ -765,7 +770,7 @@ async def test_new_metric_duplicate_messages():
         # Check that we got the callback only once
         await hub._keepalive()
         # Wait for the callback to be triggered
-        await asyncio.sleep(0.1)  # Allow event loop to process the callback
+        await _sleep_short()
         assert mock_on_new_metric.call_count == 1, "on_new_metric should be called exactly 1 time"
 
         # Validate that the device has the metric we published
@@ -802,7 +807,7 @@ async def test_new_metric_duplicate_formula_messages():
         # Check that we got the callback only once
         await hub._keepalive()
         # Wait for the callback to be triggered
-        await asyncio.sleep(0.1)  # Allow event loop to process the callback
+        await _sleep_short()
         assert mock_on_new_metric.call_count == 3, "on_new_metric should be called exactly 3 times"
 
         # Inject another message. Should generate this but not the formula metrics again
@@ -812,7 +817,7 @@ async def test_new_metric_duplicate_formula_messages():
         # Check that we got the callback only once
         await hub._keepalive()
         # Wait for the callback to be triggered
-        await asyncio.sleep(0.1)  # Allow event loop to process the callback
+        await _sleep_short()
         mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_latitude"))
         assert mock_on_new_metric.call_count == 4, "on_new_metric should be called exactly 4 times"
 
