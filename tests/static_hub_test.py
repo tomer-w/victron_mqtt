@@ -496,19 +496,19 @@ async def test_same_message_events_five(mock_time):
     metric.on_update = MagicMock()
 
     # Inject the same message again
-    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}")
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}", mock_time)
     assert metric.on_update.call_count == 1, "on_update should be called for the same value as this is the first notification"
 
     # Inject the same message again
-    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}")
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}", mock_time)
     assert metric.on_update.call_count == 1, "on_update should not be called for the same value as the clock did not move"
 
     mock_time.return_value = 20
 
-    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}")
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}", mock_time)
     assert metric.on_update.call_count == 2, "on_update should be called after frequency elapsed"
 
-    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 43}")
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 43}", mock_time)
     assert metric.on_update.call_count == 2, "on_update should not be called for the new value"
 
     await _hub_disconnect(hub, mock_time)
@@ -524,7 +524,7 @@ async def test_metric_keepalive_update_frequency_5(mock_time):
         mock_time.return_value = 10
 
         # Inject messages after the event is set
-        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 10}")
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 10}", mock_time)
         await finalize_injection(hub, False)
 
         # Validate that the device has the metric we published
@@ -540,13 +540,13 @@ async def test_metric_keepalive_update_frequency_5(mock_time):
 
         # injecting first message which was suppose to trigger callback
         mock_time.return_value = 11
-        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 11}")
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 11}", mock_time)
         assert metric.on_update.call_count == 1, "on_update should be called for the 1st update"
         magic_mock.assert_called_with(metric, 11)
 
         # injecting 2nd message which suppose to trigger nothing as of the update frequency
         mock_time.return_value = 12
-        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 12}")
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 12}", mock_time)
         assert metric.on_update.call_count == 1, "on_update should not be called again as the update frequency did not elapse"
 
         # Invalidate all metrics, as the silent period is 60 seconds we need to go higher
@@ -557,7 +557,7 @@ async def test_metric_keepalive_update_frequency_5(mock_time):
         magic_mock.assert_called_with(metric, None)
 
         mock_time.return_value = 77
-        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 77}")
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 77}", mock_time)
         assert metric.on_update.call_count == 3, "on_update should be called as metric updates back to value"
         magic_mock.assert_called_with(metric, 77)
 
@@ -574,7 +574,7 @@ async def test_metric_keepalive_update_frequency_none(mock_time):
         mock_time.return_value = 10
 
         # Inject messages after the event is set
-        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 10}")
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 10}", mock_time)
         await finalize_injection(hub, False)
 
         # Validate that the device has the metric we published
@@ -590,17 +590,17 @@ async def test_metric_keepalive_update_frequency_none(mock_time):
 
         # injecting first message which was suppose to trigger callback
         mock_time.return_value = 11
-        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 11}")
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 11}", mock_time)
         assert metric.on_update.call_count == 1, "on_update should be called for the 1st update"
         magic_mock.assert_called_with(metric, 11)
 
         # injecting 2nd message which suppose to trigger nothing as of the update frequency
         mock_time.return_value = 12
-        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 12}")
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 12}", mock_time)
         assert metric.on_update.call_count == 2, "on_update should be called again as value changed"
 
         mock_time.return_value = 13
-        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 12}")
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 12}", mock_time)
         assert metric.on_update.call_count == 2, "on_update should not be called again as value didnt changed"
 
         # Invalidate all metrics, as the silent period is 60 seconds we need to go higher
@@ -611,7 +611,7 @@ async def test_metric_keepalive_update_frequency_none(mock_time):
         magic_mock.assert_called_with(metric, None)
 
         mock_time.return_value = 77
-        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 77}")
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 77}", mock_time)
         assert metric.on_update.call_count == 4, "on_update should be called as metric updates back to value"
         magic_mock.assert_called_with(metric, 77)
 
@@ -1095,7 +1095,7 @@ async def test_formula_message(mock_time):
     hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
 
     # Inject messages after the event is set
-    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 1200}")
+    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 1200}", mock_time)
     mock_time.return_value += 0.1
     await finalize_injection(hub, disconnect=False)
 
@@ -1120,15 +1120,15 @@ async def test_formula_message(mock_time):
     assert metric3.name == "DC Battery Discharge Energy", f"Expected name to be 'DC Battery Discharge Energy', got {metric3.name}"
 
     mock_time.return_value = 15
-    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 800}")
+    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 800}", mock_time)
     assert metric2.value == 0.005, f"Expected metric value to be 0.005, got {metric2.value}"
 
     mock_time.return_value = 30
-    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -1000}")
+    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -1000}", mock_time)
     assert metric2.value == 0.008, f"Expected metric value to be 0.008, got {metric2.value}"
 
     mock_time.return_value = 45
-    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -2000}")
+    await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -2000}", mock_time)
     assert metric2.value == 0.008, f"Expected metric value to be 0.008, got {metric2.value}"
     assert metric3.value == 0.004, f"Expected metric value to be 0.004, got {metric3.value}"
 
@@ -1221,9 +1221,9 @@ async def test_old_cerbo(mock_time):
         hub: Hub = await create_mocked_hub()
 
         # Inject messages after the event is set
-        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}")
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}", mock_time)
         mock_time.return_value = 46
-        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 43}")
+        await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 43}", mock_time)
 
         # Validate the Hub's state
         assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
