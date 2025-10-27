@@ -63,11 +63,13 @@ async def create_mocked_hub(installation_id=None, operation_mode: OperationMode 
             if topic == "R/123/keepalive":
                 echo = parse_keepalive_options(value)
                 keepalive_payload = json.dumps({"full-publish-completed-echo": echo, "value": 42})
+                logger.info("Sending mocked full_publish_completed")
                 mocked_client.on_message(
                     mocked_client,
                     None,
                     MagicMock(topic="N/123/full_publish_completed", payload=keepalive_payload.encode())
                 )
+                logger.info("Mocked full_publish_completed")
         mocked_client.publish = MagicMock(name="publish", side_effect=mock_publish)
 
         await hub.connect()
@@ -90,21 +92,30 @@ async def _async_noop(self):
     """Async no-op used to mock out Hub._keepalive_loop in a single test."""
     return None
 
-async def _hub_disconnect(hub: Hub, mock_time: MagicMock):
+async def _hub_disconnect(hub: Hub, mock_time: MagicMock | None = None):
     """Async no-op used to mock out Hub._keepalive_loop in a single test."""
-    # As hub.disconnect is using asyncio.sleep(0.1), creating a sequence of increasing times
-    times = count(0, 0.05)  # Start at 0, increment by 0.05 each call
-    mock_time.side_effect = lambda: next(times)
+    logger.info("calling hub.disconnect()")
+    if mock_time:
+        # As hub.disconnect is using asyncio.sleep(0.1), creating a sequence of increasing times
+        times = count(0, 0.05)  # Start at 0, increment by 0.05 each call
+        mock_time.side_effect = lambda: next(times)
     await hub.disconnect()
+    if mock_time:
+        mock_time.side_effect = None
 
 
-async def inject_message(hub_instance, topic, payload):
+async def inject_message(hub_instance, topic, payload, mock_time: MagicMock | None = None):
     """Helper function to inject a single MQTT message into the Hub."""
     hub_instance._client.on_message(None, None, MagicMock(topic=topic, payload=payload.encode()))
+    if mock_time:
+        times = count(0, 0.05)  # Start at 0, increment by 0.05 each call
+        mock_time.side_effect = lambda: next(times)
     await asyncio.sleep(0.01)  # Allow event loop to process any scheduled callbacks
+    if mock_time:
+        mock_time.side_effect = None
 
 
-async def finalize_injection(hub: Hub, disconnect: bool = True):
+async def finalize_injection(hub: Hub, disconnect: bool = True, mock_time: MagicMock | None = None):
     """Finalize the injection of messages into the Hub."""
     # Wait for the connect task to finish
     logger.info("Sending keepalive to finalize injection")
@@ -113,7 +124,7 @@ async def finalize_injection(hub: Hub, disconnect: bool = True):
     await hub.wait_for_first_refresh()
     logger.info("waiting completed")
     if disconnect:
-        await hub.disconnect()
+        await _hub_disconnect(hub, mock_time)
 
 @pytest.mark.asyncio
 async def test_hub_initialization():
@@ -247,7 +258,7 @@ async def test_number_message():
     # Restore the original publish method
     hub._publish = orig__publish
 
-    await hub.disconnect()
+    await _hub_disconnect(hub)
 
 
 @pytest.mark.asyncio
@@ -436,7 +447,8 @@ async def test_same_message_events_none():
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 44}")
     assert metric.on_update.call_count == 3, "on_update should be called for the latest value change"
 
-    await hub.disconnect()
+    await _hub_disconnect(hub)
+
 
 @pytest.mark.asyncio
 async def test_same_message_events_zero():
@@ -460,7 +472,7 @@ async def test_same_message_events_zero():
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 43}")
     assert metric.on_update.call_count == 2, "on_update should be called for the new value"
 
-    await hub.disconnect()
+    await _hub_disconnect(hub)
 
 @pytest.mark.asyncio
 @patch('victron_mqtt.metric.time.monotonic')
@@ -473,7 +485,7 @@ async def test_same_message_events_five(mock_time):
     mock_time.return_value = 10
 
     # Inject messages after the event is set
-    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}")
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}", mock_time)
     await finalize_injection(hub, False)
 
     # Validate that the device has the metric we published
@@ -657,8 +669,8 @@ async def test_multiple_hubs():
     assert metric2.key_values["output"] == "2"
     assert metric2.value == GenericOnOff.Off, f"Expected metric value to be GenericOnOff.Off, got {metric2.value}"
 
-    await hub2.disconnect()
-    await hub1.disconnect()
+    await _hub_disconnect(hub2)
+    await _hub_disconnect(hub1)
 
 @pytest.mark.asyncio
 async def test_float_precision():
@@ -727,7 +739,7 @@ async def test_new_metric():
         metric = device.get_metric("system_dc_consumption")
         assert metric is not None, "Metric should exist in the device"
         assert metric.value == 1.1, f"Expected metric value to be 1.1, got {metric.value}"
-    await hub.disconnect()
+    await _hub_disconnect(hub)
 
 @pytest.mark.asyncio
 async def test_new_metric_duplicate_messages():
@@ -763,7 +775,7 @@ async def test_new_metric_duplicate_messages():
         assert metric is not None, "Metric should exist in the device"
         assert metric.value == 2, f"Expected metric value to be 2, got {metric.value}"
 
-    await hub.disconnect()
+    await _hub_disconnect(hub)
 
 @pytest.mark.asyncio
 async def test_new_metric_duplicate_formula_messages():
@@ -804,7 +816,7 @@ async def test_new_metric_duplicate_formula_messages():
         mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_latitude"))
         assert mock_on_new_metric.call_count == 4, "on_new_metric should be called exactly 4 times"
 
-    await hub.disconnect()
+    await _hub_disconnect(hub)
 
 @pytest.mark.asyncio
 # async def test_experimental_metrics_not_created_by_default():
@@ -1160,7 +1172,7 @@ async def test_depends_on_regular_exists_same_round():
         assert metric is not None, "metric should exist in the device"
         assert metric.value == GenericOnOff.Off, f"Expected metric value to be GenericOnOff.Off, got {metric.value}"
 
-    await hub.disconnect()
+    await _hub_disconnect(hub)
 
 @pytest.mark.asyncio
 async def test_depends_on_regular_exists_two_rounds():
@@ -1181,7 +1193,7 @@ async def test_depends_on_regular_exists_two_rounds():
         assert metric is not None, "metric should exist in the device"
         assert metric.value == GenericOnOff.Off, f"Expected metric value to be GenericOnOff.Off, got {metric.value}"
 
-    await hub.disconnect()
+    await _hub_disconnect(hub)
 
 @pytest.mark.asyncio
 async def test_depends_on_regular_dont_exists():
@@ -1196,7 +1208,7 @@ async def test_depends_on_regular_dont_exists():
         # Validate the Hub's state - only system device exists, evcharger message was filtered
         assert len(hub.devices) == 0, f"Expected 0 devices, got {len(hub.devices)}"
 
-    await hub.disconnect()
+    await _hub_disconnect(hub)
 
 
 @pytest.mark.asyncio
