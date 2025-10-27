@@ -549,7 +549,8 @@ class Hub:
         if self._loop.is_running():
             self._loop.call_soon_threadsafe(self._first_refresh_event.set)
         self._first_full_publish = False
-
+        _LOGGER.debug("Full publish handling completed")
+        
     def _handle_installation_id_message(self, topic: str) -> None:
         """Handle installation ID message."""
         parsed_topic = ParsedTopic.from_topic(topic)

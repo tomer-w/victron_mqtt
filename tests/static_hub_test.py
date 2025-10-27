@@ -107,8 +107,11 @@ async def inject_message(hub_instance, topic, payload):
 async def finalize_injection(hub: Hub, disconnect: bool = True):
     """Finalize the injection of messages into the Hub."""
     # Wait for the connect task to finish
+    logger.info("Sending keepalive to finalize injection")
     await hub._keepalive()
+    logger.info("Waiting for first refresh to complete")
     await hub.wait_for_first_refresh()
+    logger.info("waiting completed")
     if disconnect:
         await hub.disconnect()
 
