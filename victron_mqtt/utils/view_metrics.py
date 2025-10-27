@@ -203,14 +203,14 @@ class App:
         if not self._client:
             return
             
-        devices = sorted(self._client.devices.values(), key=lambda x: x.short_unique_id)
+        devices = sorted(self._client.devices.values(), key=lambda x: x.unique_id)
         for device in devices:
             device_item = self.tree.insert(
                 "",
                 "end",
                 text=f"{device.name} (ID: {device.device_id})" if device.device_id != "0" else device.name or "",
                 values=(device.serial_number, ""),
-                iid="D" + device.short_unique_id,
+                iid="D" + device.unique_id,
             )
             metrics = sorted(device.metrics, key=lambda x: x.short_id)
             for metric in metrics:
@@ -234,7 +234,7 @@ class App:
             if device is not None:
                 AttributeViewerDialog(self.root, device)
         elif item[0] == "M":
-            metric = self._client.get_metric_from_unique_id(unique_id)
+            metric = self._client.get_metric(unique_id)
             if metric is not None:
                 AttributeViewerDialog(self.root, metric)
 

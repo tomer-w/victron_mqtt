@@ -186,12 +186,12 @@ class Metric:
         """Sets the on_update callback."""
         self._on_update = value
 
-    def _keepalive(self, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]):
+    def _keepalive(self, force_invalidate: bool, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]):
         """Reset metrics value if no updates or send last values if they got skipped"""
         silence_timeout = max(60, self._hub._update_frequency_seconds * 3) if self._hub._update_frequency_seconds is not None else 60
-        now = time.time()
+        now = time.monotonic()
         elapsed = now - self._last_seen
-        if elapsed > silence_timeout and self._value is not None:
+        if (force_invalidate or elapsed > silence_timeout) and self._value is not None:
             log_debug("Metric %s has been silent for %.2fs, resetting", self.unique_id, elapsed)
             self._handle_message(None, event_loop, log_debug, update_last_seen=False) #Dont update the last_seen as it wasnt seen
             return
@@ -203,7 +203,7 @@ class Metric:
 
     def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None], update_last_seen: bool = True, force: bool = False):
         """Handle a message."""
-        now = time.time()
+        now = time.monotonic()
         if update_last_seen:
             self._last_seen = now
         should_notify = False

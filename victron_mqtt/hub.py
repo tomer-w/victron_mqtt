@@ -28,7 +28,9 @@ from .metric import Metric
 
 _LOGGER = logging.getLogger(__name__)
 CONNECT_MAX_FAILED_ATTEMPTS = 3
+FORCE_INVALIDATE_AFTER_NOT_CONNECTED_SECONDS = 120
 FULL_PUBLISH_MIN_INTERVAL_SECONDS = 45
+MINIMUM_FULLY_SUPPORTED_VERSION = 3.5
 
 # Modify the logger to include instance_id without changing the tracing level
 # class InstanceIDFilter(logging.Filter):
@@ -216,6 +218,8 @@ class Hub:
         # Track when _handle_full_publish_message was last invoked for our client
         # Use monotonic time to avoid issues with system clock changes
         self._last_full_publish_called: float = 0.0
+        self._firmware_version: float = 0.0
+        self._connect_failed_since: float = 0.0
 
         # Filter the active topics
         metrics_active_topics: list[TopicDescriptor] = []
@@ -312,6 +316,7 @@ class Hub:
         self._client.on_connect_fail = self.on_connect_fail
         #self._client.on_log = self._on_log
         self._connect_failed_attempts = 0
+        self._connect_failed_since = 0.0
         self._connect_failed = False
         self._loop = asyncio.get_event_loop()
         #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop, name=name))
@@ -371,6 +376,7 @@ class Hub:
 
     def _on_connect_internal(self, client: MQTTClient, userdata: Any, flags: dict, rc: int, properties: Optional[dict] = None) -> None:
         """Handle connection callback."""
+        self._connect_failed_since = 0
         if self._client is None:
             _LOGGER.warning("Got new connection while self._client is None, ignoring")
             return
@@ -529,9 +535,9 @@ class Hub:
                         ver_str = version_metric.value[1:]
                         if "~" in ver_str:
                             ver_str = ver_str.split("~", 1)[0]
-                        firmware_version = float(ver_str)
-                        if firmware_version < 3.5:
-                            _LOGGER.warning("Firmware version is below v3.5: %s", version_metric.value)
+                        self._firmware_version = float(ver_str)
+                        if self._firmware_version < MINIMUM_FULLY_SUPPORTED_VERSION:
+                            _LOGGER.warning("Firmware version is below v3.5: %s. Reduced functionality may occur.", version_metric.value)
                         else:
                             _LOGGER.info("Firmware version is good enough: %s", version_metric.value)
                     except (ValueError, TypeError):
@@ -645,7 +651,8 @@ class Hub:
                 await asyncio.sleep(30)
                 # We should keep alive all metrics every 60 seconds
                 count += 1
-                if count % 2 == 0:
+                # Old firmwars dont resend values after the keepalive message so we cant use this logic of invalidation if there is no new value
+                if self._firmware_version >= MINIMUM_FULLY_SUPPORTED_VERSION and count % 2 == 0:
                     self._keepalive_metrics()
             except asyncio.CancelledError:
                 _LOGGER.info("Keepalive loop canceled")
@@ -654,15 +661,15 @@ class Hub:
                 _LOGGER.error("Error in keepalive loop: %s", exc, exc_info=True)
                 await asyncio.sleep(5)  # Short delay before retrying
 
-    def _keepalive_metrics(self) -> None:
+    def _keepalive_metrics(self, force_invalidate: bool = False) -> None:
         """Keep alive all metrics."""
         _LOGGER.debug("Keeping alive all metrics")
         for metric in self._all_metrics.values():
             # Determine log level based on the substring
             is_info_level = self._topic_log_info and self._topic_log_info in metric._descriptor.topic
             log_debug = _LOGGER.info if is_info_level else _LOGGER.debug
-            
-            metric._keepalive(self._loop, log_debug)
+
+            metric._keepalive(force_invalidate, self._loop, log_debug)
 
     def _start_keep_alive_loop(self) -> None:
         """Start the keep_alive loop."""
@@ -904,12 +911,20 @@ class Hub:
     def on_connect_fail(self, client: MQTTClient, userdata: Any) -> None:
         """Handle connection failure callback."""
         _LOGGER.warning("Connection to MQTT broker failed")
+        if self._connect_failed_since == 0:
+            self._connect_failed_since = time.monotonic()
         self._connect_failed_attempts += 1
         # Check if we have reached the maximum number of failed attempts
         if self._connect_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
             self._connect_failed = True
             if self._loop.is_running():
                 self._loop.call_soon_threadsafe(self._connected_event.set)
+        # This code is not really needed in newer firmwares as metrics will get invalidated individually. With older firmwares, we can force invalidation after we are disconnected for enough time
+        disconnected_for = time.monotonic() - self._connect_failed_since
+        if disconnected_for > FORCE_INVALIDATE_AFTER_NOT_CONNECTED_SECONDS:
+            _LOGGER.info("Disconnected for %d seconds. Invalidating all metrics", disconnected_for)
+            self._keepalive_metrics(force_invalidate=True)
+            self._connect_failed_since = 0  # Reset the timer
 
     @staticmethod
     def expand_topic_list(topic_list: list[TopicDescriptor]) -> list[TopicDescriptor]:

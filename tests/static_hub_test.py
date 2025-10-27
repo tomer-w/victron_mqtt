@@ -1,3 +1,4 @@
+from itertools import count
 import pytest
 import asyncio
 from unittest.mock import MagicMock, patch
@@ -89,6 +90,12 @@ async def _async_noop(self):
     """Async no-op used to mock out Hub._keepalive_loop in a single test."""
     return None
 
+async def _hub_disconnect(hub: Hub, mock_time: MagicMock):
+    """Async no-op used to mock out Hub._keepalive_loop in a single test."""
+    # As hub.disconnect is using asyncio.sleep(0.1), creating a sequence of increasing times
+    times = count(0, 0.05)  # Start at 0, increment by 0.05 each call
+    mock_time.side_effect = lambda: next(times)
+    await hub.disconnect()
 
 
 async def inject_message(hub_instance, topic, payload):
@@ -102,7 +109,6 @@ async def finalize_injection(hub: Hub, disconnect: bool = True):
     # Wait for the connect task to finish
     await hub._keepalive()
     await hub.wait_for_first_refresh()
-    await asyncio.sleep(0.1)  # Allow event loop to process the callback
     if disconnect:
         await hub.disconnect()
 
@@ -454,9 +460,11 @@ async def test_same_message_events_zero():
     await hub.disconnect()
 
 @pytest.mark.asyncio
-@patch('victron_mqtt.metric.time.time')
+@patch('victron_mqtt.metric.time.monotonic')
 async def test_same_message_events_five(mock_time):
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
+
+    mock_time.return_value = 0.0
     hub: Hub = await create_mocked_hub(update_frequency_seconds=5)
 
     mock_time.return_value = 10
@@ -488,13 +496,14 @@ async def test_same_message_events_five(mock_time):
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 43}")
     assert metric.on_update.call_count == 2, "on_update should not be called for the new value"
 
-    await hub.disconnect()
+    await _hub_disconnect(hub, mock_time)
 
 @pytest.mark.asyncio
-@patch('victron_mqtt.metric.time.time')
+@patch('victron_mqtt.metric.time.monotonic')
 async def test_metric_keepalive_update_frequency_5(mock_time):
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
     with patch.object(Hub, "_keepalive_loop", new=_async_noop):
+        mock_time.return_value = 0
         hub: Hub = await create_mocked_hub(update_frequency_seconds=5)
 
         mock_time.return_value = 10
@@ -537,13 +546,14 @@ async def test_metric_keepalive_update_frequency_5(mock_time):
         assert metric.on_update.call_count == 3, "on_update should be called as metric updates back to value"
         magic_mock.assert_called_with(metric, 77)
 
-    await hub.disconnect()
+    await _hub_disconnect(hub, mock_time)
 
 @pytest.mark.asyncio
-@patch('victron_mqtt.metric.time.time')
+@patch('victron_mqtt.metric.time.monotonic')
 async def test_metric_keepalive_update_frequency_none(mock_time):
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
     with patch.object(Hub, "_keepalive_loop", new=_async_noop):
+        mock_time.return_value = 0
         hub: Hub = await create_mocked_hub()
 
         mock_time.return_value = 10
@@ -590,7 +600,7 @@ async def test_metric_keepalive_update_frequency_none(mock_time):
         assert metric.on_update.call_count == 4, "on_update should be called as metric updates back to value"
         magic_mock.assert_called_with(metric, 77)
 
-    await hub.disconnect()
+    await _hub_disconnect(hub, mock_time)
 
 
 @pytest.mark.asyncio
@@ -1062,15 +1072,16 @@ async def test_null_message():
     assert len(hub.devices) == 0, f"Expected no devices, got {len(hub.devices)}"
 
 @pytest.mark.asyncio
-@patch('victron_mqtt.formula_common.time')
+@patch('victron_mqtt.formula_common.time.monotonic')
 async def test_formula_message(mock_time):
     # Mock time.monotonic() to return a fixed time
-    mock_time.monotonic.return_value = 0
+    mock_time.return_value = 0
 
     hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
 
     # Inject messages after the event is set
     await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 1200}")
+    mock_time.return_value += 0.1
     await finalize_injection(hub, disconnect=False)
 
     # Validate the Hub's state - only system device exists, evcharger message was filtered
@@ -1093,15 +1104,15 @@ async def test_formula_message(mock_time):
     assert metric3.generic_short_id == "system_dc_battery_discharge_energy", f"Expected generic_short_id to be 'system_dc_battery_discharge_energy', got {metric3.generic_short_id}"
     assert metric3.name == "DC Battery Discharge Energy", f"Expected name to be 'DC Battery Discharge Energy', got {metric3.name}"
 
-    mock_time.monotonic.return_value = 15
+    mock_time.return_value = 15
     await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 800}")
     assert metric2.value == 0.005, f"Expected metric value to be 0.005, got {metric2.value}"
 
-    mock_time.monotonic.return_value = 30
+    mock_time.return_value = 30
     await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -1000}")
     assert metric2.value == 0.008, f"Expected metric value to be 0.008, got {metric2.value}"
 
-    mock_time.monotonic.return_value = 45
+    mock_time.return_value = 45
     await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": -2000}")
     assert metric2.value == 0.008, f"Expected metric value to be 0.008, got {metric2.value}"
     assert metric3.value == 0.004, f"Expected metric value to be 0.004, got {metric3.value}"
@@ -1109,7 +1120,7 @@ async def test_formula_message(mock_time):
     # Test the 2nd way to get metric
     assert hub.get_metric("system_0_system_dc_battery_discharge_energy") is not None
 
-    await hub.disconnect()
+    await _hub_disconnect(hub, mock_time)
 
 @pytest.mark.asyncio
 async def test_heartbeat_message():
@@ -1186,17 +1197,17 @@ async def test_depends_on_regular_dont_exists():
 
 
 @pytest.mark.asyncio
-@patch('victron_mqtt.hub.time')
+@patch('victron_mqtt.hub.time.monotonic')
 async def test_old_cerbo(mock_time):
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
     with patch.object(Hub, "_keepalive_loop", new=_async_noop):
         # Mock time.monotonic() to return a fixed time
-        mock_time.monotonic.return_value = 0
+        mock_time.return_value = 0
         hub: Hub = await create_mocked_hub()
 
         # Inject messages after the event is set
         await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}")
-        mock_time.monotonic.return_value = 46
+        mock_time.return_value = 46
         await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 43}")
 
         # Validate the Hub's state
@@ -1207,4 +1218,5 @@ async def test_old_cerbo(mock_time):
         metric = device.get_metric("grid_energy_forward_L1")
         assert metric is not None, "Metric should exist in the device"
         assert metric.value == 43, f"Expected metric value to be 43, got {metric.value}"
-    await hub.disconnect()
+    await _hub_disconnect(hub, mock_time)
+
