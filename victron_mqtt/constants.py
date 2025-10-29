@@ -1,7 +1,7 @@
 """Constants for the victron venus OS client."""
 
 from enum import Enum
-from typing import NamedTuple, Self
+from typing import Self
 
 from dataclasses import dataclass
 

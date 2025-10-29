@@ -224,14 +224,11 @@ class Hub:
         # Filter the active topics
         metrics_active_topics: list[TopicDescriptor] = []
         self._service_active_topics: dict[str, TopicDescriptor] = {}
-        self._button_active_topics: dict[str, TopicDescriptor] = {}
         for topic in topics:
             if operation_mode != OperationMode.EXPERIMENTAL and topic.experimental:
                 continue
             if topic.message_type == MetricKind.SERVICE:
                 self._service_active_topics[topic.short_id] = topic
-            elif topic.message_type == MetricKind.BUTTON:
-                self._button_active_topics[topic.short_id] = topic
             else:
                 #if operation_mode is READ_ONLY we should change all TopicDescriptor to SENSOR and BINARY_SENSOR
                 if operation_mode != OperationMode.READ_ONLY or topic.message_type in [MetricKind.ATTRIBUTE, MetricKind.SENSOR, MetricKind.BINARY_SENSOR]:
@@ -366,19 +363,6 @@ class Hub:
         assert device_id is not None, "Device ID must be provided"
         topic = topic_desc.topic.replace("{installation_id}", self._installation_id).replace("{device_id}", device_id)
         payload = WritableMetric._wrap_payload(topic_desc, value) if value is not None else ""
-        self._publish(topic, payload)
-
-    def push_button(self, topic_short_id: str, device_id: str) -> None:
-        """Publish a message to the MQTT broker."""
-        _LOGGER.info("pushing button to topic_short_id: %s, device_id: %s", topic_short_id, device_id)
-        topic_desc = self._button_active_topics.get(topic_short_id)
-        if topic_desc is None:
-            _LOGGER.error("No active push button topic found for topic_short_id: %s", topic_short_id)
-            raise TopicNotFoundError(f"No active push button topic found for topic_short_id: {topic_short_id}")
-        assert self._installation_id is not None, "Installation ID must be set before pushing a button"
-        assert device_id is not None, "Device ID must be provided"
-        topic = topic_desc.topic.replace("{installation_id}", self._installation_id).replace("{device_id}", device_id)
-        payload = WritableMetric._wrap_payload(topic_desc, '{ "value": true }')
         self._publish(topic, payload)
 
     def _on_log(self, client: MQTTClient, userdata: Any, level:int, buf:str) -> None:
@@ -519,7 +503,7 @@ class Hub:
                     if not is_met:
                         continue
                     _LOGGER.info("Formula topic resolved: %s", topic)
-                    metric = device.add_formula_metric(topic, self)
+                    metric = device._add_formula_metric(topic, self)
                     depends_on: dict[str, Metric] = {}
                     for dependency_metric in dependencies:
                         dependency_metric.add_dependency(metric)
