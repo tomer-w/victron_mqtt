@@ -18,6 +18,7 @@ class MetricKind(Enum):
     SELECT = "select"
     NUMBER = "number"
     SERVICE = "service"
+    BUTTON = "button"
 
 
 class MetricNature(Enum):

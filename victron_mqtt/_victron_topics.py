@@ -2555,12 +2555,20 @@ topics: List[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=State,
     ),
-    # All service topics comes last
+    # All service and buttons topics comes last
     TopicDescriptor(
         topic="W/{installation_id}/generator/{device_id}/ServiceCounterReset",
         message_type=MetricKind.SERVICE,
         short_id="generator_service_counter_reset",
         name="Generator service counter reset",
         value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
+        topic="W/{installation_id}/platform/{device_id}/Device/Reboot",
+        message_type=MetricKind.BUTTON,
+        short_id="platform_device_reboot",
+        name="Platform device reboot",
+        value_type=ValueType.BOOL,
+        experimental=True,
     ),
 ]

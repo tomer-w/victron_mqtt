@@ -176,7 +176,7 @@ def test_topic_pattern_structure():
         topic_parts = topic.split('/')
         if len(topic_parts) < 3:
             errors.append(f"Topic '{topic}' has invalid structure (too few parts)")
-        if descriptor.message_type != MetricKind.SERVICE and not topic.startswith('N/{installation_id}/'):
+        if descriptor.message_type != MetricKind.SERVICE and descriptor.message_type != MetricKind.BUTTON and not topic.startswith('N/{installation_id}/'):
             errors.append(f"Topic '{topic}' must start with 'N{{installation_id}}/'")
         elif descriptor.message_type == MetricKind.SERVICE and not topic.startswith('W/{installation_id}/'):
             errors.append(f"Service topic '{topic}' must start with 'W{{installation_id}}/'")
