@@ -174,7 +174,7 @@ class Device:
         name = ParsedTopic.replace_ids(metric_placeholder.topic_descriptor.name, metric_placeholder.parsed_topic.key_values)
         assert metric_placeholder.parsed_topic.device_type is not None, "device_type must be set for metric"
 
-        if new_topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT, MetricKind.BUTTON]:
+        if new_topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT, MetricKind.BUTTON, MetricKind.TIME]:
             metric = WritableMetric(self, name, new_topic_desc, metric_placeholder.parsed_topic, hub)
         else:
             metric = Metric(self, name, new_topic_desc, metric_placeholder.parsed_topic.hub_unique_id, metric_placeholder.parsed_topic.short_id, metric_placeholder.parsed_topic.key_values, hub)
