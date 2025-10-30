@@ -55,7 +55,6 @@ class MetricType(Enum):
 class ValueType(Enum):
     """Value types."""
 
-    BOOL = "bool"
     INT = "int"
     INT_DEFAULT_0 = "int_0"
     FLOAT = "float"

@@ -1159,7 +1159,8 @@ topics: List[TopicDescriptor] = [
         message_type=MetricKind.BUTTON,
         short_id="platform_device_reboot",
         name="Platform device reboot",
-        value_type=ValueType.BOOL,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
         experimental=True,
     ),
     TopicDescriptor(

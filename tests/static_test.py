@@ -96,8 +96,8 @@ def test_enum_message_type():
         if descriptor.enum is not None:
             if descriptor.enum == GenericOnOff and descriptor.message_type == MetricKind.BINARY_SENSOR:
                 continue
-            if descriptor.message_type not in [get_metric_kind().SELECT, get_metric_kind().SENSOR, get_metric_kind().SWITCH]:
-                errors.append(f"Topic '{descriptor.topic}' has 'enum' but message_type is {descriptor.message_type} (should be SELECT, SENSOR, SWITCH, or BINARY_SENSOR for GenericOnOff)")
+            if descriptor.message_type not in [MetricKind.SELECT, MetricKind.SENSOR, MetricKind.SWITCH, MetricKind.BUTTON]:
+                errors.append(f"Topic '{descriptor.topic}' has 'enum' but message_type is {descriptor.message_type} (should be SELECT, SENSOR, SWITCH, BUTTON, or BINARY_SENSOR for GenericOnOff)")
     if errors:
         pytest.fail("\n".join(errors))
 

@@ -128,7 +128,6 @@ def wrap_epoch(value: datetime | None) -> str:
 
 
 VALUE_TYPE_UNWRAPPER = {
-    ValueType.BOOL: unwrap_bool,
     ValueType.INT: unwrap_int,
     ValueType.INT_DEFAULT_0: unwrap_int_default_0,
     ValueType.FLOAT: unwrap_float,
