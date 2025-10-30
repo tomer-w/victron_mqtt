@@ -1274,10 +1274,7 @@ topics: List[TopicDescriptor] = [
         message_type=MetricKind.NUMBER,
         short_id="system_ess_schedule_charge_{slot}_duration",
         name="ESS BatteryLife Schedule charge {slot} Duration",
-        unit_of_measurement="s",
         metric_type=MetricType.TIME,
-        metric_nature=MetricNature.INSTANTANEOUS,
-        value_type=ValueType.INT,
         experimental=True
     ),
     TopicDescriptor(
@@ -1285,7 +1282,7 @@ topics: List[TopicDescriptor] = [
         message_type=MetricKind.NUMBER,
         short_id="system_ess_schedule_charge_{slot}_soc",
         name="ESS BatteryLife Schedule charge {slot} SOC",
-        metric_type=MetricType.PERCENTAGE,
+        metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
         value_type=ValueType.INT,
         experimental=True
     ),
@@ -1294,10 +1291,7 @@ topics: List[TopicDescriptor] = [
         message_type=MetricKind.TIME,
         short_id="system_ess_schedule_charge_{slot}_start",
         name="ESS BatteryLife Schedule charge {slot} Start",
-        unit_of_measurement="s",
         metric_type=MetricType.TIME,
-        metric_nature=MetricNature.INSTANTANEOUS,
-        value_type=ValueType.INT,
         experimental=True
     ),
     TopicDescriptor(

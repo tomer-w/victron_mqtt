@@ -151,6 +151,10 @@ class TopicDescriptor:
                 self.precision = 1
             if self.metric_nature == MetricNature.NONE:
                 self.metric_nature = MetricNature.INSTANTANEOUS
+            if self.min is None:
+                self.min = 0
+            if self.max is None:
+                self.max = 100
         # Apparent power default
         if self.metric_type == MetricType.APPARENT_POWER:
             if self.unit_of_measurement is None:
@@ -161,6 +165,18 @@ class TopicDescriptor:
                 self.precision = 1
             if self.metric_nature == MetricNature.NONE:
                 self.metric_nature = MetricNature.INSTANTANEOUS
+        # Time default
+        if self.metric_type == MetricType.TIME:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "s"
+            if self.value_type is None:
+                self.value_type = ValueType.INT
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+            if self.min is None:
+                self.min = 0
+            if self.max is None:
+                self.max = 86400  # 24 hours in seconds
         # General initialization
         if self.value_type != ValueType.FLOAT:
             self.precision = None

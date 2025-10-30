@@ -151,16 +151,6 @@ def test_metric_nature_for_energy_and_power():
     if errors:
         pytest.fail("\n".join(errors))
 
-def test_min_max_only_for_number():
-    topics = get_topics()
-    MetricKind = get_metric_kind()
-    errors = []
-    for descriptor in topics:
-        if (descriptor.min is not None or descriptor.max is not None) and descriptor.message_type != MetricKind.NUMBER:
-            errors.append(f"Topic '{descriptor.topic}' has min/max values but message_type is {descriptor.message_type} (should be NUMBER)")
-    if errors:
-        pytest.fail("\n".join(errors))
-
 def test_topic_pattern_structure():
     topics = get_topics()
     MetricKind = get_metric_kind()
