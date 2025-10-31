@@ -1294,6 +1294,8 @@ topics: List[TopicDescriptor] = [
         short_id="system_ess_schedule_charge_{slot}_start",
         name="ESS BatteryLife Schedule charge {slot} Start",
         metric_type=MetricType.TIME,
+        unit_of_measurement="min",
+        value_type=ValueType.INT_SECONDS_TO_MINUTES,
         experimental=True
     ),
     TopicDescriptor(

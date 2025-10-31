@@ -1,5 +1,6 @@
 """Module to communicate with the Venus OS MQTT Broker."""
 
+from dataclasses import replace
 import asyncio
 import copy
 import json
@@ -943,12 +944,14 @@ class Hub:
                 match = matches[0]
                 key, start, end = match.group(1), int(match.group(2)), int(match.group(3))
                 for i in range(start, end+1):
-                    new_kwargs = td.__dict__.copy()
-                    new_kwargs['topic'] = pattern.sub(str(i), td.topic)
-                    new_kwargs['key_values'] = {key: str(i)}
-                    expanded.append(TopicDescriptor(**new_kwargs))
+                    expanded.append(replace(
+                        td,
+                        topic=pattern.sub(str(i), td.topic),
+                        key_values={key: str(i)}
+                    ))
             else:
-                expanded.append(td)
+                # Use replace to trigger __post_init__ even for unchanged items
+                expanded.append(replace(td))
         return expanded
 
     @property

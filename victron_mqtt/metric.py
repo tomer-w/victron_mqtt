@@ -102,7 +102,8 @@ class Metric:
         """Returns the formatted value of the metric."""
         if value is None:
             return ""
-
+        if isinstance(value, float) and self._descriptor.precision is not None and self._descriptor.precision == 0:
+            value = int(value)
         if self._descriptor.unit_of_measurement is None:
             return str(value)
         else:

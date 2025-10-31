@@ -1,8 +1,6 @@
 import json
 from datetime import datetime
 
-import pytest
-
 from victron_mqtt._unwrappers import (
     unwrap_bool,
     unwrap_int,

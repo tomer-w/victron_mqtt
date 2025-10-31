@@ -177,8 +177,10 @@ class TopicDescriptor:
                 self.min = 0
             if self.max is None:
                 self.max = 86400  # 24 hours in seconds
+            if self.precision is None:
+                self.precision = 0
         # General initialization
-        if self.value_type != ValueType.FLOAT:
+        if self.value_type not in [ValueType.FLOAT, ValueType.INT_SECONDS_TO_HOURS, ValueType.INT_SECONDS_TO_MINUTES]:
             self.precision = None
 
 

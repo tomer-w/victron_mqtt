@@ -1,4 +1,3 @@
-
 """
 Command-line tool to dump all data from topics list and enums in _victron_enums.py to JSON.
 """
@@ -44,7 +43,9 @@ def main():
     args = parser.parse_args()
 
     def topic_dict_with_enum_name(descriptor):
-        d = {"topic": descriptor.topic, **descriptor.__dict__}
+        # Create a new TopicDescriptor instance to ensure __post_init__ is called
+        new_descriptor = type(descriptor)(**descriptor.__dict__)
+        d = {"topic": new_descriptor.topic, **new_descriptor.__dict__}
         if "enum" in d and d["enum"] is not None:
             d["enum"] = d["enum"].__name__
         return d

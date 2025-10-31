@@ -7,6 +7,204 @@
   "Copyright": "victron_mqtt (C) 2025, Tomer-w (https://github.com/tomer-w).\nFor more information see https://github.com/tomer-w/victron_mqtt\n\nThis file is part of victron_mqtt.\n\nLicensed under the Apache License, Version 2.0 (the 'License'); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software distributed under the License is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
   "topics": [
     {
+      "topic": "N/{installation_id}/acload/{device_id}/Ac/Current",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "acload_current",
+      "name": "Load current",
+      "unit_of_measurement": "A",
+      "metric_type": "MetricType.CURRENT",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Load current",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/acload/{device_id}/Ac/Energy/Forward",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "acload_energy_forward",
+      "name": "Load consumption",
+      "unit_of_measurement": "kWh",
+      "metric_type": "MetricType.ENERGY",
+      "metric_nature": "MetricNature.CUMULATIVE",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Load consumption",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/acload/{device_id}/Ac/Frequency",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "acload_frequency",
+      "name": "Load frequency",
+      "unit_of_measurement": "Hz",
+      "metric_type": "MetricType.FREQUENCY",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 2,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Load frequency",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/acload/{device_id}/Ac/Power",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "acload_power",
+      "name": "Load power",
+      "unit_of_measurement": "W",
+      "metric_type": "MetricType.POWER",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Load power",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/acload/{device_id}/Ac/Voltage",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "acload_voltage",
+      "name": "Load voltage",
+      "unit_of_measurement": "V",
+      "metric_type": "MetricType.VOLTAGE",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 3,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Load voltage",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/acload/{device_id}/Ac/{phase}/Current",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "acload_current_{phase}",
+      "name": "Load current on {phase}",
+      "unit_of_measurement": "A",
+      "metric_type": "MetricType.CURRENT",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Load current on {phase}",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/acload/{device_id}/Ac/{phase}/Energy/Forward",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "acload_energy_forward_{phase}",
+      "name": "Load consumption on {phase}",
+      "unit_of_measurement": "kWh",
+      "metric_type": "MetricType.ENERGY",
+      "metric_nature": "MetricNature.CUMULATIVE",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Load consumption on {phase}",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/acload/{device_id}/Ac/{phase}/Power",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "acload_power_{phase}",
+      "name": "Load power on {phase}",
+      "unit_of_measurement": "W",
+      "metric_type": "MetricType.POWER",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Load power on {phase}",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/acload/{device_id}/Ac/{phase}/Voltage",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "acload_voltage_{phase}",
+      "name": "Load voltage on {phase}",
+      "unit_of_measurement": "V",
+      "metric_type": "MetricType.VOLTAGE",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 3,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Load voltage on {phase}",
+      "is_formula": false
+    },
+    {
       "topic": "N/{installation_id}/alternator/{device_id}/Dc/0/Current",
       "message_type": "MetricKind.SENSOR",
       "short_id": "alternator_dc_current",
@@ -24,7 +222,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC Output Current"
+      "depends_on": [],
+      "generic_name": "DC Output Current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/alternator/{device_id}/Dc/0/Power",
@@ -44,7 +244,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC Output Power"
+      "depends_on": [],
+      "generic_name": "DC Output Power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/alternator/{device_id}/Dc/0/Voltage",
@@ -64,10 +266,12 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC Output Voltage"
+      "depends_on": [],
+      "generic_name": "DC Output Voltage",
+      "is_formula": false
     },
     {
-      "topic": "N/{installation_id}/alternator/{device_id}/In/I",
+      "topic": "N/{installation_id}/alternator/{device_id}/Dc/In/I",
       "message_type": "MetricKind.SENSOR",
       "short_id": "alternator_input_current",
       "name": "Input Current",
@@ -84,10 +288,12 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Input Current"
+      "depends_on": [],
+      "generic_name": "Input Current",
+      "is_formula": false
     },
     {
-      "topic": "N/{installation_id}/alternator/{device_id}/In/P",
+      "topic": "N/{installation_id}/alternator/{device_id}/Dc/In/P",
       "message_type": "MetricKind.SENSOR",
       "short_id": "alternator_input_power",
       "name": "Input Power",
@@ -104,10 +310,12 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Input Power"
+      "depends_on": [],
+      "generic_name": "Input Power",
+      "is_formula": false
     },
     {
-      "topic": "N/{installation_id}/alternator/{device_id}/In/V",
+      "topic": "N/{installation_id}/alternator/{device_id}/Dc/In/V",
       "message_type": "MetricKind.SENSOR",
       "short_id": "alternator_input_voltage",
       "name": "Input Voltage",
@@ -124,7 +332,53 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Input Voltage"
+      "depends_on": [],
+      "generic_name": "Input Voltage",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/alternator/{device_id}/Mode",
+      "message_type": "MetricKind.SWITCH",
+      "short_id": "alternator_mode",
+      "name": "Alternator Mode",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.NONE",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.ENUM",
+      "precision": null,
+      "enum": "ChargerMode",
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Alternator Mode",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/alternator/{device_id}/State",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "alternator_state",
+      "name": "Alternator State",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.NONE",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.ENUM",
+      "precision": null,
+      "enum": "State",
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Alternator State",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Alarms/CellImbalance",
@@ -144,7 +398,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery cell imbalance"
+      "depends_on": [],
+      "generic_name": "Battery cell imbalance",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Alarms/HighChargeCurrent",
@@ -164,7 +420,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery high charge current"
+      "depends_on": [],
+      "generic_name": "Battery high charge current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Alarms/HighChargeTemperature",
@@ -184,7 +442,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery high charge temperature"
+      "depends_on": [],
+      "generic_name": "Battery high charge temperature",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Alarms/HighDischargeCurrent",
@@ -204,7 +464,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery high discharge current"
+      "depends_on": [],
+      "generic_name": "Battery high discharge current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Alarms/InternalFailure",
@@ -224,7 +486,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery internal failure"
+      "depends_on": [],
+      "generic_name": "Battery internal failure",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Alarms/LowCellVoltage",
@@ -244,7 +508,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery low cell voltage"
+      "depends_on": [],
+      "generic_name": "Battery low cell voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Alarms/LowChargeTemperature",
@@ -264,7 +530,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery low charge temperature"
+      "depends_on": [],
+      "generic_name": "Battery low charge temperature",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Capacity",
@@ -284,7 +552,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery capacity"
+      "depends_on": [],
+      "generic_name": "Battery capacity",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/ConsumedAmphours",
@@ -304,7 +574,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery consumed amp-hours"
+      "depends_on": [],
+      "generic_name": "Battery consumed amp-hours",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Dc/0/Current",
@@ -324,7 +596,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC Bus current"
+      "depends_on": [],
+      "generic_name": "DC Bus current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Dc/0/Power",
@@ -344,7 +618,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery power"
+      "depends_on": [],
+      "generic_name": "Battery power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Dc/0/Temperature",
@@ -364,7 +640,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery temperature"
+      "depends_on": [],
+      "generic_name": "Battery temperature",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Dc/0/Voltage",
@@ -384,7 +662,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC Bus voltage"
+      "depends_on": [],
+      "generic_name": "DC Bus voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Dc/1/Voltage",
@@ -404,7 +684,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Auxiliary battery voltage"
+      "depends_on": [],
+      "generic_name": "Auxiliary battery voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/History/AutomaticSyncs",
@@ -424,7 +706,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Automatic syncs"
+      "depends_on": [],
+      "generic_name": "Automatic syncs",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/History/ChargedEnergy",
@@ -444,7 +728,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Charged energy"
+      "depends_on": [],
+      "generic_name": "Charged energy",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/History/DischargedEnergy",
@@ -464,7 +750,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Discharged energy"
+      "depends_on": [],
+      "generic_name": "Discharged energy",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Info/ChargeMode",
@@ -484,7 +772,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery charge mode"
+      "depends_on": [],
+      "generic_name": "Battery charge mode",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Info/MaxChargeCurrent",
@@ -504,7 +794,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery maximum charge current allowed"
+      "depends_on": [],
+      "generic_name": "Battery maximum charge current allowed",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Info/MaxChargeVoltage",
@@ -524,7 +816,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery maximum charging voltage allowed"
+      "depends_on": [],
+      "generic_name": "Battery maximum charging voltage allowed",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Info/MaxDischargeCurrent",
@@ -544,7 +838,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery maximum discharge current allowed"
+      "depends_on": [],
+      "generic_name": "Battery maximum discharge current allowed",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/InstalledCapacity",
@@ -564,7 +860,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery installed capacity"
+      "depends_on": [],
+      "generic_name": "Battery installed capacity",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Soc",
@@ -578,13 +876,15 @@
       "precision": 1,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
-      "min": null,
-      "max": null,
+      "min": 0,
+      "max": 100,
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery charge"
+      "depends_on": [],
+      "generic_name": "Battery charge",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Soh",
@@ -595,7 +895,7 @@
       "metric_type": "MetricType.PERCENTAGE",
       "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.FLOAT",
-      "precision": 2,
+      "precision": 1,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
       "min": null,
@@ -604,7 +904,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery State of Health"
+      "depends_on": [],
+      "generic_name": "Battery State of Health",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/System/MaxCellTemperature",
@@ -624,7 +926,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery maximum cell temperature"
+      "depends_on": [],
+      "generic_name": "Battery maximum cell temperature",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/System/MaxCellVoltage",
@@ -644,7 +948,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery maximum cell voltage"
+      "depends_on": [],
+      "generic_name": "Battery maximum cell voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/System/MaxVoltageCellId",
@@ -664,7 +970,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery maximum voltage cell ID"
+      "depends_on": [],
+      "generic_name": "Battery maximum voltage cell ID",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/System/MinCellTemperature",
@@ -684,7 +992,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery minimum cell temperature"
+      "depends_on": [],
+      "generic_name": "Battery minimum cell temperature",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/System/MinCellVoltage",
@@ -704,7 +1014,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery minimum cell voltage"
+      "depends_on": [],
+      "generic_name": "Battery minimum cell voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/System/MinVoltageCellId",
@@ -724,7 +1036,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery minimum voltage cell ID"
+      "depends_on": [],
+      "generic_name": "Battery minimum voltage cell ID",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/System/NrOfModulesBlockingCharge",
@@ -744,7 +1058,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery number of modules blocking charge"
+      "depends_on": [],
+      "generic_name": "Battery number of modules blocking charge",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/System/NrOfModulesBlockingDischarge",
@@ -764,7 +1080,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery number of modules blocking discharge"
+      "depends_on": [],
+      "generic_name": "Battery number of modules blocking discharge",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/System/NrOfModulesOffline",
@@ -784,7 +1102,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery number of modules offline"
+      "depends_on": [],
+      "generic_name": "Battery number of modules offline",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/System/NrOfModulesOnline",
@@ -804,7 +1124,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery number of modules online"
+      "depends_on": [],
+      "generic_name": "Battery number of modules online",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/TimeToGo",
@@ -818,16 +1140,18 @@
       "precision": null,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
-      "min": null,
-      "max": null,
+      "min": 0,
+      "max": 86400,
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery time to go"
+      "depends_on": [],
+      "generic_name": "Battery time to go",
+      "is_formula": false
     },
     {
-      "topic": "N/{installation_id}/battery/{device_id}/Voltages/Cell{cell_id(1-8)}",
+      "topic": "N/{installation_id}/battery/{device_id}/Voltages/Cell{cell_id(1-16)}",
       "message_type": "MetricKind.SENSOR",
       "short_id": "battery_cell_{cell_id}_voltage",
       "name": "Battery cell {cell_id} voltage",
@@ -844,7 +1168,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery cell {cell_id} voltage"
+      "depends_on": [],
+      "generic_name": "Battery cell {cell_id} voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/battery/{device_id}/Voltages/Diff",
@@ -864,7 +1190,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Battery cell voltage deviation"
+      "depends_on": [],
+      "generic_name": "Battery cell voltage deviation",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/dcload/{device_id}/Dc/0/Current",
@@ -884,7 +1212,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC load current"
+      "depends_on": [],
+      "generic_name": "DC load current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/dcload/{device_id}/Dc/0/Power",
@@ -904,7 +1234,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC load power"
+      "depends_on": [],
+      "generic_name": "DC load power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/dcload/{device_id}/Dc/0/Voltage",
@@ -924,7 +1256,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC load voltage"
+      "depends_on": [],
+      "generic_name": "DC load voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/dcsystem/{device_id}/Dc/0/Current",
@@ -944,7 +1278,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC System Current"
+      "depends_on": [],
+      "generic_name": "DC System Current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/dcsystem/{device_id}/Dc/0/Power",
@@ -964,7 +1300,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC System Power"
+      "depends_on": [],
+      "generic_name": "DC System Power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/dcsystem/{device_id}/Dc/0/Voltage",
@@ -984,7 +1322,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC System Voltage"
+      "depends_on": [],
+      "generic_name": "DC System Voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/dcsystem/{device_id}/Dc/1/Voltage",
@@ -1004,7 +1344,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC System Auxiliary Voltage"
+      "depends_on": [],
+      "generic_name": "DC System Auxiliary Voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/digitalinput/{device_id}/Alarm",
@@ -1024,7 +1366,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Digital input alarm"
+      "depends_on": [],
+      "generic_name": "Digital input alarm",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/digitalinput/{device_id}/InputState",
@@ -1044,7 +1388,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Digital input raw state"
+      "depends_on": [],
+      "generic_name": "Digital input raw state",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/digitalinput/{device_id}/Settings/InvertTranslation",
@@ -1064,7 +1410,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Digital input settings invert translation"
+      "depends_on": [],
+      "generic_name": "Digital input settings invert translation",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/digitalinput/{device_id}/State",
@@ -1084,7 +1432,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Digital input state"
+      "depends_on": [],
+      "generic_name": "Digital input state",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/digitalinput/{device_id}/Type",
@@ -1104,7 +1454,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Digital input type"
+      "depends_on": [],
+      "generic_name": "Digital input type",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/evcharger/{device_id}/Ac/{phase}/Power",
@@ -1124,7 +1476,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "EV charger power {phase}"
+      "depends_on": [],
+      "generic_name": "EV charger power {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/evcharger/{device_id}/Connected",
@@ -1144,7 +1498,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "EV charger connected"
+      "depends_on": [],
+      "generic_name": "EV charger connected",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/evcharger/{device_id}/Current",
@@ -1164,7 +1520,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "EV charger current"
+      "depends_on": [],
+      "generic_name": "EV charger current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/evcharger/{device_id}/Mode",
@@ -1184,7 +1542,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "EV charger mode"
+      "depends_on": [],
+      "generic_name": "EV charger mode",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/evcharger/{device_id}/SetCurrent",
@@ -1195,16 +1555,18 @@
       "metric_type": "MetricType.CURRENT",
       "metric_nature": "MetricNature.INSTANTANEOUS",
       "value_type": "ValueType.INT",
-      "precision": 1,
+      "precision": null,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
       "min": 0,
-      "max": 16,
+      "max": 32,
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "EV charger set current"
+      "depends_on": [],
+      "generic_name": "EV charger set current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/evcharger/{device_id}/StartStop",
@@ -1224,7 +1586,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "EV charger charge"
+      "depends_on": [],
+      "generic_name": "EV charger charge",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/generator/{device_id}/AccumulatedRuntime",
@@ -1238,13 +1602,15 @@
       "precision": null,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
-      "min": null,
-      "max": null,
+      "min": 0,
+      "max": 86400,
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator total runtime"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Generator total runtime",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/generator/{device_id}/AutoStartEnabled",
@@ -1263,8 +1629,10 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator auto start enabled"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Generator auto start enabled",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/generator/{device_id}/ManualStart",
@@ -1283,8 +1651,10 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator manual start"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Generator manual start",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/generator/{device_id}/RunningByConditionCode",
@@ -1303,8 +1673,10 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator run state"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Generator run state",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/generator/{device_id}/ServiceCounter",
@@ -1318,13 +1690,15 @@
       "precision": null,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
-      "min": null,
-      "max": null,
+      "min": 0,
+      "max": 86400,
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator service counter"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Generator service counter",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/generator/{device_id}/TodayRuntime",
@@ -1338,13 +1712,15 @@
       "precision": null,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
-      "min": null,
-      "max": null,
+      "min": 0,
+      "max": 86400,
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator today runtime"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Generator today runtime",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/gps/{device_id}/Altitude",
@@ -1364,7 +1740,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "GPS Altitude"
+      "depends_on": [],
+      "generic_name": "GPS Altitude",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/gps/{device_id}/Connected",
@@ -1384,7 +1762,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "GPS Connected"
+      "depends_on": [],
+      "generic_name": "GPS Connected",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/gps/{device_id}/Course",
@@ -1404,7 +1784,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "GPS Course"
+      "depends_on": [],
+      "generic_name": "GPS Course",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/gps/{device_id}/Fix",
@@ -1424,7 +1806,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "GPS Fix"
+      "depends_on": [],
+      "generic_name": "GPS Fix",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/gps/{device_id}/NrOfSatellites",
@@ -1444,7 +1828,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "GPS Nr Of Satellites"
+      "depends_on": [],
+      "generic_name": "GPS Nr Of Satellites",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/gps/{device_id}/Position/Latitude",
@@ -1464,7 +1850,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "GPS Latitude"
+      "depends_on": [],
+      "generic_name": "GPS Latitude",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/gps/{device_id}/Position/Longitude",
@@ -1484,7 +1872,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "GPS Longitude"
+      "depends_on": [],
+      "generic_name": "GPS Longitude",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/gps/{device_id}/Speed",
@@ -1504,7 +1894,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "GPS Speed"
+      "depends_on": [],
+      "generic_name": "GPS Speed",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/Current",
@@ -1524,7 +1916,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid current"
+      "depends_on": [],
+      "generic_name": "Grid current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/Energy/Forward",
@@ -1544,7 +1938,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid consumption"
+      "depends_on": [],
+      "generic_name": "Grid consumption",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/Energy/Reverse",
@@ -1564,7 +1960,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid feed-in"
+      "depends_on": [],
+      "generic_name": "Grid feed-in",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/Frequency",
@@ -1584,7 +1982,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid frequency"
+      "depends_on": [],
+      "generic_name": "Grid frequency",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/N/Current",
@@ -1604,7 +2004,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid current on N"
+      "depends_on": [],
+      "generic_name": "Grid current on N",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/PENVoltage",
@@ -1624,7 +2026,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid voltage on PEN"
+      "depends_on": [],
+      "generic_name": "Grid voltage on PEN",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/Power",
@@ -1644,7 +2048,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid power"
+      "depends_on": [],
+      "generic_name": "Grid power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/Voltage",
@@ -1664,7 +2070,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid voltage"
+      "depends_on": [],
+      "generic_name": "Grid voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/{phase}/Current",
@@ -1684,7 +2092,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid current on {phase}"
+      "depends_on": [],
+      "generic_name": "Grid current on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/{phase}/Energy/Forward",
@@ -1704,7 +2114,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid consumption on {phase}"
+      "depends_on": [],
+      "generic_name": "Grid consumption on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/{phase}/Energy/Reverse",
@@ -1724,7 +2136,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid feed-in on {phase}"
+      "depends_on": [],
+      "generic_name": "Grid feed-in on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/{phase}/Power",
@@ -1744,7 +2158,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid power on {phase}"
+      "depends_on": [],
+      "generic_name": "Grid power on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/{phase}/Voltage",
@@ -1764,7 +2180,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid voltage on {phase}"
+      "depends_on": [],
+      "generic_name": "Grid voltage on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/grid/{device_id}/Ac/{phase}/VoltageLineToLine",
@@ -1784,7 +2202,229 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid voltage {phase} to {next_phase}"
+      "depends_on": [],
+      "generic_name": "Grid voltage {phase} to {next_phase}",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/heartbeat",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "system_heartbeat",
+      "name": "GX system heartbeat",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.NONE",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.INT",
+      "precision": null,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "GX system heartbeat",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/heatpump/{device_id}/Ac/Current",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "heatpump_current",
+      "name": "heatpump current",
+      "unit_of_measurement": "A",
+      "metric_type": "MetricType.CURRENT",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "heatpump current",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/heatpump/{device_id}/Ac/Energy/Forward",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "heatpump_energy_forward",
+      "name": "heatpump consumption",
+      "unit_of_measurement": "kWh",
+      "metric_type": "MetricType.ENERGY",
+      "metric_nature": "MetricNature.CUMULATIVE",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "heatpump consumption",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/heatpump/{device_id}/Ac/Frequency",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "heatpump_frequency",
+      "name": "heatpump frequency",
+      "unit_of_measurement": "Hz",
+      "metric_type": "MetricType.FREQUENCY",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 2,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "heatpump frequency",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/heatpump/{device_id}/Ac/Power",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "heatpump_power",
+      "name": "heatpump power",
+      "unit_of_measurement": "W",
+      "metric_type": "MetricType.POWER",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "heatpump power",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/heatpump/{device_id}/Ac/Voltage",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "heatpump_voltage",
+      "name": "heatpump voltage",
+      "unit_of_measurement": "V",
+      "metric_type": "MetricType.VOLTAGE",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 3,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "heatpump voltage",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/heatpump/{device_id}/Ac/{phase}/Current",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "heatpump_current_{phase}",
+      "name": "heatpump current on {phase}",
+      "unit_of_measurement": "A",
+      "metric_type": "MetricType.CURRENT",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "heatpump current on {phase}",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/heatpump/{device_id}/Ac/{phase}/Energy/Forward",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "heatpump_energy_forward_{phase}",
+      "name": "heatpump consumption on {phase}",
+      "unit_of_measurement": "kWh",
+      "metric_type": "MetricType.ENERGY",
+      "metric_nature": "MetricNature.CUMULATIVE",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "heatpump consumption on {phase}",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/heatpump/{device_id}/Ac/{phase}/Power",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "heatpump_power_{phase}",
+      "name": "heatpump power on {phase}",
+      "unit_of_measurement": "W",
+      "metric_type": "MetricType.POWER",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "heatpump power on {phase}",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/heatpump/{device_id}/Ac/{phase}/Voltage",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "heatpump_voltage_{phase}",
+      "name": "heatpump voltage on {phase}",
+      "unit_of_measurement": "V",
+      "metric_type": "MetricType.VOLTAGE",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 3,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "heatpump voltage on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Ac/Out/{phase}/I",
@@ -1804,7 +2444,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter output current {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter output current {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Ac/Out/{phase}/P",
@@ -1824,7 +2466,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter output power {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter output power {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Ac/Out/{phase}/S",
@@ -1844,7 +2488,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter output apparent power {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter output apparent power {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Ac/Out/{phase}/V",
@@ -1864,7 +2510,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter output voltage {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter output voltage {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Alarms/HighTemperature",
@@ -1884,7 +2532,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter alarm HighTemperature"
+      "depends_on": [],
+      "generic_name": "Inverter alarm HighTemperature",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Alarms/HighVoltage",
@@ -1904,7 +2554,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter alarm HighVoltage"
+      "depends_on": [],
+      "generic_name": "Inverter alarm HighVoltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Alarms/HighVoltageAcOut",
@@ -1924,7 +2576,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter alarm HighVoltageAcOut"
+      "depends_on": [],
+      "generic_name": "Inverter alarm HighVoltageAcOut",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Alarms/LowTemperature",
@@ -1944,7 +2598,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter alarm LowTemperature"
+      "depends_on": [],
+      "generic_name": "Inverter alarm LowTemperature",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Alarms/LowVoltage",
@@ -1964,7 +2620,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter alarm LowVoltage"
+      "depends_on": [],
+      "generic_name": "Inverter alarm LowVoltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Alarms/LowVoltageAcOut",
@@ -1984,7 +2642,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter alarm LowVoltageAcOut"
+      "depends_on": [],
+      "generic_name": "Inverter alarm LowVoltageAcOut",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Alarms/Overload",
@@ -2004,7 +2664,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter alarm Overload"
+      "depends_on": [],
+      "generic_name": "Inverter alarm Overload",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Alarms/Ripple",
@@ -2024,7 +2686,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter alarm Ripple"
+      "depends_on": [],
+      "generic_name": "Inverter alarm Ripple",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/Mode",
@@ -2044,7 +2708,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter mode"
+      "depends_on": [],
+      "generic_name": "Inverter mode",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/inverter/{device_id}/State",
@@ -2064,7 +2730,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter state"
+      "depends_on": [],
+      "generic_name": "Inverter state",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Ac/In/1/{phase}/I",
@@ -2084,7 +2752,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Current {phase}"
+      "depends_on": [],
+      "generic_name": "Current {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Ac/In/1/{phase}/P",
@@ -2104,7 +2774,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Power on {phase}"
+      "depends_on": [],
+      "generic_name": "Power on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Ac/In/1/{phase}/V",
@@ -2124,7 +2796,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Voltage on {phase}"
+      "depends_on": [],
+      "generic_name": "Voltage on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Ac/NumberOfPhases",
@@ -2144,7 +2818,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Phases"
+      "depends_on": [],
+      "generic_name": "Phases",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Ac/Out/{output}/{phase}/I",
@@ -2164,7 +2840,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "AC Out {output} Current on {phase}"
+      "depends_on": [],
+      "generic_name": "AC Out {output} Current on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Ac/Out/{output}/{phase}/P",
@@ -2184,7 +2862,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "AC Out {output} Power on {phase}"
+      "depends_on": [],
+      "generic_name": "AC Out {output} Power on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Ac/Out/{output}/{phase}/V",
@@ -2204,7 +2884,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "AC Out {output} Voltage on {phase}"
+      "depends_on": [],
+      "generic_name": "AC Out {output} Voltage on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Ess/AcPowerSetpoint",
@@ -2224,7 +2906,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "ESS AC Power Setpoint"
+      "depends_on": [],
+      "generic_name": "ESS AC Power Setpoint",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Ess/InverterPowerSetpoint",
@@ -2244,7 +2928,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter Power Setpoint"
+      "depends_on": [],
+      "generic_name": "Inverter Power Setpoint",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Pv/{mpptnumber}/MppOperationMode",
@@ -2264,7 +2950,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "MPPT {mpptnumber} state"
+      "depends_on": [],
+      "generic_name": "MPPT {mpptnumber} state",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Pv/{mpptnumber}/P",
@@ -2284,7 +2972,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "MPPT {mpptnumber} Power"
+      "depends_on": [],
+      "generic_name": "MPPT {mpptnumber} Power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Pv/{mpptnumber}/V",
@@ -2304,7 +2994,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "MPPT {mpptnumber} PV Voltage"
+      "depends_on": [],
+      "generic_name": "MPPT {mpptnumber} PV Voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Settings/Ess/Mode",
@@ -2324,7 +3016,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "ESS Mode"
+      "depends_on": [],
+      "generic_name": "ESS Mode",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/State",
@@ -2344,7 +3038,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "State"
+      "depends_on": [],
+      "generic_name": "State",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Yield/Power",
@@ -2364,7 +3060,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV Power Total"
+      "depends_on": [],
+      "generic_name": "PV Power Total",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/multi/{device_id}/Yield/User",
@@ -2384,7 +3082,75 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Total PV Yield"
+      "depends_on": [],
+      "generic_name": "Total PV Yield",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/platform/{device_id}/Device/Reboot",
+      "message_type": "MetricKind.BUTTON",
+      "short_id": "platform_device_reboot",
+      "name": "Platform device reboot",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.NONE",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.ENUM",
+      "precision": null,
+      "enum": "GenericOnOff",
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": true,
+      "depends_on": [],
+      "generic_name": "Platform device reboot",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/platform/{device_id}/Firmware/Installed/Version",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "platform_venus_firmware_installed_version",
+      "name": "Firmware Venus Installed Version",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.NONE",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.STRING",
+      "precision": null,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Firmware Venus Installed Version",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/platform/{device_id}/Firmware/Online/AvailableVersion",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "platform_venus_firmware_available_version",
+      "name": "Firmware Venus Available Version",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.NONE",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.STRING",
+      "precision": null,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Firmware Venus Available Version",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/pvinverter/{device_id}/Ac/Energy/Forward",
@@ -2404,7 +3170,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Total Yield"
+      "depends_on": [],
+      "generic_name": "Total Yield",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/pvinverter/{device_id}/Ac/Power",
@@ -2424,7 +3192,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Power Total"
+      "depends_on": [],
+      "generic_name": "Power Total",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/pvinverter/{device_id}/Ac/{phase}/Current",
@@ -2444,7 +3214,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Current {phase}"
+      "depends_on": [],
+      "generic_name": "Current {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/pvinverter/{device_id}/Ac/{phase}/Energy/Forward",
@@ -2464,7 +3236,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Yield {phase}"
+      "depends_on": [],
+      "generic_name": "Yield {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/pvinverter/{device_id}/Ac/{phase}/Power",
@@ -2484,7 +3258,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Power {phase}"
+      "depends_on": [],
+      "generic_name": "Power {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/pvinverter/{device_id}/Ac/{phase}/Voltage",
@@ -2504,7 +3280,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Voltage {phase}"
+      "depends_on": [],
+      "generic_name": "Voltage {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/AcExportLimit",
@@ -2515,7 +3293,7 @@
       "metric_type": "MetricType.CURRENT",
       "metric_nature": "MetricNature.INSTANTANEOUS",
       "value_type": "ValueType.INT",
-      "precision": 1,
+      "precision": null,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
       "min": -1,
@@ -2524,7 +3302,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "AC Export Limit"
+      "depends_on": [],
+      "generic_name": "AC Export Limit",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/AcInputLimit",
@@ -2535,7 +3315,7 @@
       "metric_type": "MetricType.CURRENT",
       "metric_nature": "MetricNature.INSTANTANEOUS",
       "value_type": "ValueType.INT",
-      "precision": 1,
+      "precision": null,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
       "min": -1,
@@ -2544,7 +3324,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "AC Input Limit"
+      "depends_on": [],
+      "generic_name": "AC Input Limit",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/AcPowerSetPoint",
@@ -2555,7 +3337,7 @@
       "metric_type": "MetricType.POWER",
       "metric_nature": "MetricNature.INSTANTANEOUS",
       "value_type": "ValueType.INT",
-      "precision": 1,
+      "precision": null,
       "enum": null,
       "min_max_range": "RangeType.DYNAMIC",
       "min": -10000,
@@ -2564,7 +3346,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "AC Power Setpoint"
+      "depends_on": [],
+      "generic_name": "AC Power Setpoint",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/MinimumSocLimit",
@@ -2575,16 +3359,106 @@
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.INSTANTANEOUS",
       "value_type": "ValueType.INT",
-      "precision": 1,
+      "precision": null,
       "enum": null,
       "min_max_range": "RangeType.DYNAMIC",
+      "min": 0,
+      "max": 100,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "ESS min SOC limit",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Day",
+      "message_type": "MetricKind.SELECT",
+      "short_id": "system_ess_schedule_charge_{slot}_days",
+      "name": "ESS BatteryLife Schedule charge {slot} days",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.NONE",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.ENUM",
+      "precision": null,
+      "enum": "ChargeSchedule",
+      "min_max_range": "RangeType.STATIC",
       "min": null,
       "max": null,
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "ESS min SOC limit"
+      "depends_on": [],
+      "generic_name": "ESS BatteryLife Schedule charge {slot} days",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Duration",
+      "message_type": "MetricKind.NUMBER",
+      "short_id": "system_ess_schedule_charge_{slot}_duration",
+      "name": "ESS BatteryLife Schedule charge {slot} Duration",
+      "unit_of_measurement": "min",
+      "metric_type": "MetricType.TIME",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.INT_SECONDS_TO_MINUTES",
+      "precision": null,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": 0,
+      "max": 86400,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": true,
+      "depends_on": [],
+      "generic_name": "ESS BatteryLife Schedule charge {slot} Duration",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Soc",
+      "message_type": "MetricKind.NUMBER",
+      "short_id": "system_ess_schedule_charge_{slot}_soc",
+      "name": "ESS BatteryLife Schedule charge {slot} SOC",
+      "unit_of_measurement": "%",
+      "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.INT",
+      "precision": null,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": 0,
+      "max": 100,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": true,
+      "depends_on": [],
+      "generic_name": "ESS BatteryLife Schedule charge {slot} SOC",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Start",
+      "message_type": "MetricKind.TIME",
+      "short_id": "system_ess_schedule_charge_{slot}_start",
+      "name": "ESS BatteryLife Schedule charge {slot} Start",
+      "unit_of_measurement": "s",
+      "metric_type": "MetricType.TIME",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.INT",
+      "precision": null,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": 0,
+      "max": 86400,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": true,
+      "depends_on": [],
+      "generic_name": "ESS BatteryLife Schedule charge {slot} Start",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/State",
@@ -2604,7 +3478,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "ESS BatteryLife State"
+      "depends_on": [],
+      "generic_name": "ESS BatteryLife State",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/Hub4Mode",
@@ -2624,7 +3500,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "ESS Mode (Hub4)"
+      "depends_on": [],
+      "generic_name": "ESS Mode (Hub4)",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxDischargePower",
@@ -2635,7 +3513,7 @@
       "metric_type": "MetricType.POWER",
       "metric_nature": "MetricNature.INSTANTANEOUS",
       "value_type": "ValueType.INT",
-      "precision": 1,
+      "precision": null,
       "enum": null,
       "min_max_range": "RangeType.DYNAMIC",
       "min": null,
@@ -2644,7 +3522,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "ESS max inverter power limit"
+      "depends_on": [],
+      "generic_name": "ESS max inverter power limit",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxFeedInPower",
@@ -2655,7 +3535,7 @@
       "metric_type": "MetricType.POWER",
       "metric_nature": "MetricNature.INSTANTANEOUS",
       "value_type": "ValueType.INT",
-      "precision": 1,
+      "precision": null,
       "enum": null,
       "min_max_range": "RangeType.DYNAMIC",
       "min": -1,
@@ -2664,7 +3544,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "ESS max feed-in power"
+      "depends_on": [],
+      "generic_name": "ESS max feed-in power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/OvervoltageFeedIn",
@@ -2684,7 +3566,31 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV DC Overvoltage FeedIn"
+      "depends_on": [],
+      "generic_name": "PV DC Overvoltage FeedIn",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/settings/{device_id}/Settings/DynamicEss/Mode",
+      "message_type": "MetricKind.SELECT",
+      "short_id": "system_settings_dess_mode",
+      "name": "DESS Mode",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.NONE",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.ENUM",
+      "precision": null,
+      "enum": "DESSMode",
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "DESS Mode",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/Enabled",
@@ -2703,8 +3609,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator start on voltage enabled"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator start on voltage enabled",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/QuietHoursStartValue",
@@ -2723,8 +3633,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator QH start on voltage"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator QH start on voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/QuietHoursStopValue",
@@ -2743,8 +3657,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator QH stop on voltage"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator QH stop on voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StartTimer",
@@ -2763,8 +3681,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator start on voltage timer"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator start on voltage timer",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StartValue",
@@ -2783,8 +3705,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator start on voltage"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator start on voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StopTimer",
@@ -2803,8 +3729,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator stop on voltage timer"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator stop on voltage timer",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/BatteryVoltage/StopValue",
@@ -2823,8 +3753,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator stop on voltage"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator stop on voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/CoolDownTime",
@@ -2843,8 +3777,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator cool down timer"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator cool down timer",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/GeneratorStopTime",
@@ -2863,8 +3801,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator shut down timer"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator shut down timer",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/InverterHighTemp/Enabled",
@@ -2883,8 +3825,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator start on high temp enabled"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator start on high temp enabled",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/InverterHighTemp/StartTimer",
@@ -2903,8 +3849,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator start on temp timer"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator start on temp timer",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/InverterHighTemp/StopTimer",
@@ -2923,8 +3873,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator stop on temp timer"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator stop on temp timer",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/QuietHours/Enabled",
@@ -2943,8 +3897,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator quiet hours enabled"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator quiet hours enabled",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/ServiceInterval",
@@ -2963,8 +3921,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator service interval"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator service interval",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/Enabled",
@@ -2983,8 +3945,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator start on SOC enabled"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator start on SOC enabled",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStartValue",
@@ -3003,8 +3969,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator QH start on SOC"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator QH start on SOC",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStopValue",
@@ -3023,8 +3993,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator QH stop on SOC"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator QH stop on SOC",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StartTimer",
@@ -3043,8 +4017,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator start on SOC timer"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator start on SOC timer",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StartValue",
@@ -3063,8 +4041,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator start on SOC"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator start on SOC",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StopTimer",
@@ -3083,8 +4065,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator stop on SOC timer"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator stop on SOC timer",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StopValue",
@@ -3103,8 +4089,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator stop on SOC"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator stop on SOC",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/WarmUpTime",
@@ -3123,8 +4113,12 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator warm up timer"
+      "experimental": false,
+      "depends_on": [
+        "generator_{gen_id}_generator_autorun"
+      ],
+      "generic_name": "Generator warm up timer",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Relay/{relay}/CustomName",
@@ -3144,7 +4138,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Relay {relay} Custom Name"
+      "depends_on": [],
+      "generic_name": "Relay {relay} Custom Name",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/SystemSetup/MaxChargeCurrent",
@@ -3155,7 +4151,7 @@
       "metric_type": "MetricType.CURRENT",
       "metric_nature": "MetricNature.INSTANTANEOUS",
       "value_type": "ValueType.INT",
-      "precision": 1,
+      "precision": null,
       "enum": null,
       "min_max_range": "RangeType.DYNAMIC",
       "min": null,
@@ -3164,7 +4160,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "ESS max charge current"
+      "depends_on": [],
+      "generic_name": "ESS max charge current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/SystemSetup/MaxChargeVoltage",
@@ -3174,8 +4172,8 @@
       "unit_of_measurement": "V",
       "metric_type": "MetricType.VOLTAGE",
       "metric_nature": "MetricNature.INSTANTANEOUS",
-      "value_type": "ValueType.FLOAT",
-      "precision": 2,
+      "value_type": "ValueType.INT",
+      "precision": null,
       "enum": null,
       "min_max_range": "RangeType.DYNAMIC",
       "min": null,
@@ -3184,7 +4182,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "ESS max charge voltage"
+      "depends_on": [],
+      "generic_name": "ESS max charge voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/TransferSwitch/GeneratorCurrentLimit",
@@ -3203,8 +4203,10 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator AC current limit"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Generator AC current limit",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Dc/0/Current",
@@ -3224,7 +4226,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC (Batt) Bus current"
+      "depends_on": [],
+      "generic_name": "DC (Batt) Bus current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Dc/0/Voltage",
@@ -3244,7 +4248,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC (Batt) Bus voltage"
+      "depends_on": [],
+      "generic_name": "DC (Batt) Bus voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/ErrorCode",
@@ -3264,7 +4270,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Solar Charger Error Code"
+      "depends_on": [],
+      "generic_name": "Solar Charger Error Code",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/History/Daily/0/MaxBatteryVoltage",
@@ -3284,7 +4292,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Solar Charger Max Battery Voltage Today"
+      "depends_on": [],
+      "generic_name": "Solar Charger Max Battery Voltage Today",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/History/Daily/0/MaxPower",
@@ -3304,7 +4314,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Max Power Today"
+      "depends_on": [],
+      "generic_name": "Max Power Today",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/History/Daily/0/MinBatteryVoltage",
@@ -3324,7 +4336,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Solar Charger Min Battery Voltage Today"
+      "depends_on": [],
+      "generic_name": "Solar Charger Min Battery Voltage Today",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/History/Daily/0/TimeInAbsorption",
@@ -3344,7 +4358,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Solar Charger Time in Absorption Today"
+      "depends_on": [],
+      "generic_name": "Solar Charger Time in Absorption Today",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/History/Daily/0/TimeInBulk",
@@ -3364,7 +4380,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Solar Charger Time in Bulk Today"
+      "depends_on": [],
+      "generic_name": "Solar Charger Time in Bulk Today",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/History/Daily/0/TimeInFloat",
@@ -3384,7 +4402,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Solar Charger Time in Float Today"
+      "depends_on": [],
+      "generic_name": "Solar Charger Time in Float Today",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/History/Daily/0/Yield",
@@ -3404,7 +4424,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Yield Today"
+      "depends_on": [],
+      "generic_name": "Yield Today",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/History/Daily/1/MaxPower",
@@ -3424,7 +4446,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Max Power Yesterday"
+      "depends_on": [],
+      "generic_name": "Max Power Yesterday",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/History/Daily/1/Yield",
@@ -3444,7 +4468,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Yield Yesterday"
+      "depends_on": [],
+      "generic_name": "Yield Yesterday",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Load/I",
@@ -3464,7 +4490,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Load Bus current"
+      "depends_on": [],
+      "generic_name": "Load Bus current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Load/State",
@@ -3484,7 +4512,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Solar Charger Load State"
+      "depends_on": [],
+      "generic_name": "Solar Charger Load State",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Mode",
@@ -3496,7 +4526,7 @@
       "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.ENUM",
       "precision": null,
-      "enum": "GenericOnOff",
+      "enum": "ChargerMode",
       "min_max_range": "RangeType.STATIC",
       "min": null,
       "max": null,
@@ -3504,7 +4534,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Solar Charger Mode"
+      "depends_on": [],
+      "generic_name": "Solar Charger Mode",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/MppOperationMode",
@@ -3524,7 +4556,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Solar Charger MPPT Operation Mode"
+      "depends_on": [],
+      "generic_name": "Solar Charger MPPT Operation Mode",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Pv/V",
@@ -3544,13 +4578,15 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV Bus Voltage"
+      "depends_on": [],
+      "generic_name": "PV Bus Voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Pv/{tracker}/MppOperationMode",
       "message_type": "MetricKind.SENSOR",
       "short_id": "solarcharger_tracker_{tracker}_operation_mode",
-      "name": "PV Tracker {tracker} Operation Mode",
+      "name": "PV Tracker {tracker:solarcharger_tracker_{tracker}_name} Operation Mode",
       "unit_of_measurement": null,
       "metric_type": "MetricType.NONE",
       "metric_nature": "MetricNature.NONE",
@@ -3564,7 +4600,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV Tracker {tracker} Operation Mode"
+      "depends_on": [],
+      "generic_name": "PV Tracker {tracker} Operation Mode",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Pv/{tracker}/Name",
@@ -3584,13 +4622,15 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV Tracker {tracker} Name"
+      "depends_on": [],
+      "generic_name": "PV Tracker {tracker} Name",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Pv/{tracker}/P",
       "message_type": "MetricKind.SENSOR",
       "short_id": "solarcharger_tracker_{tracker}_power",
-      "name": "PV Tracker {tracker} Power",
+      "name": "PV Tracker {tracker:solarcharger_tracker_{tracker}_name} Power",
       "unit_of_measurement": "W",
       "metric_type": "MetricType.POWER",
       "metric_nature": "MetricNature.INSTANTANEOUS",
@@ -3604,13 +4644,15 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV Tracker {tracker} Power"
+      "depends_on": [],
+      "generic_name": "PV Tracker {tracker} Power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Pv/{tracker}/V",
       "message_type": "MetricKind.SENSOR",
       "short_id": "solarcharger_tracker_{tracker}_voltage",
-      "name": "PV Tracker {tracker} Voltage",
+      "name": "PV Tracker {tracker:solarcharger_tracker_{tracker}_name} Voltage",
       "unit_of_measurement": "V",
       "metric_type": "MetricType.VOLTAGE",
       "metric_nature": "MetricNature.INSTANTANEOUS",
@@ -3624,7 +4666,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV Tracker {tracker} Voltage"
+      "depends_on": [],
+      "generic_name": "PV Tracker {tracker} Voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Relay/0/State",
@@ -3644,7 +4688,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Solar Charger Relay State"
+      "depends_on": [],
+      "generic_name": "Solar Charger Relay State",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/State",
@@ -3664,7 +4710,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Solar Charger State"
+      "depends_on": [],
+      "generic_name": "Solar Charger State",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Yield/Power",
@@ -3684,7 +4732,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV Yield Power"
+      "depends_on": [],
+      "generic_name": "PV Yield Power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/solarcharger/{device_id}/Yield/User",
@@ -3704,7 +4754,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Total Yield"
+      "depends_on": [],
+      "generic_name": "Total Yield",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/Dimming",
@@ -3724,7 +4776,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Switch {output} Dimming"
+      "depends_on": [],
+      "generic_name": "Switch {output} Dimming",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/Settings/CustomName",
@@ -3744,7 +4798,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Switch {output} Custom Name"
+      "depends_on": [],
+      "generic_name": "Switch {output} Custom Name",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/State",
@@ -3764,7 +4820,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Switch {output} State"
+      "depends_on": [],
+      "generic_name": "Switch {output} State",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/ActiveIn/Source",
@@ -3784,7 +4842,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "AC Active Input Source"
+      "depends_on": [],
+      "generic_name": "AC Active Input Source",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/Consumption/NumberOfPhases",
@@ -3804,7 +4864,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Consumption phases"
+      "depends_on": [],
+      "generic_name": "Consumption phases",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/Consumption/{phase}/Current",
@@ -3824,7 +4886,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Consumption Current {phase}"
+      "depends_on": [],
+      "generic_name": "Consumption Current {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/Consumption/{phase}/Power",
@@ -3844,7 +4908,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Consumption Power {phase}"
+      "depends_on": [],
+      "generic_name": "Consumption Power {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/ConsumptionOnInput/{phase}/Power",
@@ -3864,7 +4930,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "AC loads on {phase}"
+      "depends_on": [],
+      "generic_name": "AC loads on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/ConsumptionOnOutput/NumberOfPhases",
@@ -3884,7 +4952,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Consumption On Output phases"
+      "depends_on": [],
+      "generic_name": "Consumption On Output phases",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/ConsumptionOnOutput/{phase}/Power",
@@ -3904,7 +4974,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Critical loads on {phase}"
+      "depends_on": [],
+      "generic_name": "Critical loads on {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/Genset/{phase}/Power",
@@ -3924,7 +4996,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Genset Load {phase}"
+      "depends_on": [],
+      "generic_name": "Genset Load {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/Grid/NumberOfPhases",
@@ -3944,7 +5018,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid phases"
+      "depends_on": [],
+      "generic_name": "Grid phases",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/Grid/{phase}/Current",
@@ -3964,7 +5040,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid Current {phase}"
+      "depends_on": [],
+      "generic_name": "Grid Current {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/Grid/{phase}/Power",
@@ -3984,7 +5062,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Grid Power {phase}"
+      "depends_on": [],
+      "generic_name": "Grid Power {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/PvOnOutput/NumberOfPhases",
@@ -4004,7 +5084,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV on Output phases"
+      "depends_on": [],
+      "generic_name": "PV on Output phases",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/PvOnOutput/{phase}/Current",
@@ -4024,7 +5106,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV on Output Current {phase}"
+      "depends_on": [],
+      "generic_name": "PV on Output Current {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Ac/PvOnOutput/{phase}/Power",
@@ -4044,7 +5128,53 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV on Output Power {phase}"
+      "depends_on": [],
+      "generic_name": "PV on Output Power {phase}",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/system/{device_id}/Control/ActiveSocLimit",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "system_control_active_soc_limit",
+      "name": "Active SOC Limit",
+      "unit_of_measurement": "%",
+      "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": 0,
+      "max": 100,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Active SOC Limit",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/system/{device_id}/Control/ScheduledSoc",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "system_control_scheduled_soc",
+      "name": "Scheduled SOC",
+      "unit_of_measurement": "%",
+      "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": 0,
+      "max": 100,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Scheduled SOC",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Dc/Battery/Current",
@@ -4064,7 +5194,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC Battery Current"
+      "depends_on": [],
+      "generic_name": "DC Battery Current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Dc/Battery/Power",
@@ -4084,7 +5216,57 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC Battery Power"
+      "depends_on": [],
+      "generic_name": "DC Battery Power",
+      "is_formula": false
+    },
+    {
+      "topic": "$$func/system/system_dc_battery_charge_power",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "system_dc_battery_charge_energy",
+      "name": "DC Battery Charge Energy",
+      "unit_of_measurement": "kWh",
+      "metric_type": "MetricType.ENERGY",
+      "metric_nature": "MetricNature.CUMULATIVE",
+      "value_type": "ValueType.FLOAT",
+      "precision": 3,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": true,
+      "depends_on": [
+        "system_dc_battery_power"
+      ],
+      "generic_name": "DC Battery Charge Energy",
+      "is_formula": true
+    },
+    {
+      "topic": "$$func/system/system_dc_battery_discharge_power",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "system_dc_battery_discharge_energy",
+      "name": "DC Battery Discharge Energy",
+      "unit_of_measurement": "kWh",
+      "metric_type": "MetricType.ENERGY",
+      "metric_nature": "MetricNature.CUMULATIVE",
+      "value_type": "ValueType.FLOAT",
+      "precision": 3,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": true,
+      "depends_on": [
+        "system_dc_battery_power"
+      ],
+      "generic_name": "DC Battery Discharge Energy",
+      "is_formula": true
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Dc/Battery/Soc",
@@ -4098,13 +5280,15 @@
       "precision": 1,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
-      "min": null,
-      "max": null,
+      "min": 0,
+      "max": 100,
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC Battery Charge"
+      "depends_on": [],
+      "generic_name": "DC Battery Charge",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Dc/Battery/Voltage",
@@ -4124,7 +5308,31 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC Battery Voltage"
+      "depends_on": [],
+      "generic_name": "DC Battery Voltage",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/system/{device_id}/Dc/Pv/Current",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "system_dc_pv_current",
+      "name": "PV Current",
+      "unit_of_measurement": "A",
+      "metric_type": "MetricType.CURRENT",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "PV Current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Dc/Pv/Power",
@@ -4144,7 +5352,33 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV Power"
+      "depends_on": [],
+      "generic_name": "PV Power",
+      "is_formula": false
+    },
+    {
+      "topic": "$$func/system/left_riemann_sum",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "system_dc_pv_energy",
+      "name": "PV Energy",
+      "unit_of_measurement": "kWh",
+      "metric_type": "MetricType.ENERGY",
+      "metric_nature": "MetricNature.CUMULATIVE",
+      "value_type": "ValueType.FLOAT",
+      "precision": 3,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [
+        "system_dc_pv_power"
+      ],
+      "generic_name": "PV Energy",
+      "is_formula": true
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Dc/System/Power",
@@ -4164,7 +5398,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "DC Consumption"
+      "depends_on": [],
+      "generic_name": "DC Consumption",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/Active",
@@ -4184,7 +5420,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Active"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Active",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/AllowGridFeedIn",
@@ -4204,7 +5442,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Allow Grid Feed In"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Allow Grid Feed In",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/Available",
@@ -4224,7 +5464,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Available"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Available",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/AvailableOverhead",
@@ -4244,7 +5486,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Available Overhead"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Available Overhead",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/ErrorCode",
@@ -4264,7 +5508,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Error"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Error",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/LastScheduledEnd",
@@ -4284,7 +5530,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Last Scheduled End"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Last Scheduled End",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/LastScheduledStart",
@@ -4304,7 +5552,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Last Scheduled Start"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Last Scheduled Start",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/MinimumSoc",
@@ -4315,16 +5565,18 @@
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.INSTANTANEOUS",
       "value_type": "ValueType.FLOAT",
-      "precision": 1,
+      "precision": 0,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
-      "min": null,
-      "max": null,
+      "min": 0,
+      "max": 100,
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Minimum SOC"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Minimum SOC",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/NumberOfSchedules",
@@ -4344,7 +5596,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Number Of Schedules"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Number Of Schedules",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/ReactiveStrategy",
@@ -4364,7 +5618,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Reactive Strategy"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Reactive Strategy",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/Restrictions",
@@ -4384,7 +5640,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Restrictions"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Restrictions",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/Strategy",
@@ -4404,7 +5662,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Strategy"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Strategy",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/TargetSoc",
@@ -4415,16 +5675,18 @@
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.INSTANTANEOUS",
       "value_type": "ValueType.FLOAT",
-      "precision": 1,
+      "precision": 0,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
-      "min": null,
-      "max": null,
+      "min": 0,
+      "max": 100,
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Dynamic ESS Target SOC"
+      "depends_on": [],
+      "generic_name": "Dynamic ESS Target SOC",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/PV/Current",
@@ -4444,7 +5706,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "PV Bus current"
+      "depends_on": [],
+      "generic_name": "PV Bus current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/system/{device_id}/Relay/{relay}/State",
@@ -4464,7 +5728,31 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Relay {relay} state"
+      "depends_on": [],
+      "generic_name": "Relay {relay} state",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/system/{device_id}/SystemState/State",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "system_state",
+      "name": "System state",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.NONE",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.ENUM",
+      "precision": null,
+      "enum": "State",
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "System state",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/tank/{device_id}/BatteryVoltage",
@@ -4484,7 +5772,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Tank sensor battery voltage"
+      "depends_on": [],
+      "generic_name": "Tank sensor battery voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/tank/{device_id}/FluidType",
@@ -4504,7 +5794,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Fluid Type"
+      "depends_on": [],
+      "generic_name": "Fluid Type",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/tank/{device_id}/Level",
@@ -4524,7 +5816,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Level"
+      "depends_on": [],
+      "generic_name": "Level",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/tank/{device_id}/Remaining",
@@ -4544,7 +5838,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Remaining"
+      "depends_on": [],
+      "generic_name": "Remaining",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/tank/{device_id}/Temperature",
@@ -4564,7 +5860,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Temperature"
+      "depends_on": [],
+      "generic_name": "Temperature",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/temperature/{device_id}/BatteryVoltage",
@@ -4584,7 +5882,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Temperature sensor battery voltage"
+      "depends_on": [],
+      "generic_name": "Temperature sensor battery voltage",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/temperature/{device_id}/Humidity",
@@ -4604,7 +5904,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Humidity"
+      "depends_on": [],
+      "generic_name": "Humidity",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/temperature/{device_id}/Offset",
@@ -4624,7 +5926,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Temperature offset"
+      "depends_on": [],
+      "generic_name": "Temperature offset",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/temperature/{device_id}/Scale",
@@ -4644,7 +5948,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Temperature scale factor"
+      "depends_on": [],
+      "generic_name": "Temperature scale factor",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/temperature/{device_id}/Status",
@@ -4664,7 +5970,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Temperature sensor status"
+      "depends_on": [],
+      "generic_name": "Temperature sensor status",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/temperature/{device_id}/Temperature",
@@ -4684,7 +5992,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Temperature"
+      "depends_on": [],
+      "generic_name": "Temperature",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/temperature/{device_id}/TemperatureType",
@@ -4704,7 +6014,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Temperature sensor type"
+      "depends_on": [],
+      "generic_name": "Temperature sensor type",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/ActiveInput",
@@ -4724,7 +6036,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter active AC input"
+      "depends_on": [],
+      "generic_name": "Inverter active AC input",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/CurrentLimit",
@@ -4744,7 +6058,9 @@
       "is_adjustable_suffix": "CurrentLimitIsAdjustable",
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter current limit"
+      "depends_on": [],
+      "generic_name": "Inverter current limit",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/F",
@@ -4764,7 +6080,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter input frequency {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter input frequency {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/P",
@@ -4784,7 +6102,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter input power {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter input power {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/S",
@@ -4804,7 +6124,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter input apparent power {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter input apparent power {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/V",
@@ -4824,7 +6146,31 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter input voltage {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter input voltage {phase}",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/vebus/{device_id}/Ac/Control/IgnoreAcIn1",
+      "message_type": "MetricKind.SWITCH",
+      "short_id": "vebus_inverter_ignoreacin1_onoff_control",
+      "name": "Control IgnoreAcIn1",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.NONE",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.ENUM",
+      "precision": null,
+      "enum": "GenericOnOff",
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Control IgnoreAcIn1",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Ac/Out/{phase}/F",
@@ -4844,7 +6190,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter output frequency {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter output frequency {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Ac/Out/{phase}/I",
@@ -4864,7 +6212,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter output current {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter output current {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Ac/Out/{phase}/P",
@@ -4884,7 +6234,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter output power {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter output power {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Ac/Out/{phase}/S",
@@ -4904,7 +6256,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter output apparent power {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter output apparent power {phase}",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Ac/Out/{phase}/V",
@@ -4924,7 +6278,31 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter output voltage {phase}"
+      "depends_on": [],
+      "generic_name": "Inverter output voltage {phase}",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/vebus/{device_id}/Ac/State/IgnoreAcIn1",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "vebus_inverter_ignoreacin1_state",
+      "name": "State of IgnoreAcIn1",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.NONE",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.ENUM",
+      "precision": null,
+      "enum": "GenericOnOff",
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "State of IgnoreAcIn1",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Alarms/GridLost",
@@ -4944,7 +6322,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Loss of grid alarm"
+      "depends_on": [],
+      "generic_name": "Loss of grid alarm",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Alarms/HighDcCurrent",
@@ -4964,7 +6344,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter high DC current alarm"
+      "depends_on": [],
+      "generic_name": "Inverter high DC current alarm",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Alarms/HighDcVoltage",
@@ -4984,7 +6366,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter high DC voltage alarm"
+      "depends_on": [],
+      "generic_name": "Inverter high DC voltage alarm",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Alarms/HighTemperature",
@@ -5004,7 +6388,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter high temperature alarm"
+      "depends_on": [],
+      "generic_name": "Inverter high temperature alarm",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Alarms/LowBattery",
@@ -5024,7 +6410,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter low battery alarm"
+      "depends_on": [],
+      "generic_name": "Inverter low battery alarm",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Alarms/Overload",
@@ -5044,7 +6432,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter overload alarm"
+      "depends_on": [],
+      "generic_name": "Inverter overload alarm",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Alarms/PhaseRotation",
@@ -5064,7 +6454,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter phase rotation alarm"
+      "depends_on": [],
+      "generic_name": "Inverter phase rotation alarm",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Alarms/Ripple",
@@ -5084,7 +6476,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter ripple alarm"
+      "depends_on": [],
+      "generic_name": "Inverter ripple alarm",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Alarms/TemperatureSensor",
@@ -5104,7 +6498,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter temperature sensor alarm"
+      "depends_on": [],
+      "generic_name": "Inverter temperature sensor alarm",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Alarms/VoltageSensor",
@@ -5124,7 +6520,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter voltage sensor alarm"
+      "depends_on": [],
+      "generic_name": "Inverter voltage sensor alarm",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Connected",
@@ -5144,7 +6542,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter connected"
+      "depends_on": [],
+      "generic_name": "Inverter connected",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Dc/0/Current",
@@ -5164,7 +6564,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter DC current"
+      "depends_on": [],
+      "generic_name": "Inverter DC current",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Dc/0/Power",
@@ -5184,7 +6586,31 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter DC power"
+      "depends_on": [],
+      "generic_name": "Inverter DC power",
+      "is_formula": false
+    },
+    {
+      "topic": "N/{installation_id}/vebus/{device_id}/Dc/0/Temperature",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "vebus_inverter_dc_temperature",
+      "name": "Inverter DC temperature",
+      "unit_of_measurement": "\u00b0C",
+      "metric_type": "MetricType.TEMPERATURE",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Inverter DC temperature",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/In/P",
@@ -5203,8 +6629,10 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "VE.Bus device {device_number} line 1 input power"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "VE.Bus device {device_number} line 1 input power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/In/{phase}/P",
@@ -5223,8 +6651,10 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "VE.Bus device {device_number} line {phase} input power"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "VE.Bus device {device_number} line {phase} input power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/Inverter/P",
@@ -5243,8 +6673,10 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "VE.Bus device {device_number} inverted power"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "VE.Bus device {device_number} inverted power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/Out/P",
@@ -5263,8 +6695,10 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "VE.Bus device {device_number} line 1 output power"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "VE.Bus device {device_number} line 1 output power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/Out/{phase}/P",
@@ -5283,8 +6717,10 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "VE.Bus device {device_number} line {phase} output power"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "VE.Bus device {device_number} line {phase} output power",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Energy/AcIn1ToAcOut",
@@ -5304,7 +6740,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Energy from AcIn1 to AcOut"
+      "depends_on": [],
+      "generic_name": "Energy from AcIn1 to AcOut",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Energy/AcIn1ToInverter",
@@ -5324,7 +6762,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Energy from AcIn1 to inverter"
+      "depends_on": [],
+      "generic_name": "Energy from AcIn1 to inverter",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Energy/AcIn2ToAcOut",
@@ -5344,7 +6784,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Energy from AcIn2 to AcOut"
+      "depends_on": [],
+      "generic_name": "Energy from AcIn2 to AcOut",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Energy/AcIn2ToInverter",
@@ -5364,7 +6806,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Energy from AcIn2 to inverter"
+      "depends_on": [],
+      "generic_name": "Energy from AcIn2 to inverter",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Energy/AcOutToAcIn1",
@@ -5384,7 +6828,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Energy from AcOut to AcIn1"
+      "depends_on": [],
+      "generic_name": "Energy from AcOut to AcIn1",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Energy/AcOutToAcIn2",
@@ -5404,7 +6850,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Energy from AcOut to AcIn2"
+      "depends_on": [],
+      "generic_name": "Energy from AcOut to AcIn2",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Energy/InverterToAcIn1",
@@ -5424,7 +6872,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Energy from Inverter to AcIn1"
+      "depends_on": [],
+      "generic_name": "Energy from Inverter to AcIn1",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Energy/InverterToAcIn2",
@@ -5444,7 +6894,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Energy from Inverter to AcIn2"
+      "depends_on": [],
+      "generic_name": "Energy from Inverter to AcIn2",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Energy/InverterToAcOut",
@@ -5464,7 +6916,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Energy from Inverter to AcOut"
+      "depends_on": [],
+      "generic_name": "Energy from Inverter to AcOut",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Energy/OutToInverter",
@@ -5484,7 +6938,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Energy from Out to inverter"
+      "depends_on": [],
+      "generic_name": "Energy from Out to inverter",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Mode",
@@ -5504,7 +6960,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter mode"
+      "depends_on": [],
+      "generic_name": "Inverter mode",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Settings/Alarm/System/GridLost",
@@ -5524,7 +6982,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Loss of grid alarm setting"
+      "depends_on": [],
+      "generic_name": "Loss of grid alarm setting",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/Settings/AssistCurrentBoostFactor",
@@ -5544,7 +7004,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Assist Current Boost Factor"
+      "depends_on": [],
+      "generic_name": "Assist Current Boost Factor",
+      "is_formula": false
     },
     {
       "topic": "N/{installation_id}/vebus/{device_id}/State",
@@ -5564,7 +7026,9 @@
       "is_adjustable_suffix": null,
       "key_values": {},
       "experimental": false,
-      "generic_name": "Inverter state"
+      "depends_on": [],
+      "generic_name": "Inverter state",
+      "is_formula": false
     },
     {
       "topic": "W/{installation_id}/generator/{device_id}/ServiceCounterReset",
@@ -5583,8 +7047,10 @@
       "step": null,
       "is_adjustable_suffix": null,
       "key_values": {},
-      "experimental": true,
-      "generic_name": "Generator service counter reset"
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Generator service counter reset",
+      "is_formula": false
     }
   ],
   "enums": [
@@ -5615,6 +7081,126 @@
           "id": "NotConnected",
           "name": "Not connected",
           "value": 240
+        }
+      ]
+    },
+    {
+      "name": "ChargeSchedule",
+      "EnumValues": [
+        {
+          "id": "DisabledSunday",
+          "name": "Disabled (Sunday)",
+          "value": -10
+        },
+        {
+          "id": "DisabledWeekend",
+          "name": "Disabled (Weekend)",
+          "value": -9
+        },
+        {
+          "id": "DisabledWeekdays",
+          "name": "Disabled (Weekdays)",
+          "value": -8
+        },
+        {
+          "id": "DisabledEveryDay",
+          "name": "Disabled (Every day)",
+          "value": -7
+        },
+        {
+          "id": "DisabledSaturday",
+          "name": "Disabled (Saturday)",
+          "value": -6
+        },
+        {
+          "id": "DisabledFriday",
+          "name": "Disabled (Friday)",
+          "value": -5
+        },
+        {
+          "id": "DisabledThursday",
+          "name": "Disabled (Thursday)",
+          "value": -4
+        },
+        {
+          "id": "DisabledWednesday",
+          "name": "Disabled (Wednesday)",
+          "value": -3
+        },
+        {
+          "id": "DisabledTuesday",
+          "name": "Disabled (Tuesday)",
+          "value": -2
+        },
+        {
+          "id": "DisabledMonday",
+          "name": "Disabled (Monday)",
+          "value": -1
+        },
+        {
+          "id": "Sunday",
+          "name": "Sunday",
+          "value": 0
+        },
+        {
+          "id": "Monday",
+          "name": "Monday",
+          "value": 1
+        },
+        {
+          "id": "Tuesday",
+          "name": "Tuesday",
+          "value": 2
+        },
+        {
+          "id": "Wednesday",
+          "name": "Wednesday",
+          "value": 3
+        },
+        {
+          "id": "Thursday",
+          "name": "Thursday",
+          "value": 4
+        },
+        {
+          "id": "Friday",
+          "name": "Friday",
+          "value": 5
+        },
+        {
+          "id": "Saturday",
+          "name": "Saturday",
+          "value": 6
+        },
+        {
+          "id": "EveryDay",
+          "name": "Every day",
+          "value": 7
+        },
+        {
+          "id": "Weekdays",
+          "name": "Weekdays",
+          "value": 8
+        },
+        {
+          "id": "Weekends",
+          "name": "Weekends",
+          "value": 9
+        }
+      ]
+    },
+    {
+      "name": "ChargerMode",
+      "EnumValues": [
+        {
+          "id": "On",
+          "name": "On",
+          "value": 1
+        },
+        {
+          "id": "Off",
+          "name": "Off",
+          "value": 4
         }
       ]
     },
@@ -5650,6 +7236,36 @@
           "id": "BATTRY_CAPACITY_NOT_CONFIGURED",
           "name": "Battery Capacity Not Configured",
           "value": 5
+        }
+      ]
+    },
+    {
+      "name": "DESSMode",
+      "EnumValues": [
+        {
+          "id": "OFF",
+          "name": "Off",
+          "value": 0
+        },
+        {
+          "id": "AUTO_VRM",
+          "name": "Auto / VRM",
+          "value": 1
+        },
+        {
+          "id": "BUY",
+          "name": "Buy",
+          "value": 2
+        },
+        {
+          "id": "SELL",
+          "name": "Sell",
+          "value": 3
+        },
+        {
+          "id": "NODE_RED",
+          "name": "Node-RED",
+          "value": 4
         }
       ]
     },
@@ -5803,7 +7419,7 @@
         },
         {
           "id": "GRID_TO_BATTERY_RESTRICTED",
-          "name": "Grid to battey energy flow restricted",
+          "name": "Grid to battery energy flow restricted",
           "value": 1
         },
         {
@@ -5965,6 +7581,26 @@
           "id": "RELAY",
           "name": "<Not used>",
           "value": "Relay"
+        },
+        {
+          "id": "PLATFORM",
+          "name": "Platform",
+          "value": "platform"
+        },
+        {
+          "id": "HEATPUMP",
+          "name": "Heat Pump",
+          "value": "heatpump"
+        },
+        {
+          "id": "DYNAMIC_ESS",
+          "name": "Dynamic ESS",
+          "value": "DynamicEss"
+        },
+        {
+          "id": "ACLOAD",
+          "name": "AC Load",
+          "value": "acload"
         }
       ]
     },
@@ -6569,7 +8205,7 @@
         {
           "id": "ECO",
           "name": "Eco",
-          "value": 4
+          "value": 5
         }
       ]
     },
@@ -6665,6 +8301,26 @@
           "id": "ExternalControl",
           "name": "External Control",
           "value": 252
+        },
+        {
+          "id": "Discharging",
+          "name": "Discharging",
+          "value": 256
+        },
+        {
+          "id": "SustainAlt",
+          "name": "Sustain Alt",
+          "value": 257
+        },
+        {
+          "id": "Recharging",
+          "name": "Recharging",
+          "value": 258
+        },
+        {
+          "id": "ScheduledRecharging",
+          "name": "Scheduled Recharging",
+          "value": 259
         }
       ]
     },
