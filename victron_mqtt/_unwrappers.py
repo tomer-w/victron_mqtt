@@ -45,6 +45,14 @@ def unwrap_int_seconds_to_hours(json_str: str, precision: int | None) -> float |
     hours = seconds / 3600
     return hours if precision is None else round(hours, precision)
 
+def unwrap_int_seconds_to_minutes(json_str: str, precision: int | None) -> float | None:
+    """Convert seconds to minutes."""
+    seconds = unwrap_int(json_str)
+    if seconds is None:
+        return None
+    minutes = seconds / 60
+    return minutes if precision is None else round(minutes, precision)
+
 def unwrap_float(json_str: str, precision: int | None, json_value: str = "value") -> float | None:
     """Unwrap a float value from a JSON string."""
     try:
@@ -106,6 +114,10 @@ def wrap_int_hours_to_seconds(value: int | None) -> str:
     """Wrap an integer value into a JSON string with a 'value' key."""
     return json.dumps({"value": value * 3600 if value is not None else None})
 
+def wrap_int_minutes_to_seconds(value: int | None) -> str:
+    """Wrap an integer value into a JSON string with a 'value' key."""
+    return json.dumps({"value": value * 60 if value is not None else None})
+
 def wrap_int_default_0(value: int | None) -> str:
     """Wrap an integer value into a JSON string with a 'value' key, defaulting to 0 if None."""
     return json.dumps({"value": value if value is not None else 0})
@@ -134,7 +146,8 @@ VALUE_TYPE_UNWRAPPER = {
     ValueType.STRING: unwrap_string,
     ValueType.ENUM: unwrap_enum,
     ValueType.EPOCH: unwrap_epoch,
-    ValueType.INT_SECONDS_TO_HOURS: unwrap_int_seconds_to_hours
+    ValueType.INT_SECONDS_TO_HOURS: unwrap_int_seconds_to_hours,
+    ValueType.INT_SECONDS_TO_MINUTES: unwrap_int_seconds_to_minutes
 }
 
 VALUE_TYPE_WRAPPER = {
@@ -144,5 +157,6 @@ VALUE_TYPE_WRAPPER = {
     ValueType.STRING: wrap_string,
     ValueType.ENUM: wrap_enum,
     ValueType.EPOCH: wrap_epoch,
-    ValueType.INT_SECONDS_TO_HOURS: wrap_int_hours_to_seconds
+    ValueType.INT_SECONDS_TO_HOURS: wrap_int_hours_to_seconds,
+    ValueType.INT_SECONDS_TO_MINUTES: wrap_int_minutes_to_seconds
 }

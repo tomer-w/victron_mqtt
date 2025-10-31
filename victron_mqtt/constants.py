@@ -63,6 +63,7 @@ class ValueType(Enum):
     ENUM = "enum"
     EPOCH = "epoch"
     INT_SECONDS_TO_HOURS = "int_seconds_to_hours"
+    INT_SECONDS_TO_MINUTES = "int_seconds_to_minutes"
 
 class RangeType(Enum):
     """Range types for numeric values."""
