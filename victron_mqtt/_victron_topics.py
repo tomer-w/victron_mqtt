@@ -1718,6 +1718,7 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.VOLTAGE,
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
+        step=0.1
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/TransferSwitch/GeneratorCurrentLimit",
