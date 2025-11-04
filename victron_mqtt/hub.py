@@ -436,15 +436,16 @@ class Hub:
             # Use an empty JSON object.
             self._handle_full_publish_message("{}")
 
-    def is_formula_dependency_met(self, topic: TopicDescriptor, relevant_device: Device) -> Tuple[bool, list[Metric]]:
+    def is_formula_dependency_met(self, topic: TopicDescriptor, relevant_device: Device, key_values: dict[str, str]) -> Tuple[bool, list[Metric]]:
         if not topic.depends_on:
             return True, []
         dependencies: list[Metric] = []
         for dependency in topic.depends_on:
-            metric_id = ParsedTopic.make_hub_unique_id(relevant_device.unique_id, dependency)
-            dependency_metric = self._all_metrics.get(metric_id)
+            metric_unique_id = ParsedTopic.make_unique_id(relevant_device.unique_id, dependency)
+            metric_unique_id = ParsedTopic.replace_ids(metric_unique_id, key_values)
+            dependency_metric = self._all_metrics.get(metric_unique_id)
             if dependency_metric is None:
-                _LOGGER.debug("Formula topic %s is missing dependency metric: %s", topic.topic, metric_id)
+                _LOGGER.debug("Formula topic %s is missing dependency metric: %s", topic.topic, metric_unique_id)
                 return False, []
             dependencies.append(dependency_metric)
         return True, dependencies
@@ -492,29 +493,30 @@ class Hub:
         self._fallback_placeholders.clear()
         # Activate formula entities
         if len(new_metrics) > 0:
-            new_formula_metrics: list[tuple[Device, Metric]] = []
             for topic in self._pending_formula_topics:
                 _LOGGER.debug("Trying to resolve formula topic: %s", topic)
                 relevant_devices: list[Device] = [device for device in self._devices.values() if device.device_type.code == topic.topic.split("/")[1]]
                 for device in relevant_devices:
-                    metric_id = ParsedTopic.make_hub_unique_id(device.unique_id, topic.short_id)
-                    if self._all_metrics.get(metric_id) is not None:
-                        continue
-                    is_met, dependencies = self.is_formula_dependency_met(topic, device)
-                    if not is_met:
-                        continue
-                    _LOGGER.info("Formula topic resolved: %s", topic)
-                    metric = device._add_formula_metric(topic, self)
-                    depends_on: dict[str, Metric] = {}
-                    for dependency_metric in dependencies:
-                        dependency_metric.add_dependency(metric)
-                        depends_on[dependency_metric.unique_id] = dependency_metric
-                    metric.init(depends_on, self._loop, _LOGGER.debug)
-                    _LOGGER.info("Formula metric created: %s", metric)
-                    self._all_metrics[metric.unique_id] = metric
-                    new_formula_metrics.append((device, metric))
-            # Send all new metrics to clients
-            new_metrics.extend(new_formula_metrics)
+                    # We need all depends_on metric to get the key_values associated with it to be able to generate new metrics per moniker.
+                    all_new_metrics_with_same_depends_on_generic_id = [t[1] for t in new_metrics if t[1]._device == device and t[1].generic_short_id == topic.depends_on[0]]
+                    for depends_on_metric in all_new_metrics_with_same_depends_on_generic_id:
+                        metric_unique_id = ParsedTopic.make_unique_id(device.unique_id, topic.short_id)
+                        metric_unique_id = ParsedTopic.replace_ids(metric_unique_id, depends_on_metric.key_values)
+                        if self._all_metrics.get(metric_unique_id) is not None:
+                            continue
+                        is_met, dependencies = self.is_formula_dependency_met(topic, device, depends_on_metric.key_values)
+                        if not is_met:
+                            continue
+                        _LOGGER.info("Formula topic resolved: %s", topic)
+                        metric = device._add_formula_metric(topic, self, depends_on_metric.key_values)
+                        depends_on: dict[str, Metric] = {}
+                        for dependency_metric in dependencies:
+                            dependency_metric.add_dependency(metric)
+                            depends_on[dependency_metric.unique_id] = dependency_metric
+                        metric.init(depends_on, _LOGGER.debug)
+                        _LOGGER.info("Formula metric created: %s", metric)
+                        self._all_metrics[metric.unique_id] = metric
+                        new_metrics.append((device, metric))
         # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
         for device, metric in new_metrics:
             metric.phase2_init(device.unique_id, self._all_metrics)
@@ -595,15 +597,15 @@ class Hub:
         device = self._get_or_create_device(parsed_topic, desc)
         placeholder = device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload, self._loop, log_debug, self)
         if isinstance(placeholder, MetricPlaceholder):
-            existing_placeholder = self._metrics_placeholders.get(placeholder.parsed_topic.hub_unique_id)
+            existing_placeholder = self._metrics_placeholders.get(placeholder.parsed_topic.unique_id)
             if existing_placeholder:
                 log_debug("Replacing existing metric placeholder: %s", existing_placeholder)
-            self._metrics_placeholders[placeholder.parsed_topic.hub_unique_id] = placeholder
+            self._metrics_placeholders[placeholder.parsed_topic.unique_id] = placeholder
         elif isinstance(placeholder, FallbackPlaceholder):
-            existing_placeholder = self._fallback_placeholders.get(placeholder.parsed_topic.hub_unique_id)
+            existing_placeholder = self._fallback_placeholders.get(placeholder.parsed_topic.unique_id)
             if existing_placeholder:
                 log_debug("Replacing existing fallback placeholder: %s", existing_placeholder)
-            self._fallback_placeholders[placeholder.parsed_topic.hub_unique_id] = placeholder
+            self._fallback_placeholders[placeholder.parsed_topic.unique_id] = placeholder
 
     async def disconnect(self) -> None:
         """Disconnect from the hub."""
@@ -671,7 +673,7 @@ class Hub:
             is_info_level = self._topic_log_info and self._topic_log_info in metric._descriptor.topic
             log_debug = _LOGGER.info if is_info_level else _LOGGER.debug
 
-            metric._keepalive(force_invalidate, self._loop, log_debug)
+            metric._keepalive(force_invalidate, log_debug)
 
     def _start_keep_alive_loop(self) -> None:
         """Start the keep_alive loop."""

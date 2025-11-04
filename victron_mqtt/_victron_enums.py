@@ -299,7 +299,7 @@ class AcActiveInputSource(VictronEnum):
 class ChargeSchedule(VictronEnum):
     """Charge Schedule Enum"""
     DisabledSunday= (-10, "Disabled (Sunday)")
-    DisabledWeekend= (-9, "Disabled (Weekend)")
+    DisabledWeekend= (-9, "Disabled (Weekends)")
     DisabledWeekdays= (-8, "Disabled (Weekdays)")
     DisabledEveryDay= (-7, "Disabled (Every day)")
     DisabledSaturday= (-6, "Disabled (Saturday)")

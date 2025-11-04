@@ -2,6 +2,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from .writable_metric import WritableMetric
+from ._victron_enums import ChargeSchedule, GenericOnOff
 from .formula_common import left_riemann_sum_internal
 from .constants import FormulaPersistentState, FormulaTransientState
 
@@ -44,3 +46,38 @@ def left_riemann_sum(
     
     return left_riemann_sum_internal(depends_on, adjust, transient_state, persistent_state)
 
+
+def schedule_charge_enabled(
+    depends_on: dict[str, Metric],
+    transient_state: FormulaTransientState | None,
+    persistent_state: FormulaPersistentState | None) -> tuple[GenericOnOff | None, None, None] | None:   
+
+    assert len(depends_on) == 1, "Expected exactly one input metric for schedule_charge_enabled"
+    metric = list(depends_on.values())[0]
+    if metric.value is None:
+        return None, None, None
+    
+    ret_val = GenericOnOff.On if metric.value.code >= 0 else GenericOnOff.Off
+    return ret_val, None, None
+
+def schedule_charge_enabled_set(
+    value: int | str,
+    depends_on: dict[str, Metric],
+    transient_state: FormulaTransientState | None,
+    persistent_state: FormulaPersistentState | None) -> tuple[float, FormulaTransientState, FormulaPersistentState] | None:   
+    assert len(depends_on) == 1, "Expected exactly one input metric for schedule_charge_enabled"
+    enabled = value if isinstance(value, GenericOnOff) else GenericOnOff.from_code(value) #Support both the int value and the enum itself
+    metric = list(depends_on.values())[0]
+    assert isinstance(metric, WritableMetric), "Expected WritableMetric for schedule_charge_enabled_set"
+    assert isinstance(metric.value, ChargeSchedule), "Expected ChargeSchedule for schedule_charge_enabled_set.value"
+    schedule_value = metric.value
+    if enabled == GenericOnOff.On:
+        if schedule_value == ChargeSchedule.DisabledSunday:
+            metric.set(ChargeSchedule.Sunday) # No idea why they didnt choose non zero for Sunday
+        elif schedule_value.code < 0:
+            metric.set(ChargeSchedule.from_code(abs(schedule_value.code))) # type: ignore
+    else:
+        if schedule_value == ChargeSchedule.Sunday:
+            metric.set(ChargeSchedule.DisabledSunday) # No idea why they didnt choose non zero for Sunday
+        if schedule_value.code >= 0:
+            metric.set(ChargeSchedule.from_code(-abs(schedule_value.code))) # type: ignore

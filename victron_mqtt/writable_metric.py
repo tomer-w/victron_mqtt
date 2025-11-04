@@ -7,15 +7,10 @@ from __future__ import annotations
 from enum import Enum
 import logging
 
-from typing import TYPE_CHECKING
-
 from victron_mqtt.constants import RangeType
-if TYPE_CHECKING:
-    from .hub import Hub
-    from .device import Device
 from .metric import Metric
 from ._unwrappers import VALUE_TYPE_WRAPPER, wrap_enum
-from .data_classes import ParsedTopic, TopicDescriptor
+from .data_classes import TopicDescriptor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,15 +18,18 @@ _LOGGER = logging.getLogger(__name__)
 class WritableMetric(Metric):
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, device: Device, name: str, descriptor: TopicDescriptor, parsed_topic: ParsedTopic, hub: Hub) -> None:
+    def __init__(self, *, descriptor: TopicDescriptor | None = None, topic: str | None = None, **kwargs) -> None:
         """Initialize the WritableMetric."""
+        assert descriptor is not None
         _LOGGER.debug(
             "Creating new WritableMetric: short_id=%s, type=%s, nature=%s",
-            parsed_topic.short_id, descriptor.metric_type, descriptor.metric_nature
+            descriptor.short_id, descriptor.metric_type, descriptor.metric_nature
         )
-        assert parsed_topic.full_topic.startswith("N")
-        self._write_topic = "W" + parsed_topic.full_topic[1:]
-        super().__init__(device, name, descriptor, parsed_topic.hub_unique_id,parsed_topic.short_id, parsed_topic.key_values, hub)
+        self._write_topic: str | None = None
+        if topic is not None:
+            assert topic.startswith("N")
+            self._write_topic = "W" + topic[1:]
+        super().__init__(descriptor=descriptor, **kwargs)
 
     def __str__(self) -> str:
         return f"WritableMetric({super().__str__()}, write_topic = {self._write_topic})"
@@ -56,6 +54,7 @@ class WritableMetric(Metric):
         return [e.string for e in self._descriptor.enum] if self._descriptor.enum else None
 
     def set(self, value: str | float | int | bool | Enum) -> None:
+        assert self._write_topic is not None
         payload = WritableMetric._wrap_payload(self._descriptor, value)
         self._hub._publish(self._write_topic, payload)
 

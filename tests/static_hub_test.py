@@ -2,10 +2,11 @@ from itertools import count
 import pytest
 import asyncio
 from unittest.mock import MagicMock, patch
-from victron_mqtt._victron_enums import DeviceType, GenericOnOff
+from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, GenericOnOff
 from victron_mqtt.hub import Hub, TopicNotFoundError
 from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
 from victron_mqtt.metric import Metric
+from victron_mqtt.writable_formula_metric import WritableFormulaMetric
 from victron_mqtt.writable_metric import WritableMetric
 from victron_mqtt._victron_topics import topics
 import json
@@ -70,6 +71,13 @@ async def create_mocked_hub(installation_id=None, operation_mode: OperationMode 
                     MagicMock(topic="N/123/full_publish_completed", payload=keepalive_payload.encode())
                 )
                 logger.info("Mocked full_publish_completed")
+            if topic.startswith("W/"):
+                read_topic = "N" + topic[1:]
+                mocked_client.on_message(
+                    mocked_client,
+                    None,
+                    MagicMock(topic=read_topic, payload=value.encode())
+                )
         mocked_client.publish = MagicMock(name="publish", side_effect=mock_publish)
 
         await hub.connect()
@@ -1093,7 +1101,7 @@ async def test_null_message():
 
 @pytest.mark.asyncio
 @patch('victron_mqtt.formula_common.time.monotonic')
-async def test_formula_message(mock_time):
+async def test_formula_metric(mock_time):
     # Mock time.monotonic() to return a fixed time
     mock_time.return_value = 0
 
@@ -1115,6 +1123,8 @@ async def test_formula_message(mock_time):
     metric2 = device.get_metric("system_dc_battery_charge_energy")
     assert metric2 is not None, "metric should exist in the device"
     assert metric2.value == 0.0, f"Expected metric value to be 0.0, got {metric2.value}"
+    assert metric2.unique_id == "system_0_system_dc_battery_charge_energy", f"Expected unique_id to be 'system_0_system_dc_battery_charge_energy', got {metric2.generic_short_id}"
+    assert metric2.short_id == "system_dc_battery_charge_energy", f"Expected short_id to be 'system_dc_battery_charge_energy', got {metric2.generic_short_id}"
     assert metric2.generic_short_id == "system_dc_battery_charge_energy", f"Expected generic_short_id to be 'system_dc_battery_charge_energy', got {metric2.generic_short_id}"
     assert metric2.name == "DC Battery Charge Energy", f"Expected name to be 'DC Battery Charge Energy', got {metric2.name}"
 
@@ -1139,6 +1149,42 @@ async def test_formula_message(mock_time):
 
     # Test the 2nd way to get metric
     assert hub.get_metric("system_0_system_dc_battery_discharge_energy") is not None
+
+    await _hub_disconnect(hub, mock_time)
+
+@pytest.mark.asyncio
+@patch('victron_mqtt.formula_common.time.monotonic')
+async def test_formula_switch(mock_time):
+    # Mock time.monotonic() to return a fixed time
+    mock_time.return_value = 0
+
+    hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
+
+    # Inject messages after the event is set
+    await inject_message(hub, "N/123/settings/0/Settings/CGwacs/BatteryLife/Schedule/Charge/2/Day", "{\"value\": -7}", mock_time)
+    mock_time.return_value += 0.1
+    await finalize_injection(hub, disconnect=False)
+
+    # Validate the Hub's state - only system device exists
+    assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
+    device = hub.devices["system_0"]
+    assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
+
+    metric1 = device.get_metric("system_ess_schedule_charge_2_days")
+    assert metric1 is not None, "metric should exist in the device"
+    assert metric1.unique_id == "system_0_system_ess_schedule_charge_2_days"
+    assert metric1.value == ChargeSchedule.DisabledEveryDay, f"Expected metric value to be -7, got {metric1.value}"
+
+    metric2 = device.get_metric("system_ess_schedule_charge_2_enabled")
+    assert isinstance(metric2, WritableFormulaMetric)
+    assert metric2.unique_id == "system_0_system_ess_schedule_charge_2_enabled"
+    assert metric2.generic_short_id == "system_ess_schedule_charge_{slot}_enabled"
+    assert metric2.short_id == "system_ess_schedule_charge_2_enabled"
+    assert metric2.value == GenericOnOff.Off, f"Expected metric value to be 'GenericOnOff.Off', got {metric1.value}"
+
+    mock_time.return_value = 15
+    metric2.set(GenericOnOff.On)
+    assert metric1.value == ChargeSchedule.EveryDay, f"Expected metric value to be ChargeSchedule.EveryDay, got {metric1.value}"
 
     await _hub_disconnect(hub, mock_time)
 

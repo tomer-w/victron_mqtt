@@ -9,7 +9,6 @@ import logging
 from typing import TYPE_CHECKING, Callable
 import copy
 
-
 if TYPE_CHECKING:
     from .hub import Hub
 
@@ -17,6 +16,7 @@ from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_
 from .constants import MetricKind, RangeType
 from .metric import Metric
 from .formula_metric import FormulaMetric
+from .writable_formula_metric import WritableFormulaMetric
 from ._victron_enums import DeviceType
 from .writable_metric import WritableMetric
 from .data_classes import ParsedTopic, TopicDescriptor
@@ -119,7 +119,7 @@ class Device:
 
         metric = self._metrics.get(parsed_topic.short_id)
         if metric:
-            metric._handle_message(value, event_loop, log_debug)
+            metric._handle_message(value, log_debug)
             return None
         assert value is not None, f"Value must not be None. topic={topic}, payload={payload}"
         return MetricPlaceholder(self, parsed_topic, topic_desc, payload, value)
@@ -175,16 +175,22 @@ class Device:
         assert metric_placeholder.parsed_topic.device_type is not None, "device_type must be set for metric"
 
         if new_topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT, MetricKind.BUTTON, MetricKind.TIME]:
-            metric = WritableMetric(self, name, new_topic_desc, metric_placeholder.parsed_topic, hub)
+            metric = WritableMetric(device = self, name = name, descriptor = new_topic_desc, unique_id = metric_placeholder.parsed_topic.unique_id, short_id = metric_placeholder.parsed_topic.short_id, key_values = metric_placeholder.parsed_topic.key_values, topic = metric_placeholder.parsed_topic.full_topic, hub = hub)
         else:
-            metric = Metric(self, name, new_topic_desc, metric_placeholder.parsed_topic.hub_unique_id, metric_placeholder.parsed_topic.short_id, metric_placeholder.parsed_topic.key_values, hub)
-        metric._handle_message(metric_placeholder.value, None, _LOGGER.debug)
+            metric = Metric(device = self, name = name, descriptor = new_topic_desc, unique_id = metric_placeholder.parsed_topic.unique_id, short_id = metric_placeholder.parsed_topic.short_id, key_values = metric_placeholder.parsed_topic.key_values,hub = hub)
+        metric._handle_message(metric_placeholder.value, _LOGGER.debug)
         self._metrics[metric.short_id] = metric
         return metric
 
-    def _add_formula_metric(self, topic_desc: TopicDescriptor, hub: Hub) -> FormulaMetric:
+    def _add_formula_metric(self, topic_desc: TopicDescriptor, hub: Hub, key_values: dict[str, str]) -> FormulaMetric:
         assert topic_desc.name is not None, "name must be set for topic"
-        metric = FormulaMetric(self, topic_desc.name, topic_desc, hub)
+        name = ParsedTopic.replace_ids(topic_desc.name, key_values)
+        short_id = ParsedTopic.replace_ids(topic_desc.short_id, key_values)
+        unique_id = ParsedTopic.make_unique_id(self.unique_id, short_id)
+        if topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT, MetricKind.BUTTON, MetricKind.TIME]:
+            metric = WritableFormulaMetric(device = self, name = name, descriptor = topic_desc, unique_id = unique_id, short_id = short_id, hub = hub, key_values = key_values)
+        else:
+            metric = FormulaMetric(device = self, name = name, descriptor = topic_desc, unique_id = unique_id, short_id = short_id, hub = hub, key_values = key_values)
         self._metrics[metric.short_id] = metric
         return metric
 

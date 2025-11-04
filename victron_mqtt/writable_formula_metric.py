@@ -6,17 +6,16 @@ from __future__ import annotations
 
 import logging
 
-from typing import Callable
-
-from .constants import FormulaPersistentState, FormulaTransientState
-from .metric import Metric
+from .constants import VictronEnum
+from .formula_metric import FormulaMetric
+from .writable_metric import WritableMetric
 from .data_classes import TopicDescriptor
 from . import _victron_formulas as formulas
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class FormulaMetric(Metric):
+class WritableFormulaMetric(WritableMetric, FormulaMetric):
     """Representation of a Victron Venus sensor."""
 
     def __init__(self, *, descriptor: TopicDescriptor, **kwargs) -> None:
@@ -25,35 +24,28 @@ class FormulaMetric(Metric):
             "Creating new FormulaMetric: unique_id=%s, type=%s, nature=%s",
             descriptor.short_id, descriptor.metric_type, descriptor.metric_nature
         )
-        assert descriptor.is_formula, f"Metric {descriptor.short_id} is not a formula"
-        self._depends_on: dict[str, Metric] = {}
-        self.transient_state: FormulaTransientState | None = None
-        self.persistent_state: FormulaPersistentState | None = None
         assert descriptor.topic.startswith("$$func")
         func_name = descriptor.topic.split('/')[-1]
-        if ":" in func_name:
-            func_name = func_name.split(":", 1)[0]
-        self._func = getattr(formulas, func_name)
+        assert ":" in func_name
+        write_func_name = func_name.split(":", 1)[1]
+        self._write_func = getattr(formulas, write_func_name)
 
         super().__init__(descriptor = descriptor, **kwargs)
 
-    def init(self, depends_on: dict[str, Metric], log_debug: Callable[..., None]) -> None:
-        self._depends_on = depends_on
-        self._handle_formula(log_debug)
 
     def __str__(self) -> str:
-        return f"FormulaMetric({super().__str__()}, transient_state={self.transient_state}, persistent_state={self.persistent_state})"
+        return f"WritableFormulaMetric({super().__str__()}, transient_state={self.transient_state}, persistent_state={self.persistent_state})"
 
     def __repr__(self) -> str:
         return self.__str__()
-    
-    @property
-    def value(self):
-        return self._value
 
-    def _handle_formula(self, log_debug: Callable[..., None]):
+    def set(self, value: str | float | int | bool | VictronEnum) -> None:
+        # Determine log level based on the substring
+        is_info_level = self._hub._topic_log_info and self._hub._topic_log_info in self._descriptor.topic
+        log_debug = _LOGGER.info if is_info_level else _LOGGER.debug
+
         # Formula functions may return None to indicate no value/update.
-        result = self._func(self._depends_on, self.transient_state, self.persistent_state)
+        result = self._write_func(value, self._depends_on, self.transient_state, self.persistent_state)
         if result is None:
             log_debug("Formula %s returned None", self._func)
             self._handle_message(None, log_debug)
@@ -65,6 +57,4 @@ class FormulaMetric(Metric):
             _LOGGER.error("Unexpected return value from formula %s: %r", self._func, result)
             return
         
-        if self._descriptor.precision is not None:
-            value = round(value, self._descriptor.precision)
         self._handle_message(value, log_debug)

@@ -271,7 +271,7 @@ class ParsedTopic:
         )
 
     @classmethod
-    def make_hub_unique_id(cls, device_short_unique_id: str, short_id: str) -> str:
+    def make_unique_id(cls, device_short_unique_id: str, short_id: str) -> str:
         return f"{device_short_unique_id}_{short_id}"
 
     def get_device_unique_id(self) -> str:
@@ -281,7 +281,7 @@ class ParsedTopic:
         self._key_values = self.get_key_values(topic_desc)
         self._key_values.update(topic_desc.key_values)
         self._short_id = self._replace_ids(topic_desc.short_id)
-        self._hub_unique_id = ParsedTopic.make_hub_unique_id(self.get_device_unique_id(), self._short_id)
+        self._unique_id = ParsedTopic.make_unique_id(self.get_device_unique_id(), self._short_id)
         assert topic_desc.name is not None, f"TopicDescriptor name is None for topic: {topic_desc.topic}"
         self._name = self._replace_ids(topic_desc.name)
 
@@ -301,9 +301,9 @@ class ParsedTopic:
         return self._short_id
 
     @property
-    def hub_unique_id(self) -> str:
-        assert self._hub_unique_id is not None, f"hub_unique_id is None for topic: {self.full_topic}"
-        return self._hub_unique_id
+    def unique_id(self) -> str:
+        assert self._unique_id is not None, f"unique_id is None for topic: {self.full_topic}"
+        return self._unique_id
 
     @property
     def key_values(self) -> dict[str, str]:

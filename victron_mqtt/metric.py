@@ -5,13 +5,12 @@ Support for Victron Venus sensors. The sensor itself has no logic,
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 import time
 import logging
 from typing import TYPE_CHECKING, Any
 
-from .id_utils import replace_complex_id_to_simple, replace_complex_ids
+from .id_utils import replace_complex_ids
 from .constants import MetricKind, MetricNature, MetricType
 from .data_classes import ParsedTopic, TopicDescriptor
 
@@ -27,27 +26,34 @@ CallbackOnUpdate = Callable[["Metric", Any], None]
 class Metric:
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, device: Device, name: str, descriptor: TopicDescriptor, hub_unique_id: str, short_id: str, key_values: dict[str, str], hub: Hub) -> None:
+    def __init__(self, *, device: Device | None = None, name: str | None = None, descriptor: TopicDescriptor | None = None, unique_id: str | None = None, short_id: str | None = None, key_values: dict[str, str] | None = None, hub: Hub | None = None, **kwargs) -> None:
         """Initialize the sensor."""
+        assert device is not None
+        assert name is not None
+        assert descriptor is not None
+        assert descriptor.name is not None, "name must be set for metric"
+        assert unique_id is not None
+        assert key_values is not None
+        assert short_id is not None
+        assert hub is not None
         _LOGGER.debug(
             "Creating new metric: short_id=%s, type=%s, nature=%s",
             short_id, descriptor.metric_type, descriptor.metric_nature
         )
-        assert descriptor.name is not None, "name must be set for metric"
-        self._device = device
-        self._descriptor = descriptor
-        self._unique_id = hub_unique_id
-        self._value = None
-        self._short_id = short_id
-        self._name = name
+        self._device: Device = device
+        self._descriptor: TopicDescriptor = descriptor
+        self._unique_id: str = unique_id
+        self._value: Any = None
+        self._short_id: str = short_id
+        self._name: str  = name
         self._key_values: dict[str, str] = key_values
         self._on_update: CallbackOnUpdate | None = None
-        self._generic_name: str | None = None
-        self._generic_short_id: str | None = None
         self._depend_on_me: list[FormulaMetric] = []
         self._hub = hub
         self._last_notified: float = 0
         self._last_seen: float = 0
+        self._generic_short_id = self._descriptor.short_id
+        self._generic_name = self._descriptor.generic_name
 
         _LOGGER.debug("Metric %s initialized", repr(self))
 
@@ -72,8 +78,6 @@ class Metric:
         assert self._descriptor.name is not None, f"name must be set for topic: {self._descriptor.topic}"
         name_temp = ParsedTopic.replace_ids(self._descriptor.name, self._key_values)
         self._name = self._replace_ids(name_temp, device_id, all_metrics)
-        self._generic_name = self._descriptor.generic_name
-        self._generic_short_id = replace_complex_id_to_simple(self._descriptor.short_id)
 
     def _replace_ids(self, orig_str: str, device_id: str, all_metrics: dict[str, Metric]) -> str:
         def replace_match(match):
@@ -187,22 +191,22 @@ class Metric:
         """Sets the on_update callback."""
         self._on_update = value
 
-    def _keepalive(self, force_invalidate: bool, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None]):
+    def _keepalive(self, force_invalidate: bool, log_debug: Callable[..., None]):
         """Reset metrics value if no updates or send last values if they got skipped"""
         silence_timeout = max(60, self._hub._update_frequency_seconds * 3) if self._hub._update_frequency_seconds is not None else 60
         now = time.monotonic()
         elapsed = now - self._last_seen
         if (force_invalidate or elapsed > silence_timeout) and self._value is not None:
             log_debug("Metric %s has been silent for %.2fs, resetting", self.unique_id, elapsed)
-            self._handle_message(None, event_loop, log_debug, update_last_seen=False) #Dont update the last_seen as it wasnt seen
+            self._handle_message(None, log_debug, update_last_seen=False) #Dont update the last_seen as it wasnt seen
             return
         if self._last_seen > self._last_notified:
             log_debug("Metric %s has been updated at %.2f but not published since %.2fs, re-publishing", self.unique_id, self._last_notified, self._last_seen)
-            self._handle_message(self._value, event_loop, log_debug, update_last_seen=False, force=True)
+            self._handle_message(self._value, log_debug, update_last_seen=False, force=True)
             return
         log_debug("Metric is active and up-to-date: %s", self.unique_id)
 
-    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop | None, log_debug: Callable[..., None], update_last_seen: bool = True, force: bool = False):
+    def _handle_message(self, value, log_debug: Callable[..., None], update_last_seen: bool = True, force: bool = False):
         """Handle a message."""
         now = time.monotonic()
         if update_last_seen:
@@ -245,14 +249,14 @@ class Metric:
                 # This happens when the last time was before the update frequency passed so now we do really need to notify on it
                 should_notify = True
 
-        if should_notify and event_loop and callable(self._on_update) and event_loop.is_running():
+        if should_notify and  self._hub._loop and callable(self._on_update) and self._hub._loop.is_running():
             self._last_notified = now
             try:
                 # If the event loop is running, schedule the callback
-                event_loop.call_soon_threadsafe(self._on_update, self, self.value)
+                self._hub._loop.call_soon_threadsafe(self._on_update, self, self.value)
             except Exception as exc:
                 log_debug("Error calling callback %s", exc, exc_info=True)
 
         for dependency in self._depend_on_me:
             assert self != dependency, f"Circular dependency detected: {self}"
-            dependency._handle_formula(event_loop, log_debug)
+            dependency._handle_formula(log_debug)

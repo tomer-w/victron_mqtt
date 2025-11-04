@@ -1270,6 +1270,15 @@ topics: List[TopicDescriptor] = [
         enum=ChargeSchedule,
     ),
     TopicDescriptor(
+        topic="$$func/system/schedule_charge_enabled:schedule_charge_enabled_set",
+        depends_on=["system_ess_schedule_charge_{slot}_days"],
+        message_type=MetricKind.SWITCH,
+        short_id="system_ess_schedule_charge_{slot}_enabled",
+        name="ESS BatteryLife Schedule charge {slot} enabled",
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Duration",
         message_type=MetricKind.NUMBER,
         short_id="system_ess_schedule_charge_{slot}_duration",
