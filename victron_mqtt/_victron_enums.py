@@ -318,3 +318,8 @@ class ChargeSchedule(VictronEnum):
     EveryDay = (7, "Every day")
     Weekdays = (8, "Weekdays")
     Weekends = (9, "Weekends")
+
+class ActiveInputEnum(VictronEnum):
+    AC_INPUT_1 = (0, "AC Input 1")
+    AC_INPUT_2 = (1, "AC Input 2")
+    DISCONNECTED = (240, "Disconnected")

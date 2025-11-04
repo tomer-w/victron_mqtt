@@ -7,7 +7,7 @@ from .device import Device
 from .hub import Hub, CannotConnectError, ProgrammingError, NotConnectedError, TopicNotFoundError
 from .metric import Metric
 from .writable_metric import WritableMetric
-from ._victron_enums import DeviceType, State, InverterMode, GenericOnOff, ChargerMode, EvChargerMode, GenericAlarmEnum, FluidType, TemperatureType, TemperatureStatus, ESSMode, MppOperationMode, DESSMode, DESSReactiveStrategy, DESSStrategy, DESSErrorCode, DESSRestrictions, VictronDeviceEnum, GeneratorRunningByConditionCode, DigitalInputInputState, DigitalInputType, DigitalInputState, PhoenixInverterMode, ErrorCode, ESSState, ESSModeHub4, AcActiveInputSource, ChargeSchedule
+from ._victron_enums import DeviceType, State, InverterMode, GenericOnOff, ChargerMode, EvChargerMode, GenericAlarmEnum, FluidType, TemperatureType, TemperatureStatus, ESSMode, MppOperationMode, DESSMode, DESSReactiveStrategy, DESSStrategy, DESSErrorCode, DESSRestrictions, VictronDeviceEnum, GeneratorRunningByConditionCode, DigitalInputInputState, DigitalInputType, DigitalInputState, PhoenixInverterMode, ErrorCode, ESSState, ESSModeHub4, AcActiveInputSource, ChargeSchedule, ActiveInputEnum
 
 __all__ = [
     "Hub",
@@ -52,4 +52,5 @@ __all__ = [
     "ESSModeHub4",
     "AcActiveInputSource",
     "ChargeSchedule",
+    "ActiveInputEnum",
 ]
