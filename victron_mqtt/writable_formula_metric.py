@@ -43,6 +43,7 @@ class WritableFormulaMetric(WritableMetric, FormulaMetric):
         # Determine log level based on the substring
         is_info_level = self._hub._topic_log_info and self._hub._topic_log_info in self._descriptor.topic
         log_debug = _LOGGER.info if is_info_level else _LOGGER.debug
+        log_debug("Formula %s set to: %s", self._func, value)
 
         # Formula functions may return None to indicate no value/update.
         result = self._write_func(value, self._depends_on, self.transient_state, self.persistent_state)
@@ -56,5 +57,6 @@ class WritableFormulaMetric(WritableMetric, FormulaMetric):
         except Exception:  # pragma: no cover - defensive logging for unexpected return shapes
             _LOGGER.error("Unexpected return value from formula %s: %r", self._func, result)
             return
+        log_debug("Formula %s returned: value=%s, transient_state=%s, persistent_state=%s", self._func, value, self.transient_state, self.persistent_state)
         
         self._handle_message(value, log_debug)

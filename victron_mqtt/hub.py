@@ -641,8 +641,12 @@ class Hub:
 
     def _publish(self, topic: str, value: PayloadType) -> None:
         assert self._client is not None
+        # Determine log level based on the substring
+        is_info_level = self._topic_log_info and self._topic_log_info in topic
+        log_debug = _LOGGER.info if is_info_level else _LOGGER.debug
+
         prefixed_topic = self._add_topic_prefix(topic)
-        _LOGGER.debug("Publishing message to topic: %s, value: %s", prefixed_topic, value)
+        log_debug("Publishing message to topic: %s, value: %s", prefixed_topic, value)
         self._client.publish(prefixed_topic, value)
 
     async def _keepalive_loop(self) -> None:
