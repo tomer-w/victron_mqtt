@@ -97,7 +97,15 @@ class AttributeViewerDialog(simpledialog.Dialog):
 
         if isinstance(self.instance, WritableMetric) and self.instance.metric_kind == MetricKind.SELECT:
             assert self.instance.enum_values is not None
-            ttk.Label(master, text="State:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
+            ttk.Label(master, text="Select:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
+            self.switch_var = tk.StringVar(value=self.instance.value)
+            self.switch_dropdown = ttk.Combobox(master, textvariable=self.switch_var, values=self.instance.enum_values)
+            self.switch_dropdown.grid(row=row, column=1, sticky=tk.W, padx=5, pady=5)
+            row += 1
+
+        if isinstance(self.instance, WritableMetric) and self.instance.metric_kind == MetricKind.SWITCH:
+            assert self.instance.enum_values is not None
+            ttk.Label(master, text="Switch:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
             self.switch_var = tk.StringVar(value=self.instance.value)
             self.switch_dropdown = ttk.Combobox(master, textvariable=self.switch_var, values=self.instance.enum_values)
             self.switch_dropdown.grid(row=row, column=1, sticky=tk.W, padx=5, pady=5)

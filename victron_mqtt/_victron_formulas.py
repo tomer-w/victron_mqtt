@@ -50,7 +50,7 @@ def left_riemann_sum(
 def schedule_charge_enabled(
     depends_on: dict[str, Metric],
     transient_state: FormulaTransientState | None,
-    persistent_state: FormulaPersistentState | None) -> tuple[GenericOnOff | None, None, None] | None:   
+    persistent_state: FormulaPersistentState | None) -> tuple[GenericOnOff | None, None, None]:   
 
     assert len(depends_on) == 1, "Expected exactly one input metric for schedule_charge_enabled"
     metric = list(depends_on.values())[0]
@@ -61,12 +61,13 @@ def schedule_charge_enabled(
     return ret_val, None, None
 
 def schedule_charge_enabled_set(
-    value: int | str,
+    value: str,
     depends_on: dict[str, Metric],
     transient_state: FormulaTransientState | None,
-    persistent_state: FormulaPersistentState | None) -> tuple[float, FormulaTransientState, FormulaPersistentState] | None:   
+    persistent_state: FormulaPersistentState | None) -> tuple[GenericOnOff, None, None]:   
     assert len(depends_on) == 1, "Expected exactly one input metric for schedule_charge_enabled"
-    enabled = value if isinstance(value, GenericOnOff) else GenericOnOff.from_code(value) #Support both the int value and the enum itself
+    enabled: GenericOnOff | None = value if isinstance(value, GenericOnOff) else GenericOnOff.from_string(value) #Support both the int value and the enum itself
+    assert enabled is not None, "Failed to determine enabled state"
     metric = list(depends_on.values())[0]
     assert isinstance(metric, WritableMetric), "Expected WritableMetric for schedule_charge_enabled_set"
     assert isinstance(metric.value, ChargeSchedule), "Expected ChargeSchedule for schedule_charge_enabled_set.value"
@@ -79,5 +80,7 @@ def schedule_charge_enabled_set(
     else:
         if schedule_value == ChargeSchedule.Sunday:
             metric.set(ChargeSchedule.DisabledSunday) # No idea why they didnt choose non zero for Sunday
-        if schedule_value.code >= 0:
+        elif schedule_value.code >= 0:
             metric.set(ChargeSchedule.from_code(-abs(schedule_value.code))) # type: ignore
+
+    return enabled, None, None

@@ -5,6 +5,7 @@ Support for Victron Venus WritableMetric.
 from __future__ import annotations
 
 import logging
+from typing import Callable
 
 from .constants import VictronEnum
 from .formula_metric import FormulaMetric
@@ -38,6 +39,10 @@ class WritableFormulaMetric(WritableMetric, FormulaMetric):
 
     def __repr__(self) -> str:
         return self.__str__()
+    
+    def _keepalive(self, force_invalidate: bool, log_debug: Callable[..., None]):
+        log_debug("Metric is WritableFormulaMetric so no keepalive for now: %s", self.unique_id)
+        pass
 
     def set(self, value: str | float | int | bool | VictronEnum) -> None:
         # Determine log level based on the substring
