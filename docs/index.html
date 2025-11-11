@@ -177,7 +177,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
   </p>
   <h1>Victron MQTT Protocol Overview</h1>
   <p>
-    The <strong>Victron MQTT protocol</strong> is used by Victron Energy devices to publish and subscribe to real-time data over an MQTT broker. This protocol enables seamless integration of Victron devices—such as inverters, chargers, battery monitors, and solar controllers—into home automation, monitoring, and energy management systems.
+    The <strong>Victron MQTT protocol</strong> is used by Victron Energy devices to publish and subscribe to real-time data over an MQTT broker. This protocol enables seamless integration of Victron devices—including inverters, chargers, battery monitors, and solar controllers—into home automation, monitoring, and energy management systems.
   </p>
   <h2>How It Works</h2>
   <ul>
@@ -188,19 +188,23 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
   </ul>
   <h2>Supported Victron Devices</h2>
   <p>
-    <strong>Note:</strong> To use the Victron MQTT protocol, you must have a <strong>Cerbo GX</strong>, <strong>Venus GX</strong>, or <strong>Color Control GX</strong> device (collectively known as GX devices). These GX devices act as gateways, exposing data from connected Victron products via MQTT. Other Victron devices (such as inverters, solar controllers, and battery monitors) do <em>not</em> expose MQTT directly—they must be connected to a GX device, which then publishes their data to the MQTT broker.
+  <strong>Note:</strong> To use the Victron MQTT protocol, you must have a <strong>Cerbo GX</strong>, <strong>Venus GX</strong>, or <strong>Color Control GX</strong> device (collectively known as GX devices). These GX devices act as gateways, exposing data from connected Victron products via MQTT. Other Victron devices (such as inverters, solar controllers, and battery monitors) do <em>not</em> expose MQTT directly; they must be connected to a GX device, which publishes their data to the MQTT broker.
   </p>
   <ul>
     <li><strong>Cerbo GX / Venus GX / Color Control GX</strong> <span style="color:#003366; font-size:0.95em;">(required for MQTT access)</span></li>
-    <li><strong>MultiPlus / Quattro Inverter-Chargers</strong> <span style="color:#888; font-size:0.95em;">(via GX device)</span></li>
-    <li><strong>BlueSolar / SmartSolar MPPT Solar Charge Controllers</strong> <span style="color:#888; font-size:0.95em;">(via GX device)</span></li>
-    <li><strong>BMV / SmartShunt Battery Monitors</strong> <span style="color:#888; font-size:0.95em;">(via GX device)</span></li>
-    <li><strong>Lynx Shunt / Power Distribution Systems</strong> <span style="color:#888; font-size:0.95em;">(via GX device)</span></li>
-    <li><strong>Other compatible Victron devices</strong> <span style="color:#888; font-size:0.95em;">(via GX device)</span></li>
+    <li><strong>MultiPlus / MultiPlus-II / Quattro inverter‑chargers</strong> <span style="color:#888; font-size:0.95em;">(e.g. MultiPlus, MultiPlus-II, Quattro families via GX)</span></li>
+    <li><strong>EasySolar / EasySolar-II / Phoenix inverters</strong> <span style="color:#888; font-size:0.95em;">(inverter/charger & integrated solutions)</span></li>
+    <li><strong>SmartSolar & BlueSolar MPPT charge controllers</strong> <span style="color:#888; font-size:0.95em;">(e.g. MPPT 75/10, 75/15, 100/30, 150/35, 250/100 and other SmartSolar / BlueSolar models)</span></li>
+    <li><strong>BMV battery monitors</strong> <span style="color:#888; font-size:0.95em;">(BMV-600/700 series, BMV-702, BMV-712 and similar)</span></li>
+    <li><strong>SmartShunt</strong> <span style="color:#888; font-size:0.95em;">(SmartShunt 500A, 1000A and variants)</span></li>
+    <li><strong>Lynx power components</strong> <span style="color:#888; font-size:0.95em;">(Lynx Shunt, Lynx Distributor and related Lynx modules)</span></li>
+    <li><strong>VE.Direct / VE.Can connected devices</strong> <span style="color:#888; font-size:0.95em;">(VE.Direct MPPTs, VE.Can devices and other products connected over GX interfaces)</span></li>
+    <li><strong>GX accessories & connectivity modules</strong> <span style="color:#888; font-size:0.95em;">(GX Touch, Smart Battery Sense, GlobalLink / GX LTE, and other GX peripherals)</span></li>
+    <li><strong>Third‑party devices via GX</strong> <span style="color:#888; font-size:0.95em;">(devices bridged to MQTT by the GX using VE.Bus/VE.Can/VE.Direct)</span></li>
   </ul>
   <h2>Common MQTT Topics</h2>
   <p>
-    Each device type publishes to a set of standardized topics. For example:
+    Each device type publishes to standardized topics. Examples include:
   </p>
   <ul>
     <li><code>victron/+/Dc/0/Voltage</code> – DC voltage readings</li>
@@ -349,7 +353,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
 
   <h2>Enums</h2>
   <p>
-    <strong>Enums</strong> represent the possible states or values for certain device properties, such as operational modes, alarm states, or relay statuses. These are useful for interpreting numeric codes in MQTT payloads.
+    <strong>Enums</strong> represent the possible states or values for certain device properties, such as operational modes, alarm states, or relay statuses. Enums help interpret numeric codes in MQTT payloads.
   </p>
   {% for enum in site.data.victron_mqtt.enums %}
     <h3 style="margin-bottom:0.5em; color:#003366;">{{ enum.name }}</h3>
@@ -372,7 +376,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
   {% endfor %}
 </div>
 <div class="footer">Generated by <a href="https://github.com/tomer-w/victron_mqtt" target="_blank">victron-mqtt project</a> &copy; {{ site.time | date: '%Y' }}<br>
-  <span style="font-size:0.9em;">Not affiliated with Victron Energy. For official documentation, visit <a href="https://www.victronenergy.com/live/" target="_blank">Victron Energy Live</a>.</span>
+  <span style="font-size:0.9em;">This project is not affiliated with Victron Energy. For official documentation, visit <a href="https://www.victronenergy.com/live/" target="_blank">Victron Energy Live</a>.</span>
 </div>
 
 
