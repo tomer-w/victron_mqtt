@@ -205,8 +205,8 @@ class DESSMode(VictronEnum):
 
 class DESSRestrictions(VictronEnum):
     NO_RESTRICTIONS = (0, "No Restrictions between battery and the grid")
-    GRID_TO_BATTERY_RESTRICTED = (1, "Grid to battery energy flow restricted")
-    BATTERY_TO_GRID_RESTRICTED = (2, "Battery to grid energy flow restricted")
+    BATTERY_TO_GRID_RESTRICTED = (1, "Battery to grid energy flow restricted")
+    GRID_TO_BATTERY_RESTRICTED = (2, "Grid to battery energy flow restricted")
     NO_FLOW = (3, "No energy flow between battery and grid")
 
 class ErrorCode(VictronEnum):
