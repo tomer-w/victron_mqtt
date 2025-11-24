@@ -1,5 +1,7 @@
 """Constants for the victron venus OS client."""
 
+from __future__ import annotations
+
 from enum import Enum
 from typing import Self
 
@@ -131,15 +133,15 @@ class VictronDeviceEnum(VictronEnum):
         self.mapped_to = mapped_to
 
     @classmethod
-    def from_code(cls: type[Self], value: int | str, default_value: "VictronDeviceEnum | None" = None) -> "VictronDeviceEnum | None":
+    def from_code(cls: type[Self], value: int | str, default_value: Self | None = None) -> Self | None:
         result = super().from_code(value, default_value)
         if result is None:
             return None
-        assert isinstance(result, VictronDeviceEnum)
+        assert isinstance(result, cls)
         if result.mapped_to:
             mapped_result = super().from_code(result.mapped_to, default_value)
             if mapped_result is None:
                 return None
-            assert isinstance(mapped_result, VictronDeviceEnum)
+            assert isinstance(mapped_result, cls)
             result = mapped_result
         return result
