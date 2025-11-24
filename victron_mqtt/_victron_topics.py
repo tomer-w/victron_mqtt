@@ -2082,6 +2082,13 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/system/{device_id}/Dc/Alternator/Power",
+        message_type=MetricKind.SENSOR,
+        short_id="system_dc_alternator_power",
+        name="DC Alternator Power",
+        metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Dc/Battery/Current",
         message_type=MetricKind.SENSOR,
         short_id="system_dc_battery_current",
