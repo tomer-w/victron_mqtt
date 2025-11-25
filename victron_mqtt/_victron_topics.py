@@ -423,6 +423,13 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/System/MaxTemperatureCellId",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_max_temperature_cell_id",
+        name="Battery maximum temperature cell ID",
+        value_type=ValueType.STRING,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/System/MaxVoltageCellId",
         message_type=MetricKind.SENSOR,
         short_id="battery_max_voltage_cell_id",
@@ -442,6 +449,13 @@ topics: List[TopicDescriptor] = [
         short_id="battery_min_cell_voltage",
         name="Battery minimum cell voltage",
         metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/System/MinTemperatureCellId",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_min_temperature_cell_id",
+        name="Battery minimum temperature cell ID",
+        value_type=ValueType.STRING,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/System/MinVoltageCellId",

@@ -283,6 +283,8 @@ class ParsedTopic:
         assert topic_desc.name is not None, f"TopicDescriptor name is None for topic: {topic_desc.topic}"
         self._name = self._replace_ids(topic_desc.name)
 
+    # This is needed in cases of solarcharger_max_power_today and solarcharger_max_power_yesterday
+    # which has the same topic but different meaning
     def match_from_list(self, topic_desc_list: list[TopicDescriptor]) -> TopicDescriptor |None:
         topic_parts = self.full_topic.split("/")
         topic_parts[1] = "{installation_id}"
