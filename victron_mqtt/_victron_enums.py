@@ -94,6 +94,33 @@ class EvChargerMode(VictronEnum):
     Auto = (1, "Auto")
     ScheduledCharge = (2, "Scheduled Charge")
 
+class EvChargerStatus(VictronEnum):
+    """EVCharger Status Enum"""
+    Disconnected = (0, "Disconnected")
+    Connected = (1, "Connected")
+    Charging = (2, "Charging")
+    Charged = (3, "Charged")
+    WaitingForSun = (4, "Waiting for sun")
+    WaitingForRFID = (5, "Waiting for RFID")
+    WaitingForStart = (6, "Waiting for start")
+    LowSoc = (7, "Low SOC")
+    GroundTestError = (8, "Ground test error")
+    WeldedContactsTestError = (9, "Welded contacts test error")
+    CPInputTestError= (10, "CP input test error")
+    ResidualCurrentDetected = (11, "Residual current detected")
+    UndervoltageDetected = (12, "Undervoltage detected")
+    OvervoltageDetected = (13, "Overvoltage detected")
+    OverheatingDetected = (14, "Overheating detected")
+    Reserved15 = (15, "Reserved")
+    Reserved16 = (16, "Reserved")
+    Reserved17 = (17, "Reserved")
+    Reserved18 = (18, "Reserved")
+    Reserved19 = (19, "reserved")
+    ChargingLimit = (20, "Charging limit")
+    StartCharging = (21, "Start charging")
+    SwitchingTo3Phase = (22, "Switching to 3 phase")
+    SwitchingTo1Phase = (23, "Switching to 1 phase")
+
 class TemperatureStatus(VictronEnum):
     """Temperature sensor status enum"""
     Ok = (0, "Ok")
