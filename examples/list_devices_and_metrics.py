@@ -17,9 +17,7 @@ async def main():
 
     # Connect and initialize
     await hub.connect()
-
-    # Allow some time for messages to be received
-    await asyncio.sleep(10)
+    await hub.wait_for_first_refresh()
 
     # Access devices and metrics
     for device in hub.devices.values():
