@@ -11,6 +11,7 @@ from victron_mqtt._unwrappers import (
     unwrap_string,
     unwrap_enum,
     unwrap_epoch,
+    unwrap_bitmask,
     wrap_enum,
     wrap_int,
     wrap_int_default_0,
@@ -19,10 +20,11 @@ from victron_mqtt._unwrappers import (
     wrap_int_minutes_to_seconds,
     wrap_string,
     wrap_epoch,
+    wrap_bitmask,
     VALUE_TYPE_UNWRAPPER,
     VALUE_TYPE_WRAPPER,
 )
-from victron_mqtt._victron_enums import GenericOnOff
+from victron_mqtt._victron_enums import GenericOnOff, SolarChargerDeviceOffReason
 from victron_mqtt.constants import ValueType
 
 
@@ -83,6 +85,20 @@ def test_unwrap_enum_and_epoch():
     assert isinstance(res_dt, datetime)
     assert res_dt == dt
 
+def test_unwrap_bitmask():
+    # SolarChargerDeviceOffReason: 0x00=NONE, 0x01=NoInputPower, 0x02=SwitchedOffPowerSwitch, 0x04=SwitchedOffDeviceModeRegister", ...
+    res = unwrap_bitmask('{"value": 0}', SolarChargerDeviceOffReason)
+    assert SolarChargerDeviceOffReason.NONE in res
+
+    res = unwrap_bitmask('{"value": 2}', SolarChargerDeviceOffReason)
+    assert SolarChargerDeviceOffReason.SwitchedOffPowerSwitch in res
+
+    res = unwrap_bitmask('{"value": 3}', SolarChargerDeviceOffReason)
+    assert SolarChargerDeviceOffReason.NoInputPower in res
+    assert SolarChargerDeviceOffReason.SwitchedOffPowerSwitch in res
+
+    assert unwrap_enum('{"value": null}', SolarChargerDeviceOffReason) is None
+    assert unwrap_enum('bad', SolarChargerDeviceOffReason) is None
 
 def test_unwrap_int_seconds_to_hours():
     # Test normal conversion: 3600 seconds = 1 hour
@@ -176,6 +192,13 @@ def test_wrap_functions_and_mappings():
     assert json.loads(wrap_enum(GenericOnOff.On, GenericOnOff)) == {"value": GenericOnOff.On.code}
     # wrap_enum with string name
     assert json.loads(wrap_enum("On", GenericOnOff)) == {"value": GenericOnOff.On.code}
+
+    # wrap_bitmask with enum instance(s)
+    assert json.loads(wrap_bitmask(SolarChargerDeviceOffReason.NoInputPower, SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NoInputPower.code}
+    assert json.loads(wrap_bitmask([SolarChargerDeviceOffReason.NoInputPower, SolarChargerDeviceOffReason.SwitchedOffPowerSwitch], SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NoInputPower.code + SolarChargerDeviceOffReason.SwitchedOffPowerSwitch.code}
+    # wrap_bitmask with string name(s)
+    assert json.loads(wrap_bitmask("No/Low input power", SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NoInputPower.code}
+    assert json.loads(wrap_bitmask(["No/Low input power", "Switched off (power switch)"], SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NoInputPower.code + SolarChargerDeviceOffReason.SwitchedOffPowerSwitch.code}
 
     # wrap_epoch
     dt = datetime(2020, 1, 2, 3, 4, 5)

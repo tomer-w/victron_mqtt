@@ -76,14 +76,18 @@ def test_required_fields_for_sensor():
                 errors.append(f"SENSOR topic '{descriptor.topic}' missing required 'name' field")
             if descriptor.value_type is None:
                 errors.append(f"SENSOR topic '{descriptor.topic}' missing required 'value_type' field")
-        if descriptor.value_type in [ValueType.STRING, ValueType.ENUM] and descriptor.precision is not None:
+        if descriptor.value_type in [ValueType.STRING, ValueType.ENUM, ValueType.BITMASK] and descriptor.precision is not None:
             errors.append(f"Topic '{descriptor.topic}' has value_type {descriptor.value_type} but also has precision={descriptor.precision} (should be None)")
         if descriptor.value_type == ValueType.ENUM and descriptor.enum is None:
             errors.append(f"Topic '{descriptor.topic}' has value_type ENUM but missing 'enum' field")
-        if descriptor.value_type != ValueType.ENUM and descriptor.enum is not None:
-            errors.append(f"Topic '{descriptor.topic}' has 'enum' field but value_type is not ENUM")
         if descriptor.value_type == ValueType.ENUM and descriptor.metric_nature != MetricNature.NONE:
             errors.append(f"Topic '{descriptor.topic}' has value_type ENUM but metric_nature is {descriptor.metric_nature} (should be NONE)")
+        if descriptor.value_type == ValueType.BITMASK and descriptor.enum is None:
+            errors.append(f"Topic '{descriptor.topic}' has value_type BITMASK but missing 'enum' field")
+        if descriptor.value_type == ValueType.BITMASK and descriptor.metric_nature != MetricNature.NONE:
+            errors.append(f"Topic '{descriptor.topic}' has value_type BITMASK but metric_nature is {descriptor.metric_nature} (should be NONE)")
+        if descriptor.value_type not in [ValueType.ENUM, ValueType.BITMASK] and descriptor.enum is not None:
+            errors.append(f"Topic '{descriptor.topic}' has 'enum' field but value_type is not ENUM")
     if errors:
         pytest.fail("\n".join(errors))
 

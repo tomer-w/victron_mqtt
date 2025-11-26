@@ -26,7 +26,7 @@ asyncio.BaseEventLoop.close = debug_close
 
 @pytest.fixture
 def config_host():
-    return os.getenv("VICTRON_MQTT_SERVER", "venus.local.")
+    return os.getenv("VICTRON_MQTT_SERVER", "192.168.88.254")  #"venus.local.")
 
 
 @pytest.fixture

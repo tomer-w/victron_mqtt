@@ -1,5 +1,6 @@
 """Functions to unwrap the data from the JSON string."""
 
+from collections.abc import Iterable
 from datetime import datetime
 from enum import Enum
 import json
@@ -85,6 +86,22 @@ def unwrap_enum(json_str, enum: type[VictronEnum]) -> VictronEnum | None:
     val = data["value"]
     return enum.from_code(val) if val is not None else None
 
+def unwrap_bitmask(json_str, enum: type[VictronEnum]) -> Iterable[VictronEnum] | None:
+    """Unwrap a string value from a JSON string."""
+    try:
+        data = json.loads(json_str)
+    except (json.JSONDecodeError, KeyError, ValueError, TypeError):
+        return None
+    val = data["value"]
+    if val is None:
+        return None
+    else:
+        vals = [2**idx for idx,bit in enumerate(bin(val)[:1:-1]) if int(bit)]
+        if len(vals) > 0:
+            return [enum.from_code(v) for v in vals]
+        else:
+            return [enum.from_code(0)]
+
 def unwrap_epoch(json_str) -> datetime | None:
     """Unwrap a timestamp value from a JSON string."""
     try:
@@ -105,6 +122,24 @@ def wrap_enum(enum_val: Enum | str, enum_expected: type[VictronEnum]) -> str:
     else:
         raise TypeError(f"Expected Enum or str, got {type(enum_val).__name__}")
 
+def wrap_bitmask(bitmask_val: Enum | str | Iterable[Enum] | Iterable[str], enum_expected: type[VictronEnum]) -> str:
+    """Wrap an Enum value into a JSON string with a 'value' key."""
+    if isinstance(bitmask_val, VictronEnum):
+        return json.dumps({"value": bitmask_val.code})
+    elif isinstance(bitmask_val, str):
+        return json.dumps({"value": enum_expected.from_string(bitmask_val).code})
+    elif hasattr(bitmask_val, '__iter__'):
+        val = 0x00
+        for v in bitmask_val:
+            if isinstance(v, VictronEnum):
+                val += v.code
+            elif isinstance(v, str):
+                val += enum_expected.from_string(v).code
+            else:
+                raise TypeError(f"Expected Enum or str, got {type(v).__name__}")
+        return json.dumps({"value": val})
+    else:
+        raise TypeError(f"Expected Enum, str or Iterable, got {type(bitmask_val).__name__}")
 
 def wrap_int(value: int | None) -> str:
     """Wrap an integer value into a JSON string with a 'value' key."""
@@ -145,6 +180,7 @@ VALUE_TYPE_UNWRAPPER = {
     ValueType.FLOAT: unwrap_float,
     ValueType.STRING: unwrap_string,
     ValueType.ENUM: unwrap_enum,
+    ValueType.BITMASK: unwrap_bitmask,
     ValueType.EPOCH: unwrap_epoch,
     ValueType.INT_SECONDS_TO_HOURS: unwrap_int_seconds_to_hours,
     ValueType.INT_SECONDS_TO_MINUTES: unwrap_int_seconds_to_minutes
@@ -156,6 +192,7 @@ VALUE_TYPE_WRAPPER = {
     ValueType.FLOAT: wrap_float,
     ValueType.STRING: wrap_string,
     ValueType.ENUM: wrap_enum,
+    ValueType.BITMASK: wrap_bitmask,
     ValueType.EPOCH: wrap_epoch,
     ValueType.INT_SECONDS_TO_HOURS: wrap_int_hours_to_seconds,
     ValueType.INT_SECONDS_TO_MINUTES: wrap_int_minutes_to_seconds
