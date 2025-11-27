@@ -22,6 +22,7 @@ from ._victron_enums import (
     GenericOnOff,
     ChargerMode,
     EvChargerMode,
+    EvChargerStatus,
     MppOperationMode,
     PhoenixInverterMode,
     State,
@@ -655,6 +656,14 @@ topics: List[TopicDescriptor] = [
         name="EV charger charge",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/evcharger/{device_id}/Status",
+        message_type=MetricKind.SENSOR,
+        short_id="evcharger_status",
+        name="EV charger status",
+        value_type=ValueType.ENUM,
+        enum=EvChargerStatus,
     ),
     # Generator topics
     TopicDescriptor(
