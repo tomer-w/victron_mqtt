@@ -88,14 +88,14 @@ def test_unwrap_enum_and_epoch():
 def test_unwrap_bitmask():
     # SolarChargerDeviceOffReason: 0x00=NONE, 0x01=NoInputPower, 0x02=SwitchedOffPowerSwitch, 0x04=SwitchedOffDeviceModeRegister", ...
     res = unwrap_bitmask('{"value": 0}', SolarChargerDeviceOffReason)
-    assert SolarChargerDeviceOffReason.NONE in res
+    assert res == SolarChargerDeviceOffReason.NONE.string
 
     res = unwrap_bitmask('{"value": 2}', SolarChargerDeviceOffReason)
-    assert SolarChargerDeviceOffReason.SwitchedOffPowerSwitch in res
+    assert res == SolarChargerDeviceOffReason.SwitchedOffPowerSwitch.string
 
     res = unwrap_bitmask('{"value": 3}', SolarChargerDeviceOffReason)
-    assert SolarChargerDeviceOffReason.NoInputPower in res
-    assert SolarChargerDeviceOffReason.SwitchedOffPowerSwitch in res
+    assert SolarChargerDeviceOffReason.NoInputPower.string in res
+    assert SolarChargerDeviceOffReason.SwitchedOffPowerSwitch.string in res
 
     assert unwrap_enum('{"value": null}', SolarChargerDeviceOffReason) is None
     assert unwrap_enum('bad', SolarChargerDeviceOffReason) is None
@@ -198,6 +198,7 @@ def test_wrap_functions_and_mappings():
     assert json.loads(wrap_bitmask([SolarChargerDeviceOffReason.NoInputPower, SolarChargerDeviceOffReason.SwitchedOffPowerSwitch], SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NoInputPower.code + SolarChargerDeviceOffReason.SwitchedOffPowerSwitch.code}
     # wrap_bitmask with string name(s)
     assert json.loads(wrap_bitmask("No/Low input power", SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NoInputPower.code}
+    assert json.loads(wrap_bitmask("No/Low input power,Switched off (power switch)", SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NoInputPower.code + SolarChargerDeviceOffReason.SwitchedOffPowerSwitch.code}
     assert json.loads(wrap_bitmask(["No/Low input power", "Switched off (power switch)"], SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NoInputPower.code + SolarChargerDeviceOffReason.SwitchedOffPowerSwitch.code}
 
     # wrap_epoch

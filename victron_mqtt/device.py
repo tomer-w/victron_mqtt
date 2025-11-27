@@ -128,11 +128,8 @@ class Device:
     def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | bool | type[Enum] | None:
         assert topic_desc.value_type is not None
         unwrapper = VALUE_TYPE_UNWRAPPER[topic_desc.value_type]
-        if unwrapper == unwrap_enum:
+        if unwrapper in [unwrap_enum, unwrap_bitmask]:
             return unwrapper(payload, topic_desc.enum)
-        elif unwrapper == unwrap_bitmask:
-            bits = unwrapper(payload, topic_desc.enum)
-            return str.join(',', [bit.string for bit in bits]) if bits is not None else None
         elif unwrapper in [unwrap_float, unwrap_int_seconds_to_hours, unwrap_int_seconds_to_minutes]:
             return unwrapper(payload, topic_desc.precision)
         else:

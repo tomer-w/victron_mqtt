@@ -86,8 +86,8 @@ def unwrap_enum(json_str, enum: type[VictronEnum]) -> VictronEnum | None:
     val = data["value"]
     return enum.from_code(val) if val is not None else None
 
-def unwrap_bitmask(json_str, enum: type[VictronEnum]) -> Iterable[VictronEnum] | None:
-    """Unwrap a string value from a JSON string."""
+def unwrap_bitmask(json_str, enum: type[VictronEnum]) -> str | None:
+    """Unwrap a bitmask value from a JSON string."""
     try:
         data = json.loads(json_str)
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
@@ -96,11 +96,9 @@ def unwrap_bitmask(json_str, enum: type[VictronEnum]) -> Iterable[VictronEnum] |
     if val is None:
         return None
     else:
-        vals = [2**idx for idx,bit in enumerate(bin(val)[:1:-1]) if int(bit)]
-        if len(vals) > 0:
-            return [enum.from_code(v) for v in vals]
-        else:
-            return [enum.from_code(0)]
+        vals = [2**idx for idx,bit in enumerate(bin(val)[:1:-1]) if int(bit)] if int(val)>0 else [0]
+        enums = [enum.from_code(v) for v in vals]
+        return str.join(',', [e.string for e in enums if e is not None])
 
 def unwrap_epoch(json_str) -> datetime | None:
     """Unwrap a timestamp value from a JSON string."""
@@ -123,12 +121,13 @@ def wrap_enum(enum_val: Enum | str, enum_expected: type[VictronEnum]) -> str:
         raise TypeError(f"Expected Enum or str, got {type(enum_val).__name__}")
 
 def wrap_bitmask(bitmask_val: Enum | str | Iterable[Enum] | Iterable[str], enum_expected: type[VictronEnum]) -> str:
-    """Wrap an Enum value into a JSON string with a 'value' key."""
+    """Wrap an bitmask value into a JSON string with a 'value' key."""
     if isinstance(bitmask_val, VictronEnum):
-        return json.dumps({"value": bitmask_val.code})
+        bitmask_val = [bitmask_val]
     elif isinstance(bitmask_val, str):
-        return json.dumps({"value": enum_expected.from_string(bitmask_val).code})
-    elif hasattr(bitmask_val, '__iter__'):
+        bitmask_val = bitmask_val.split(',')
+
+    if hasattr(bitmask_val, '__iter__'):
         val = 0x00
         for v in bitmask_val:
             if isinstance(v, VictronEnum):
