@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum
 import json
 
-from victron_mqtt.constants import ValueType, VictronEnum
+from victron_mqtt.constants import ValueType, VictronEnum, BITMASK_SEPARATOR
 
 
 def unwrap_bool(json_str) -> bool | None:
@@ -98,7 +98,7 @@ def unwrap_bitmask(json_str, enum: type[VictronEnum]) -> str | None:
     else:
         vals = [2**idx for idx,bit in enumerate(bin(val)[:1:-1]) if int(bit)] if int(val)>0 else [0]
         enums = [enum.from_code(v) for v in vals]
-        return str.join(',', [e.string for e in enums if e is not None])
+        return str.join(BITMASK_SEPARATOR, [e.string for e in enums if e is not None])
 
 def unwrap_epoch(json_str) -> datetime | None:
     """Unwrap a timestamp value from a JSON string."""
@@ -125,7 +125,7 @@ def wrap_bitmask(bitmask_val: Enum | str | Iterable[Enum] | Iterable[str], enum_
     if isinstance(bitmask_val, VictronEnum):
         bitmask_val = [bitmask_val]
     elif isinstance(bitmask_val, str):
-        bitmask_val = bitmask_val.split(',')
+        bitmask_val = bitmask_val.split(BITMASK_SEPARATOR)
 
     if hasattr(bitmask_val, '__iter__'):
         val = 0x00

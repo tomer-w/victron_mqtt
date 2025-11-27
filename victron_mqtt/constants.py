@@ -90,6 +90,8 @@ class FormulaPersistentState:
 PLACEHOLDER_PHASE = "{phase}"
 PLACEHOLDER_NEXT_PHASE = "{next_phase}"
 
+BITMASK_SEPARATOR = ","
+
 class VictronEnum(Enum):
     def __init__(self, code, string):
         self._value_ = (code, string)
