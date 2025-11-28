@@ -12,7 +12,7 @@ import copy
 if TYPE_CHECKING:
     from .hub import Hub
 
-from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_float, unwrap_int_seconds_to_hours, unwrap_int_seconds_to_minutes
+from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_bitmask, unwrap_float, unwrap_int_seconds_to_hours, unwrap_int_seconds_to_minutes
 from .constants import MetricKind, RangeType
 from .metric import Metric
 from .formula_metric import FormulaMetric
@@ -128,7 +128,7 @@ class Device:
     def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | bool | type[Enum] | None:
         assert topic_desc.value_type is not None
         unwrapper = VALUE_TYPE_UNWRAPPER[topic_desc.value_type]
-        if unwrapper == unwrap_enum:
+        if unwrapper in [unwrap_enum, unwrap_bitmask]:
             return unwrapper(payload, topic_desc.enum)
         elif unwrapper in [unwrap_float, unwrap_int_seconds_to_hours, unwrap_int_seconds_to_minutes]:
             return unwrapper(payload, topic_desc.precision)

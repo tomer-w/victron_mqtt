@@ -22,6 +22,7 @@ from ._victron_enums import (
     GenericOnOff,
     ChargerMode,
     EvChargerMode,
+    EvChargerStatus,
     MppOperationMode,
     PhoenixInverterMode,
     State,
@@ -33,6 +34,7 @@ from ._victron_enums import (
     ESSState,
     ESSModeHub4,
     ActiveInputEnum,
+    SolarChargerDeviceOffReason,
 )
 
 # Good sources for topics is:
@@ -655,6 +657,14 @@ topics: List[TopicDescriptor] = [
         name="EV charger charge",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/evcharger/{device_id}/Status",
+        message_type=MetricKind.SENSOR,
+        short_id="evcharger_status",
+        name="EV charger status",
+        value_type=ValueType.ENUM,
+        enum=EvChargerStatus,
     ),
     # Generator topics
     TopicDescriptor(
@@ -1777,6 +1787,14 @@ topics: List[TopicDescriptor] = [
         short_id="solarcharger_dc_voltage",
         name="DC (Batt) Bus voltage",
         metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/solarcharger/{device_id}/DeviceOffReason",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_device_off_reason",
+        name="Solar Charger Device Off Reason",
+        value_type=ValueType.BITMASK,
+        enum=SolarChargerDeviceOffReason,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/ErrorCode",

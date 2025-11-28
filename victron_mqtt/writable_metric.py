@@ -9,7 +9,7 @@ import logging
 
 from victron_mqtt.constants import RangeType
 from .metric import Metric
-from ._unwrappers import VALUE_TYPE_WRAPPER, wrap_enum
+from ._unwrappers import VALUE_TYPE_WRAPPER, wrap_bitmask, wrap_enum
 from .data_classes import TopicDescriptor
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ class WritableMetric(Metric):
     def _wrap_payload(topic_desc: TopicDescriptor, value: str | float | int | bool | Enum) -> str:
         assert topic_desc.value_type is not None
         wrapper = VALUE_TYPE_WRAPPER[topic_desc.value_type]
-        if wrapper == wrap_enum:
+        if wrapper in [wrap_enum,wrap_bitmask]:
             return wrapper(value, topic_desc.enum)
         else:
             return wrapper(value)

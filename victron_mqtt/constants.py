@@ -63,6 +63,7 @@ class ValueType(Enum):
     FLOAT = "float"
     STRING = "str"
     ENUM = "enum"
+    BITMASK = "bitmask"
     EPOCH = "epoch"
     INT_SECONDS_TO_HOURS = "int_seconds_to_hours"
     INT_SECONDS_TO_MINUTES = "int_seconds_to_minutes"
@@ -88,6 +89,8 @@ class FormulaPersistentState:
 
 PLACEHOLDER_PHASE = "{phase}"
 PLACEHOLDER_NEXT_PHASE = "{next_phase}"
+
+BITMASK_SEPARATOR = ","
 
 class VictronEnum(Enum):
     def __init__(self, code, string):
