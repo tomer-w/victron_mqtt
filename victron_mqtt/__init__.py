@@ -54,4 +54,5 @@ __all__ = [
     "AcActiveInputSource",
     "ChargeSchedule",
     "ActiveInputEnum",
+    "SolarChargerDeviceOffReason",
 ]
