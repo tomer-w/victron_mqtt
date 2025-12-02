@@ -203,6 +203,15 @@ topics: List[TopicDescriptor] = [
         enum=ChargerMode,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/alternator/{device_id}/Settings/ChargeCurrentLimit",
+        message_type=MetricKind.NUMBER,
+        short_id="alternator_charge_current_limit",
+        name="Charge Current Limit",
+        metric_type=MetricType.CURRENT,
+        min=1,
+        max=50,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/alternator/{device_id}/State",
         message_type=MetricKind.SENSOR,
         short_id="alternator_state",
