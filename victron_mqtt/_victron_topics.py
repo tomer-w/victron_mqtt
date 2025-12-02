@@ -208,7 +208,7 @@ topics: List[TopicDescriptor] = [
         short_id="alternator_charge_current_limit",
         name="Charge Current Limit",
         metric_type=MetricType.CURRENT,
-        min=1,
+        min=0,
         max=50,
     ),
     TopicDescriptor(
