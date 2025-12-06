@@ -1329,7 +1329,6 @@ topics: List[TopicDescriptor] = [
         name="Platform device reboot",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/platform/{device_id}/Firmware/Installed/Version",
@@ -1454,7 +1453,6 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.TIME,
         unit_of_measurement = "min",
         value_type = ValueType.INT_SECONDS_TO_MINUTES,
-        experimental=True
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Soc",
@@ -1463,7 +1461,6 @@ topics: List[TopicDescriptor] = [
         name="ESS BatteryLife Schedule charge {slot} SOC",
         metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
         value_type=ValueType.INT,
-        experimental=True
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Start",
@@ -1473,7 +1470,6 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.TIME,
         unit_of_measurement="min",
         value_type=ValueType.INT_SECONDS_TO_MINUTES,
-        experimental=True
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/State",
@@ -2151,7 +2147,6 @@ topics: List[TopicDescriptor] = [
         name="DC Battery Charge Energy",
         metric_type=MetricType.ENERGY,
         precision=3,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="$$func/system/system_dc_battery_discharge_power",
@@ -2161,7 +2156,6 @@ topics: List[TopicDescriptor] = [
         name="DC Battery Discharge Energy",
         metric_type=MetricType.ENERGY,
         precision=3,
-        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Dc/Battery/Soc",
