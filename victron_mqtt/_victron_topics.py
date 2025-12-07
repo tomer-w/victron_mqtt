@@ -2496,7 +2496,7 @@ topics: List[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="vebus_inverter_input_current_{phase}",
         name="Inverter input current {phase}",
-        metric_type=MetricType.VOLTAGE,
+        metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/Control/IgnoreAcIn1",
