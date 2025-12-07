@@ -5909,6 +5909,28 @@
       "is_formula": false
     },
     {
+      "topic": "N/{installation_id}/temperature/{device_id}/Pressure",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "temperature_pressure",
+      "name": "Pressure",
+      "unit_of_measurement": "hPa",
+      "metric_type": "MetricType.PRESSURE",
+      "metric_nature": "MetricNature.INSTANTANEOUS",
+      "value_type": "ValueType.FLOAT",
+      "precision": 1,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "Pressure",
+      "is_formula": false
+    },
+    {
       "topic": "N/{installation_id}/temperature/{device_id}/Offset",
       "message_type": "MetricKind.NUMBER",
       "short_id": "temperature_offset",

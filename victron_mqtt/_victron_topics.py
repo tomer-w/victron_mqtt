@@ -2390,6 +2390,17 @@ topics: List[TopicDescriptor] = [
         precision=1,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/temperature/{device_id}/Pressure",
+        message_type=MetricKind.SENSOR,
+        short_id="temperature_pressure",
+        name="Pressure",
+        unit_of_measurement="hPa",
+        metric_type=MetricType.PRESSURE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/temperature/{device_id}/Offset",
         message_type=MetricKind.NUMBER,
         short_id="temperature_offset",
