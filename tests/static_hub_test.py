@@ -270,7 +270,7 @@ def test_expend_topics():
     new_desc = next((t for t in expanded if t.topic == "N/{installation_id}/switch/{device_id}/SwitchableOutput/output_1/State"), None)
     assert new_desc, "Missing expanded topic for output 1"
     assert new_desc.short_id == "switch_{output}_state"
-    assert new_desc.name == "Switch {output:switch_{output}_custom_name} State"
+    assert new_desc.name == "Switch {output:switch_{output}_custom_name} state"
     assert new_desc.key_values["output"] == "1"
 
 @pytest.mark.asyncio
@@ -843,8 +843,8 @@ async def test_remote_name_dont_exists():
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
     metric = device.get_metric("switch_1_state")
     assert metric is not None, "metric should exist in the device"
-    assert metric.name == "Switch 1 State", "Expected metric name to be 'Switch 1 State', got {metric.name}"
-    assert metric.generic_name == "Switch {output} State", "Expected metric generic_name to be 'Switch {output} State', got {metric.generic_name}"
+    assert metric.name == "Switch 1 state", "Expected metric name to be 'Switch 1 state', got {metric.name}"
+    assert metric.generic_name == "Switch {output} state", "Expected metric generic_name to be 'Switch {output} state', got {metric.generic_name}"
     assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "1"
 
@@ -865,8 +865,8 @@ async def test_remote_name_exists():
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
     metric = device.get_metric("switch_1_state")
     assert metric is not None, "metric should exist in the device"
-    assert metric.name == "Switch bla State", "Expected metric name to be 'Switch bla State', got {metric.name}"
-    assert metric.generic_name == "Switch {output} State", "Expected metric name to be 'Switch {output} State', got {metric.name}"
+    assert metric.name == "Switch bla state", "Expected metric name to be 'Switch bla state', got {metric.name}"
+    assert metric.generic_name == "Switch {output} state", "Expected metric name to be 'Switch {output} state', got {metric.name}"
     assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "bla"
 
@@ -889,8 +889,8 @@ async def test_remote_name_exists_two_devices():
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
     metric = device.get_metric("switch_1_state")
     assert metric is not None, "metric should exist in the device"
-    assert metric.name == "Switch bla State", "Expected metric name to be 'Switch bla State', got {metric.name}"
-    assert metric.generic_name == "Switch {output} State", "Expected metric name to be 'Switch {output} State', got {metric.name}"
+    assert metric.name == "Switch bla state", "Expected metric name to be 'Switch bla state', got {metric.name}"
+    assert metric.generic_name == "Switch {output} state", "Expected metric name to be 'Switch {output} state', got {metric.name}"
     assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "bla"
 
@@ -898,8 +898,8 @@ async def test_remote_name_exists_two_devices():
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
     metric = device.get_metric("switch_1_state")
     assert metric is not None, "metric should exist in the device"
-    assert metric.name == "Switch foo State", "Expected metric name to be 'Switch foo State', got {metric.name}"
-    assert metric.generic_name == "Switch {output} State", "Expected metric name to be 'Switch {output} State', got {metric.name}"
+    assert metric.name == "Switch foo state", "Expected metric name to be 'Switch foo state', got {metric.name}"
+    assert metric.generic_name == "Switch {output} state", "Expected metric name to be 'Switch {output} state', got {metric.name}"
     assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "foo"
 
@@ -920,8 +920,8 @@ async def test_remote_name_exists_2():
     assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
     metric = device.get_metric("solarcharger_tracker_2_power")
     assert metric is not None, "metric should exist in the device"
-    assert metric.name == "PV Tracker bar Power", "Expected metric name to be 'PV Tracker bar Power', got {metric.name}"
-    assert metric.generic_name == "PV Tracker {tracker} Power", "Expected metric name to be 'PV Tracker {tracker} Power', got {metric.name}"
+    assert metric.name == "PV tracker bar power", "Expected metric name to be 'PV tracker bar power', got {metric.name}"
+    assert metric.generic_name == "PV tracker {tracker} power", "Expected metric name to be 'PV tracker {tracker} power', got {metric.name}"
     assert metric.value == 1, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["tracker"] == "bar"
 
@@ -993,13 +993,13 @@ async def test_formula_metric(mock_time):
     assert metric2.unique_id == "system_0_system_dc_battery_charge_energy", f"Expected unique_id to be 'system_0_system_dc_battery_charge_energy', got {metric2.generic_short_id}"
     assert metric2.short_id == "system_dc_battery_charge_energy", f"Expected short_id to be 'system_dc_battery_charge_energy', got {metric2.generic_short_id}"
     assert metric2.generic_short_id == "system_dc_battery_charge_energy", f"Expected generic_short_id to be 'system_dc_battery_charge_energy', got {metric2.generic_short_id}"
-    assert metric2.name == "DC Battery Charge Energy", f"Expected name to be 'DC Battery Charge Energy', got {metric2.name}"
+    assert metric2.name == "DC battery charge energy", f"Expected name to be 'DC battery charge energy', got {metric2.name}"
 
     metric3 = device.get_metric("system_dc_battery_discharge_energy")
     assert metric3 is not None, "metric should exist in the device"
     assert metric3.value == 0.0, f"Expected metric value to be 0.0, got {metric3.value}"
     assert metric3.generic_short_id == "system_dc_battery_discharge_energy", f"Expected generic_short_id to be 'system_dc_battery_discharge_energy', got {metric3.generic_short_id}"
-    assert metric3.name == "DC Battery Discharge Energy", f"Expected name to be 'DC Battery Discharge Energy', got {metric3.name}"
+    assert metric3.name == "DC battery discharge energy", f"Expected name to be 'DC battery discharge energy', got {metric3.name}"
 
     mock_time.return_value = 15
     await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 800}", mock_time)
