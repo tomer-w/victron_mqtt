@@ -2676,6 +2676,14 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Settings/PowerAssistEnabled",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_device_{device_number}_power_assist_enabled",
+        name="VE.Bus device {device_number} power assist enabled",
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Energy/AcIn1ToAcOut",
         message_type=MetricKind.SENSOR,
         short_id="vebus_energy_ac_in1_to_ac_out",
