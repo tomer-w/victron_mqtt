@@ -2464,18 +2464,18 @@ topics: List[TopicDescriptor] = [
         is_adjustable_suffix="CurrentLimitIsAdjustable",
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/I",
-        message_type=MetricKind.SENSOR,
-        short_id="vebus_inverter_input_current_{phase}",
-        name="Inverter input current {phase}",
-        metric_type=MetricType.CURRENT,
-    ),
-    TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/F",
         message_type=MetricKind.SENSOR,
         short_id="vebus_inverter_input_frequency_{phase}",
         name="Inverter input frequency {phase}",
         metric_type=MetricType.FREQUENCY,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/I",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_inverter_input_current_{phase}",
+        name="Inverter input current {phase}",
+        metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/P",
