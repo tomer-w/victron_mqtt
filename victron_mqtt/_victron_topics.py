@@ -2390,6 +2390,13 @@ topics: List[TopicDescriptor] = [
         precision=1,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/temperature/{device_id}/Offset",
+        message_type=MetricKind.NUMBER,
+        short_id="temperature_offset",
+        name="Temperature offset",
+        metric_type=MetricType.TEMPERATURE,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/temperature/{device_id}/Pressure",
         message_type=MetricKind.SENSOR,
         short_id="temperature_pressure",
@@ -2399,13 +2406,6 @@ topics: List[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.FLOAT,
         precision=1,
-    ),
-    TopicDescriptor(
-        topic="N/{installation_id}/temperature/{device_id}/Offset",
-        message_type=MetricKind.NUMBER,
-        short_id="temperature_offset",
-        name="Temperature offset",
-        metric_type=MetricType.TEMPERATURE,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/temperature/{device_id}/Scale",
@@ -2464,6 +2464,13 @@ topics: List[TopicDescriptor] = [
         is_adjustable_suffix="CurrentLimitIsAdjustable",
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/I",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_inverter_input_current_{phase}",
+        name="Inverter input current {phase}",
+        metric_type=MetricType.CURRENT,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/F",
         message_type=MetricKind.SENSOR,
         short_id="vebus_inverter_input_frequency_{phase}",
@@ -2490,13 +2497,6 @@ topics: List[TopicDescriptor] = [
         short_id="vebus_inverter_input_voltage_{phase}",
         name="Inverter input voltage {phase}",
         metric_type=MetricType.VOLTAGE,
-    ),
-    TopicDescriptor(
-        topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/I",
-        message_type=MetricKind.SENSOR,
-        short_id="vebus_inverter_input_current_{phase}",
-        name="Inverter input current {phase}",
-        metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/Control/IgnoreAcIn1",
