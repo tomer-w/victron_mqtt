@@ -2413,6 +2413,17 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.TEMPERATURE,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/temperature/{device_id}/Pressure",
+        message_type=MetricKind.SENSOR,
+        short_id="temperature_pressure",
+        name="Pressure",
+        unit_of_measurement="hPa",
+        metric_type=MetricType.PRESSURE,
+        metric_nature=MetricNature.INSTANTANEOUS,
+        value_type=ValueType.FLOAT,
+        precision=1,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/temperature/{device_id}/Scale",
         message_type=MetricKind.NUMBER,
         short_id="temperature_scale",
@@ -2474,6 +2485,13 @@ topics: List[TopicDescriptor] = [
         short_id="vebus_inverter_input_frequency_{phase}",
         name="Inverter input frequency {phase}",
         metric_type=MetricType.FREQUENCY,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/I",
+        message_type=MetricKind.SENSOR,
+        short_id="vebus_inverter_input_current_{phase}",
+        name="Inverter input current {phase}",
+        metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/{phase}/P",
