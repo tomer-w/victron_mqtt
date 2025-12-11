@@ -642,6 +642,22 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/evcharger/{device_id}/MaxCurrent",
+        message_type=MetricKind.SENSOR,
+        short_id="evcharger_max_set_current",
+        name="EV charger maximum set current",
+        metric_type=MetricType.CURRENT,
+        value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/evcharger/{device_id}/MinCurrent",
+        message_type=MetricKind.SENSOR,
+        short_id="evcharger_min_set_current",
+        name="EV charger minimum set current",
+        metric_type=MetricType.CURRENT,
+        value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/evcharger/{device_id}/Mode",
         message_type=MetricKind.SELECT,
         short_id="evcharger_mode",
@@ -656,8 +672,8 @@ topics: List[TopicDescriptor] = [
         name="EV charger set current",
         metric_type=MetricType.CURRENT,
         value_type=ValueType.INT,
-        min=0,
-        max=32,
+        min="evcharger_min_set_current:0",
+        max="evcharger_max_set_current:32",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/evcharger/{device_id}/StartStop",

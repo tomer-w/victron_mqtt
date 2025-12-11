@@ -1149,3 +1149,21 @@ async def test_old_cerbo(mock_time):
     assert metric.value == 43, f"Expected metric value to be 43, got {metric.value}"
     await hub_disconnect(hub, mock_time)
 
+
+@pytest.mark.asyncio
+async def test_min_max_dependencies():
+    hub: Hub = await create_mocked_hub()
+
+    # Inject messages after the event is set
+    await inject_message(hub, "N/123/evcharger/170/MaxCurrent", "{\"value\": 42}")
+    await inject_message(hub, "N/123/evcharger/170/SetCurrent", "{\"value\": 22}")
+    await finalize_injection(hub)
+
+    # Validate the Hub's state
+    assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
+    device = hub.devices["evcharger_170"]
+    metric = device.get_metric("evcharger_set_current")
+    assert isinstance(metric, WritableMetric), "Metric should exist in the device"
+    assert metric.value == 22, f"Expected metric value to be 22, got {metric.value}"
+    assert metric.min_value == 0, f"Expected metric min_value to be 0, got {metric.min_value}"
+    assert metric.max_value == 42, f"Expected metric max_value to be 42, got {metric.max_value}"

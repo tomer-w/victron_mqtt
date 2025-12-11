@@ -43,8 +43,8 @@ class TopicDescriptor:
     precision: int | None = None
     enum: type[VictronEnum] | None = None
     min_max_range: RangeType = RangeType.STATIC
-    min: float | int | None = None
-    max: float | int | None = None
+    min: float | int | str | None = None
+    max: float | int | str | None = None
     step: float | int | None = None
     is_adjustable_suffix: str | None = None
     key_values: dict[str, str] = field(default_factory=dict)
