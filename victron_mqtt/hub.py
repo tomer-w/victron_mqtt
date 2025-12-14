@@ -389,10 +389,12 @@ class Hub:
         if reason_code.is_failure:
             # Check if this is an authentication failure (value 134 for MQTT v5 or 4/5 for MQTT v3.1.1)
             # ReasonCode value 134 = "Bad user name or password" in MQTT v5
+            # ReasonCode value 135 = "Not authorized" in MQTT v5
             # ConnackCode 4 = CONNACK_REFUSED_BAD_USERNAME_PASSWORD in MQTT v3.1.1  
             # ConnackCode 5 = CONNACK_REFUSED_NOT_AUTHORIZED in MQTT v3.1.1
+            # I am not sure that v3.1.1 will ever be used here, but just in case.
             _LOGGER.warning("Failed to connect with error code: %s. flags: %s", reason_code, flags)
-            if reason_code.value in (134, 4, 5):
+            if reason_code.value in (134, 135, 4, 5):
                 raise AuthenticationError(f"Authentication failed: {connack_string(reason_code)}")
             else:
                 raise CannotConnectError(f"Failed to connect to MQTT broker: {self.host}:{self.port}. Error: {connack_string(reason_code)}")
