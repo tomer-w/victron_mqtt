@@ -53,6 +53,7 @@ class MetricType(Enum):
     LOCATION = "location"
     HEADING = "heading"
     SPEED = "speed"
+    COST = "cost"
 
 
 class ValueType(Enum):

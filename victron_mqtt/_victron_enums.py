@@ -94,6 +94,11 @@ class EvChargerMode(VictronEnum):
     Auto = (1, "Auto")
     ScheduledCharge = (2, "Scheduled Charge")
 
+class EvChargerPosition(VictronEnum):
+    """EVCharger Position Enum"""
+    AcOut = (0, "AC Out")
+    AcInput = (1, "AC Input")
+
 class EvChargerStatus(VictronEnum):
     """EVCharger Status Enum"""
     Disconnected = (0, "Disconnected")

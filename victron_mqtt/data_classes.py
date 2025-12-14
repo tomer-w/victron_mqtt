@@ -177,6 +177,14 @@ class TopicDescriptor:
                 self.max = 86400  # 24 hours in seconds
             if self.precision is None:
                 self.precision = 0
+        # Cost default
+        if self.metric_type == MetricType.COST:
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 2
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
         # General initialization
         if self.value_type not in [ValueType.FLOAT, ValueType.INT_SECONDS_TO_HOURS, ValueType.INT_SECONDS_TO_MINUTES]:
             self.precision = None
