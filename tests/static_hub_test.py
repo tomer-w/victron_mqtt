@@ -1,6 +1,9 @@
 import asyncio
 import pytest
 from unittest.mock import MagicMock, patch
+from paho.mqtt.client import ConnectFlags
+from paho.mqtt.packettypes import PacketTypes
+from paho.mqtt.reasoncodes import ReasonCode
 from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, GenericOnOff
 from victron_mqtt.hub import Hub, TopicNotFoundError
 from victron_mqtt.constants import OperationMode
@@ -26,6 +29,45 @@ async def test_hub_initialization():
     """Test that the Hub initializes correctly."""
     hub: Hub = await create_mocked_hub()
     assert hub._client is not None, "MQTT client should be initialized"
+
+@pytest.mark.asyncio
+async def test_authentication_failure():
+    """Test that authentication failures are properly raised."""
+    from victron_mqtt.hub import AuthenticationError
+    
+    with patch('victron_mqtt.hub.mqtt.Client') as mock_client:
+        hub = Hub(
+            host="localhost",
+            port=1883,
+            username="testuser",
+            password="wrongpassword",
+            use_ssl=False,
+        )
+        
+        mocked_client = MagicMock()
+        mock_client.return_value = mocked_client
+        hub._client = mocked_client
+        
+        # Mock connect_async to trigger authentication failure
+        def mock_connect_async_auth_fail(*args, **kwargs):
+            if hub._client is not None:
+                # Simulate authentication failure with ConnackCode.CONNACK_REFUSED_BAD_USERNAME_PASSWORD (value 4)
+                hub._on_connect(
+                    hub._client,
+                    None,
+                    ConnectFlags(False),
+                    ReasonCode(PacketTypes.CONNACK, identifier=134), # 134 corresponds to "Bad user name or password"
+                    None
+                )
+        
+        mocked_client.connect_async = MagicMock(name="connect_async", side_effect=mock_connect_async_auth_fail)
+        mocked_client.loop_start = MagicMock(name="loop_start")
+        
+        # Attempt to connect and expect AuthenticationError
+        with pytest.raises(AuthenticationError) as exc_info:
+            await hub.connect()
+        
+        assert "Authentication failed" in str(exc_info.value)
 
 @pytest.mark.asyncio
 async def test_hub_message_handling():
@@ -942,7 +984,7 @@ async def test_on_connect_sets_up_subscriptions():
     hub._loop = asyncio.get_running_loop()  # Set the event loop
     
     # Call _on_connect directly with successful connection (rc=0)
-    hub._on_connect_internal(mocked_client, None, {}, 0, None)
+    hub._on_connect_internal(mocked_client, None, ConnectFlags(False), ReasonCode(PacketTypes.CONNACK, identifier=0), None)
 
     # Get expected number of subscriptions
     expected_calls = len(hub._subscription_list) + 1  # +1 for full_publish_completed

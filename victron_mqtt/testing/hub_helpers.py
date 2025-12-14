@@ -11,6 +11,10 @@ import logging
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
+from paho.mqtt.client import ConnectFlags
+from paho.mqtt.packettypes import PacketTypes
+from paho.mqtt.reasoncodes import ReasonCode
+
 from victron_mqtt.hub import Hub
 from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
 from victron_mqtt._victron_enums import DeviceType
@@ -100,7 +104,7 @@ async def create_mocked_hub(
             # Mock connect_async to trigger the _on_connect callback
             def mock_connect_async(*args, **kwargs):
                 if hub._client is not None:
-                    hub._on_connect(hub._client, None, {}, 0)
+                    hub._on_connect(hub._client, None, ConnectFlags(False), ReasonCode(PacketTypes.CONNACK, identifier=0), None)
             mocked_client.connect_async = MagicMock(name="connect_async", side_effect=mock_connect_async)
 
             # Ensure loop_start is a no-op

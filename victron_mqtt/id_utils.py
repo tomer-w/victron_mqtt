@@ -17,3 +17,10 @@ def replace_complex_id_to_simple(orig_str: str) -> str:
         return f"{{{key}}}"
 
     return replace_complex_ids(orig_str, replace_match)
+
+
+def reraise_same_exception(exc: Exception) -> None:
+    """Reraise the same exception, preserving the traceback."""
+    new = type(exc)(*exc.args)
+    new.__dict__.update(exc.__dict__)
+    raise new from exc

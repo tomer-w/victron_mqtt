@@ -13,7 +13,7 @@ from typing import Any, Callable, Optional, Tuple
 import time
 
 import paho.mqtt.client as mqtt
-from paho.mqtt.client import Client as MQTTClient, PayloadType
+from paho.mqtt.client import Client as MQTTClient, PayloadType, ConnectFlags, connack_string
 from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.reasoncodes import ReasonCode
 from paho.mqtt.properties import Properties
@@ -26,6 +26,7 @@ from .constants import TOPIC_INSTALLATION_ID, MetricKind, OperationMode
 from .data_classes import ParsedTopic, TopicDescriptor, topic_to_device_type
 from .device import Device, FallbackPlaceholder, MetricPlaceholder
 from .metric import Metric
+from .id_utils import reraise_same_exception
 
 _LOGGER = logging.getLogger(__name__)
 CONNECT_MAX_FAILED_ATTEMPTS = 3
@@ -215,7 +216,7 @@ class Hub:
         self._first_connect = True
         self._first_full_publish = True
         self._connect_failed_attempts = 0
-        self._connect_failed = False
+        self._connect_failed_reason: Exception | None = None
         # Track when _handle_full_publish_message was last invoked for our client
         # Use monotonic time to avoid issues with system clock changes
         self._last_full_publish_called: float = 0.0
@@ -318,40 +319,37 @@ class Hub:
         #self._client.on_log = self._on_log
         self._connect_failed_attempts = 0
         self._connect_failed_since = 0.0
-        self._connect_failed = False
+        self._connect_failed_reason = None
         self._loop = asyncio.get_event_loop()
         #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop, name=name))
         self._last_full_publish_called = time.monotonic() # Initialize last full publish time
 
-        try:
-            _LOGGER.info("Starting paho mqtt")
-            self._client.loop_start()
-            _LOGGER.info("Connecting")
-            self._client.connect_async(self.host, self.port)
-            _LOGGER.info("Waiting for connection event")
-            await self._wait_for_connect()
-            if self._client is None:
-                raise CannotConnectError("Got request to disconnect while still connecting")
-            if self._connect_failed:
-                raise CannotConnectError(f"Failed to connect to MQTT broker: {self.host}:{self.port}")
-            _LOGGER.info("Successfully connected to MQTT broker at %s:%d", self.host, self.port)
-            if self._installation_id is None:
-                _LOGGER.info("No installation ID provided, attempting to read from device")
-                self._installation_id = await self._read_installation_id()
-            # First we need to replace the installation ID in the subscription topics
-            new_list: list[str] = []
-            for topic in self._subscription_list:
-                new_topic = topic.replace("{installation_id}", self._installation_id)
-                new_list.append(new_topic)
-            self._subscription_list = new_list
-            # First setup subscriptions will happen here as we need the installation ID.
-            # Later we will do it from the connect callback
-            self._setup_subscriptions()
-            self._start_keep_alive_loop()
-            _LOGGER.info("Connected. Installation ID: %s", self._installation_id)
-        except Exception as exc:
-            _LOGGER.error("Failed to connect: %s", exc, exc_info=True)
-            raise CannotConnectError(f"Failed to connect: {exc}") from exc
+
+        _LOGGER.info("Starting paho mqtt")
+        self._client.loop_start()
+        _LOGGER.info("Connecting")
+        self._client.connect_async(self.host, self.port)
+        _LOGGER.info("Waiting for connection event")
+        await self._wait_for_connect()
+        if self._client is None:
+            raise CannotConnectError("Got request to disconnect while still connecting")
+        if self._connect_failed_reason is not None:
+            reraise_same_exception(self._connect_failed_reason)
+        _LOGGER.info("Successfully connected to MQTT broker at %s:%d", self.host, self.port)
+        if self._installation_id is None:
+            _LOGGER.info("No installation ID provided, attempting to read from device")
+            self._installation_id = await self._read_installation_id()
+        # First we need to replace the installation ID in the subscription topics
+        new_list: list[str] = []
+        for topic in self._subscription_list:
+            new_topic = topic.replace("{installation_id}", self._installation_id)
+            new_list.append(new_topic)
+        self._subscription_list = new_list
+        # First setup subscriptions will happen here as we need the installation ID.
+        # Later we will do it from the connect callback
+        self._setup_subscriptions()
+        self._start_keep_alive_loop()
+        _LOGGER.info("Connected. Installation ID: %s", self._installation_id)
 
     def publish(self, topic_short_id: str, device_id: str, value: str | float | int | None) -> None:
         """Publish a message to the MQTT broker."""
@@ -369,25 +367,38 @@ class Hub:
     def _on_log(self, client: MQTTClient, userdata: Any, level:int, buf:str) -> None:
         _LOGGER.log(level, buf)
 
-    def _on_connect(self, client: MQTTClient, userdata: Any, flags: dict, rc: int, properties: Optional[dict] = None) -> None:
+    def _on_connect(self, client: MQTTClient, userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, properties: Optional[Properties] = None) -> None:
         try:
-            self._on_connect_internal(client, userdata, flags, rc, properties)
+            self._on_connect_internal(client, userdata, flags, reason_code, properties)
         except Exception as exc:
             _LOGGER.exception("_on_connect exception %s: %s", type(exc), exc, exc_info=True)
+            self._connect_failed_reason = exc
+        
+        try:
+            if self._loop.is_running():
+                self._loop.call_soon_threadsafe(self._connected_event.set)
+        except Exception as exc:
+            _LOGGER.exception("Exception in _on_connect while setting connected event: %s", exc)
 
-    def _on_connect_internal(self, client: MQTTClient, userdata: Any, flags: dict, rc: int, properties: Optional[dict] = None) -> None:
+    def _on_connect_internal(self, client: MQTTClient, userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, properties: Optional[Properties] = None) -> None:
         """Handle connection callback."""
         self._connect_failed_since = 0
         if self._client is None:
             _LOGGER.warning("Got new connection while self._client is None, ignoring")
             return
-        if rc == 0:
-            _LOGGER.info("Connected to MQTT broker successfully")
-            self._setup_subscriptions()
-            if self._loop.is_running():
-                self._loop.call_soon_threadsafe(self._connected_event.set)
-        else:
-            _LOGGER.error("Failed to connect with error code: %s. flags: %s", rc, flags)
+        if reason_code.is_failure:
+            # Check if this is an authentication failure (value 134 for MQTT v5 or 4/5 for MQTT v3.1.1)
+            # ReasonCode value 134 = "Bad user name or password" in MQTT v5
+            # ConnackCode 4 = CONNACK_REFUSED_BAD_USERNAME_PASSWORD in MQTT v3.1.1  
+            # ConnackCode 5 = CONNACK_REFUSED_NOT_AUTHORIZED in MQTT v3.1.1
+            _LOGGER.warning("Failed to connect with error code: %s. flags: %s", reason_code, flags)
+            if reason_code.value in (134, 4, 5):
+                raise AuthenticationError(f"Authentication failed: {connack_string(reason_code)}")
+            else:
+                raise CannotConnectError(f"Failed to connect to MQTT broker: {self.host}:{self.port}. Error: {connack_string(reason_code)}")
+            
+        _LOGGER.info("Connected to MQTT broker successfully")
+        self._setup_subscriptions()
 
     def _on_disconnect(self, client: MQTTClient, userdata: Any, disconnect_flags: mqtt.DisconnectFlags, reason_code: ReasonCode, properties: Optional[Properties] = None) -> None:
         """Handle disconnection callback."""
@@ -918,21 +929,25 @@ class Hub:
 
     def on_connect_fail(self, client: MQTTClient, userdata: Any) -> None:
         """Handle connection failure callback."""
-        _LOGGER.warning("Connection to MQTT broker failed")
-        if self._connect_failed_since == 0:
-            self._connect_failed_since = time.monotonic()
-        self._connect_failed_attempts += 1
-        # Check if we have reached the maximum number of failed attempts
-        if self._connect_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
-            self._connect_failed = True
+        try:
+            _LOGGER.warning("Connection to MQTT broker failed")
+            if self._connect_failed_since == 0:
+                self._connect_failed_since = time.monotonic()
+            self._connect_failed_attempts += 1
+            # Check if we have reached the maximum number of failed attempts
+            if self._connect_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
+                raise CannotConnectError(f"Failed to connect to MQTT broker: {self.host}:{self.port} after {self._connect_failed_attempts} attempts")
+            # This code is not really needed in newer firmwares as metrics will get invalidated individually. With older firmwares, we can force invalidation after we are disconnected for enough time
+            disconnected_for = time.monotonic() - self._connect_failed_since
+            if disconnected_for > FORCE_INVALIDATE_AFTER_NOT_CONNECTED_SECONDS:
+                _LOGGER.info("Disconnected for %d seconds. Invalidating all metrics", disconnected_for)
+                self._keepalive_metrics(force_invalidate=True)
+                self._connect_failed_since = 0  # Reset the timer
+        except Exception as exc:
+            _LOGGER.exception("on_connect_fail exception %s: %s", type(exc), exc, exc_info=True)
+            self._connect_failed_reason = exc
             if self._loop.is_running():
                 self._loop.call_soon_threadsafe(self._connected_event.set)
-        # This code is not really needed in newer firmwares as metrics will get invalidated individually. With older firmwares, we can force invalidation after we are disconnected for enough time
-        disconnected_for = time.monotonic() - self._connect_failed_since
-        if disconnected_for > FORCE_INVALIDATE_AFTER_NOT_CONNECTED_SECONDS:
-            _LOGGER.info("Disconnected for %d seconds. Invalidating all metrics", disconnected_for)
-            self._keepalive_metrics(force_invalidate=True)
-            self._connect_failed_since = 0  # Reset the timer
 
     @staticmethod
     def expand_topic_list(topic_list: list[TopicDescriptor]) -> list[TopicDescriptor]:
@@ -1003,5 +1018,10 @@ class ProgrammingError(Exception):
 class NotConnectedError(Exception):
     """Error to indicate that we expected to be connected at this stage but is not."""
 
+
 class TopicNotFoundError(Exception):
     """Error to indicate that we expected to find a topic but it is not present."""
+
+
+class AuthenticationError(CannotConnectError):
+    """Authentication failed."""
