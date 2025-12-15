@@ -55,8 +55,12 @@ jobs:
       - name: Generate victron_mqtt.json
         run: python -m victron_mqtt.utils.dump_victron_mqtt victron_mqtt.json
 
+      - name: Build distribution
+        run: hatch build
+
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Copy victron_mqtt.json to docs/_data
@@ -73,7 +77,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-      - name: Build distribution
-        run: hatch build
 
