@@ -627,6 +627,13 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/evcharger/{device_id}/Ac/Power",
+        message_type=MetricKind.SENSOR,
+        short_id="evcharger_power",
+        name="EV charger power",
+        metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/evcharger/{device_id}/Ac/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="evcharger_power_{phase}",
