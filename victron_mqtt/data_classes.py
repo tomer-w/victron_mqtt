@@ -177,6 +177,16 @@ class TopicDescriptor:
                 self.max = 86400  # 24 hours in seconds
             if self.precision is None:
                 self.precision = 0
+        # Duration default
+        if self.metric_type == MetricType.DURATION:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "s"
+            if self.value_type is None:
+                self.value_type = ValueType.INT
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.INSTANTANEOUS
+            if self.precision is None:
+                self.precision = 0
         # Cost default
         if self.metric_type == MetricType.COST:
             if self.value_type is None:

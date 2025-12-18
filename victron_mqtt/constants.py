@@ -46,6 +46,7 @@ class MetricType(Enum):
     PRESSURE = "pressure"
     FREQUENCY = "frequency"
     TIME = "time"
+    DURATION = "duration"
     PERCENTAGE = "percentage"
     ELECTRIC_STORAGE_CAPACITY = "electric_storage_capacity"
     ELECTRIC_STORAGE_PERCENTAGE = "electric_storage_percentage"

@@ -139,6 +139,8 @@ def test_metric_type_vs_unit():
             errors.append(f"Topic '{descriptor.topic}' has frequency unit 'Hz' but metric_type is {descriptor.metric_type}")
         if descriptor.unit_of_measurement == "kWh" and descriptor.metric_type != MetricType.ENERGY:
             errors.append(f"Topic '{descriptor.topic}' has energy unit 'kWh' but metric_type is {descriptor.metric_type}")
+        if descriptor.unit_of_measurement in ["s", "min", "h"] and (descriptor.metric_type != MetricType.TIME and descriptor.metric_type != MetricType.DURATION):
+            errors.append(f"Topic '{descriptor.topic}' has time unit '{descriptor.unit_of_measurement}' but metric_type is {descriptor.metric_type}")
     if errors:
         pytest.fail("\n".join(errors))
 
