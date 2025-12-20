@@ -920,6 +920,14 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/grid/{device_id}/Ac/PowerFactor",
+        message_type=MetricKind.SENSOR,
+        short_id="grid_power_factor",
+        name="Grid power factor",
+        value_type=ValueType.FLOAT,
+        precision=2,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/grid/{device_id}/Ac/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="grid_voltage",
@@ -953,6 +961,14 @@ topics: List[TopicDescriptor] = [
         short_id="grid_power_{phase}",
         name="Grid power on {phase}",
         metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/grid/{device_id}/Ac/{phase}/PowerFactor",
+        message_type=MetricKind.SENSOR,
+        short_id="grid_power_factor_{phase}",
+        name="Grid power factor on {phase}",
+        value_type=ValueType.FLOAT,
+        precision=2,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/grid/{device_id}/Ac/{phase}/Voltage",
