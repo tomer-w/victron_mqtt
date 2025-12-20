@@ -50,10 +50,16 @@ jobs:
       - name: Run test_topics test
         run: |
           python -m pip install pytest pytest-asyncio
-          python -m pytest tests/static_test.py::test_topics -v
+          python -m pytest tests/static_test.py -v
       
       - name: Generate victron_mqtt.json
         run: python -m victron_mqtt.utils.dump_victron_mqtt victron_mqtt.json
+
+      - name: Build distribution
+        run: hatch build
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -72,8 +78,3 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Build distribution
-        run: hatch build
-
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1

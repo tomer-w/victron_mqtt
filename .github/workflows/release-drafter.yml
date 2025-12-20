@@ -22,7 +22,76 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Get previous tag and commit messages
+        id: get_changes
+        run: |
+          # Get the most recent tag
+          PREVIOUS_TAG=$(git tag --sort=-creatordate | head -1)
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "No previous tag found, using initial commit"
+            PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
+          fi
+          
+          echo "Previous tag: $PREVIOUS_TAG"
+          
+          # Get commit messages since the previous tag
+          COMMITS=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s" | head -20)
+          
+          # Save commits to environment variable
+          echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_ENV
+          echo "COMMITS<<EOF" >> $GITHUB_ENV
+          echo "$COMMITS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       # Drafts your next Release notes as Pull Requests are merged into "main"
       - uses: release-drafter/release-drafter@v6
+        id: release_drafter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Append commit history to draft release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the latest draft release
+          DRAFT_RELEASE=$(gh release list --limit 50 --json isDraft,tagName | jq -r '.[] | select(.isDraft == true) | .tagName' | head -1)
+          
+          if [ -n "$DRAFT_RELEASE" ] && [ "$DRAFT_RELEASE" != "null" ]; then
+            echo "Found draft release: $DRAFT_RELEASE"
+            
+            # Get current release notes
+            CURRENT_NOTES=$(gh release view "$DRAFT_RELEASE" --json body -q .body)
+            
+            # Create enhanced release notes by merging commits into the Changes section
+            if echo "$CURRENT_NOTES" | grep -q "## Changes"; then
+              # Split the notes at the Changes section and insert commits
+              echo "$CURRENT_NOTES" | sed '/## Changes/,$!d' | sed '1!d' > enhanced_notes.md  # Header line
+              echo "" >> enhanced_notes.md
+              echo "$CURRENT_NOTES" | sed -n '/## Changes/,/## Contributors/p' | sed '1d;$d' >> enhanced_notes.md
+              echo "$COMMITS" >> enhanced_notes.md
+              echo "" >> enhanced_notes.md
+              # Add the rest of the notes (Contributors section onwards)
+              echo "$CURRENT_NOTES" | sed -n '/## Contributors/,$p' >> enhanced_notes.md
+            else
+              # Fallback if no Changes section found
+              echo "$CURRENT_NOTES" > enhanced_notes.md
+              echo "" >> enhanced_notes.md
+              echo "## Changes" >> enhanced_notes.md
+              echo "" >> enhanced_notes.md
+              echo "$COMMITS" >> enhanced_notes.md
+            fi
+            echo "" >> enhanced_notes.md
+            
+            # Update the draft release with enhanced notes
+            gh release edit "$DRAFT_RELEASE" --notes-file enhanced_notes.md
+            echo "Updated draft release with commit history"
+          else
+            echo "No draft release found to update"
+          fi

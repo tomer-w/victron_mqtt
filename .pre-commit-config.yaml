@@ -1,0 +1,10 @@
+repos:
+  - repo: local
+    hooks:
+      - id: dump-victron-mqtt
+        name: Dump Victron MQTT data
+        entry: py -m victron_mqtt.utils.dump_victron_mqtt victron_mqtt.json
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

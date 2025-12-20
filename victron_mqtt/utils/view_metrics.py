@@ -12,8 +12,8 @@ import tkinter.ttk as ttk
 from victron_mqtt import Hub, Device, Metric
 import os
 
-from victron_mqtt.constants import MetricKind
-from victron_mqtt.switch import Switch
+from victron_mqtt.constants import MetricKind, OperationMode
+from victron_mqtt.writable_metric import WritableMetric
 
 DEFAULT_HOST = "venus.local."
 DEFAULT_PORT = 1883
@@ -95,9 +95,17 @@ class AttributeViewerDialog(simpledialog.Dialog):
             except AttributeError:
                 continue
 
-        if isinstance(self.instance, Switch) and self.instance.metric_kind == MetricKind.SELECT:
+        if isinstance(self.instance, WritableMetric) and self.instance.metric_kind == MetricKind.SELECT:
             assert self.instance.enum_values is not None
-            ttk.Label(master, text="State:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
+            ttk.Label(master, text="Select:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
+            self.switch_var = tk.StringVar(value=self.instance.value)
+            self.switch_dropdown = ttk.Combobox(master, textvariable=self.switch_var, values=self.instance.enum_values)
+            self.switch_dropdown.grid(row=row, column=1, sticky=tk.W, padx=5, pady=5)
+            row += 1
+
+        if isinstance(self.instance, WritableMetric) and self.instance.metric_kind == MetricKind.SWITCH:
+            assert self.instance.enum_values is not None
+            ttk.Label(master, text="Switch:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
             self.switch_var = tk.StringVar(value=self.instance.value)
             self.switch_dropdown = ttk.Combobox(master, textvariable=self.switch_var, values=self.instance.enum_values)
             self.switch_dropdown.grid(row=row, column=1, sticky=tk.W, padx=5, pady=5)
@@ -106,7 +114,7 @@ class AttributeViewerDialog(simpledialog.Dialog):
         return master
 
     def apply(self):
-        if isinstance(self.instance, Switch):
+        if isinstance(self.instance, WritableMetric):
             self.instance.set(self.switch_var.get())
 
 class MetricContainer:
@@ -118,8 +126,8 @@ class MetricContainer:
         self._tree_view = tree_view
         self._parent_item = parent_item
 
-    def _update(self, metric: Metric):  # pylint: disable=unused-argument
-        formatted = self._metric.formatted_value
+    def _update(self, metric: Metric, value):  # pylint: disable=unused-argument
+        formatted = self._metric.format_value(value)
         if self._tree_view.exists(self._parent_item):
             self._tree_view.item(self._parent_item, values=(formatted,))
         
@@ -184,7 +192,7 @@ class App:
 
     async def _async_connect(self, server: str, port: int, username: str | None, password: str | None, use_ssl: bool) -> bool:
         try:
-            self._client = Hub(server, port, username, password, use_ssl, topic_log_info=self._log_topic)
+            self._client = Hub(server, port, username, password, use_ssl, topic_log_info=self._log_topic, operation_mode=OperationMode.EXPERIMENTAL, update_frequency_seconds=3)
             await self._client.connect()
             await self._client.wait_for_first_refresh()
             self._fill_tree()
@@ -203,12 +211,12 @@ class App:
         if not self._client:
             return
             
-        devices = sorted(self._client.devices, key=lambda x: x.unique_id)
+        devices = sorted(self._client.devices.values(), key=lambda x: x.unique_id)
         for device in devices:
             device_item = self.tree.insert(
                 "",
                 "end",
-                text=device.name or "",
+                text=f"{device.name} (ID: {device.device_id})" if device.device_id != "0" else device.name or "",
                 values=(device.serial_number, ""),
                 iid="D" + device.unique_id,
             )
@@ -217,7 +225,7 @@ class App:
                 metric_item = self.tree.insert(
                     device_item,
                     "end",
-                    text=metric.short_id or "",
+                    text=metric.name or "",
                     values=(metric.formatted_value,),
                     iid="M" + metric.unique_id,
                 )
@@ -230,11 +238,11 @@ class App:
         item = self.tree.selection()[0]
         unique_id = item[1:]
         if item[0] == "D":
-            device = self._client.get_device_from_unique_id(unique_id)
+            device = self._client.devices.get(unique_id)
             if device is not None:
                 AttributeViewerDialog(self.root, device)
         elif item[0] == "M":
-            metric = self._client.get_metric_from_unique_id(unique_id)
+            metric = self._client.get_metric(unique_id)
             if metric is not None:
                 AttributeViewerDialog(self.root, metric)
 

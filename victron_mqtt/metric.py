@@ -5,40 +5,59 @@ Support for Victron Venus sensors. The sensor itself has no logic,
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
+import time
 import logging
+from typing import TYPE_CHECKING, Any
 
-from ._victron_enums import DeviceType
-from .constants import MetricKind, MetricNature, MetricType, RangeType
+from .id_utils import replace_complex_ids
+from .constants import MetricKind, MetricNature, MetricType
 from .data_classes import ParsedTopic, TopicDescriptor
+
+if TYPE_CHECKING:
+    from .hub import Hub
+    from .device import Device
+    from .formula_metric import FormulaMetric
 
 _LOGGER = logging.getLogger(__name__)
 
+CallbackOnUpdate = Callable[["Metric", Any], None]
 
 class Metric:
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, unique_id: str, short_id: str, descriptor: TopicDescriptor, parsed_topic: ParsedTopic) -> None:
+    def __init__(self, *, device: Device | None = None, name: str | None = None, descriptor: TopicDescriptor | None = None, unique_id: str | None = None, short_id: str | None = None, key_values: dict[str, str] | None = None, hub: Hub | None = None, **kwargs) -> None:
         """Initialize the sensor."""
-        _LOGGER.debug(
-            "Creating new metric: unique_id=%s, type=%s, nature=%s",
-            unique_id, descriptor.metric_type, descriptor.metric_nature
-        )
+        assert device is not None
+        assert name is not None
+        assert descriptor is not None
         assert descriptor.name is not None, "name must be set for metric"
-        assert parsed_topic.device_type is not None, "device_type must be set for metric"
-        assert parsed_topic.device_type != DeviceType.UNKNOWN, "device_type must not be UNKNOWN for metric"
-        
-        self._descriptor = descriptor
-        self._unique_id = unique_id
-        self._value = None
-        self._short_id = short_id
-        self._name = parsed_topic.name
-        self._key_values: dict[str, str] = parsed_topic.key_values
-        self._on_update: Callable | None = None
+        assert unique_id is not None
+        assert key_values is not None
+        assert short_id is not None
+        assert hub is not None
+        _LOGGER.debug(
+            "Creating new metric: short_id=%s, type=%s, nature=%s",
+            short_id, descriptor.metric_type, descriptor.metric_nature
+        )
+        self._device: Device = device
+        self._descriptor: TopicDescriptor = descriptor
+        self._unique_id: str = unique_id
+        self._value: Any = None
+        self._short_id: str = short_id
+        self._name: str  = name
+        self._key_values: dict[str, str] = key_values
+        self._on_update: CallbackOnUpdate | None = None
+        self._depend_on_me: list[FormulaMetric] = []
+        self._hub = hub
+        self._last_notified: float = 0
+        self._last_seen: float = 0
+        self._generic_short_id = self._descriptor.short_id
+        self._generic_name = self._descriptor.generic_name
+
         _LOGGER.debug("Metric %s initialized", repr(self))
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         """Return the string representation of the metric."""
         key_values_str = ", ".join(f"{k}={v}" for k, v in self._key_values.items())
         key_values_part = f"key_values={{{key_values_str}}}" if key_values_str else "key_values={}"
@@ -46,27 +65,58 @@ class Metric:
             f"Metric(unique_id={self.unique_id}, "
             f"descriptor={self._descriptor}, "
             f"value={self.value}, "
-            f"generic_short_id={self.generic_short_id}, "
-            f"device_type={self.device_type}, "
-            f"short_id={self.short_id}, "
-            f"name={self.name}, "
+            f"short_id={self._short_id}, "
+            f"name={self._name}, "
             f"{key_values_part})"
             )
 
-    def __str__(self) -> str:
-        """Return the string representation of the metric."""
-        return self.formatted_value
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    def phase2_init(self, device_id: str, all_metrics: dict[str, Metric]) -> None:
+        """Second phase of initializing the metric."""
+        assert self._descriptor.name is not None, f"name must be set for topic: {self._descriptor.topic}"
+        name_temp = ParsedTopic.replace_ids(self._descriptor.name, self._key_values)
+        self._name = self._replace_ids(name_temp, device_id, all_metrics)
+
+    def _replace_ids(self, orig_str: str, device_id: str, all_metrics: dict[str, Metric]) -> str:
+        def replace_match(match):
+            moniker = match.group('moniker')
+            key, suffix = moniker.split(':', 1)
+            assert key and suffix, f"Invalid moniker format: {moniker} in topic: {orig_str}"
+            metric = all_metrics.get(f"{device_id}_{suffix}")
+            if metric:
+                result = str(metric.value)
+                self.key_values[key] = result
+                return result
+            return self.key_values[key]
+
+        temp = replace_complex_ids(orig_str, replace_match)
+        if temp != orig_str:
+            _LOGGER.debug("Replaced complex placeholders in topic: %s", orig_str)
+            return temp
+
+        return ParsedTopic.replace_ids(orig_str, self.key_values)
+
+    def add_dependency(self, formula_metric: FormulaMetric) -> None:
+        """Add a dependency to the metric."""
+        self._depend_on_me.append(formula_metric)
+
+    def format_value(self, value) -> str:
+        """Returns the formatted value of the metric."""
+        if value is None:
+            return ""
+        if isinstance(value, float) and self._descriptor.precision is not None and self._descriptor.precision == 0:
+            value = int(value)
+        if self._descriptor.unit_of_measurement is None:
+            return str(value)
+        else:
+            return f"{value} {self._descriptor.unit_of_measurement}"
 
     @property
-    def formatted_value(self) -> str:
-        """Returns the formatted value of the metric."""
-        if self._value is None:
-            return ""
-
-        if self._descriptor.unit_of_measurement is None:
-            return str(self._value)
-        else:
-            return f"{self._value} {self._descriptor.unit_of_measurement}"
+    def formatted_value(self):
+        """Returns the value of the metric."""
+        return self.format_value(self._value)
 
     @property
     def value(self):
@@ -81,12 +131,20 @@ class Metric:
     @property
     def name(self) -> str:
         """Returns the short id of the metric."""
+        assert self._name is not None, f"Metric name is None for metric: {repr(self)}"
         return self._name
+    
+    @property
+    def generic_name(self) -> str:
+        """Returns the generic name of the metric."""
+        assert self._generic_name is not None, f"Metric generic_name is None for metric: {repr(self)}"
+        return self._generic_name
 
     @property
     def generic_short_id(self) -> str:
         """Returns the generic short id of the metric."""
-        return self._descriptor.short_id
+        assert self._generic_short_id is not None, f"Metric generic_short_id is None for metric: {repr(self)}"
+        return self._generic_short_id
 
     @property
     def unit_of_measurement(self) -> str | None:
@@ -109,26 +167,9 @@ class Metric:
         return self._descriptor.message_type
 
     @property
-    def device_type(self) -> DeviceType:
-        """Returns the device type."""
-        return self._descriptor.device_type
-
-    @property
     def precision(self) -> int | None:
         """Returns the precision of the metric."""
         return self._descriptor.precision
-
-    @property
-    def min_value(self) -> int | RangeType | None:
-        return self._descriptor.min
-
-    @property
-    def max_value(self) -> int | RangeType | None:
-        return self._descriptor.max
-
-    @property
-    def enum_values(self) -> list[str] | None:
-        return [e.string for e in self._descriptor.enum] if self._descriptor.enum else None
 
     @property
     def unique_id(self) -> str:
@@ -141,37 +182,81 @@ class Metric:
         return self._key_values
 
     @property
-    def on_update(self) -> Callable | None:
+    def on_update(self) -> CallbackOnUpdate | None:
         """Returns the on_update callback."""
         return self._on_update
 
     @on_update.setter
-    def on_update(self, value: Callable):
+    def on_update(self, value: CallbackOnUpdate | None) -> None:
         """Sets the on_update callback."""
         self._on_update = value
 
-    def _handle_message(self, value, event_loop: asyncio.AbstractEventLoop, log_debug: Callable[..., None]    ):
+    def _keepalive(self, force_invalidate: bool, log_debug: Callable[..., None]):
+        """Reset metrics value if no updates or send last values if they got skipped"""
+        silence_timeout = max(60, self._hub._update_frequency_seconds * 3) if self._hub._update_frequency_seconds is not None else 60
+        now = time.monotonic()
+        elapsed = now - self._last_seen
+        if (force_invalidate or elapsed > silence_timeout) and self._value is not None:
+            log_debug("Metric %s has been silent for %.2fs, resetting", self.unique_id, elapsed)
+            self._handle_message(None, log_debug, update_last_seen=False) #Dont update the last_seen as it wasnt seen
+            return
+        if self._last_seen > self._last_notified:
+            log_debug("Metric %s has been updated at %.2f but not published since %.2fs, re-publishing", self.unique_id, self._last_notified, self._last_seen)
+            self._handle_message(self._value, log_debug, update_last_seen=False, force=True)
+            return
+        log_debug("Metric is active and up-to-date: %s", self.unique_id)
+
+    def _handle_message(self, value, log_debug: Callable[..., None], update_last_seen: bool = True, force: bool = False):
         """Handle a message."""
-        if value != self._value:
+        now = time.monotonic()
+        if update_last_seen:
+            self._last_seen = now
+        should_notify = False
+
+        # In case of zero update frequency, always consider changed when MQTT message is received
+        # also if this is the first time the metric is being notified
+        if force or self._hub._update_frequency_seconds == 0 or self._last_notified == 0:
+            should_notify = True
+            force = True
+        elif value != self._value:
             log_debug(
                 "Metric %s value changed: %s -> %s %s",
                 self.unique_id, self._value, value,
                 self._descriptor.unit_of_measurement or ''
             )
+            should_notify = True
+            if self._value is None:
+                log_debug("Metric updated to non-None value. forcing it. metric: %s", self.unique_id)
+                force = True
         else:
             log_debug(
                 "Metric %s value unchanged: %s %s",
                 self.unique_id, value,
                 self._descriptor.unit_of_measurement or ''
             )
-            return
-
         self._value = value
 
-        try:
-            if callable(self._on_update):
-                if event_loop.is_running():
-                    # If the event loop is running, schedule the callback
-                    event_loop.call_soon_threadsafe(self._on_update, self)
-        except Exception as exc:
-            log_debug("Error calling callback %s", exc, exc_info=True)
+        # In case of non-zero update frequency, respect the update frequency limit only for numerical values
+        if not force and self._hub._update_frequency_seconds is not None and isinstance(value, (float, int)):
+            elapsed = now - self._last_notified
+            if elapsed < self._hub._update_frequency_seconds:
+                _LOGGER.debug(
+                    "Update for %s skipped due to frequency limit (%.2fs < %ds)",
+                    self.unique_id, elapsed, self._hub._update_frequency_seconds
+                )
+                should_notify = False
+            else:
+                # This happens when the last time was before the update frequency passed so now we do really need to notify on it
+                should_notify = True
+
+        if should_notify and  self._hub._loop and callable(self._on_update) and self._hub._loop.is_running():
+            self._last_notified = now
+            try:
+                # If the event loop is running, schedule the callback
+                self._hub._loop.call_soon_threadsafe(self._on_update, self, self.value)
+            except Exception as exc:
+                log_debug("Error calling callback %s", exc, exc_info=True)
+
+        for dependency in self._depend_on_me:
+            assert self != dependency, f"Circular dependency detected: {self}"
+            dependency._handle_formula(log_debug)

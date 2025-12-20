@@ -22,6 +22,8 @@ You can consume the Victron MQTT definitions [here](https://raw.githubuserconten
 - **🔍 Device Metrics Viewer:** A Tk-based viewer application to inspect metrics and devices.
 - **🛠️ Utility Tools:** Includes utilities like `dump_mqtt` for exploring the MQTT structure.
 - **📈 Extensibility:** Easily extendable to support additional metrics and configurations.
+- **🧮 Formula support:** New formula metric support (e.g. `FormulaMetric` and helper utilities) allows composing, evaluating, and exposing derived metrics calculated from raw MQTT values — useful for unit conversions, computed power/energy values, or combining multiple sensors into a single derived metric.
+
 
 ## 📦 Installation
 
@@ -57,11 +59,6 @@ python3 -m victron_mqtt.utils.dump_mqtt --help
 
 ## Help Needed!!
 Please help with extending the library with more topics. See instructions [here](CONTRIBUTING.md) for how to contribute.
-
-## ⚠️ Limitations and Known Issues
-
-- **🧪 Limited Testing:** The library has been tested with a single configuration of a Victron installation. It may not include all metrics relevant to other setups.
-- **🔒 Read-Only:** Currently, the library supports data retrieval only. Changing settings is not yet implemented.
 
 ## 🐞 Logging Issues
 

@@ -17,9 +17,10 @@ async def main():
 
     # Connect and initialize
     await hub.connect()
+    await hub.wait_for_first_refresh()
 
     # Access devices and metrics
-    for device in hub.devices:
+    for device in hub.devices.values():
         print(f"Device: {device.model} ({device.device_type})")
         for metric in device.metrics:
             print(f"  {metric.short_id}: {metric.formatted_value}")

@@ -1,7 +1,11 @@
 """Constants for the victron venus OS client."""
 
+from __future__ import annotations
+
 from enum import Enum
-from typing import TypeVar, cast
+from typing import Self
+
+from dataclasses import dataclass
 
 TOPIC_INSTALLATION_ID = "N/+/system/0/Serial"
 
@@ -15,6 +19,9 @@ class MetricKind(Enum):
     SWITCH = "switch"
     SELECT = "select"
     NUMBER = "number"
+    SERVICE = "service"
+    BUTTON = "button"
+    TIME = "time"
 
 
 class MetricNature(Enum):
@@ -31,6 +38,7 @@ class MetricType(Enum):
 
     NONE = "none"
     POWER = "power"
+    APPARENT_POWER = "apparent_power"
     ENERGY = "energy"
     VOLTAGE = "voltage"
     CURRENT = "current"
@@ -38,34 +46,54 @@ class MetricType(Enum):
     PRESSURE = "pressure"
     FREQUENCY = "frequency"
     TIME = "time"
+    DURATION = "duration"
     PERCENTAGE = "percentage"
     ELECTRIC_STORAGE_CAPACITY = "electric_storage_capacity"
+    ELECTRIC_STORAGE_PERCENTAGE = "electric_storage_percentage"
     LIQUID_VOLUME = "liquid_volume"
     LOCATION = "location"
     HEADING = "heading"
     SPEED = "speed"
+    COST = "cost"
 
 
 class ValueType(Enum):
     """Value types."""
 
-    BOOL = "bool"
     INT = "int"
     INT_DEFAULT_0 = "int_0"
     FLOAT = "float"
     STRING = "str"
     ENUM = "enum"
+    BITMASK = "bitmask"
+    EPOCH = "epoch"
+    INT_SECONDS_TO_HOURS = "int_seconds_to_hours"
+    INT_SECONDS_TO_MINUTES = "int_seconds_to_minutes"
 
 class RangeType(Enum):
     """Range types for numeric values."""
     STATIC = "static"  # Static range, e.g., fixed values
     DYNAMIC = "dynamic"  # Dynamic range, e.g., depends on device model
 
+class OperationMode(Enum):
+    """Enum for operation modes."""
+    READ_ONLY = "read_only"
+    FULL = "full"
+    EXPERIMENTAL = "experimental"
+
+@dataclass
+class FormulaTransientState:
+    pass
+
+@dataclass
+class FormulaPersistentState:
+    pass
 
 PLACEHOLDER_PHASE = "{phase}"
 PLACEHOLDER_NEXT_PHASE = "{next_phase}"
 
-T = TypeVar("T", bound="VictronEnum")
+BITMASK_SEPARATOR = ","
+
 class VictronEnum(Enum):
     def __init__(self, code, string):
         self._value_ = (code, string)
@@ -85,10 +113,10 @@ class VictronEnum(Enum):
         return cls._lookup_by_code
 
     @classmethod
-    def from_code(cls: type[T], value: int | str, default_value: T | None = None) -> T | None:
+    def from_code(cls: type[Self], value: int | str, default_value: "VictronEnum | None" = None) -> Self | None:
         lookup = cls._build_code_lookup()
         result = lookup.get(value, default_value)
-        return cast(T, result) if result is not None else None
+        return result  # type: ignore[return-value]
 
     @classmethod
     def _build_string_lookup(cls):
@@ -97,7 +125,7 @@ class VictronEnum(Enum):
         return cls._lookup_by_string
 
     @classmethod
-    def from_string(cls, value: str):
+    def from_string(cls: type[Self], value: str) -> Self:
         lookup = cls._build_string_lookup()
         try:
             return lookup[value]
@@ -108,3 +136,17 @@ class VictronDeviceEnum(VictronEnum):
     def __init__(self, code: str, string: str, mapped_to: str | None = None):
         super().__init__(code, string)
         self.mapped_to = mapped_to
+
+    @classmethod
+    def from_code(cls: type[Self], value: int | str, default_value: Self | None = None) -> Self | None:
+        result = super().from_code(value, default_value)
+        if result is None:
+            return None
+        assert isinstance(result, cls)
+        if result.mapped_to:
+            mapped_result = super().from_code(result.mapped_to, default_value)
+            if mapped_result is None:
+                return None
+            assert isinstance(mapped_result, cls)
+            result = mapped_result
+        return result

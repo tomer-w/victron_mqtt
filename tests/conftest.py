@@ -1,11 +1,12 @@
 """Configuration for tests, mostly Victron Venus device connection settings.
 
 Can be overridden by environment variables:
-VENUS_TEST_HOST - The host or IP address of the Venus device. Default "venus.local."
-VENUS_TEST_PORT - The port of the Venus device. Default 1883
-VENUS_TEST_USERNAME - The username for the Venus device. Default None
-VENUS_TEST_PASSWORD - The password for the Venus device. Default None
+VICTRON_MQTT_SERVER - The host or IP address of the Venus device. Default "venus.local."
+VICTRON_MQTT_PORT - The port of the Venus device. Default 1883
+VICTRON_TEST_USERNAME - The username for the Venus device. Default None
+VICTRON_TEST_PASSWORD - The password for the Venus device. Default None
 VENUS_TEST_USE_SSL - Whether to use SSL for the connection. Default False
+VICTRON_TEST_ROOT_PREFIX - The root prefix for the MQTT topics. Default None
 
 """
 
@@ -25,7 +26,7 @@ asyncio.BaseEventLoop.close = debug_close
 
 @pytest.fixture
 def config_host():
-    return os.getenv("VICTRON_MQTT_SERVER", "venus.local.")
+    return os.getenv("VICTRON_MQTT_SERVER", "127.0.0.1") #venus.local.
 
 
 @pytest.fixture
@@ -44,7 +45,11 @@ def config_password():
 
 @pytest.fixture
 def config_root_prefix():
-    return os.getenv("VICTRON_TEST_ROOT_PREFIX", None)
+    prefix = os.getenv("VICTRON_TEST_ROOT_PREFIX", None)
+    if prefix and prefix not in [""]:
+        return prefix
+    else:
+        return None
 
 @pytest.fixture
 def config_use_ssl() -> bool:

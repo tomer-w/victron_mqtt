@@ -5,6 +5,7 @@ import victron_mqtt  # pylint: disable=import-error
 import logging
 
 from victron_mqtt._victron_enums import DeviceType
+from victron_mqtt.hub import AuthenticationError
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -23,6 +24,16 @@ async def test_connect(config_host, config_port, config_username, config_passwor
     # Check that no error logs were emitted
     error_logs = [record for record in caplog.records if record.levelno >= logging.ERROR]
     assert len(error_logs) == 0, f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"
+
+@pytest.mark.asyncio
+async def test_connect_auth_failure():
+    """Tests whether the client can connect to a Venus device. Disconnects after passing the test."""
+    logger.debug("Starting test_connect_auth_failure")
+    hub = victron_mqtt.Hub("test.mosquitto.org", 1884, "invalid_user", "invalid_pass", False)
+
+    # Attempt to connect and expect AuthenticationError
+    with pytest.raises(AuthenticationError):
+        await hub.connect()
 
 @pytest.mark.asyncio
 async def test_create_full_raw_snapshot(config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix):
@@ -46,12 +57,12 @@ async def test_create_full_raw_snapshot(config_host, config_port, config_usernam
 async def test_devices_and_metrics(config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix):
     hub = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix)
     await hub.connect()
-
+    await hub.wait_for_first_refresh()
     assert len(hub.devices) > 0
 
-    for device in hub.devices:
+    for device in hub.devices.values():
         assert device.device_type is not None
-        if device.device_type == DeviceType.UNKNOWN or device.device_type == DeviceType.GENERATOR:
+        if device.device_type is None or device.device_type == DeviceType.GENERATOR:
             continue
         assert len(device.metrics) > 0
 
