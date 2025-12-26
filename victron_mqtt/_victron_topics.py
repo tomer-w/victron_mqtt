@@ -1289,10 +1289,12 @@ topics: List[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ess/AcPowerSetpoint",
-        message_type=MetricKind.SENSOR,
+        message_type=MetricKind.NUMBER,
         short_id="multi_ess_ac_power_setpoint",
         name="ESS AC power setpoint",
         metric_type=MetricType.POWER,
+        min="-12500",
+        max="12500",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ess/DisableCharge",
@@ -1555,6 +1557,14 @@ topics: List[TopicDescriptor] = [
         name="ESS BatteryLife state",
         value_type=ValueType.ENUM,
         enum=ESSState,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryUse",
+        message_type=MetricKind.SWITCH,
+        short_id="system_ess_battery_use",
+        name="ESS Only Critical Loads from Battery",
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/Hub4Mode",
