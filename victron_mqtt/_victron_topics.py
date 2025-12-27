@@ -1916,6 +1916,27 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/Pv/{tracker}/MaxPower",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_tracker_{tracker}_max_power_today",
+        name="Tracker {tracker} max power today",
+        metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/Pv/{tracker}/MaxVoltage",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_tracker_{tracker}_max_voltage_today",
+        name="Tracker {tracker} max voltage today",
+        metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/Pv/{tracker}/Yield",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_tracker_{tracker}_yield_today",
+        name="Tracker {tracker} yield today",
+        metric_type=MetricType.ENERGY,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/TimeInAbsorption",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_time_in_absorption_today",
