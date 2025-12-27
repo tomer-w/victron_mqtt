@@ -1564,7 +1564,7 @@ topics: List[TopicDescriptor] = [
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryUse",
         message_type=MetricKind.SWITCH,
         short_id="system_ess_battery_use",
-        name="ESS Only Critical Loads from Battery",
+        name="ESS only critical loads from battery",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
