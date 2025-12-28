@@ -324,3 +324,45 @@ def test_name_references_exist():
     if errors:
         pytest.fail("\n".join(errors))
 
+def test_min_max_values_aligned_with_range_type():
+    """Test that min/max values are properly formatted for _get_min_max_value logic.
+    
+    Validates that _get_min_max_value can successfully parse all min/max values.
+    Min/max values can be:
+    - Numeric (int or float) - static values
+    - String in format "metric_id:default_value" - dynamic references to other metrics
+    """
+    topics = get_topics()
+    from victron_mqtt.writable_metric import WritableMetric
+    from victron_mqtt.data_classes import TopicDescriptor
+    errors = []
+    
+    # Create a mock WritableMetric instance to access _get_min_max_value
+    mock_metric = WritableMetric.__new__(WritableMetric)
+    mock_metric._key_values = {}
+    mock_descriptor = TopicDescriptor(
+        topic="mock",
+        message_type=get_metric_kind().SENSOR,
+        short_id="mock",
+        name="mock"
+    )
+    mock_metric._descriptor = mock_descriptor
+    
+    for descriptor in topics:
+        # Test min value
+        if descriptor.min is not None:
+            try:
+                mock_metric._get_min_max_value(descriptor.min, "test_device", {})
+            except Exception as e:
+                errors.append(f"Topic '{descriptor.topic}' has invalid min={descriptor.min}: {e}")
+        
+        # Test max value
+        if descriptor.max is not None:
+            try:
+                mock_metric._get_min_max_value(descriptor.max, "test_device", {})
+            except Exception as e:
+                errors.append(f"Topic '{descriptor.topic}' has invalid max={descriptor.max}: {e}")
+    
+    if errors:
+        pytest.fail("\n".join(errors))
+

@@ -1295,8 +1295,8 @@ topics: List[TopicDescriptor] = [
         short_id="multi_ess_ac_power_setpoint",
         name="ESS AC power setpoint",
         metric_type=MetricType.POWER,
-        min="-12500",
-        max="12500",
+        min=-12500,
+        max=12500,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ess/DisableCharge",
