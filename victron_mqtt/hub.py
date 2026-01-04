@@ -191,7 +191,6 @@ class Hub:
         self.password = password
         self.serial = serial
         self.use_ssl = use_ssl
-        self._client = None
         self.port = port
         self._installation_id = installation_id
         self._topic_prefix = topic_prefix
@@ -331,8 +330,6 @@ class Hub:
         self._client.connect_async(self.host, self.port)
         _LOGGER.info("Waiting for connection event")
         await self._wait_for_connect()
-        if self._client is None:
-            raise CannotConnectError("Got request to disconnect while still connecting")
         if self._connect_failed_reason is not None:
             reraise_same_exception(self._connect_failed_reason)
         _LOGGER.info("Successfully connected to MQTT broker at %s:%d", self.host, self.port)
@@ -373,6 +370,7 @@ class Hub:
         except Exception as exc:
             _LOGGER.exception("_on_connect exception %s: %s", type(exc), exc, exc_info=True)
             self._connect_failed_reason = exc
+            client.disconnect()
         
         try:
             if self._loop.is_running():
@@ -383,9 +381,6 @@ class Hub:
     def _on_connect_internal(self, client: MQTTClient, userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, properties: Optional[Properties] = None) -> None:
         """Handle connection callback."""
         self._connect_failed_since = 0
-        if self._client is None:
-            _LOGGER.warning("Got new connection while self._client is None, ignoring")
-            return
         if reason_code.is_failure:
             # Check if this is an authentication failure (value 134 for MQTT v5 or 4/5 for MQTT v3.1.1)
             # ReasonCode value 134 = "Bad user name or password" in MQTT v5
@@ -625,15 +620,10 @@ class Hub:
         _LOGGER.info("Disconnecting from MQTT broker")
         self._stop_keepalive_loop()
         await asyncio.sleep(0.1)
-        if self._client is None:
-            _LOGGER.debug("No client to disconnect")
-            return
-        if self._client.is_connected():
-            self._client.disconnect()
-            _LOGGER.info("Disconnected from MQTT broker")
-            # Give a small delay to allow any pending MQTT messages to be processed
-            await asyncio.sleep(0.1)
-        self._client = None
+        self._client.disconnect() # need to call disconnect so the paho thread will terminate
+        _LOGGER.info("Disconnected from MQTT broker")
+        # Give a small delay to allow any pending MQTT messages to be processed
+        await asyncio.sleep(0.1)
 
     async def _keepalive(self) -> None:
         """Send a keep alive message to the hub. Updates will only be made to the metrics
@@ -641,9 +631,6 @@ class Hub:
         # Docuementation: https://github.com/victronenergy/dbus-flashmq
         keep_alive_topic = f"R/{self._installation_id}/keepalive"
 
-        if self._client is None:
-            _LOGGER.warning("Cannot send keepalive - no MQTT client")
-            return
         if not self._client.is_connected():
             _LOGGER.warning("Cannot send keepalive - client is not connected")
             return
@@ -777,9 +764,6 @@ class Hub:
     async def _read_installation_id(self) -> str:
         """Read the installation id for the Victron installation."""
         _LOGGER.info("Reading installation ID")
-        if self._client is None:
-            _LOGGER.error("Cannot read installation ID - no MQTT client")
-            raise ProgrammingError
         if not self._client.is_connected():
             _LOGGER.error("Cannot read installation ID - client not connected")
             raise NotConnectedError
@@ -925,8 +909,6 @@ class Hub:
     @property
     def connected(self) -> bool:
         """Return if connected."""
-        if self._client is None:
-            return False
         return self._client.is_connected()
 
     def on_connect_fail(self, client: MQTTClient, userdata: Any) -> None:
@@ -948,6 +930,7 @@ class Hub:
         except Exception as exc:
             _LOGGER.exception("on_connect_fail exception %s: %s", type(exc), exc, exc_info=True)
             self._connect_failed_reason = exc
+            client.disconnect()
             if self._loop.is_running():
                 self._loop.call_soon_threadsafe(self._connected_event.set)
 

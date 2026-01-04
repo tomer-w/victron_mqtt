@@ -202,8 +202,6 @@ class App:
             LOGGER.error("Error connecting to Venus device: %s", e, exc_info=True)
             message = str(e)
             messagebox.showerror("Error", f"Error connecting: {message}")
-            if self._client:
-                await self._client.disconnect()
             self.connect_button.config(state=tk.NORMAL)
             return False
 
