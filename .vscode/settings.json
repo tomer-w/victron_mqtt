@@ -20,13 +20,9 @@
     "python.autoComplete.extraPaths": [
         "./src/victron_mqtt"  // Add this to make sure VS Code sees sub-modules
     ],
-    "pylint.interpreter": [
-        "venv/bin/python3"
-    ],
     "python.analysis.diagnosticSeverityOverrides": {
 
     },
-    "python.defaultInterpreterPath": "venv/bin/python",
     "python.testing.pytestArgs": [
         "tests"
     ],
