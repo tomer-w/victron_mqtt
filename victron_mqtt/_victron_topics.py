@@ -210,7 +210,7 @@ topics: List[TopicDescriptor] = [
         name="Charge current limit",
         metric_type=MetricType.CURRENT,
         min=0,
-        max=50,
+        max=200,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/alternator/{device_id}/State",
