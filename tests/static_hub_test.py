@@ -1,3 +1,4 @@
+"""Unit tests for the Victron MQTT Hub functionality."""
 # pylint: disable=protected-access
 # pyright: reportPrivateUsage=false
 
@@ -44,30 +45,29 @@ async def test_authentication_failure():
             password="wrongpassword",
             use_ssl=False,
         )
-        
+
         mocked_client = MagicMock()
         mock_client.return_value = mocked_client
         hub._client = mocked_client
-        
+
         # Mock connect_async to trigger authentication failure
-        def mock_connect_async_auth_fail(*args, **kwargs):
-            if hub._client is not None:
-                # Simulate authentication failure with ConnackCode.CONNACK_REFUSED_BAD_USERNAME_PASSWORD (value 4)
-                hub._on_connect(
-                    hub._client,
-                    None,
-                    ConnectFlags(False),
-                    ReasonCode(PacketTypes.CONNACK, identifier=134), # 134 corresponds to "Bad user name or password"
-                    None
-                )
-        
+        def mock_connect_async_auth_fail(*_args: object, **_kwargs: object) -> None:
+            # Simulate authentication failure with ConnackCode.CONNACK_REFUSED_BAD_USERNAME_PASSWORD (value 4)
+            hub._on_connect(
+                hub._client,
+                None,
+                ConnectFlags(False),
+                ReasonCode(PacketTypes.CONNACK, identifier=134), # 134 corresponds to "Bad user name or password"
+                None
+            )
+
         mocked_client.connect_async = MagicMock(name="connect_async", side_effect=mock_connect_async_auth_fail)
         mocked_client.loop_start = MagicMock(name="loop_start")
-        
+
         # Attempt to connect and expect AuthenticationError
         with pytest.raises(AuthenticationError) as exc_info:
             await hub.connect()
-        
+
         assert "Authentication failed" in str(exc_info.value)
 
 @pytest.mark.asyncio
@@ -130,7 +130,7 @@ async def test_placeholder_message():
     assert device.unique_id == "system_0", f"Expected system_0. Got {device.unique_id}"
     metric = device.get_metric("system_relay_0")
     assert metric is not None, "Metric should exist in the device"
-    assert metric.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric.value}"
+    assert metric.value == GenericOnOff.ON, f"Expected metric value to be GenericOnOff.ON, got {metric.value}"
     assert metric.name == "Relay 0 state", f"Expected metric name to be 'Relay 0 state', got {metric.name}"
     assert metric.generic_name == "Relay {relay} state", f"Expected metric generic_name to be 'Relay {{relay}} state', got {metric.generic_name}"
 
@@ -305,6 +305,7 @@ async def test_today_message():
     assert metric.value == 2, f"Expected metric value to be 2, got {metric.value}"
 
 def test_expend_topics():
+    """Test that the Hub correctly expands topic descriptors with placeholders."""
     descriptor = next((t for t in topics if t.topic == "N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/State"), None)
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
@@ -331,7 +332,7 @@ async def test_expend_message():
     assert metric is not None, "Metric should exist in the device"
     assert metric.generic_short_id == "switch_{output}_state"
     assert metric.key_values["output"] == "2"
-    assert metric.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric.value}"
+    assert metric.value == GenericOnOff.ON, f"Expected metric value to be GenericOnOff.ON, got {metric.value}"
 
 @pytest.mark.asyncio
 async def test_expend_message_2():
@@ -561,7 +562,7 @@ async def test_existing_installation_id():
     assert metric is not None, "Metric should exist in the device"
     assert metric.generic_short_id == "switch_{output}_state"
     assert metric.key_values["output"] == "2"
-    assert metric.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric.value}"
+    assert metric.value == GenericOnOff.ON, f"Expected metric value to be GenericOnOff.ON, got {metric.value}"
 
 
 @pytest.mark.asyncio
@@ -579,7 +580,7 @@ async def test_multiple_hubs():
     assert metric1 is not None, "Metric should exist in the device"
     assert metric1.generic_short_id == "switch_{output}_state"
     assert metric1.key_values["output"] == "2"
-    assert metric1.value == GenericOnOff.On, f"Expected metric value to be GenericOnOff.On, got {metric1.value}"
+    assert metric1.value == GenericOnOff.ON, f"Expected metric value to be GenericOnOff.ON, got {metric1.value}"
 
     hub2: Hub = await create_mocked_hub(installation_id="123")
     # Inject messages after the event is set
@@ -595,7 +596,7 @@ async def test_multiple_hubs():
     assert metric2 is not None, "Metric should exist in the device"
     assert metric2.generic_short_id == "switch_{output}_state"
     assert metric2.key_values["output"] == "2"
-    assert metric2.value == GenericOnOff.Off, f"Expected metric value to be GenericOnOff.Off, got {metric2.value}"
+    assert metric2.value == GenericOnOff.OFF, f"Expected metric value to be GenericOnOff.OFF, got {metric2.value}"
 
     await hub_disconnect(hub2)
     await hub_disconnect(hub1)
@@ -785,6 +786,7 @@ async def test_read_only_creates_plain_metrics():
 
 @pytest.mark.asyncio
 async def test_publish():
+    """Test that the Hub correctly publishes MQTT messages."""
     hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
     mocked_client: MagicMock = hub._client # type: ignore
 
@@ -807,6 +809,7 @@ async def test_publish():
 
 @pytest.mark.asyncio
 async def test_publish_topic_not_found():
+    """Test that publishing to a non-existent topic raises TopicNotFoundError."""
     hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
     mocked_client: MagicMock = hub._client # type: ignore
 
@@ -888,7 +891,7 @@ async def test_remote_name_dont_exists():
     assert metric is not None, "metric should exist in the device"
     assert metric.name == "Switch 1 state", "Expected metric name to be 'Switch 1 state', got {metric.name}"
     assert metric.generic_name == "Switch {output} state", "Expected metric generic_name to be 'Switch {output} state', got {metric.generic_name}"
-    assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
+    assert metric.value == GenericOnOff.ON, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "1"
 
 @pytest.mark.asyncio
@@ -910,7 +913,7 @@ async def test_remote_name_exists():
     assert metric is not None, "metric should exist in the device"
     assert metric.name == "Switch bla state", "Expected metric name to be 'Switch bla state', got {metric.name}"
     assert metric.generic_name == "Switch {output} state", "Expected metric name to be 'Switch {output} state', got {metric.name}"
-    assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
+    assert metric.value == GenericOnOff.ON, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "bla"
 
 @pytest.mark.asyncio
@@ -934,7 +937,7 @@ async def test_remote_name_exists_two_devices():
     assert metric is not None, "metric should exist in the device"
     assert metric.name == "Switch bla state", "Expected metric name to be 'Switch bla state', got {metric.name}"
     assert metric.generic_name == "Switch {output} state", "Expected metric name to be 'Switch {output} state', got {metric.name}"
-    assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
+    assert metric.value == GenericOnOff.ON, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "bla"
 
     device = hub.devices["switch_155"]
@@ -943,7 +946,7 @@ async def test_remote_name_exists_two_devices():
     assert metric is not None, "metric should exist in the device"
     assert metric.name == "Switch foo state", "Expected metric name to be 'Switch foo state', got {metric.name}"
     assert metric.generic_name == "Switch {output} state", "Expected metric name to be 'Switch {output} state', got {metric.name}"
-    assert metric.value == GenericOnOff.On, f"Expected metric value to be 1, got {metric.value}"
+    assert metric.value == GenericOnOff.ON, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "foo"
 
 @pytest.mark.asyncio
@@ -973,23 +976,22 @@ async def test_on_connect_sets_up_subscriptions():
     """Test that subscriptions are set up after _on_connect callback."""
     # Create a hub with installation_id
     hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id="test123")
-    
+
     # Create a MagicMock instance with proper method mocks
-    from paho.mqtt.client import Client
     mocked_client: MagicMock = MagicMock(spec=Client)
     mocked_client.is_connected.return_value = True
-    
+
     # Set required properties
     hub._client = mocked_client
     hub._first_connect = False  # Mark as not first connect to allow subscriptions
     hub._loop = asyncio.get_running_loop()  # Set the event loop
-    
+
     # Call _on_connect directly with successful connection (rc=0)
     hub._on_connect_internal(mocked_client, None, ConnectFlags(False), ReasonCode(PacketTypes.CONNACK, identifier=0), None)
 
     # Get expected number of subscriptions
     expected_calls = len(hub._subscription_list) + 1  # +1 for full_publish_completed
-    
+
     # Get the actual subscription calls
     actual_calls = mocked_client.subscribe.call_count
     assert actual_calls == expected_calls, f"Expected {expected_calls} subscribe calls, got {actual_calls}"
@@ -1000,6 +1002,7 @@ async def test_on_connect_sets_up_subscriptions():
 
 @pytest.mark.asyncio
 async def test_null_message():
+    """Test that the Hub correctly filters MQTT messages with null value."""
     hub: Hub = await create_mocked_hub()
 
     # Inject messages after the event is set
@@ -1012,6 +1015,7 @@ async def test_null_message():
 @pytest.mark.asyncio
 @patch('victron_mqtt.formula_common.time.monotonic')
 async def test_formula_metric(mock_time: MagicMock) -> None:
+    """Test that the Hub correctly calculates formula metrics."""
     # Mock time.monotonic() to return a fixed time
     mock_time.return_value = 0
 
@@ -1065,6 +1069,7 @@ async def test_formula_metric(mock_time: MagicMock) -> None:
 @pytest.mark.asyncio
 @patch('victron_mqtt.formula_common.time.monotonic')
 async def test_formula_switch(mock_time: MagicMock) -> None:
+    """Test that the Hub correctly calculates formula metrics."""
     # Mock time.monotonic() to return a fixed time
     mock_time.return_value = 0
 
@@ -1083,18 +1088,18 @@ async def test_formula_switch(mock_time: MagicMock) -> None:
     metric1 = device.get_metric("system_ess_schedule_charge_2_days")
     assert metric1 is not None, "metric should exist in the device"
     assert metric1.unique_id == "system_0_system_ess_schedule_charge_2_days"
-    assert metric1.value == ChargeSchedule.DisabledEveryDay, f"Expected metric value to be -7, got {metric1.value}"
+    assert metric1.value == ChargeSchedule.DISABLED_EVERY_DAY, f"Expected metric value to be -7, got {metric1.value}"
 
     metric2 = device.get_metric("system_ess_schedule_charge_2_enabled")
     assert isinstance(metric2, WritableFormulaMetric)
     assert metric2.unique_id == "system_0_system_ess_schedule_charge_2_enabled"
     assert metric2.generic_short_id == "system_ess_schedule_charge_{slot}_enabled"
     assert metric2.short_id == "system_ess_schedule_charge_2_enabled"
-    assert metric2.value == GenericOnOff.Off, f"Expected metric value to be 'GenericOnOff.Off', got {metric1.value}"
+    assert metric2.value == GenericOnOff.OFF, f"Expected metric value to be 'GenericOnOff.OFF', got {metric1.value}"
 
     mock_time.return_value = 15
-    metric2.set(GenericOnOff.On)
-    assert metric1.value == ChargeSchedule.EveryDay, f"Expected metric value to be ChargeSchedule.EveryDay, got {metric1.value}"
+    metric2.set(GenericOnOff.ON)
+    assert metric1.value == ChargeSchedule.EVERY_DAY, f"Expected metric value to be ChargeSchedule.EVERY_DAY, got {metric1.value}"
 
     await hub_disconnect(hub, mock_time)
 
@@ -1130,7 +1135,7 @@ async def test_depends_on_regular_exists_same_round():
     device = hub.devices["Generator1_0"]
     metric = device.get_metric("generator_1_start_on_voltage_enabled")
     assert metric is not None, "metric should exist in the device"
-    assert metric.value == GenericOnOff.Off, f"Expected metric value to be GenericOnOff.Off, got {metric.value}"
+    assert metric.value == GenericOnOff.OFF, f"Expected metric value to be GenericOnOff.OFF, got {metric.value}"
 
     await hub_disconnect(hub)
 
@@ -1150,7 +1155,7 @@ async def test_depends_on_regular_exists_two_rounds():
     device = hub.devices["Generator1_0"]
     metric = device.get_metric("generator_1_start_on_voltage_enabled")
     assert metric is not None, "metric should exist in the device"
-    assert metric.value == GenericOnOff.Off, f"Expected metric value to be GenericOnOff.Off, got {metric.value}"
+    assert metric.value == GenericOnOff.OFF, f"Expected metric value to be GenericOnOff.OFF, got {metric.value}"
 
     await hub_disconnect(hub)
 
@@ -1195,6 +1200,7 @@ async def test_old_cerbo(mock_time: MagicMock) -> None:
 
 @pytest.mark.asyncio
 async def test_min_max_dependencies():
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
     hub: Hub = await create_mocked_hub()
 
     # Inject messages after the event is set
@@ -1214,6 +1220,7 @@ async def test_min_max_dependencies():
 
 @pytest.mark.asyncio
 async def test_min_max_float():
+    """Test that the Hub correctly updates its internal state based on MQTT messages."""
     hub: Hub = await create_mocked_hub()
 
     # Inject messages after the event is set
@@ -1241,22 +1248,22 @@ async def test_on_connect_fail_before_first_connect():
         use_ssl=False,
         installation_id="test123"
     )
-    
+
     mocked_client = MagicMock(spec=Client)
     hub._client = mocked_client
     hub._loop = asyncio.get_running_loop()
     hub._first_connect = True  # Mark as first connect
-    
+
     # Simulate connection failures during initial connection
     # Call on_connect_fail multiple times, reaching the max attempts
     for _ in range(CONNECT_MAX_FAILED_ATTEMPTS):
         hub.on_connect_fail(mocked_client, None)
-    
+
     # Verify that _connect_failed_reason was set after max attempts reached
     assert hub._connect_failed_reason is not None, "Connection should have failed after max attempts"
     assert isinstance(hub._connect_failed_reason, CannotConnectError), f"Expected CannotConnectError, got {type(hub._connect_failed_reason)}"
     assert "after 3 attempts" in str(hub._connect_failed_reason), f"Error message should mention 3 attempts, got: {hub._connect_failed_reason}"
-    
+
 
 @pytest.mark.asyncio
 async def test_on_connect_fail_after_first_successful_connect():
@@ -1269,12 +1276,12 @@ async def test_on_connect_fail_after_first_successful_connect():
         use_ssl=False,
         installation_id="test123"
     )
-    
+
     mocked_client = MagicMock(spec=Client)
     hub._client = mocked_client
     hub._loop = asyncio.get_running_loop()
     hub._first_connect = False  # Mark as not first connect (already connected once)
-    
+
     # Simulate a successful connection first
     hub._on_connect_internal(
         mocked_client,
@@ -1283,12 +1290,12 @@ async def test_on_connect_fail_after_first_successful_connect():
         ReasonCode(PacketTypes.CONNACK, identifier=0),
         None
     )
-    
+
     # Verify that counters were reset after successful connection
     assert hub._connect_failed_attempts == 0, "Failed attempts should be reset after successful connection"
     assert hub._connect_failed_since == 0, "Connect failed since should be reset after successful connection"
     assert hub._connect_failed_reason is None, "Connect failed reason should be cleared after successful connection"
-    
+
     # Now simulate multiple connection failures - should NOT raise error even after max attempts
     for attempt in range(CONNECT_MAX_FAILED_ATTEMPTS + 5):
         hub.on_connect_fail(mocked_client, None)
@@ -1296,7 +1303,7 @@ async def test_on_connect_fail_after_first_successful_connect():
         # because it keeps retrying forever
         if attempt < CONNECT_MAX_FAILED_ATTEMPTS:
             assert hub._connect_failed_reason is None, f"Should not fail on attempt {attempt}"
-    
+
     # After max attempts exceeded but after successful connection, should still NOT have failed
     # because the logic allows infinite retries after first successful connection
     assert hub._connect_failed_attempts > CONNECT_MAX_FAILED_ATTEMPTS, "Should have accumulated more failed attempts than max"
@@ -1314,12 +1321,12 @@ async def test_on_connect_fail_resets_counters_on_successful_reconnect():
         use_ssl=False,
         installation_id="test123"
     )
-    
+
     mocked_client = MagicMock(spec=Client)
     hub._client = mocked_client
     hub._loop = asyncio.get_running_loop()
     hub._first_connect = False
-    
+
     # First successful connection
     hub._on_connect_internal(
         mocked_client,
@@ -1329,12 +1336,12 @@ async def test_on_connect_fail_resets_counters_on_successful_reconnect():
         None
     )
     assert hub._connect_failed_attempts == 0
-    
+
     # Simulate some connection failures
     hub.on_connect_fail(mocked_client, None)
     hub.on_connect_fail(mocked_client, None)
     assert hub._connect_failed_attempts == 2, "Should have 2 failed attempts"
-    
+
     # Reconnect successfully
     hub._on_connect_internal(
         mocked_client,
@@ -1343,12 +1350,12 @@ async def test_on_connect_fail_resets_counters_on_successful_reconnect():
         ReasonCode(PacketTypes.CONNACK, identifier=0),
         None
     )
-    
+
     # Verify counters were reset
     assert hub._connect_failed_attempts == 0, "Failed attempts should be reset after successful reconnection"
     assert hub._connect_failed_since == 0, "Connect failed since should be reset"
     assert hub._connect_failed_reason is None, "Connect failed reason should be cleared"
-    
+
     # New failures should not immediately fail
     hub.on_connect_fail(mocked_client, None)
     assert hub._connect_failed_attempts == 1, "Should restart counting from 1"
@@ -1365,23 +1372,23 @@ async def test_on_connect_fail_tracking_time_before_first_connect():
         use_ssl=False,
         installation_id="test123"
     )
-    
+
     mocked_client = MagicMock(spec=Client)
     hub._client = mocked_client
     hub._loop = asyncio.get_running_loop()
     hub._first_connect = True
-    
+
     # First failure - should initialize _connect_failed_since
     hub.on_connect_fail(mocked_client, None)
     first_failure_time = hub._connect_failed_since
     assert first_failure_time > 0, "Should have recorded failure time"
-    
+
     # Second failure - should keep same _connect_failed_since
     hub.on_connect_fail(mocked_client, None)
     assert hub._connect_failed_since == first_failure_time, "Should keep same failure time across retries"
-    
+
     # Continue failures until max attempts
     for _ in range(CONNECT_MAX_FAILED_ATTEMPTS - 2):
         hub.on_connect_fail(mocked_client, None)
-    
+
     assert hub._connect_failed_reason is not None, "Should have failed after max attempts"

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import logging
-
+import re
 from .id_utils import replace_complex_id_to_simple
 from ._victron_enums import DeviceType
 from .constants import MetricKind, MetricNature, MetricType, RangeType, ValueType, VictronEnum
@@ -47,12 +47,12 @@ class TopicDescriptor:
     max: float | int | str | None = None
     step: float | int | None = None
     is_adjustable_suffix: str | None = None
-    key_values: dict[str, str] = field(default_factory=dict)
+    key_values: dict[str, str] = field(default_factory=lambda: {})
     experimental: bool = False
     # Depends on format is different for regular and formula topics:
     # For regular topics, the depends_on list contains the {device_id}_{metric_short_id} of the metric it depends on
     # For formula topics, the depends_on list contains the {device_type}_{metric_short_id} of the metrics it depends on as it will be generated for all device ids from the specific device type
-    depends_on: list[str] = field(default_factory=list)
+    depends_on: list[str] = field(default_factory=lambda: [])
     generic_name: str | None = None
     is_formula: bool = False  # True if this topic is calculated from other topics
 
@@ -334,9 +334,7 @@ class ParsedTopic:
     @staticmethod
     def replace_ids(string: str, key_values: dict[str, str]) -> str:
         """Replace placeholders in the string with matched items from self.key_values."""
-        import re
-
-        def replace_match(match):
+        def replace_match(match: re.Match[str]) -> str:
             key = match.group(1)
             if key in key_values:
                 return key_values[key]

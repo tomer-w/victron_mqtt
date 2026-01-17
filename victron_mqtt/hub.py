@@ -1,4 +1,5 @@
 """Module to communicate with the Venus OS MQTT Broker."""
+from __future__ import annotations
 
 from dataclasses import replace
 import asyncio
@@ -151,36 +152,10 @@ class Hub:
         #     self.logger.setLevel(logger_level)
 
         # Parameter validation
-        if not isinstance(host, str) or not host:
+        if not host:
             raise ValueError("host must be a non-empty string")
-        if not isinstance(port, int) or not (0 < port < 65536):
+        if not (0 < port < 65536):
             raise ValueError("port must be an integer between 1 and 65535")
-        if username is not None and not isinstance(username, str):
-            raise TypeError(f"username must be a string or None, got type={type(username).__name__}, value={username!r}")
-        if password is not None and not isinstance(password, str):
-            raise TypeError(f"password must be a string or None, got type={type(password).__name__}, value={password!r}")
-        if not isinstance(use_ssl, bool):
-            raise TypeError(f"use_ssl must be a boolean, got type={type(use_ssl).__name__}, value={use_ssl!r}")
-        if installation_id is not None and not isinstance(installation_id, str):
-            raise TypeError(f"installation_id must be a string or None, got type={type(installation_id).__name__}, value={installation_id!r}")
-        if model_name is not None and not isinstance(model_name, str):
-            raise TypeError(f"model_name must be a string or None, got type={type(model_name).__name__}, value={model_name!r}")
-        if serial is not None and not isinstance(serial, str):
-            raise TypeError(f"serial must be a string or None, got type={type(serial).__name__}, value={serial!r}")
-        if topic_prefix is not None and not isinstance(topic_prefix, str):
-            raise TypeError(f"topic_prefix must be a string or None, got type={type(topic_prefix).__name__}, value={topic_prefix!r}")
-        if topic_log_info is not None and not isinstance(topic_log_info, str):
-            raise TypeError(f"topic_log_info must be a string or None, got type={type(topic_log_info).__name__}, value={topic_log_info!r}")
-        if not isinstance(operation_mode, OperationMode):
-            raise TypeError(f"operation_mode must be an instance of OperationMode, got type={type(operation_mode).__name__}, value={operation_mode!r}")
-        if device_type_exclude_filter is not None and not isinstance(device_type_exclude_filter, list):
-            raise TypeError(f"device_type_exclude_filter must be a list or None, got type={type(device_type_exclude_filter).__name__}, value={device_type_exclude_filter!r}")
-        if device_type_exclude_filter is not None:
-            for device_type in device_type_exclude_filter:
-                if not isinstance(device_type, DeviceType):
-                    raise TypeError(f"device_type_filter must contain only DeviceType instances, got type={type(device_type).__name__}, value={device_type!r}")
-        if update_frequency_seconds is not None and not isinstance(update_frequency_seconds, int):
-            raise TypeError(f"update_frequency_seconds must be an integer or None, got type={type(update_frequency_seconds).__name__}, value={update_frequency_seconds!r}")
         _LOGGER.info(
             "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, topic_log_info=%s)",
             self._instance_id, host, port, username, use_ssl, installation_id, model_name, topic_prefix, operation_mode, device_type_exclude_filter, update_frequency_seconds, topic_log_info,
@@ -197,7 +172,7 @@ class Hub:
         self._devices: dict[str, Device] = {}
         self._first_refresh_event: asyncio.Event = asyncio.Event()
         self._installation_id_event: asyncio.Event = asyncio.Event()
-        self._snapshot = {}
+        self._snapshot: dict[str, Any] = {}
         self._keepalive_task = None
         self._connected_event = asyncio.Event()
         self._on_new_metric: CallbackOnNewMetric | None = None
@@ -244,7 +219,7 @@ class Hub:
         expanded_topics = Hub.expand_topic_list(metrics_active_topics)
         # Apply device type filtering if specified
         if self._device_type_exclude_filter is not None and len(self._device_type_exclude_filter) > 0:
-            relevant_topics = []
+            relevant_topics: list[TopicDescriptor] = []
             for td in expanded_topics:
                 if td.message_type == MetricKind.ATTRIBUTE:
                     relevant_topics.append(td)
@@ -263,8 +238,8 @@ class Hub:
             return desc.topic.rsplit('/', 1)[0] + '/' + desc.is_adjustable_suffix
 
         # Helper to build a map where duplicate keys accumulate values in a list
-        def build_multi_map(items, key_func):
-            result = {}
+        def build_multi_map(items: list[TopicDescriptor], key_func: Callable[[TopicDescriptor], str]) -> dict[str, list[TopicDescriptor]]:
+            result: dict[str, list[TopicDescriptor]] = {}
             for item in items:
                 # No need to index formula topics, they are discovered by _pending_formula_topics
                 if item.is_formula:
@@ -289,6 +264,7 @@ class Hub:
         for topic in self._pending_formula_topics:
             _LOGGER.info("Formula topic detected: %s", topic.topic)
         self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2, client_id=self._client_id)
+        self._loop = asyncio.get_event_loop()
         _LOGGER.info("Hub initialized. Client ID: %s", self._client_id)
 
     async def connect(self) -> None:
@@ -312,14 +288,13 @@ class Hub:
             self._client.tls_set_context(ssl_context)
         
         self._client.on_connect = self._on_connect
-        self._client._on_disconnect = self._on_disconnect
+        self._client.on_disconnect = self._on_disconnect
         self._client.on_message = self._on_message
         self._client.on_connect_fail = self.on_connect_fail
         #self._client.on_log = self._on_log
         self._connect_failed_attempts = 0
         self._connect_failed_since = 0.0
         self._connect_failed_reason = None
-        self._loop = asyncio.get_event_loop()
         #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop, name=name))
         self._last_full_publish_called = time.monotonic() # Initialize last full publish time
 
@@ -361,7 +336,7 @@ class Hub:
         payload = WritableMetric._wrap_payload(topic_desc, value) if value is not None else ""
         self._publish(topic, payload)
 
-    def _on_log(self, client: MQTTClient, userdata: Any, level:int, buf:str) -> None:
+    def _on_log(self, _client: MQTTClient, _userdata: Any, level:int, buf:str) -> None:
         _LOGGER.log(level, buf)
 
     def _on_connect(self, client: MQTTClient, userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, properties: Optional[Properties] = None) -> None:
@@ -378,7 +353,7 @@ class Hub:
         except Exception as exc:
             _LOGGER.exception("Exception in _on_connect while setting connected event: %s", exc)
 
-    def _on_connect_internal(self, client: MQTTClient, userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, properties: Optional[Properties] = None) -> None:
+    def _on_connect_internal(self, _client: MQTTClient, _userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, _properties: Optional[Properties] = None) -> None:
         """Handle connection callback."""
         self._connect_failed_since = 0
         self._connect_failed_attempts = 0
@@ -398,7 +373,7 @@ class Hub:
         _LOGGER.info("Connected to MQTT broker successfully")
         self._setup_subscriptions()
 
-    def _on_disconnect(self, client: MQTTClient, userdata: Any, disconnect_flags: mqtt.DisconnectFlags, reason_code: ReasonCode, properties: Optional[Properties] = None) -> None:
+    def _on_disconnect(self, _client: MQTTClient, _userdata: Any, disconnect_flags: mqtt.DisconnectFlags, reason_code: ReasonCode, _properties: Optional[Properties] = None) -> None:
         """Handle disconnection callback."""
         if reason_code != 0:
             _LOGGER.warning("Unexpected disconnection from MQTT broker. Error: %s. flags: %s, Reconnecting...", reason_code, disconnect_flags)
@@ -411,7 +386,7 @@ class Hub:
         except Exception as exc:
             _LOGGER.exception("_on_message exception %s: %s", type(exc), exc, exc_info=True)
 
-    def _on_message_internal(self, client: MQTTClient, userdata: Any, message: mqtt.MQTTMessage) -> None:
+    def _on_message_internal(self, _client: MQTTClient, _userdata: Any, message: mqtt.MQTTMessage) -> None:
         """Process MQTT message asynchronously."""
         topic = message.topic
         payload = message.payload.decode()
@@ -445,7 +420,7 @@ class Hub:
             # Use an empty JSON object.
             self._handle_full_publish_message("{}")
 
-    def is_formula_dependency_met(self, topic: TopicDescriptor, relevant_device: Device, key_values: dict[str, str]) -> Tuple[bool, list[Metric]]:
+    def _is_formula_dependency_met(self, topic: TopicDescriptor, relevant_device: Device, key_values: dict[str, str]) -> Tuple[bool, list[Metric]]:
         if not topic.depends_on:
             return True, []
         dependencies: list[Metric] = []
@@ -459,7 +434,7 @@ class Hub:
             dependencies.append(dependency_metric)
         return True, dependencies
 
-    def is_regular_dependency_met(self, metric_placeholder: MetricPlaceholder) -> bool:
+    def _is_regular_dependency_met(self, metric_placeholder: MetricPlaceholder) -> bool:
         if not metric_placeholder.topic_descriptor.depends_on:
             return True
         for dependency in metric_placeholder.topic_descriptor.depends_on:
@@ -493,7 +468,7 @@ class Hub:
             fallback_placeholders_list = list(self._fallback_placeholders.values())
             for metric_placeholder in self._metrics_placeholders.values():
                 # Check if depedency met, if not, the topic will get ignored
-                if not self.is_regular_dependency_met(metric_placeholder):
+                if not self._is_regular_dependency_met(metric_placeholder):
                     continue
                 metric = metric_placeholder.device._create_metric_from_placeholder(metric_placeholder, fallback_placeholders_list, self)
                 self._all_metrics[metric.unique_id] = metric
@@ -513,7 +488,7 @@ class Hub:
                         metric_unique_id = ParsedTopic.replace_ids(metric_unique_id, depends_on_metric.key_values)
                         if self._all_metrics.get(metric_unique_id) is not None:
                             continue
-                        is_met, dependencies = self.is_formula_dependency_met(topic, device, depends_on_metric.key_values)
+                        is_met, dependencies = self._is_formula_dependency_met(topic, device, depends_on_metric.key_values)
                         if not is_met:
                             continue
                         _LOGGER.info("Formula topic resolved: %s", topic)
@@ -575,7 +550,7 @@ class Hub:
         if self._loop.is_running():
             self._loop.call_soon_threadsafe(self._installation_id_event.set)
 
-    def _handle_normal_message(self, topic: str, payload: str, log_debug) -> None:
+    def _handle_normal_message(self, topic: str, payload: str, log_debug: Callable[..., None]) -> None:
         """Handle regular MQTT message."""
         parsed_topic = ParsedTopic.from_topic(topic)
         if parsed_topic is None:
@@ -696,7 +671,7 @@ class Hub:
             self._keepalive_task = None
 
 
-    async def create_full_raw_snapshot(self) -> dict:
+    async def create_full_raw_snapshot(self) -> dict[str, Any]:
         """Create a full raw snapshot of the current state of the Venus OS device.
         Should not be used in conjunction with initialize_devices_and_metrics()."""
         _LOGGER.info("Creating full raw snapshot of device state")
@@ -714,15 +689,15 @@ class Hub:
         _LOGGER.info("Snapshot complete with %d top-level entries", len(self._snapshot))
         return self._snapshot
 
-    def _set_nested_dict_value(self, d: dict, keys: list[str], value: str) -> None:
+    def _set_nested_dict_value(self, d: dict[str, Any], keys: list[str], value: str) -> None:
         for key in keys[:-1]:
             d = d.setdefault(key, {})
         d[keys[-1]] = value
 
     def _on_snapshot_message(
         self,
-        client: MQTTClient,
-        userdata: Any,
+        _client: MQTTClient,
+        _userdata: Any,
         message: mqtt.MQTTMessage,
     ) -> None:
         """Handle snapshot messages synchronously."""
@@ -730,8 +705,7 @@ class Hub:
             topic = self._remove_topic_prefix(message.topic)
             if "full_publish_completed" in topic:
                 _LOGGER.info("Full publish completed, unsubscribing from notification")
-                if self._client is not None:
-                    self._unsubscribe("#")
+                self._unsubscribe("#")
                 if self._loop.is_running():
                     self._loop.call_soon_threadsafe(self._first_refresh_event.set)
                 return
@@ -744,8 +718,8 @@ class Hub:
 
     def _on_installation_id_message(
         self,
-        client: MQTTClient,
-        userdata: Any,
+        _client: MQTTClient,
+        _userdata: Any,
         message: mqtt.MQTTMessage,
     ) -> None:
         """Handle installation ID messages synchronously."""
@@ -756,9 +730,8 @@ class Hub:
                 payload_json = json.loads(message.payload.decode())
                 self._installation_id = payload_json.get("value")
                 _LOGGER.info("Installation ID received: %s", self._installation_id)
-                if self._installation_id_event is not None:
-                    if self._loop.is_running():
-                        self._loop.call_soon_threadsafe(self._installation_id_event.set)
+                if self._loop.is_running():
+                    self._loop.call_soon_threadsafe(self._installation_id_event.set)
         except Exception as exc:
             _LOGGER.error("Error processing installation ID message: %s", exc)
 
@@ -775,8 +748,7 @@ class Hub:
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout waiting for installation ID")
             raise
-        if self._client is not None:
-            self._unsubscribe(TOPIC_INSTALLATION_ID)
+        self._unsubscribe(TOPIC_INSTALLATION_ID)
         _LOGGER.info("Installation ID read successfully: %s", self.installation_id)
         return str(self.installation_id)
 
@@ -853,9 +825,9 @@ class Hub:
         """Wait for the first connection to complete."""
         try:
             await asyncio.wait_for(self._connected_event.wait(), timeout=25) # 25 seconds
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as exc:
             _LOGGER.error("Timeout waiting for first first connection")
-            raise CannotConnectError("Timeout waiting for first connection")
+            raise CannotConnectError("Timeout waiting for first connection") from exc
 
     async def wait_for_first_refresh(self) -> None:
         """Wait for the first full refresh to complete."""
@@ -863,9 +835,9 @@ class Hub:
         try:
             await asyncio.wait_for(self._first_refresh_event.wait(), timeout=60)
             _LOGGER.info("Devices and metrics initialized. Found %d devices", len(self._devices))
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as exc:
             _LOGGER.error("Timeout waiting for first full refresh")
-            raise CannotConnectError("Timeout waiting for first full refresh")
+            raise CannotConnectError("Timeout waiting for first full refresh") from exc
 
     def _get_or_create_device(self, parsed_topic: ParsedTopic, desc: TopicDescriptor) -> Device:
         """Get or create a device based on topic."""
@@ -912,7 +884,7 @@ class Hub:
         """Return if connected."""
         return self._client.is_connected()
 
-    def on_connect_fail(self, client: MQTTClient, userdata: Any) -> None:
+    def on_connect_fail(self, client: MQTTClient, _userdata: Any) -> None:
         """Handle connection failure callback."""
         try:
             _LOGGER.warning("Connection to MQTT broker failed")
@@ -941,8 +913,7 @@ class Hub:
         """
         Expands TopicDescriptors with placeholders like {output(1-4)} into multiple descriptors.
         """
-        import re
-        expanded = []
+        expanded: list[TopicDescriptor] = []
         pattern = re.compile(r"\{([a-zA-Z0-9_]+)\((\d+)-(\d+)\)\}")
         for td in topic_list:
             matches = list(pattern.finditer(td.topic))

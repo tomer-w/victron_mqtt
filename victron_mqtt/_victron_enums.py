@@ -1,3 +1,4 @@
+"""Victron Enums Module."""
 from .constants import VictronDeviceEnum, VictronEnum
 
 class DeviceType(VictronDeviceEnum):
@@ -37,24 +38,24 @@ class DeviceType(VictronDeviceEnum):
 
 class GenericOnOff(VictronEnum):
     """On/Off Enum"""
-    Off = (0, "Off")
-    On = (1, "On")
+    OFF = (0, "Off")
+    ON = (1, "On")
 
 class ChargerMode(VictronEnum):
     """Charger Mode Enum"""
-    On = (1, "On")
-    Off = (4, "Off")
+    ON = (1, "On")
+    OFF = (4, "Off")
 
 class InverterMode(VictronEnum):
     """Inverter Mode Enum"""
-    ChargerOnly = (1, "Charger Only")
-    InverterOnly = (2, "Inverter Only")
-    On = (3, "On")
-    Off = (4, "Off")
-    LowPower = (5, "Low Power")
-    Passthrough = (251, "Passthrough")
-    Standby = (252, "Standby")
-    Hibernate = (253, "Hibernate")
+    CHARGER_ONLY = (1, "Charger Only")
+    INVERTER_ONLY = (2, "Inverter Only")
+    ON = (3, "On")
+    OFF = (4, "Off")
+    LOW_POWER = (5, "Low Power")
+    PASSTHROUGH = (251, "Passthrough")
+    STANDBY = (252, "Standby")
+    HIBERNATE = (253, "Hibernate")
 
 class PhoenixInverterMode(VictronEnum):
     """Inverter Mode Enum"""
@@ -64,131 +65,136 @@ class PhoenixInverterMode(VictronEnum):
 
 class State(VictronEnum):
     """State Enum"""
-    Off = (0, "Off")
-    LowPower = (1, "Low Power")
-    Fault = (2, "Fault")
-    Bulk = (3, "Bulk")
-    Absorption = (4, "Absorption")
-    Float = (5, "Float")
-    Storage = (6, "Storage")
-    Equalize = (7, "Equalize")
-    Passthrough = (8, "Passthrough")
-    Inverting = (9, "Inverting")
-    PowerAssist = (10, "Power Assist")
-    PowerSupply = (11, "Power Supply")
-    Sustain = (244, "Sustain")
-    StartingUp = (245, "Starting Up")
-    RepeatedAbsorption = (246, "Repeated Absorption")
-    AutoEqualize = (247, "Auto Equalize / Recondition")
-    BatterySafe = (248, "Battery Safe")
-    ExternalControl = (252, "External Control")
-    Discharging = (256, "Discharging")
-    SustainAlt = (257, "Sustain Alt")
-    Recharging = (258, "Recharging")
-    ScheduledRecharging = (259, "Scheduled Recharging")
+    OFF = (0, "Off")
+    LOW_POWER = (1, "Low Power")
+    FAULT = (2, "Fault")
+    BULK = (3, "Bulk")
+    ABSORPTION = (4, "Absorption")
+    FLOAT = (5, "Float")
+    STORAGE = (6, "Storage")
+    EQUALIZE = (7, "Equalize")
+    PASSTHROUGH = (8, "Passthrough")
+    INVERTING = (9, "Inverting")
+    POWER_ASSIST = (10, "Power Assist")
+    POWER_SUPPLY = (11, "Power Supply")
+    SUSTAIN = (244, "Sustain")
+    STARTING_UP = (245, "Starting Up")
+    REPEATED_ABSORPTION = (246, "Repeated Absorption")
+    AUTO_EQUALIZE = (247, "Auto Equalize / Recondition")
+    BATTERY_SAFE = (248, "Battery Safe")
+    EXTERNAL_CONTROL = (252, "External Control")
+    DISCHARGING = (256, "Discharging")
+    SUSTAIN_ALT = (257, "Sustain Alt")
+    RECHARGING = (258, "Recharging")
+    SCHEDULED_RECHARGING = (259, "Scheduled Recharging")
 
 class GenericAlarmEnum(VictronEnum):
-    NoAlarm = (0, "No Alarm")
-    Warning = (1, "Warning")
-    Alarm = (2, "Alarm")
+    """Generic Alarm Enum"""
+    NO_ALARM = (0, "No Alarm")
+    WARNING = (1, "Warning")
+    ALARM = (2, "Alarm")
 
 class EvChargerMode(VictronEnum):
     """EVCharger Mode Enum"""
-    Manual = (0, "Manual")
-    Auto = (1, "Auto")
-    ScheduledCharge = (2, "Scheduled Charge")
+    MANUAL = (0, "Manual")
+    AUTO = (1, "Auto")
+    SCHEDULED_CHARGE = (2, "Scheduled Charge")
 
 class EvChargerPosition(VictronEnum):
     """EVCharger Position Enum"""
-    AcOut = (0, "AC Out")
-    AcInput = (1, "AC Input")
+    AC_OUT = (0, "AC Out")
+    AC_INPUT = (1, "AC Input")
 
 class EvChargerStatus(VictronEnum):
     """EVCharger Status Enum"""
-    Disconnected = (0, "Disconnected")
-    Connected = (1, "Connected")
-    Charging = (2, "Charging")
-    Charged = (3, "Charged")
-    WaitingForSun = (4, "Waiting for sun")
-    WaitingForRFID = (5, "Waiting for RFID")
-    WaitingForStart = (6, "Waiting for start")
-    LowSoc = (7, "Low SOC")
-    GroundTestError = (8, "Ground test error")
-    WeldedContactsTestError = (9, "Welded contacts test error")
-    CPInputTestError= (10, "CP input test error")
-    ResidualCurrentDetected = (11, "Residual current detected")
-    UndervoltageDetected = (12, "Undervoltage detected")
-    OvervoltageDetected = (13, "Overvoltage detected")
-    OverheatingDetected = (14, "Overheating detected")
-    Reserved15 = (15, "Reserved")
-    Reserved16 = (16, "Reserved")
-    Reserved17 = (17, "Reserved")
-    Reserved18 = (18, "Reserved")
-    Reserved19 = (19, "reserved")
-    ChargingLimit = (20, "Charging limit")
-    StartCharging = (21, "Start charging")
-    SwitchingTo3Phase = (22, "Switching to 3 phase")
-    SwitchingTo1Phase = (23, "Switching to 1 phase")
+    DISCONNECTED = (0, "Disconnected")
+    CONNECTED = (1, "Connected")
+    CHARGING = (2, "Charging")
+    CHARGED = (3, "Charged")
+    WAITING_FOR_SUN = (4, "Waiting for sun")
+    WAITING_FOR_RFID = (5, "Waiting for RFID")
+    WAITING_FOR_START = (6, "Waiting for start")
+    LOW_SOC = (7, "Low SOC")
+    GROUND_TEST_ERROR = (8, "Ground test error")
+    WELDED_CONTACTS_TEST_ERROR = (9, "Welded contacts test error")
+    CP_INPUT_TEST_ERROR= (10, "CP input test error")
+    RESIDUAL_CURRENT_DETECTED = (11, "Residual current detected")
+    UNDERVOLTAGE_DETECTED = (12, "Undervoltage detected")
+    OVERVOLTAGE_DETECTED = (13, "Overvoltage detected")
+    OVERHEATING_DETECTED = (14, "Overheating detected")
+    RESERVED15 = (15, "Reserved")
+    RESERVED16 = (16, "Reserved")
+    RESERVED17 = (17, "Reserved")
+    RESERVED18 = (18, "Reserved")
+    RESERVED19 = (19, "reserved")
+    CHARGING_LIMIT = (20, "Charging limit")
+    START_CHARGING = (21, "Start charging")
+    SWITCHING_TO_3_PHASE = (22, "Switching to 3 phase")
+    SWITCHING_TO_1_PHASE = (23, "Switching to 1 phase")
 
 class TemperatureStatus(VictronEnum):
     """Temperature sensor status enum"""
-    Ok = (0, "Ok")
-    Disconnected = (1, "Disconnected")
-    ShortCircuited = (2, "Short circuited")
-    ReversePolarity = (3, "Reverse polarity")
-    Unknown = (4, "Unknown")
+    OK = (0, "Ok")
+    DISCONNECTED = (1, "Disconnected")
+    SHORT_CIRCUITED = (2, "Short circuited")
+    REVERSE_POLARITY = (3, "Reverse polarity")
+    UNKNOWN = (4, "Unknown")
 
 class TemperatureType(VictronEnum):
     """Temperature sensor type enum"""
-    Battery = (0, "Battery")
-    Fridge = (1, "Fridge")
-    Generic = (2, "Generic")
-    Room = (3, "Room")
-    Outdoor = (4, "Outdoor")
-    WaterHeater = (5, "Water Heater")
-    Freezer = (6, "Freezer")
+    BATTERY = (0, "Battery")
+    FRIDGE = (1, "Fridge")
+    GENERIC = (2, "Generic")
+    ROOM = (3, "Room")
+    OUTDOOR = (4, "Outdoor")
+    WATER_HEATER = (5, "Water Heater")
+    FREEZER = (6, "Freezer")
 
 class FluidType(VictronEnum):
     """Fluid type enum"""
-    Fuel = (0, "Fuel")
-    FreshWater = (1, "Fresh Water")
-    WasteWater = (2, "Waste Water")
-    LiveWell = (3, "Live Well")
-    Oil = (4, "Oil")
-    BlackWater = (5, "Black water (sewage)")
-    Gasoline = (6, "Gasoline")
-    Diesel = (7, "Diesel")
+    FUEL = (0, "Fuel")
+    FRESH_WATER = (1, "Fresh Water")
+    WASTE_WATER = (2, "Waste Water")
+    LIVE_WELL = (3, "Live Well")
+    OIL = (4, "Oil")
+    BLACK_WATER = (5, "Black water (sewage)")
+    GASOLINE = (6, "Gasoline")
+    DIESEL = (7, "Diesel")
     LPG = (8, "Liquid  Petroleum Gas (LPG)")
     LNG = (9, "Liquid Natural Gas (LNG)")
-    HydraulicOil = (10, "Hydraulic oil")
-    RawWater = (11, "Raw water")
-    
+    HYDRAULIC_OIL = (10, "Hydraulic oil")
+    RAW_WATER = (11, "Raw water")
+
 class MppOperationMode(VictronEnum):
-    Off = (0, "Off")
-    VoltageCurrentLimited = (1, "Voltage/current limited")
-    MPPTActive = (2, "MPPT active")
-    NotAvailable = (255, "Not available")
+    """MPP Operation Mode Enum"""
+    OFF = (0, "Off")
+    VOLTAGE_CURRENT_LIMITED = (1, "Voltage/current limited")
+    MPPT_ACTIVE = (2, "MPPT active")
+    NOT_AVAILABLE = (255, "Not available")
 
 class ESSMode(VictronEnum):
-    SelfConsumptionBatterylife = (0, "self consumption (batterylife)")
-    SelfConsumption = (1, "self consumption")
-    KeepCharged = (2, "keep charged")
-    ExternalControl = (3, "External control")
+    """ESS Mode Enum"""
+    SELF_CONSUMPTION_BATTERYLIFE = (0, "self consumption (batterylife)")
+    SELF_CONSUMPTION = (1, "self consumption")
+    KEEP_CHARGED = (2, "keep charged")
+    EXTERNAL_CONTROL = (3, "External control")
 
 class GeneratorRunningByConditionCode(VictronEnum):
-    Stopped = (0, "Stopped")
-    Manual = (1, "Manual")
-    TestRun = (2, "Test Run")
-    LostComms = (3, "Lost Comms")
+    """Generator Running By Condition Code Enum"""
+    STOPPED = (0, "Stopped")
+    MANUAL = (1, "Manual")
+    TEST_RUN = (2, "Test Run")
+    LOST_COMMS = (3, "Lost Comms")
     SOC = (4, "SOC")
-    ACLoad = (5, "AC Load")
-    BatteryCurrent = (6, "Battery Current")
-    BatteryVolts = (7, "Battery Volts")
-    InvTemp = (8, "Inv Temp")
-    InvOverload = (9, "Inv Overload")
-    StopOnAC1 = (10, "Stop On AC1")
+    AC_LOAD = (5, "AC Load")
+    BATTERY_CURRENT = (6, "Battery Current")
+    BATTERY_VOLTS = (7, "Battery Volts")
+    INV_TEMP = (8, "Inv Temp")
+    INV_OVERLOAD = (9, "Inv Overload")
+    STOP_ON_AC1 = (10, "Stop On AC1")
 
 class DESSReactiveStrategy(VictronEnum):
+    """DESS Reactive Strategy Enum"""
     SCHEDULED_SELFCONSUME = (1, "Scheduled Self-Consume")
     SCHEDULED_CHARGE_ALLOW_GRID = (2, "Scheduled Charge Allow Grid")
     SCHEDULED_CHARGE_ENHANCED = (3, "Scheduled Charge Enhanced")
@@ -218,12 +224,14 @@ class DESSReactiveStrategy(VictronEnum):
     NO_WINDOW = (99, "No Window")
 
 class DESSStrategy(VictronEnum):
+    """DESS Strategy Enum"""
     TARGETSOC = (0, "Target SOC")
     SELFCONSUME = (1, "Self-Consume")
     PROBATTERY = (2, "Pro Battery")
     PROGRID = (3, "Pro Grid")
 
 class DESSErrorCode(VictronEnum):
+    """DESS Error Code Enum"""
     NO_ERROR = (0,"No Error")
     NO_ESS = (1,"No ESS")
     ESS_MODE = (2, "ESS Mode") # ???
@@ -240,12 +248,14 @@ class DESSMode(VictronEnum):
     NODE_RED = (4, "Node-RED")
 
 class DESSRestrictions(VictronEnum):
+    """DESS Restrictions Enum"""
     NO_RESTRICTIONS = (0, "No Restrictions between battery and the grid")
     BATTERY_TO_GRID_RESTRICTED = (1, "Battery to grid energy flow restricted")
     GRID_TO_BATTERY_RESTRICTED = (2, "Grid to battery energy flow restricted")
     NO_FLOW = (3, "No energy flow between battery and grid")
 
 class ErrorCode(VictronEnum):
+    """Generic Error Code Enum"""
     NO_ERROR = (0, "No error")
     BATTERY_VOLTAGE_TOO_HIGH = (2, "Battery voltage too high")
     CHARGER_TEMPERATURE_TOO_HIGH = (17, "Charger temperature too high")
@@ -269,109 +279,113 @@ class ErrorCode(VictronEnum):
 
 class DigitalInputInputState(VictronEnum):
     """Raw input state: High/Open (0) or Low/Closed (1)."""
-    High_Open = (0, "High/Open")
-    Low_Closed = (1, "Low/Closed")
+    HIGH_OPEN = (0, "High/Open")
+    LOW_CLOSED = (1, "Low/Closed")
 
 class DigitalInputType(VictronEnum):
     """Type of digital input."""
-    Disabled = (0, "Disabled")
-    PulseMeter = (1, "Pulse meter")
-    DoorAlarm = (2, "Door alarm")
-    BilgePump = (3, "Bilge pump")
-    BilgeAlarm = (4, "Bilge alarm")
-    BurglarAlarm = (5, "Burglar alarm")
-    SmokeAlarm = (6, "Smoke alarm")
-    FireAlarm = (7, "Fire alarm")
-    CO2Alarm = (8, "CO2 alarm")
-    Generator = (9, "Generator")
-    TouchInputControl = (10, "Touch input control")
+    DISABLED = (0, "Disabled")
+    PULSE_METER = (1, "Pulse meter")
+    DOOR_ALARM = (2, "Door alarm")
+    BILGE_PUMP = (3, "Bilge pump")
+    BILGE_ALARM = (4, "Bilge alarm")
+    BURGLAR_ALARM = (5, "Burglar alarm")
+    SMOKE_ALARM = (6, "Smoke alarm")
+    FIRE_ALARM = (7, "Fire alarm")
+    CO2_ALARM = (8, "CO2 alarm")
+    GENERATOR = (9, "Generator")
+    TOUCH_INPUT_CONTROL = (10, "Touch input control")
 
 class DigitalInputState(VictronEnum):
     """Translated input state (determined by input type)."""
-    Low = (0, "Low")
-    High = (1, "High")
-    Off = (2, "Off")
-    On = (3, "On")
-    No = (4, "No")
-    Yes = (5, "Yes")
-    Open = (6, "Open")
-    Closed = (7, "Closed")
-    Ok = (8, "Ok")
-    Alarm = (9, "Alarm")
-    Running = (10, "Running")
-    Stopped = (11, "Stopped")
-    
+    LOW = (0, "Low")
+    HIGH = (1, "High")
+    OFF = (2, "Off")
+    ON = (3, "On")
+    NO = (4, "No")
+    YES = (5, "Yes")
+    OPEN = (6, "Open")
+    CLOSED = (7, "Closed")
+    OK = (8, "Ok")
+    ALARM = (9, "Alarm")
+    RUNNING = (10, "Running")
+    STOPPED = (11, "Stopped")
+
 class ESSState(VictronEnum):
+    """ESS State Enum"""
     #Optimized mode with BatteryLife:
     # 1 is Value set by the GUI when BatteryLife is enabled. Hub4Control uses it to find the right BatteryLife state (values 2-7) based on system state
-    WithBatteryLife = (1, "Optimized mode with BatteryLife")
-    SelfConsumption = (2, "Self consumption")
-    SelfConsumptionSoCExceeds85= (3, "Self consumption, SoC exceeds 85%")
-    SelfConsumptionSoCat100 = (4, "Self consumption, SoC at 100%")
-    SoCBelowBatteryLifeDynamicSoClimit = (5, "SoC below BatteryLife dynamic SoC limit")
-    SoCBelowSoCLimit24Hours = (6, "SoC has been below SoC limit for more than 24 hours. Charging with battery with 5amps")
-    Sustain = (7, "Multi/Quattro is in sustain")
-    Recharge = (8, "Recharge, SOC dropped 5% or more below MinSOC")
+    WITH_BATTERY_LIFE = (1, "Optimized mode with BatteryLife")
+    SELF_CONSUMPTION = (2, "Self consumption")
+    SELF_CONSUMPTION_SOC_EXCEEDS_85= (3, "Self consumption, SoC exceeds 85%")
+    SELF_CONSUMPTION_SOC_AT_100 = (4, "Self consumption, SoC at 100%")
+    SOC_BELOW_BATTERY_LIFE_DYNAMIC_SOC_LIMIT = (5, "SoC below BatteryLife dynamic SoC limit")
+    SOC_BELOW_SOC_LIMIT_24_HOURS = (6, "SoC has been below SoC limit for more than 24 hours. Charging with battery with 5amps")
+    SUSTAIN = (7, "Multi/Quattro is in sustain")
+    RECHARGE = (8, "Recharge, SOC dropped 5% or more below MinSOC")
     #Keep batteries charged mode:
-    KeepBatteriesCharged = (9, "'Keep batteries charged' mode enabled")
+    KEEP_BATTERIES_CHARGED = (9, "'Keep batteries charged' mode enabled")
     #Optimized mode without BatteryLife:
-    SelfConsumptionSoCAboveMin = (10, "Self consumption, SoC at or above minimum SoC")
-    SelfConsumptionSoCBelowMin = (11, "Self consumption, SoC is below minimum SoC")
-    RechargeNoBatteryLife = (12, "Recharge, SOC dropped 5% or more below MinSOC (No BatteryLife)")
+    SELF_CONSUMPTION_SOC_ABOVE_MIN = (10, "Self consumption, SoC at or above minimum SoC")
+    SELF_CONSUMPTION_SOC_BELOW_MIN = (11, "Self consumption, SoC is below minimum SoC")
+    RECHARGE_NO_BATTERY_LIFE = (12, "Recharge, SOC dropped 5% or more below MinSOC (No BatteryLife)")
 
 class ESSModeHub4(VictronEnum):
-    PhaseCompensationEnabled = (1, "Optimized mode or 'keep batteries charged' and phase compensation enabled")
-    PhaseCompensationDisabled = (2, "Optimized mode or 'keep batteries charged' and phase compensation disabled")
-    ExternalControl = (3, "External control")
+    """ESS Mode Enum for Hub4Control"""
+    PHASE_COMPENSATION_ENABLED = (1, "Optimized mode or 'keep batteries charged' and phase compensation enabled")
+    PHASE_COMPENSATION_DISABLED = (2, "Optimized mode or 'keep batteries charged' and phase compensation disabled")
+    EXTERNAL_CONTROL = (3, "External control")
 
 class AcActiveInputSource(VictronEnum):
     """AC Active Input Source Enum"""
-    Unknown = (0, "Unknown")
-    Grid = (1, "Grid")
-    Generator = (2, "Generator")
-    ShorePower = (3, "Shore power")
-    NotConnected = (240, "Not connected")
+    UNKNOWN = (0, "Unknown")
+    GRID = (1, "Grid")
+    GENERATOR = (2, "Generator")
+    SHORE_POWER = (3, "Shore power")
+    NOT_CONNECTED = (240, "Not connected")
 
 class ChargeSchedule(VictronEnum):
     """Charge Schedule Enum"""
-    DisabledSunday= (-10, "Disabled (Sunday)")
-    DisabledWeekend= (-9, "Disabled (Weekends)")
-    DisabledWeekdays= (-8, "Disabled (Weekdays)")
-    DisabledEveryDay= (-7, "Disabled (Every day)")
-    DisabledSaturday= (-6, "Disabled (Saturday)")
-    DisabledFriday= (-5, "Disabled (Friday)")
-    DisabledThursday= (-4, "Disabled (Thursday)")
-    DisabledWednesday= (-3, "Disabled (Wednesday)")
-    DisabledTuesday= (-2, "Disabled (Tuesday)")
-    DisabledMonday= (-1, "Disabled (Monday)")
-    Sunday = (0, "Sunday")
-    Monday = (1, "Monday")
-    Tuesday = (2, "Tuesday")
-    Wednesday = (3, "Wednesday")
-    Thursday = (4, "Thursday")
-    Friday = (5, "Friday")
-    Saturday = (6, "Saturday")
-    EveryDay = (7, "Every day")
-    Weekdays = (8, "Weekdays")
-    Weekends = (9, "Weekends")
+    DISABLED_SUNDAY= (-10, "Disabled (Sunday)")
+    DISABLED_WEEKEND= (-9, "Disabled (Weekends)")
+    DISABLED_WEEKDAYS= (-8, "Disabled (Weekdays)")
+    DISABLED_EVERY_DAY= (-7, "Disabled (Every day)")
+    DISABLED_SATURDAY= (-6, "Disabled (Saturday)")
+    DISABLED_FRIDAY= (-5, "Disabled (Friday)")
+    DISABLED_THURSDAY= (-4, "Disabled (Thursday)")
+    DISABLED_WEDNESDAY= (-3, "Disabled (Wednesday)")
+    DISABLED_TUESDAY= (-2, "Disabled (Tuesday)")
+    DISABLED_MONDAY= (-1, "Disabled (Monday)")
+    SUNDAY = (0, "Sunday")
+    MONDAY = (1, "Monday")
+    TUESDAY = (2, "Tuesday")
+    WEDNESDAY = (3, "Wednesday")
+    THURSDAY = (4, "Thursday")
+    FRIDAY = (5, "Friday")
+    SATURDAY = (6, "Saturday")
+    EVERY_DAY = (7, "Every day")
+    WEEKDAYS = (8, "Weekdays")
+    WEEKENDS = (9, "Weekends")
 
 class ActiveInputEnum(VictronEnum):
+    """Active Input Enum"""
     AC_INPUT_1 = (0, "AC Input 1")
     AC_INPUT_2 = (1, "AC Input 2")
     DISCONNECTED = (240, "Disconnected")
 
 class SolarChargerDeviceOffReason(VictronEnum):
+    """Solar Charger Device Off Reason Enum"""
     NONE = (0x00, "-")
-    NoInputPower = (0x01, "No/Low input power")
-    SwitchedOffPowerSwitch = (0x02, "Switched off (power switch)")
-    SwitchedOffDeviceModeRegister = (0x04, "Switched off (device mode register)")
-    RemoteInput = (0x08, "Remote input")
-    ProtectiveAction = (0x10, "Protection active")
-    NeedToken = (0x20, "Need token for operation")
-    SignalFromBMS = (0x40, "Signal from BMS")
-    EngineShutdow = (0x80, "Engine shutdown on low input voltage")
-    AnalysingInputVoltage = (0x100, "Analysing input voltage")
-    LowTemperature = (0x200, "Low temperature")
-    NoPanelPower = (0x400, "No/Low panel power")
-    NoBatteryPower = (0x800, "No/Low battery power")
-    ActiveAlarm = (0x8000, "Active alarm")
+    NO_INPUT_POWER = (0x01, "No/Low input power")
+    SWITCHED_OFF_POWER_SWITCH = (0x02, "Switched off (power switch)")
+    SWITCHED_OFF_DEVICE_MODE_REGISTER = (0x04, "Switched off (device mode register)")
+    REMOTE_INPUT = (0x08, "Remote input")
+    PROTECTIVE_ACTION = (0x10, "Protection active")
+    NEED_TOKEN = (0x20, "Need token for operation")
+    SIGNAL_FROM_BMS = (0x40, "Signal from BMS")
+    ENGINE_SHUTDOWN = (0x80, "Engine shutdown on low input voltage")
+    ANALYSING_INPUT_VOLTAGE = (0x100, "Analysing input voltage")
+    LOW_TEMPERATURE = (0x200, "Low temperature")
+    NO_PANEL_POWER = (0x400, "No/Low panel power")
+    NO_BATTERY_POWER = (0x800, "No/Low battery power")
+    ACTIVE_ALARM = (0x8000, "Active alarm")

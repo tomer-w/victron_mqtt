@@ -6,10 +6,12 @@ from __future__ import annotations
 
 from enum import Enum
 import logging
+from typing import Any, Iterable
 
 from .metric import Metric
 from ._unwrappers import VALUE_TYPE_WRAPPER, wrap_bitmask, wrap_enum
 from .data_classes import ParsedTopic, TopicDescriptor
+from .constants import ValueType, VictronEnum
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +22,7 @@ class WritableMetric(Metric):
     _min_value: int | float | None = None
     _max_value: int | float | None = None
 
-    def __init__(self, *, descriptor: TopicDescriptor | None = None, topic: str | None = None, **kwargs) -> None:
+    def __init__(self, *, descriptor: TopicDescriptor | None = None, topic: str | None = None, **kwargs: Any) -> None:
         """Initialize the WritableMetric."""
         assert descriptor is not None
         _LOGGER.debug(
@@ -46,55 +48,60 @@ class WritableMetric(Metric):
         self._max_value = self._get_min_max_value(self._descriptor.max, device_id, all_metrics)
 
     def _get_min_max_value(
-        self, 
-        range_value: int | float | str | None, 
-        device_id: str, 
+        self,
+        range_value: int | float | str | None,
+        device_id: str,
         all_metrics: dict[str, Metric]
         ) -> int | float | None:
         """Resolve a range value (min/max) that may be static or reference another metric."""
         if range_value is None:
             return None
-        
+
         if not isinstance(range_value, str):
             # Static numeric value
             return range_value
-        
+
         # Dynamic reference to another metric: "metric_id:default_value"
         parts = range_value.split(":")
-        assert len(parts) == 2, f"Range reference must be in format 'metric_id:default_value'. Got: '{range_value}'"        
+        assert len(parts) == 2, f"Range reference must be in format 'metric_id:default_value'. Got: '{range_value}'"
         dependency_id: str = parts[0]
         default_value: int | float = float(parts[1]) if "." in parts[1] else int(parts[1])
-        
+
         metric_unique_id = ParsedTopic.make_unique_id(device_id, dependency_id)
         metric_unique_id = ParsedTopic.replace_ids(metric_unique_id, self.key_values)
         ref_metric = all_metrics.get(metric_unique_id)
-        
+
         if ref_metric is None:
             _LOGGER.debug(
             "Referenced metric '%s' not found for %s, using default value %s",
             metric_unique_id, self._descriptor.short_id, default_value
             )
             return default_value
-        
+
         return ref_metric.value
 
     @property
     def min_value(self) -> int | float | None:
+        """Get the minimum value for this metric, if defined."""
         return self._min_value
 
     @property
     def max_value(self) -> int | float | None:
+        """Get the maximum value for this metric, if defined."""
         return self._max_value
 
     @property
     def step(self) -> float | int | None:
+        """Get the step value for this metric, if defined."""
         return self._descriptor.step
 
     @property
     def enum_values(self) -> list[str] | None:
+        """Get the enum string values for this metric, if defined."""
         return [e.string for e in self._descriptor.enum] if self._descriptor.enum else None
 
     def set(self, value: str | float | int | bool | Enum) -> None:
+        """Set the value of this metric by publishing to the write topic."""
         assert self._write_topic is not None
         payload = WritableMetric._wrap_payload(self._descriptor, value)
         self._hub._publish(self._write_topic, payload)
@@ -102,16 +109,27 @@ class WritableMetric(Metric):
     @staticmethod
     def _wrap_payload(topic_desc: TopicDescriptor, value: str | float | int | bool | Enum) -> str:
         assert topic_desc.value_type is not None
-        wrapper = VALUE_TYPE_WRAPPER[topic_desc.value_type]
-        if wrapper in [wrap_enum,wrap_bitmask]:
-            return wrapper(value, topic_desc.enum)
-        else:
-            return wrapper(value)
-    
+        value_type = topic_desc.value_type
+
+        if value_type is ValueType.ENUM:
+            assert topic_desc.enum is not None, "Enum must be provided for enum value types"
+            assert isinstance(value, (VictronEnum, str)), "Enum values must be VictronEnum or str"
+            return wrap_enum(value, topic_desc.enum)
+
+        if value_type is ValueType.BITMASK:
+            assert topic_desc.enum is not None, "Enum must be provided for bitmask value types"
+            assert isinstance(value, (VictronEnum, str, Iterable)), "Bitmask values must be VictronEnum, str or iterable"
+            return wrap_bitmask(value, topic_desc.enum)
+
+        wrapper = VALUE_TYPE_WRAPPER[value_type]
+        return wrapper(value)
+
     @property
     def value(self):
+        """Get the current value of this metric."""
         return self._value
 
     @value.setter
-    def value(self, new_value):
+    def value(self, new_value: str | float | int | bool | Enum) -> None:
+        """Set a new value for this metric."""
         self.set(new_value)

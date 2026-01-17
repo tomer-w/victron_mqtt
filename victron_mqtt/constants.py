@@ -84,11 +84,11 @@ class OperationMode(Enum):
 
 @dataclass
 class FormulaTransientState:
-    pass
+    """Transient state for formula metrics."""
 
 @dataclass
 class FormulaPersistentState:
-    pass
+    """Persistent state for formula metrics."""
 
 PLACEHOLDER_PHASE = "{phase}"
 PLACEHOLDER_NEXT_PHASE = "{next_phase}"
@@ -96,14 +96,15 @@ PLACEHOLDER_NEXT_PHASE = "{next_phase}"
 BITMASK_SEPARATOR = ","
 
 class VictronEnum(Enum):
-    def __init__(self, code, string):
+    """Base class for Victron Enums with code and string representation."""
+    def __init__(self, code: int | str, string: str):
         self._value_ = (code, string)
         self.code = code
         self.string = string
 
     def __repr__(self):
         return f"{self.__class__.__name__}.{self.name}(code={self.code}, string={self.string})"
-    
+
     def __str__(self) -> str:
         return self.string
 
