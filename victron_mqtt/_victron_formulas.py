@@ -14,7 +14,8 @@ def system_dc_battery_discharge_power(
     depends_on: dict[str, Metric],
     transient_state: FormulaTransientState | None,
     persistent_state: FormulaPersistentState | None) -> tuple[float, FormulaTransientState, FormulaPersistentState] | None:
-    
+    """Calculate the system DC battery discharge power in kWh."""
+
     def adjust_power_for_discharging(current_power: float) -> float:
         if current_power > 0:
             current_power = 0.0
@@ -28,6 +29,7 @@ def system_dc_battery_charge_power(
     depends_on: dict[str, Metric],
     transient_state: FormulaTransientState | None,
     persistent_state: FormulaPersistentState | None) -> tuple[float, FormulaTransientState, FormulaPersistentState] | None:
+    """Calculate the system DC battery charge power in kWh."""
 
     def adjust_power_for_charging(current_power: float) -> float:
         if current_power < 0:
@@ -40,9 +42,10 @@ def left_riemann_sum(
     depends_on: dict[str, Metric],
     transient_state: FormulaTransientState | None,
     persistent_state: FormulaPersistentState | None) -> tuple[float, FormulaTransientState, FormulaPersistentState] | None:
+    """Calculate the left Riemann sum in kWh."""
 
-    def adjust(input: float) -> float:
-        return input / 1000  # Convert to kW
+    def adjust(val: float) -> float:
+        return val / 1000  # Convert to kW
 
     return left_riemann_sum_internal(depends_on, adjust, transient_state, persistent_state)
 
@@ -51,6 +54,7 @@ def schedule_charge_enabled(
     depends_on: dict[str, Metric],
     _transient_state: FormulaTransientState | None,
     _persistent_state: FormulaPersistentState | None) -> tuple[GenericOnOff | None, None, None]:
+    """Determine if schedule charge is enabled."""
 
     assert len(depends_on) == 1, "Expected exactly one input metric for schedule_charge_enabled"
     metric = list(depends_on.values())[0]
@@ -65,6 +69,8 @@ def schedule_charge_enabled_set(
     depends_on: dict[str, Metric],
     _transient_state: FormulaTransientState | None,
     _persistent_state: FormulaPersistentState | None) -> tuple[GenericOnOff, None, None]:
+    """Set schedule charge enabled state."""
+
     assert len(depends_on) == 1, "Expected exactly one input metric for schedule_charge_enabled"
     enabled: GenericOnOff | None = value if isinstance(value, GenericOnOff) else GenericOnOff.from_string(value) #Support both the int value and the enum itself
     assert enabled is not None, "Failed to determine enabled state"

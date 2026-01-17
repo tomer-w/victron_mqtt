@@ -116,6 +116,7 @@ class VictronEnum(Enum):
 
     @classmethod
     def from_code(cls: type[Self], value: int | str, default_value: "VictronEnum | None" = None) -> Self | None:
+        """Get enum member from its code representation."""
         lookup = cls._build_code_lookup()
         result = lookup.get(value, default_value)
         return result  # type: ignore[return-value]
@@ -128,25 +129,33 @@ class VictronEnum(Enum):
 
     @classmethod
     def from_string(cls: type[Self], value: str) -> Self:
+        """Get enum member from its string representation."""
         lookup = cls._build_string_lookup()
         try:
             return lookup[value]
-        except KeyError:
-            raise ValueError(f"No enum member found with string={value}")
+        except KeyError as exc:
+            raise ValueError(f"No enum member found with string={value}") from exc
 
 class VictronDeviceEnum(VictronEnum):
+    """Base class for Victron Enums that may map to other enum values."""
     def __init__(self, code: str, string: str, mapped_to: str | None = None):
         super().__init__(code, string)
         self.mapped_to = mapped_to
 
     @classmethod
-    def from_code(cls: type[Self], value: int | str, default_value: Self | None = None) -> Self | None:
-        result = super().from_code(value, default_value)
+    def from_code(cls: type[Self], value: int | str, default_value: "VictronEnum | None" = None) -> Self | None:
+        """Not implemented for VictronDeviceEnum, use from_device_code instead."""
+        raise NotImplementedError("VictronDeviceEnum does not support from_code, use from_device_code.")
+
+    @classmethod
+    def from_device_code(cls: type[Self], value: int | str, default_value: Self | None = None) -> Self | None:
+        """Get enum member from its device code representation, following mappings if necessary."""
+        result = super(VictronDeviceEnum, cls).from_code(value, default_value)
         if result is None:
             return None
         assert isinstance(result, cls)
         if result.mapped_to:
-            mapped_result = super().from_code(result.mapped_to, default_value)
+            mapped_result = super(VictronDeviceEnum, cls).from_code(result.mapped_to, default_value)
             if mapped_result is None:
                 return None
             assert isinstance(mapped_result, cls)

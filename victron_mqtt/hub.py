@@ -279,14 +279,14 @@ class Hub:
             username = "victron_mqtt" if self.username is None else self.username
             _LOGGER.info("Setting auth credentials for user: %s", self.username)
             self._client.username_pw_set(username, self.password)
-        
+
         if self.use_ssl:
             _LOGGER.info("Setting up SSL context")
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.VerifyMode.CERT_NONE
             self._client.tls_set_context(ssl_context)
-        
+
         self._client.on_connect = self._on_connect
         self._client.on_disconnect = self._on_disconnect
         self._client.on_message = self._on_message
@@ -369,7 +369,7 @@ class Hub:
                 raise AuthenticationError(f"Authentication failed: {connack_string(reason_code)}")
             else:
                 raise CannotConnectError(f"Failed to connect to MQTT broker: {self.host}:{self.port}. Error: {connack_string(reason_code)}")
-            
+
         _LOGGER.info("Connected to MQTT broker successfully")
         self._setup_subscriptions()
 
@@ -461,7 +461,7 @@ class Hub:
             return
         # Update the last-called timestamp when we handled a full-publish for our client
         self._last_full_publish_called = time.monotonic()
-        
+
         _LOGGER.debug("Full publish completed: %s", echo)
         new_metrics: list[tuple[Device, Metric]] = []
         if len(self._metrics_placeholders) > 0:
@@ -537,7 +537,7 @@ class Hub:
             self._loop.call_soon_threadsafe(self._first_refresh_event.set)
         self._first_full_publish = False
         _LOGGER.debug("Full publish handling completed")
-        
+
     def _handle_installation_id_message(self, topic: str) -> None:
         """Handle installation ID message."""
         parsed_topic = ParsedTopic.from_topic(topic)

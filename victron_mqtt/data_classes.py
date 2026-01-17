@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 def topic_to_device_type(topic_parts: list[str]) -> DeviceType | None:
     """Extract the device type from the topic."""
     if topic_parts[0] == "$$func":
-        result = DeviceType.from_code(topic_parts[1])
+        result = DeviceType.from_device_code(topic_parts[1])
         return result
     if len(topic_parts) == 3 and topic_parts[2] == "heartbeat":
         return DeviceType.SYSTEM
@@ -25,7 +25,7 @@ def topic_to_device_type(topic_parts: list[str]) -> DeviceType | None:
     # for settings like N/+/settings/0/Settings/CGwacs/AcPowerSetPoint
     if native_device_type == "settings":
         native_device_type = topic_parts[5]
-    result = DeviceType.from_code(native_device_type)
+    result = DeviceType.from_device_code(native_device_type)
     return result
 
 
@@ -64,7 +64,7 @@ class TopicDescriptor:
             f"short_id={self.short_id}, "
             f"name={self.name})"
         )
-    
+
     def __post_init__(self):
         assert self.message_type == MetricKind.ATTRIBUTE or self.name is not None
         self.generic_name = replace_complex_id_to_simple(self.name) if self.name else None
@@ -210,7 +210,8 @@ class ParsedTopic:
     wildcards_with_device_type: str
     wildcards_without_device_type: str
     full_topic: str
-    
+    _unique_id: str | None = None
+
     def __post_init__(self):
         self._short_id: str | None = None
         self._name: str | None = None
@@ -228,7 +229,7 @@ class ParsedTopic:
             f"full_topic={self.full_topic}"
             f")"
         )
-    
+
     def __hash__(self):
         """Make ParsedTopic hashable for use as dictionary keys."""
         return hash((self.full_topic))
@@ -288,12 +289,15 @@ class ParsedTopic:
 
     @classmethod
     def make_unique_id(cls, device_short_unique_id: str, short_id: str) -> str:
+        """Create a unique id from device unique id and short id."""
         return f"{device_short_unique_id}_{short_id}"
 
     def get_device_unique_id(self) -> str:
+        """Get the unique id of the device."""
         return f"{self.device_type.code}_{self.device_id}"
 
     def finalize_topic_fields(self, topic_desc: TopicDescriptor) -> None:
+        """Finalize the fields of the ParsedTopic based on the TopicDescriptor."""
         self._key_values = self.get_key_values(topic_desc)
         self._key_values.update(topic_desc.key_values)
         self._short_id = self._replace_ids(topic_desc.short_id)
@@ -303,7 +307,8 @@ class ParsedTopic:
 
     # This is needed in cases of solarcharger_max_power_today and solarcharger_max_power_yesterday
     # which has the same topic but different meaning
-    def match_from_list(self, topic_desc_list: list[TopicDescriptor]) -> TopicDescriptor |None:
+    def match_from_list(self, topic_desc_list: list[TopicDescriptor]) -> TopicDescriptor | None:
+        """Match the ParsedTopic to a TopicDescriptor from a list."""
         topic_parts = self.full_topic.split("/")
         topic_parts[1] = "{installation_id}"
         topic_parts[3] = "{device_id}"
@@ -315,16 +320,19 @@ class ParsedTopic:
 
     @property
     def short_id(self) -> str:
+        """Get the short id of the ParsedTopic."""
         assert self._short_id is not None, f"short_id is None for topic: {self.full_topic}"
         return self._short_id
 
     @property
     def unique_id(self) -> str:
+        """Get the unique id of the ParsedTopic."""
         assert self._unique_id is not None, f"unique_id is None for topic: {self.full_topic}"
         return self._unique_id
 
     @property
     def key_values(self) -> dict[str, str]:
+        """Get the key values of the ParsedTopic."""
         assert self._key_values is not None, f"key_values is None for topic: {self.full_topic}"
         return self._key_values
 
@@ -345,6 +353,7 @@ class ParsedTopic:
         return pattern.sub(replace_match, string)
 
     def get_key_values(self, topic_desc: TopicDescriptor) -> dict[str, str]:
+        """Get the key values from the topic based on the TopicDescriptor."""
         topic_parts = self.full_topic.split("/")
         topic_descriptor_parts = topic_desc.topic.split("/")
         result_key_values: dict[str, str] = {}
@@ -353,11 +362,11 @@ class ParsedTopic:
                 result_key_values[part.strip("{}")] = topic_parts[i]
         #hack for next phase
         if "phase" in result_key_values:
-            result_key_values["next_phase"] = ParsedTopic._get_next_Phase(result_key_values["phase"])
+            result_key_values["next_phase"] = ParsedTopic._get_next_phase(result_key_values["phase"])
         return result_key_values
 
     @staticmethod
-    def _get_next_Phase(phase: str) -> str:
+    def _get_next_phase(phase: str) -> str:
         """Get the next phase in rotation (L1 -> L2 -> L3 -> L1)."""
         if phase == "L1":
             return "L2"

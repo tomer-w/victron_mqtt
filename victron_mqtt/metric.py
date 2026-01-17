@@ -27,7 +27,7 @@ CallbackOnUpdate = Callable[["Metric", Any], None]
 class Metric:
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, *, device: Device | None = None, name: str | None = None, descriptor: TopicDescriptor | None = None, unique_id: str | None = None, short_id: str | None = None, key_values: dict[str, str] | None = None, hub: Hub | None = None, **kwargs) -> None:
+    def __init__(self, *, device: Device | None = None, name: str | None = None, descriptor: TopicDescriptor | None = None, unique_id: str | None = None, short_id: str | None = None, key_values: dict[str, str] | None = None, hub: Hub | None = None) -> None:
         """Initialize the sensor."""
         assert device is not None
         assert name is not None

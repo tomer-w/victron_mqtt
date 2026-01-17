@@ -9,9 +9,6 @@ import logging
 from typing import TYPE_CHECKING, Callable
 import copy
 
-if TYPE_CHECKING:
-    from .hub import Hub
-
 from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_bitmask, unwrap_float, unwrap_int_seconds_to_hours, unwrap_int_seconds_to_minutes, unwrap_float_m3_to_liters
 from .constants import MetricKind, RangeType
 from .metric import Metric
@@ -20,6 +17,9 @@ from .writable_formula_metric import WritableFormulaMetric
 from ._victron_enums import DeviceType
 from .writable_metric import WritableMetric
 from .data_classes import ParsedTopic, TopicDescriptor
+
+if TYPE_CHECKING:
+    from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +58,6 @@ class Device:
 
     def _set_device_property_from_topic(
         self,
-        parsed_topic: ParsedTopic,
         topic_desc: TopicDescriptor,
         payload: str,
     ) -> None:
@@ -95,7 +94,7 @@ class Device:
         log_debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 
         if topic_desc.message_type == MetricKind.ATTRIBUTE:
-            self._set_device_property_from_topic(parsed_topic, topic_desc, payload)
+            self._set_device_property_from_topic(topic_desc, payload)
             return None
 
         parsed_topic.finalize_topic_fields(topic_desc)
@@ -155,7 +154,7 @@ class Device:
                 _LOGGER.info("Switching topic from writable to read-only. topic=%s", new_topic_desc.topic)
                 new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
                 new_topic_desc.message_type = MetricKind.SENSOR
-    
+
         # Handle dynamic min/max range
         if new_topic_desc.min_max_range == RangeType.DYNAMIC:
             max_value = unwrap_float(metric_placeholder.payload, new_topic_desc.precision, "max")
@@ -216,13 +215,13 @@ class Device:
         if (model := self.model):
             return model
         return self.device_type.string
-    
+
     @property
     def model(self) -> str | None:
         """Return the model of the device."""
         if (model := self._model):
             return model
-        
+
         if self._device_type == DeviceType.SYSTEM:
             return "Victron Venus"
 
@@ -259,6 +258,7 @@ class Device:
 
 @dataclass
 class MetricPlaceholder:
+    """Placeholder for a metric that needs to be created."""
     device: Device
     parsed_topic: ParsedTopic
     topic_descriptor: TopicDescriptor
@@ -267,9 +267,10 @@ class MetricPlaceholder:
 
     def __repr__(self) -> str:
         return f"MetricPlaceholder(device={self.device}, parsed_topic={self.parsed_topic}, topic_descriptor={self.topic_descriptor}, payload={self.payload}, value={self.value})"
-    
+
 @dataclass
 class FallbackPlaceholder:
+    """Placeholder for a fallback metric that needs to be created."""
     device: Device
     parsed_topic: ParsedTopic
     topic_descriptor: TopicDescriptor
