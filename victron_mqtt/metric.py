@@ -134,7 +134,7 @@ class Metric:
         """Returns the short id of the metric."""
         assert self._name is not None, f"Metric name is None for metric: {repr(self)}"
         return self._name
-    
+
     @property
     def generic_name(self) -> str:
         """Returns the generic name of the metric."""

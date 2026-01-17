@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from enum import Enum
 import logging
@@ -89,7 +88,7 @@ class Device:
             _LOGGER.warning("Unhandled device property %s for %s", short_id, self.unique_id)
 
 
-    def handle_message(self, fallback_to_metric_topic: bool, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, event_loop: asyncio.AbstractEventLoop, log_debug: Callable[..., None], hub: Hub) -> MetricPlaceholder | FallbackPlaceholder | None:
+    def handle_message(self, fallback_to_metric_topic: bool, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, log_debug: Callable[..., None]) -> MetricPlaceholder | FallbackPlaceholder | None:
         """Handle a message."""
         log_debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 

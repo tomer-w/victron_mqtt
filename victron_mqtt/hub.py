@@ -154,7 +154,7 @@ class Hub:
         # Parameter validation
         if not host:
             raise ValueError("host must be a non-empty string")
-        if not (0 < port < 65536):
+        if not 0 < port < 65536:
             raise ValueError("port must be an integer between 1 and 65535")
         _LOGGER.info(
             "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, topic_log_info=%s)",
@@ -346,7 +346,7 @@ class Hub:
             _LOGGER.exception("_on_connect exception %s: %s", type(exc), exc, exc_info=True)
             self._connect_failed_reason = exc
             client.disconnect()
-        
+
         try:
             if self._loop.is_running():
                 self._loop.call_soon_threadsafe(self._connected_event.set)
@@ -361,7 +361,7 @@ class Hub:
             # Check if this is an authentication failure (value 134 for MQTT v5 or 4/5 for MQTT v3.1.1)
             # ReasonCode value 134 = "Bad user name or password" in MQTT v5
             # ReasonCode value 135 = "Not authorized" in MQTT v5
-            # ConnackCode 4 = CONNACK_REFUSED_BAD_USERNAME_PASSWORD in MQTT v3.1.1  
+            # ConnackCode 4 = CONNACK_REFUSED_BAD_USERNAME_PASSWORD in MQTT v3.1.1
             # ConnackCode 5 = CONNACK_REFUSED_NOT_AUTHORIZED in MQTT v3.1.1
             # I am not sure that v3.1.1 will ever be used here, but just in case.
             _LOGGER.warning("Failed to connect with error code: %s. flags: %s", reason_code, flags)
@@ -579,7 +579,7 @@ class Hub:
                 return
 
         device = self._get_or_create_device(parsed_topic, desc)
-        placeholder = device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload, self._loop, log_debug, self)
+        placeholder = device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload, log_debug)
         if isinstance(placeholder, MetricPlaceholder):
             existing_placeholder = self._metrics_placeholders.get(placeholder.parsed_topic.unique_id)
             if existing_placeholder:
