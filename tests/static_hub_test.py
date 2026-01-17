@@ -1,12 +1,15 @@
-# pyright: ignore[reportPrivateUsage]
+# pylint: disable=protected-access
+# pyright: reportPrivateUsage=false
+
+import logging
 import asyncio
 from unittest.mock import MagicMock, patch
 import pytest
-from paho.mqtt.client import ConnectFlags
+from paho.mqtt.client import Client, ConnectFlags, PayloadType
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.reasoncodes import ReasonCode
 from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, GenericOnOff
-from victron_mqtt.hub import Hub, TopicNotFoundError
+from victron_mqtt.hub import Hub, TopicNotFoundError, AuthenticationError, CannotConnectError, CONNECT_MAX_FAILED_ATTEMPTS
 from victron_mqtt.constants import OperationMode
 from victron_mqtt.metric import Metric
 from victron_mqtt.writable_formula_metric import WritableFormulaMetric
@@ -19,7 +22,6 @@ from victron_mqtt.testing import (
     sleep_short,
     hub_disconnect,
 )
-import logging
 
 # Configure logging for the test
 logging.basicConfig(level=logging.DEBUG)
@@ -34,8 +36,6 @@ async def test_hub_initialization():
 @pytest.mark.asyncio
 async def test_authentication_failure():
     """Test that authentication failures are properly raised."""
-    from victron_mqtt.hub import AuthenticationError
-    
     with patch('victron_mqtt.hub.mqtt.Client') as mock_client:
         hub = Hub(
             host="localhost",
@@ -176,7 +176,7 @@ async def test_number_message():
 
     # Patch the publish method to track calls
     published = {}
-    def mock__publish(topic, value):
+    def mock__publish(topic: str, value: PayloadType) -> None:
         published['topic'] = topic
         published['value'] = value
         # Call the original publish if needed
@@ -406,7 +406,7 @@ async def test_same_message_events_zero():
 
 @pytest.mark.asyncio
 @patch('victron_mqtt.metric.time.monotonic')
-async def test_same_message_events_five(mock_time):
+async def test_same_message_events_five(mock_time: MagicMock) -> None:
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
 
     mock_time.return_value = 0.0
@@ -445,7 +445,7 @@ async def test_same_message_events_five(mock_time):
 
 @pytest.mark.asyncio
 @patch('victron_mqtt.metric.time.monotonic')
-async def test_metric_keepalive_update_frequency_5(mock_time):
+async def test_metric_keepalive_update_frequency_5(mock_time: MagicMock) -> None:
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
     mock_time.return_value = 0
     hub: Hub = await create_mocked_hub(update_frequency_seconds=5)
@@ -462,8 +462,8 @@ async def test_metric_keepalive_update_frequency_5(mock_time):
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 10, f"Expected metric value to be 10, got {metric.value}"
 
-    def on_metric_update(metric, value):
-        logger.debug(f"Update: Metric={repr(metric)}, value={value}")
+    def on_metric_update(metric: Metric, value: object) -> None:
+        logger.debug("Update: Metric=%s, value=%s", repr(metric), value)
     magic_mock = MagicMock(side_effect=on_metric_update)
     metric.on_update = magic_mock
 
@@ -494,7 +494,7 @@ async def test_metric_keepalive_update_frequency_5(mock_time):
 
 @pytest.mark.asyncio
 @patch('victron_mqtt.metric.time.monotonic')
-async def test_metric_keepalive_update_frequency_none(mock_time):
+async def test_metric_keepalive_update_frequency_none(mock_time: MagicMock) -> None:
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
     mock_time.return_value = 0
     hub: Hub = await create_mocked_hub()
@@ -511,8 +511,8 @@ async def test_metric_keepalive_update_frequency_none(mock_time):
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 10, f"Expected metric value to be 10, got {metric.value}"
 
-    def on_metric_update(metric, value):
-        logger.debug(f"Update: Metric={repr(metric)}, value={value}")
+    def on_metric_update(metric: Metric, value: object) -> None:
+        logger.debug("Update: Metric=%s, value=%s", repr(metric), value)
     magic_mock = MagicMock(side_effect=on_metric_update)
     metric.on_update = magic_mock
 
@@ -636,8 +636,8 @@ async def test_new_metric():
     hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
 
     # Mock the on_new_metric callback
-    def on_new_metric_mock(hub, device, metric):
-        logger.debug(f"New metric added: Hub={hub}, Device={device}, Metric={repr(metric)}")
+    def on_new_metric_mock(hub: Hub, device: object, metric: Metric) -> None:
+        logger.debug("New metric added: Hub=%s, Device=%s, Metric=%s", hub, device, repr(metric))
     mock_on_new_metric = MagicMock(side_effect=on_new_metric_mock)
     hub.on_new_metric = mock_on_new_metric
 
@@ -674,8 +674,8 @@ async def test_new_metric_duplicate_messages():
     hub: Hub = await create_mocked_hub()
 
     # Mock the on_new_metric callback
-    def on_new_metric_mock(hub, device, metric):
-        logger.debug(f"New metric added: Hub={hub}, Device={device}, Metric={repr(metric)}")
+    def on_new_metric_mock(hub: Hub, device: object, metric: Metric) -> None:
+        logger.debug("New metric added: Hub=%s, Device=%s, Metric=%s", hub, device, repr(metric))
     mock_on_new_metric = MagicMock(side_effect=on_new_metric_mock)
     hub.on_new_metric = mock_on_new_metric
 
@@ -709,8 +709,8 @@ async def test_new_metric_duplicate_formula_messages():
     hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
 
     # Mock the on_new_metric callback
-    def on_new_metric_mock(hub, device, metric):
-        logger.debug(f"New metric added: Hub={hub}, Device={device}, Metric={repr(metric)}")
+    def on_new_metric_mock(hub: Hub, device: object, metric: Metric) -> None:
+        logger.debug("New metric added: Hub=%s, Device=%s, Metric=%s", hub, device, repr(metric))
     mock_on_new_metric = MagicMock(side_effect=on_new_metric_mock)
     hub.on_new_metric = mock_on_new_metric
 
@@ -1011,7 +1011,7 @@ async def test_null_message():
 
 @pytest.mark.asyncio
 @patch('victron_mqtt.formula_common.time.monotonic')
-async def test_formula_metric(mock_time):
+async def test_formula_metric(mock_time: MagicMock) -> None:
     # Mock time.monotonic() to return a fixed time
     mock_time.return_value = 0
 
@@ -1064,7 +1064,7 @@ async def test_formula_metric(mock_time):
 
 @pytest.mark.asyncio
 @patch('victron_mqtt.formula_common.time.monotonic')
-async def test_formula_switch(mock_time):
+async def test_formula_switch(mock_time: MagicMock) -> None:
     # Mock time.monotonic() to return a fixed time
     mock_time.return_value = 0
 
@@ -1171,7 +1171,7 @@ async def test_depends_on_regular_dont_exists():
 
 @pytest.mark.asyncio
 @patch('victron_mqtt.hub.time.monotonic')
-async def test_old_cerbo(mock_time):
+async def test_old_cerbo(mock_time: MagicMock) -> None:
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
     # Mock time.monotonic() to return a fixed time
     mock_time.return_value = 0
@@ -1233,9 +1233,6 @@ async def test_min_max_float():
 @pytest.mark.asyncio
 async def test_on_connect_fail_before_first_connect():
     """Test that connection failures before first connect raise CannotConnectError."""
-    from victron_mqtt.hub import CannotConnectError, CONNECT_MAX_FAILED_ATTEMPTS
-    from paho.mqtt.client import Client
-    
     hub = Hub(
         host="localhost",
         port=1883,
@@ -1252,7 +1249,7 @@ async def test_on_connect_fail_before_first_connect():
     
     # Simulate connection failures during initial connection
     # Call on_connect_fail multiple times, reaching the max attempts
-    for attempt in range(CONNECT_MAX_FAILED_ATTEMPTS):
+    for _ in range(CONNECT_MAX_FAILED_ATTEMPTS):
         hub.on_connect_fail(mocked_client, None)
     
     # Verify that _connect_failed_reason was set after max attempts reached
@@ -1264,9 +1261,6 @@ async def test_on_connect_fail_before_first_connect():
 @pytest.mark.asyncio
 async def test_on_connect_fail_after_first_successful_connect():
     """Test that connection failures after first successful connection keep retrying forever."""
-    from victron_mqtt.hub import CONNECT_MAX_FAILED_ATTEMPTS
-    from paho.mqtt.client import Client
-    
     hub = Hub(
         host="localhost",
         port=1883,
@@ -1312,8 +1306,6 @@ async def test_on_connect_fail_after_first_successful_connect():
 @pytest.mark.asyncio
 async def test_on_connect_fail_resets_counters_on_successful_reconnect():
     """Test that failed attempt counters are reset after reconnecting successfully."""
-    from paho.mqtt.client import Client
-    
     hub = Hub(
         host="localhost",
         port=1883,
@@ -1365,10 +1357,6 @@ async def test_on_connect_fail_resets_counters_on_successful_reconnect():
 @pytest.mark.asyncio
 async def test_on_connect_fail_tracking_time_before_first_connect():
     """Test that on_connect_fail properly tracks disconnection time before first connect."""
-    from victron_mqtt.hub import CONNECT_MAX_FAILED_ATTEMPTS
-    from paho.mqtt.client import Client
-    import time
-    
     hub = Hub(
         host="localhost",
         port=1883,
@@ -1389,7 +1377,6 @@ async def test_on_connect_fail_tracking_time_before_first_connect():
     assert first_failure_time > 0, "Should have recorded failure time"
     
     # Second failure - should keep same _connect_failed_since
-    time.sleep(0.01)
     hub.on_connect_fail(mocked_client, None)
     assert hub._connect_failed_since == first_failure_time, "Should keep same failure time across retries"
     
