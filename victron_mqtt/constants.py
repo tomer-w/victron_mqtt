@@ -30,7 +30,6 @@ class MetricNature(Enum):
     NONE = "none"
     INSTANTANEOUS = "instantaneous"
     CUMULATIVE = "cumulative"
-    DELTA = "delta"
 
 
 class MetricType(Enum):

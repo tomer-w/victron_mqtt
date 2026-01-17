@@ -2478,7 +2478,7 @@ topics: List[TopicDescriptor] = [
         name="Remaining",
         unit_of_measurement="L",
         metric_type=MetricType.LIQUID_VOLUME,
-        metric_nature=MetricNature.CUMULATIVE,
+        metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.FLOAT_M3_TO_LITERS,
         precision=1,
     ),

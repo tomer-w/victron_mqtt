@@ -121,7 +121,6 @@ ELECTRIC_STORAGE_CAPACITY   # Amp-hours
 ```python
 INSTANTANEOUS  # Current value
 CUMULATIVE     # Ever-increasing counter
-DELTA          # Change since last reading
 NONE           # Not applicable
 ```
 
