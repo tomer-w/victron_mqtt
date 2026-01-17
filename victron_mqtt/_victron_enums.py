@@ -52,10 +52,6 @@ class InverterMode(VictronEnum):
     INVERTER_ONLY = (2, "Inverter Only")
     ON = (3, "On")
     OFF = (4, "Off")
-    LOW_POWER = (5, "Low Power")
-    PASSTHROUGH = (251, "Passthrough")
-    STANDBY = (252, "Standby")
-    HIBERNATE = (253, "Hibernate")
 
 class PhoenixInverterMode(VictronEnum):
     """Inverter Mode Enum"""

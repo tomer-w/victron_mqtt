@@ -9291,26 +9291,6 @@
           "id": "OFF",
           "name": "Off",
           "value": 4
-        },
-        {
-          "id": "LOW_POWER",
-          "name": "Low Power",
-          "value": 5
-        },
-        {
-          "id": "PASSTHROUGH",
-          "name": "Passthrough",
-          "value": 251
-        },
-        {
-          "id": "STANDBY",
-          "name": "Standby",
-          "value": 252
-        },
-        {
-          "id": "HIBERNATE",
-          "name": "Hibernate",
-          "value": 253
         }
       ]
     },
