@@ -1,4 +1,5 @@
 """Functions to unwrap the data from the JSON string."""
+from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime
@@ -8,7 +9,7 @@ import json
 from victron_mqtt.constants import ValueType, VictronEnum, BITMASK_SEPARATOR
 
 
-def unwrap_bool(json_str) -> bool | None:
+def unwrap_bool(json_str: str) -> bool | None:
     """Unwrap a boolean value from a JSON string."""
     try:
         data = json.loads(json_str)
@@ -28,7 +29,7 @@ def unwrap_int(json_str: str) -> int | None:
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
 
-def unwrap_int_default_0(json_str) -> int:
+def unwrap_int_default_0(json_str: str) -> int:
     """Unwrap an integer value from a JSON string, defaulting to 0."""
     try:
         data = json.loads(json_str)
@@ -65,8 +66,15 @@ def unwrap_float(json_str: str, precision: int | None, json_value: str = "value"
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
 
+def unwrap_float_m3_to_liters(json_str: str, precision: int | None) -> float | None:
+    """Convert cubic meters to liters."""
+    value = unwrap_float(json_str, None)
+    if value is None:
+        return None
+    liters = value * 1000
+    return liters if precision is None else round(liters, precision)
 
-def unwrap_string(json_str) -> str | None:
+def unwrap_string(json_str: str) -> str | None:
     """Unwrap a string value from a JSON string."""
     try:
         data = json.loads(json_str)
@@ -77,7 +85,7 @@ def unwrap_string(json_str) -> str | None:
         return None
 
 
-def unwrap_enum(json_str, enum: type[VictronEnum]) -> VictronEnum | None:
+def unwrap_enum(json_str: str, enum: type[VictronEnum]) -> VictronEnum | None:
     """Unwrap a string value from a JSON string."""
     try:
         data = json.loads(json_str)
@@ -86,7 +94,7 @@ def unwrap_enum(json_str, enum: type[VictronEnum]) -> VictronEnum | None:
     val = data["value"]
     return enum.from_code(val) if val is not None else None
 
-def unwrap_bitmask(json_str, enum: type[VictronEnum]) -> str | None:
+def unwrap_bitmask(json_str: str, enum: type[VictronEnum]) -> str | None:
     """Unwrap a bitmask value from a JSON string."""
     try:
         data = json.loads(json_str)
@@ -100,7 +108,7 @@ def unwrap_bitmask(json_str, enum: type[VictronEnum]) -> str | None:
         enums = [enum.from_code(v) for v in vals]
         return str.join(BITMASK_SEPARATOR, [e.string for e in enums if e is not None])
 
-def unwrap_epoch(json_str) -> datetime | None:
+def unwrap_epoch(json_str: str) -> datetime | None:
     """Unwrap a timestamp value from a JSON string."""
     try:
         data = json.loads(json_str)
@@ -182,7 +190,8 @@ VALUE_TYPE_UNWRAPPER = {
     ValueType.BITMASK: unwrap_bitmask,
     ValueType.EPOCH: unwrap_epoch,
     ValueType.INT_SECONDS_TO_HOURS: unwrap_int_seconds_to_hours,
-    ValueType.INT_SECONDS_TO_MINUTES: unwrap_int_seconds_to_minutes
+    ValueType.INT_SECONDS_TO_MINUTES: unwrap_int_seconds_to_minutes,
+    ValueType.FLOAT_M3_TO_LITERS: unwrap_float_m3_to_liters
 }
 
 VALUE_TYPE_WRAPPER = {

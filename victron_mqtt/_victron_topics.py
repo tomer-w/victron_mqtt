@@ -1850,7 +1850,6 @@ topics: List[TopicDescriptor] = [
         short_id="system_ess_max_charge_voltage",
         name="ESS max charge voltage",
         metric_type=MetricType.VOLTAGE,
-        value_type=ValueType.FLOAT,
         min_max_range=RangeType.DYNAMIC,
         step=0.1
     ),
@@ -2477,11 +2476,11 @@ topics: List[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="tank_remaining",
         name="Remaining",
-        unit_of_measurement="m³",
+        unit_of_measurement="L",
         metric_type=MetricType.LIQUID_VOLUME,
         metric_nature=MetricNature.CUMULATIVE,
-        value_type=ValueType.FLOAT,
-        precision=2,
+        value_type=ValueType.FLOAT_M3_TO_LITERS,
+        precision=1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/tank/{device_id}/Temperature",

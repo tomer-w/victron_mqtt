@@ -196,7 +196,7 @@ class TopicDescriptor:
             if self.metric_nature == MetricNature.NONE:
                 self.metric_nature = MetricNature.INSTANTANEOUS
         # General initialization
-        if self.value_type not in [ValueType.FLOAT, ValueType.INT_SECONDS_TO_HOURS, ValueType.INT_SECONDS_TO_MINUTES]:
+        if self.value_type not in [ValueType.FLOAT, ValueType.FLOAT_M3_TO_LITERS, ValueType.INT_SECONDS_TO_HOURS, ValueType.INT_SECONDS_TO_MINUTES]:
             self.precision = None
 
 

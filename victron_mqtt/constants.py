@@ -69,6 +69,7 @@ class ValueType(Enum):
     EPOCH = "epoch"
     INT_SECONDS_TO_HOURS = "int_seconds_to_hours"
     INT_SECONDS_TO_MINUTES = "int_seconds_to_minutes"
+    FLOAT_M3_TO_LITERS = "float_m3_to_liters"
 
 class RangeType(Enum):
     """Range types for numeric values."""
