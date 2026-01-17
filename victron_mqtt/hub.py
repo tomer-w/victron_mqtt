@@ -381,6 +381,7 @@ class Hub:
     def _on_connect_internal(self, client: MQTTClient, userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, properties: Optional[Properties] = None) -> None:
         """Handle connection callback."""
         self._connect_failed_since = 0
+        self._connect_failed_attempts = 0
         if reason_code.is_failure:
             # Check if this is an authentication failure (value 134 for MQTT v5 or 4/5 for MQTT v3.1.1)
             # ReasonCode value 134 = "Bad user name or password" in MQTT v5
@@ -918,8 +919,9 @@ class Hub:
             if self._connect_failed_since == 0:
                 self._connect_failed_since = time.monotonic()
             self._connect_failed_attempts += 1
-            # Check if we have reached the maximum number of failed attempts
-            if self._connect_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
+            # Check if we have reached the maximum number of failed attempts BEFORE the first successful connection
+            # After the first successful connection, we keep retrying forever
+            if self._first_connect and self._connect_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
                 raise CannotConnectError(f"Failed to connect to MQTT broker: {self.host}:{self.port} after {self._connect_failed_attempts} attempts")
             # This code is not really needed in newer firmwares as metrics will get invalidated individually. With older firmwares, we can force invalidation after we are disconnected for enough time
             disconnected_for = time.monotonic() - self._connect_failed_since

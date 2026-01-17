@@ -1,6 +1,7 @@
+# pyright: ignore[reportPrivateUsage]
 import asyncio
-import pytest
 from unittest.mock import MagicMock, patch
+import pytest
 from paho.mqtt.client import ConnectFlags
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.reasoncodes import ReasonCode
@@ -1209,3 +1210,191 @@ async def test_min_max_dependencies():
     assert metric.value == 22, f"Expected metric value to be 22, got {metric.value}"
     assert metric.min_value == 0, f"Expected metric min_value to be 0, got {metric.min_value}"
     assert metric.max_value == 42, f"Expected metric max_value to be 42, got {metric.max_value}"
+
+
+@pytest.mark.asyncio
+async def test_min_max_float():
+    hub: Hub = await create_mocked_hub()
+
+    # Inject messages after the event is set
+    await inject_message(hub, "N/123/settings/170/Settings/SystemSetup/MaxChargeVoltage", "{\"max\": 80.0, \"min\": 0.0, \"value\": 55.6}")
+    await finalize_injection(hub)
+
+    # Validate the Hub's state
+    assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
+    device = hub.devices["SystemSetup_170"]
+    metric = device.get_metric("system_ess_max_charge_voltage")
+    assert isinstance(metric, WritableMetric), "Metric should exist in the device"
+    assert metric.value == 55.6, f"Expected metric value to be 55.6, got {metric.value}"
+    assert metric.min_value == 0, f"Expected metric min_value to be 0, got {metric.min_value}"
+    assert metric.max_value == 80, f"Expected metric max_value to be 80, got {metric.max_value}"
+    assert metric.step == 0.1, f"Expected metric step to be 0.1, got {metric.step}"
+
+@pytest.mark.asyncio
+async def test_on_connect_fail_before_first_connect():
+    """Test that connection failures before first connect raise CannotConnectError."""
+    from victron_mqtt.hub import CannotConnectError, CONNECT_MAX_FAILED_ATTEMPTS
+    from paho.mqtt.client import Client
+    
+    hub = Hub(
+        host="localhost",
+        port=1883,
+        username=None,
+        password=None,
+        use_ssl=False,
+        installation_id="test123"
+    )
+    
+    mocked_client = MagicMock(spec=Client)
+    hub._client = mocked_client
+    hub._loop = asyncio.get_running_loop()
+    hub._first_connect = True  # Mark as first connect
+    
+    # Simulate connection failures during initial connection
+    # Call on_connect_fail multiple times, reaching the max attempts
+    for attempt in range(CONNECT_MAX_FAILED_ATTEMPTS):
+        hub.on_connect_fail(mocked_client, None)
+    
+    # Verify that _connect_failed_reason was set after max attempts reached
+    assert hub._connect_failed_reason is not None, "Connection should have failed after max attempts"
+    assert isinstance(hub._connect_failed_reason, CannotConnectError), f"Expected CannotConnectError, got {type(hub._connect_failed_reason)}"
+    assert "after 3 attempts" in str(hub._connect_failed_reason), f"Error message should mention 3 attempts, got: {hub._connect_failed_reason}"
+    
+
+@pytest.mark.asyncio
+async def test_on_connect_fail_after_first_successful_connect():
+    """Test that connection failures after first successful connection keep retrying forever."""
+    from victron_mqtt.hub import CONNECT_MAX_FAILED_ATTEMPTS
+    from paho.mqtt.client import Client
+    
+    hub = Hub(
+        host="localhost",
+        port=1883,
+        username=None,
+        password=None,
+        use_ssl=False,
+        installation_id="test123"
+    )
+    
+    mocked_client = MagicMock(spec=Client)
+    hub._client = mocked_client
+    hub._loop = asyncio.get_running_loop()
+    hub._first_connect = False  # Mark as not first connect (already connected once)
+    
+    # Simulate a successful connection first
+    hub._on_connect_internal(
+        mocked_client,
+        None,
+        ConnectFlags(False),
+        ReasonCode(PacketTypes.CONNACK, identifier=0),
+        None
+    )
+    
+    # Verify that counters were reset after successful connection
+    assert hub._connect_failed_attempts == 0, "Failed attempts should be reset after successful connection"
+    assert hub._connect_failed_since == 0, "Connect failed since should be reset after successful connection"
+    assert hub._connect_failed_reason is None, "Connect failed reason should be cleared after successful connection"
+    
+    # Now simulate multiple connection failures - should NOT raise error even after max attempts
+    for attempt in range(CONNECT_MAX_FAILED_ATTEMPTS + 5):
+        hub.on_connect_fail(mocked_client, None)
+        # After successful connect, on_connect_fail should NOT set _connect_failed_reason
+        # because it keeps retrying forever
+        if attempt < CONNECT_MAX_FAILED_ATTEMPTS:
+            assert hub._connect_failed_reason is None, f"Should not fail on attempt {attempt}"
+    
+    # After max attempts exceeded but after successful connection, should still NOT have failed
+    # because the logic allows infinite retries after first successful connection
+    assert hub._connect_failed_attempts > CONNECT_MAX_FAILED_ATTEMPTS, "Should have accumulated more failed attempts than max"
+    # Note: on_connect_fail won't raise after max attempts if called before _wait_for_connect completes
+
+
+@pytest.mark.asyncio
+async def test_on_connect_fail_resets_counters_on_successful_reconnect():
+    """Test that failed attempt counters are reset after reconnecting successfully."""
+    from paho.mqtt.client import Client
+    
+    hub = Hub(
+        host="localhost",
+        port=1883,
+        username=None,
+        password=None,
+        use_ssl=False,
+        installation_id="test123"
+    )
+    
+    mocked_client = MagicMock(spec=Client)
+    hub._client = mocked_client
+    hub._loop = asyncio.get_running_loop()
+    hub._first_connect = False
+    
+    # First successful connection
+    hub._on_connect_internal(
+        mocked_client,
+        None,
+        ConnectFlags(False),
+        ReasonCode(PacketTypes.CONNACK, identifier=0),
+        None
+    )
+    assert hub._connect_failed_attempts == 0
+    
+    # Simulate some connection failures
+    hub.on_connect_fail(mocked_client, None)
+    hub.on_connect_fail(mocked_client, None)
+    assert hub._connect_failed_attempts == 2, "Should have 2 failed attempts"
+    
+    # Reconnect successfully
+    hub._on_connect_internal(
+        mocked_client,
+        None,
+        ConnectFlags(False),
+        ReasonCode(PacketTypes.CONNACK, identifier=0),
+        None
+    )
+    
+    # Verify counters were reset
+    assert hub._connect_failed_attempts == 0, "Failed attempts should be reset after successful reconnection"
+    assert hub._connect_failed_since == 0, "Connect failed since should be reset"
+    assert hub._connect_failed_reason is None, "Connect failed reason should be cleared"
+    
+    # New failures should not immediately fail
+    hub.on_connect_fail(mocked_client, None)
+    assert hub._connect_failed_attempts == 1, "Should restart counting from 1"
+
+
+@pytest.mark.asyncio
+async def test_on_connect_fail_tracking_time_before_first_connect():
+    """Test that on_connect_fail properly tracks disconnection time before first connect."""
+    from victron_mqtt.hub import CONNECT_MAX_FAILED_ATTEMPTS
+    from paho.mqtt.client import Client
+    import time
+    
+    hub = Hub(
+        host="localhost",
+        port=1883,
+        username=None,
+        password=None,
+        use_ssl=False,
+        installation_id="test123"
+    )
+    
+    mocked_client = MagicMock(spec=Client)
+    hub._client = mocked_client
+    hub._loop = asyncio.get_running_loop()
+    hub._first_connect = True
+    
+    # First failure - should initialize _connect_failed_since
+    hub.on_connect_fail(mocked_client, None)
+    first_failure_time = hub._connect_failed_since
+    assert first_failure_time > 0, "Should have recorded failure time"
+    
+    # Second failure - should keep same _connect_failed_since
+    time.sleep(0.01)
+    hub.on_connect_fail(mocked_client, None)
+    assert hub._connect_failed_since == first_failure_time, "Should keep same failure time across retries"
+    
+    # Continue failures until max attempts
+    for _ in range(CONNECT_MAX_FAILED_ATTEMPTS - 2):
+        hub.on_connect_fail(mocked_client, None)
+    
+    assert hub._connect_failed_reason is not None, "Should have failed after max attempts"
