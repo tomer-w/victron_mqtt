@@ -1060,6 +1060,16 @@ topics: List[TopicDescriptor] = [
         name="Heat pump voltage on {phase}",
         metric_type=MetricType.VOLTAGE,
     ),
+    # Hub4 topics
+    TopicDescriptor(
+        topic="N/{installation_id}/hub4/{device_id}/Overrides/Setpoint",
+        message_type=MetricKind.NUMBER,
+        short_id="hub4_ac_grid_setpoint",
+        name="AC grid setpoint",
+        metric_type=MetricType.POWER,
+        min=-32767,
+        max=32767,
+    ),
     # Inverter topics (Like Phoenix)
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Ac/Out/{phase}/I",
@@ -1526,7 +1536,7 @@ topics: List[TopicDescriptor] = [
         short_id="system_ess_schedule_charge_{slot}_enabled",
         name="ESS BatteryLife schedule charge {slot} enabled",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Duration",
@@ -1534,8 +1544,8 @@ topics: List[TopicDescriptor] = [
         short_id="system_ess_schedule_charge_{slot}_duration",
         name="ESS BatteryLife schedule charge {slot} duration",
         metric_type=MetricType.DURATION,
-        unit_of_measurement = "min",
-        value_type = ValueType.INT_SECONDS_TO_MINUTES,
+        unit_of_measurement="min",
+        value_type=ValueType.INT_SECONDS_TO_MINUTES,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Soc",
@@ -1851,7 +1861,7 @@ topics: List[TopicDescriptor] = [
         name="ESS max charge voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
-        step=0.1
+        step=0.1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/TransferSwitch/GeneratorCurrentLimit",
