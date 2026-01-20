@@ -1067,6 +1067,7 @@ topics: List[TopicDescriptor] = [
         short_id="hub4_ac_grid_setpoint",
         name="AC grid setpoint",
         metric_type=MetricType.POWER,
+        value_type=ValueType.INT,
         min=-32767,
         max=32767,
     ),
