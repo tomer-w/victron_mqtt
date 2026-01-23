@@ -1060,6 +1060,17 @@ topics: List[TopicDescriptor] = [
         name="Heat pump voltage on {phase}",
         metric_type=MetricType.VOLTAGE,
     ),
+    # Hub4 topics
+    TopicDescriptor(
+        topic="N/{installation_id}/hub4/{device_id}/Overrides/Setpoint",
+        message_type=MetricKind.NUMBER,
+        short_id="hub4_ac_grid_setpoint",
+        name="AC grid setpoint",
+        metric_type=MetricType.POWER,
+        value_type=ValueType.INT,
+        min=-32767,
+        max=32767,
+    ),
     # Inverter topics (Like Phoenix)
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Ac/Out/{phase}/I",
