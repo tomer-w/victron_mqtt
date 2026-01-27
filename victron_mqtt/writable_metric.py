@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from enum import Enum
 import logging
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable, cast
 
 from .metric import Metric
 from ._unwrappers import VALUE_TYPE_WRAPPER, wrap_bitmask, wrap_enum
@@ -100,7 +100,7 @@ class WritableMetric(Metric):
         """Get the enum string values for this metric, if defined."""
         return [e.string for e in self._descriptor.enum] if self._descriptor.enum else None
 
-    def set(self, value: str | float | int | bool | Enum) -> None:
+    def set(self, value: str | float | int | bool | VictronEnum) -> None:
         """Set the value of this metric by publishing to the write topic."""
         assert self._write_topic is not None
         payload = WritableMetric._wrap_payload(self._descriptor, value)
@@ -121,7 +121,7 @@ class WritableMetric(Metric):
             assert isinstance(value, (VictronEnum, str, Iterable)), "Bitmask values must be VictronEnum, str or iterable"
             return wrap_bitmask(value, topic_desc.enum)
 
-        wrapper = VALUE_TYPE_WRAPPER[value_type]
+        wrapper = cast(Callable[[Any], str], VALUE_TYPE_WRAPPER[value_type])
         return wrapper(value)
 
     @property
@@ -130,6 +130,6 @@ class WritableMetric(Metric):
         return self._value
 
     @value.setter
-    def value(self, new_value: str | float | int | bool | Enum) -> None:
+    def value(self, new_value: str | float | int | bool | VictronEnum) -> None:
         """Set a new value for this metric."""
         self.set(new_value)

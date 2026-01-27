@@ -6,13 +6,12 @@ Support for Victron Venus sensors. The sensor itself has no logic,
 from __future__ import annotations
 
 from collections.abc import Callable
-from enum import Enum
 import time
 import logging
 from typing import TYPE_CHECKING, Any, Match
 
 from .id_utils import replace_complex_ids
-from .constants import MetricKind, MetricNature, MetricType
+from .constants import MetricKind, MetricNature, MetricType, VictronEnum
 from .data_classes import ParsedTopic, TopicDescriptor
 
 if TYPE_CHECKING:
@@ -103,7 +102,7 @@ class Metric:
         """Add a dependency to the metric."""
         self._depend_on_me.append(formula_metric)
 
-    def format_value(self, value: str | float | int | bool | type[Enum] | None) -> str:
+    def format_value(self, value: str | float | int | bool | VictronEnum | None) -> str:
         """Returns the formatted value of the metric."""
         if value is None:
             return ""
@@ -207,7 +206,7 @@ class Metric:
             return
         log_debug("Metric is active and up-to-date: %s", self.unique_id)
 
-    def _handle_message(self, value: str | float | int | bool | type[Enum] | None, log_debug: Callable[..., None], update_last_seen: bool = True, force: bool = False):
+    def _handle_message(self, value: str | float | int | bool | VictronEnum | None, log_debug: Callable[..., None], update_last_seen: bool = True, force: bool = False):
         """Handle a message."""
         now = time.monotonic()
         if update_last_seen:

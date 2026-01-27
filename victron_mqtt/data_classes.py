@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 def topic_to_device_type(topic_parts: list[str]) -> DeviceType | None:
     """Extract the device type from the topic."""
     if topic_parts[0] == "$$func":
-        result = DeviceType.from_device_code(topic_parts[1])
+        result = DeviceType.from_code(topic_parts[1])
         return result
     if len(topic_parts) == 3 and topic_parts[2] == "heartbeat":
         return DeviceType.SYSTEM
@@ -25,7 +25,7 @@ def topic_to_device_type(topic_parts: list[str]) -> DeviceType | None:
     # for settings like N/+/settings/0/Settings/CGwacs/AcPowerSetPoint
     if native_device_type == "settings":
         native_device_type = topic_parts[5]
-    result = DeviceType.from_device_code(native_device_type)
+    result = DeviceType.from_code(native_device_type)
     return result
 
 

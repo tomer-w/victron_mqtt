@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Callable
 import copy
 
 from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_bitmask, unwrap_float, unwrap_int_seconds_to_hours, unwrap_int_seconds_to_minutes, unwrap_float_m3_to_liters
-from .constants import MetricKind, RangeType
+from .constants import MetricKind, RangeType, VictronEnum
 from .metric import Metric
 from .formula_metric import FormulaMetric
 from .writable_formula_metric import WritableFormulaMetric
@@ -123,7 +122,7 @@ class Device:
         return MetricPlaceholder(self, parsed_topic, topic_desc, payload, value)
 
     @staticmethod
-    def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | bool | type[Enum] | None:
+    def _unwrap_payload(topic_desc: TopicDescriptor, payload: str) -> str | float | int | bool | VictronEnum | None:
         assert topic_desc.value_type is not None
         unwrapper = VALUE_TYPE_UNWRAPPER[topic_desc.value_type]
         if unwrapper in [unwrap_enum, unwrap_bitmask]:
@@ -262,7 +261,7 @@ class MetricPlaceholder:
     parsed_topic: ParsedTopic
     topic_descriptor: TopicDescriptor
     payload: str
-    value: str | float | int | bool | type[Enum]
+    value: str | float | int | bool | VictronEnum
 
     def __repr__(self) -> str:
         return f"MetricPlaceholder(device={self.device}, parsed_topic={self.parsed_topic}, topic_descriptor={self.topic_descriptor}, payload={self.payload}, value={self.value})"
@@ -273,7 +272,7 @@ class FallbackPlaceholder:
     device: Device
     parsed_topic: ParsedTopic
     topic_descriptor: TopicDescriptor
-    value: str | float | int | bool | type[Enum]
+    value: str | float | int | bool | VictronEnum
 
     def __repr__(self) -> str:
         return f"FallbackPlaceholder(device={self.device}, parsed_topic={self.parsed_topic}, topic_descriptor={self.topic_descriptor}, value={self.value})"

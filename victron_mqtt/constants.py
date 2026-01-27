@@ -85,10 +85,6 @@ class OperationMode(Enum):
 class FormulaTransientState:
     """Transient state for formula metrics."""
 
-@dataclass
-class FormulaPersistentState:
-    """Persistent state for formula metrics."""
-
 PLACEHOLDER_PHASE = "{phase}"
 PLACEHOLDER_NEXT_PHASE = "{next_phase}"
 
@@ -143,11 +139,6 @@ class VictronDeviceEnum(VictronEnum):
 
     @classmethod
     def from_code(cls: type[Self], value: int | str, default_value: "VictronEnum | None" = None) -> Self | None:
-        """Not implemented for VictronDeviceEnum, use from_device_code instead."""
-        raise NotImplementedError("VictronDeviceEnum does not support from_code, use from_device_code.")
-
-    @classmethod
-    def from_device_code(cls: type[Self], value: int | str, default_value: Self | None = None) -> Self | None:
         """Get enum member from its device code representation, following mappings if necessary."""
         result = super(VictronDeviceEnum, cls).from_code(value, default_value)
         if result is None:

@@ -285,7 +285,7 @@ class Hub:
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.VerifyMode.CERT_NONE
-            self._client.tls_set_context(ssl_context)
+            self._client.tls_set_context(ssl_context) # type: ignore[arg-type]
 
         self._client.on_connect = self._on_connect
         self._client.on_disconnect = self._on_disconnect
