@@ -1173,12 +1173,40 @@ topics: List[TopicDescriptor] = [
         enum=PhoenixInverterMode,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/inverter/{device_id}/Pv/V",
+        message_type=MetricKind.SENSOR,
+        short_id="inverter_pv_voltage",
+        name="PV bus voltage",
+        metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/State",
         message_type=MetricKind.SENSOR,
         short_id="inverter_state",
         name="Inverter state",
         value_type=ValueType.ENUM,
         enum=State,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/inverter/{device_id}/Yield/Power",
+        message_type=MetricKind.SENSOR,
+        short_id="inverter_pv_power_total",
+        name="PV power total",
+        metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/inverter/{device_id}/Yield/System",
+        message_type=MetricKind.SENSOR,
+        short_id="inverter_total_pv_yield_system",
+        name="Total PV yield system",
+        metric_type=MetricType.ENERGY,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/inverter/{device_id}/Yield/User",
+        message_type=MetricKind.SENSOR,
+        short_id="inverter_total_pv_yield_user",
+        name="Total PV yield user",
+        metric_type=MetricType.ENERGY,
     ),
     # Multi RS Solar topics
     TopicDescriptor(
