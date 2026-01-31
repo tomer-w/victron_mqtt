@@ -1575,6 +1575,8 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.DURATION,
         unit_of_measurement = "min",
         value_type = ValueType.INT_SECONDS_TO_MINUTES,
+        min = 0,
+        max = 1440, # 24 hours maximum
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Soc",
