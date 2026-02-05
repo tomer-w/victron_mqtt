@@ -600,7 +600,7 @@ topics: List[TopicDescriptor] = [
         topic="N/{installation_id}/digitalinput/{device_id}/Settings/InvertTranslation",
         message_type=MetricKind.SWITCH,
         short_id="digitalinput_settings_invert_translation",
-        name="Digital input settings invert translation",
+        name="Invert digital input",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
