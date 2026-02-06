@@ -99,15 +99,15 @@ async def test_phase_message():
     device = hub.devices["grid_30"]
     assert device.device_type == DeviceType.GRID, f"Expected metric type to be 'grid', got {device.device_type}"
     assert device.unique_id == "grid_30", f"Expected device unique_id to be 'grid_30', got {device.unique_id}"
-    metric = device.get_metric("grid_energy_forward_L1")
-    metric2 = hub.get_metric("grid_30_grid_energy_forward_L1")
+    metric = device.get_metric("grid_energy_forward_l1")
+    metric2 = hub.get_metric("grid_30_grid_energy_forward_l1")
     assert metric == metric2, "Metrics should be equal"
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
-    assert metric.short_id == "grid_energy_forward_L1", f"Expected metric short_id to be 'grid_energy_forward_L1', got {metric.short_id}"
+    assert metric.short_id == "grid_energy_forward_l1", f"Expected metric short_id to be 'grid_energy_forward_l1', got {metric.short_id}"
     assert metric.generic_short_id == "grid_energy_forward_{phase}", f"Expected metric generic_short_id to be 'grid_energy_forward_{{phase}}', got {metric.generic_short_id}"
-    assert metric.unique_id == "grid_30_grid_energy_forward_L1", f"Expected metric unique_id to be 'grid_30_grid_energy_forward_L1', got {metric.unique_id}"
-    assert metric.name == "Grid consumption on L1", f"Expected metric name to be 'Grid consumption on L1', got {metric.name}"
+    assert metric.unique_id == "grid_30_grid_energy_forward_l1", f"Expected metric unique_id to be 'grid_30_grid_energy_forward_L1', got {metric.unique_id}"
+    assert metric.name == "Grid consumption on L1", f"Expected metric name to be 'Grid consumption on l1', got {metric.name}"
     assert metric.generic_name == "Grid consumption on {phase}", f"Expected metric generic_name to be 'Grid consumption on {{phase}}', got {metric.generic_name}"
     assert metric.unit_of_measurement == "kWh", f"Expected metric unit_of_measurement to be 'kWh', got {metric.unit_of_measurement}"
     assert metric.key_values["phase"] == "L1"
@@ -363,7 +363,7 @@ async def test_same_message_events_none():
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
-    metric = device.get_metric("grid_energy_forward_L1")
+    metric = device.get_metric("grid_energy_forward_l1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
     metric.on_update = MagicMock()
@@ -392,7 +392,7 @@ async def test_same_message_events_zero():
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
-    metric = device.get_metric("grid_energy_forward_L1")
+    metric = device.get_metric("grid_energy_forward_l1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
     metric.on_update = MagicMock()
@@ -421,7 +421,7 @@ async def test_same_message_events_five(mock_time: MagicMock) -> None:
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
-    metric = device.get_metric("grid_energy_forward_L1")
+    metric = device.get_metric("grid_energy_forward_l1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 42, f"Expected metric value to be 42, got {metric.value}"
     metric.on_update = MagicMock()
@@ -459,7 +459,7 @@ async def test_metric_keepalive_update_frequency_5(mock_time: MagicMock) -> None
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
-    metric = device.get_metric("grid_energy_forward_L1")
+    metric = device.get_metric("grid_energy_forward_l1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 10, f"Expected metric value to be 10, got {metric.value}"
 
@@ -508,7 +508,7 @@ async def test_metric_keepalive_update_frequency_none(mock_time: MagicMock) -> N
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
-    metric = device.get_metric("grid_energy_forward_L1")
+    metric = device.get_metric("grid_energy_forward_l1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 10, f"Expected metric value to be 10, got {metric.value}"
 
@@ -1132,7 +1132,7 @@ async def test_depends_on_regular_exists_same_round():
 
     # Validate the Hub's state - only system device exists, evcharger message was filtered
     assert len(hub.devices) == 2, f"Expected 2 devices (Generator1 and generator), got {len(hub.devices)}"
-    device = hub.devices["Generator1_0"]
+    device = hub.devices["generator1_0"]
     metric = device.get_metric("generator_1_start_on_voltage_enabled")
     assert metric is not None, "metric should exist in the device"
     assert metric.value == GenericOnOff.OFF, f"Expected metric value to be GenericOnOff.OFF, got {metric.value}"
@@ -1152,7 +1152,7 @@ async def test_depends_on_regular_exists_two_rounds():
 
     # Validate the Hub's state - only system device exists, evcharger message was filtered
     assert len(hub.devices) == 2, f"Expected 2 devices (Generator1 and generator), got {len(hub.devices)}"
-    device = hub.devices["Generator1_0"]
+    device = hub.devices["generator1_0"]
     metric = device.get_metric("generator_1_start_on_voltage_enabled")
     assert metric is not None, "metric should exist in the device"
     assert metric.value == GenericOnOff.OFF, f"Expected metric value to be GenericOnOff.OFF, got {metric.value}"
@@ -1192,7 +1192,7 @@ async def test_old_cerbo(mock_time: MagicMock) -> None:
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
-    metric = device.get_metric("grid_energy_forward_L1")
+    metric = device.get_metric("grid_energy_forward_l1")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 43, f"Expected metric value to be 43, got {metric.value}"
     await hub_disconnect(hub, mock_time)
@@ -1229,7 +1229,7 @@ async def test_min_max_float():
 
     # Validate the Hub's state
     assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
-    device = hub.devices["SystemSetup_170"]
+    device = hub.devices["systemsetup_170"]
     metric = device.get_metric("system_ess_max_charge_voltage")
     assert isinstance(metric, WritableMetric), "Metric should exist in the device"
     assert metric.value == 55.6, f"Expected metric value to be 55.6, got {metric.value}"

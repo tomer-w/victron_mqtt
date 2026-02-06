@@ -294,13 +294,13 @@ class ParsedTopic:
 
     def get_device_unique_id(self) -> str:
         """Get the unique id of the device."""
-        return f"{self.device_type.code}_{self.device_id}"
+        return f"{self.device_type.code}_{self.device_id}".lower()
 
     def finalize_topic_fields(self, topic_desc: TopicDescriptor) -> None:
         """Finalize the fields of the ParsedTopic based on the TopicDescriptor."""
         self._key_values = self.get_key_values(topic_desc)
         self._key_values.update(topic_desc.key_values)
-        self._short_id = self._replace_ids(topic_desc.short_id)
+        self._short_id = self._replace_ids(topic_desc.short_id).lower()
         self._unique_id = ParsedTopic.make_unique_id(self.get_device_unique_id(), self._short_id)
         assert topic_desc.name is not None, f"TopicDescriptor name is None for topic: {topic_desc.topic}"
         self._name = self._replace_ids(topic_desc.name)
