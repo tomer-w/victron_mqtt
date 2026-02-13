@@ -34,6 +34,7 @@ class DeviceType(VictronDeviceEnum):
     HEATPUMP = ("heatpump", "Heat Pump")
     DYNAMIC_ESS = ("DynamicEss", "Dynamic ESS", "system") # Dynamic ESS settings are under system
     ACLOAD = ("acload", "AC Load")
+    CHARGER = ("charger", "Charger")
     HUB4 = ("hub4", "Hub4")
 
 

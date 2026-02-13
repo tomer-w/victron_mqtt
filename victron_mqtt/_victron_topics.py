@@ -529,6 +529,44 @@ topics: List[TopicDescriptor] = [
         name="Battery cell voltage deviation",
         metric_type=MetricType.VOLTAGE,
     ),
+    # Charger topics (AC chargers such as Blue Smart IP22)
+    TopicDescriptor(
+        topic="N/{installation_id}/charger/{device_id}/Dc/0/Current",
+        message_type=MetricKind.SENSOR,
+        short_id="charger_dc_current",
+        name="Charger DC output current",
+        metric_type=MetricType.CURRENT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/charger/{device_id}/Dc/0/Voltage",
+        message_type=MetricKind.SENSOR,
+        short_id="charger_dc_voltage",
+        name="Charger DC output voltage",
+        metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/charger/{device_id}/ErrorCode",
+        message_type=MetricKind.SENSOR,
+        short_id="charger_error_code",
+        name="Charger error code",
+        value_type=ValueType.ENUM,
+        enum=ErrorCode,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/charger/{device_id}/NrOfOutputs",
+        message_type=MetricKind.SENSOR,
+        short_id="charger_nr_of_outputs",
+        name="Charger number of outputs",
+        value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/charger/{device_id}/State",
+        message_type=MetricKind.SENSOR,
+        short_id="charger_state",
+        name="Charger state",
+        value_type=ValueType.ENUM,
+        enum=State,
+    ),
     # DC Load topics
     TopicDescriptor(
         topic="N/{installation_id}/dcload/{device_id}/Dc/0/Current",
