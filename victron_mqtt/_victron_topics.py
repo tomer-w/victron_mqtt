@@ -2970,6 +2970,15 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Hub4/{phase}/AcPowerSetpoint",
+        message_type=MetricKind.NUMBER,
+        short_id="vebus_ac_power_setpoint_{phase}",
+        name="AC power setpoint {phase}",
+        metric_type=MetricType.POWER,
+        min=-10000,
+        max=10000,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Mode",
         message_type=MetricKind.SELECT,
         short_id="vebus_inverter_mode",
