@@ -67,7 +67,7 @@ async def create_mocked_hub(
         ```
     """
     # Create an async no-op function for patching keepalive loop
-    async def _async_noop():
+    async def _async_noop(self):
         pass
 
     keepalive_patch = patch.object(Hub, "_keepalive_loop", new=_async_noop) if disable_keepalive_loop else None
@@ -255,9 +255,12 @@ async def finalize_injection(
     """
     # Wait for the connect task to finish
     logger.info("Sending keepalive to finalize injection")
-    await hub._keepalive()
+    hub._keepalive()
     logger.info("Waiting for first refresh to complete")
     await hub.wait_for_first_refresh()
+    # Allow the event loop to process any pending call_soon_threadsafe callbacks
+    # (e.g., on_new_metric) that were scheduled during _handle_full_publish_message.
+    await sleep_short(mock_time)
     logger.info("waiting completed")
     if disconnect:
         await hub_disconnect(hub, mock_time)

@@ -417,7 +417,7 @@ async def test_same_message_events_five(mock_time: MagicMock) -> None:
 
     # Inject messages after the event is set
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}", mock_time)
-    await finalize_injection(hub, False)
+    await finalize_injection(hub, False, mock_time)
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
@@ -455,7 +455,7 @@ async def test_metric_keepalive_update_frequency_5(mock_time: MagicMock) -> None
 
     # Inject 1st message to generate the metric
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 10}", mock_time)
-    await finalize_injection(hub, False)
+    await finalize_injection(hub, False, mock_time)
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
@@ -508,7 +508,7 @@ async def test_metric_keepalive_update_frequency_none(mock_time: MagicMock) -> N
 
     # Inject 1st message to generate the metric
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 10}", mock_time)
-    await finalize_injection(hub, False)
+    await finalize_injection(hub, False, mock_time)
 
     # Validate that the device has the metric we published
     device = hub.devices["grid_30"]
@@ -1032,7 +1032,7 @@ async def test_formula_metric(mock_time: MagicMock) -> None:
     # Inject messages after the event is set
     await inject_message(hub, "N/123/system/0/Dc/Battery/Power", "{\"value\": 1200}", mock_time)
     mock_time.return_value += 0.1
-    await finalize_injection(hub, disconnect=False)
+    await finalize_injection(hub, False, mock_time)
 
     # Validate the Hub's state - only system device exists, evcharger message was filtered
     assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
@@ -1086,7 +1086,7 @@ async def test_formula_switch(mock_time: MagicMock) -> None:
     # Inject messages after the event is set
     await inject_message(hub, "N/123/settings/0/Settings/CGwacs/BatteryLife/Schedule/Charge/2/Day", "{\"value\": -7}", mock_time)
     mock_time.return_value += 0.1
-    await finalize_injection(hub, disconnect=False)
+    await finalize_injection(hub, False, mock_time)
 
     # Validate the Hub's state - only system device exists
     assert len(hub.devices) == 1, f"Expected 1 device (system device), got {len(hub.devices)}"
