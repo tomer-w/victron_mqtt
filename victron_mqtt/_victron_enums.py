@@ -387,3 +387,9 @@ class SolarChargerDeviceOffReason(VictronEnum):
     NO_PANEL_POWER = (0x400, "No/Low panel power")
     NO_BATTERY_POWER = (0x800, "No/Low battery power")
     ACTIVE_ALARM = (0x8000, "Active alarm")
+
+class BatteryState(VictronEnum):
+    """Battery state Enum"""
+    IDLE = (0, "Idle")
+    CHARGING = (1, "Charging")
+    DISCHARGING = (2, "Discharging")

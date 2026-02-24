@@ -38,6 +38,7 @@ from ._victron_enums import (
     ESSModeHub4,
     ActiveInputEnum,
     SolarChargerDeviceOffReason,
+    BatteryState
 )
 
 # Good sources for topics is:
@@ -2418,6 +2419,15 @@ topics: List[TopicDescriptor] = [
         short_id="system_dc_battery_voltage",
         name="DC battery voltage",
         metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/system/{device_id}/Dc/Battery/State",
+        message_type=MetricKind.SENSOR,
+        short_id="system_dc_battery_state",
+        name="DC battery state",
+        metric_type=MetricType.NONE,
+        value_type=ValueType.ENUM,
+        enum=BatteryState
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Dc/Pv/Current",
