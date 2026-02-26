@@ -32,7 +32,7 @@ from .id_utils import reraise_same_exception
 _LOGGER = logging.getLogger(__name__)
 CONNECT_MAX_FAILED_ATTEMPTS = 3
 FORCE_INVALIDATE_AFTER_NOT_CONNECTED_SECONDS = 120
-FULL_PUBLISH_MIN_INTERVAL_SECONDS = 45
+FULL_PUBLISH_MIN_INTERVAL_SECONDS = 180
 MINIMUM_FULLY_SUPPORTED_VERSION = 3.5
 
 # Modify the logger to include instance_id without changing the tracing level
@@ -401,7 +401,7 @@ class Hub:
         topic = self._remove_topic_prefix(topic)
 
         if topic.endswith("full_publish_completed"):
-            self._handle_full_publish_message(payload)
+            self._handle_full_publish_message(payload = payload)
             return
 
         if self._installation_id is None and not self._installation_id_event.is_set():
@@ -417,8 +417,7 @@ class Hub:
         # call _handle_full_publish_message with an empty payload to trigger periodic handling.
         if now - self._last_full_publish_called >= FULL_PUBLISH_MIN_INTERVAL_SECONDS:
             _LOGGER.debug("Periodic trigger: calling _handle_full_publish_message (last %.1fs ago)", now - self._last_full_publish_called)
-            # Use an empty JSON object.
-            self._handle_full_publish_message("{}")
+            self._handle_full_publish_message(skip_validation=True)
 
     def _is_formula_dependency_met(self, topic: TopicDescriptor, relevant_device: Device, key_values: dict[str, str]) -> Tuple[bool, list[Metric]]:
         if not topic.depends_on:
@@ -446,19 +445,22 @@ class Hub:
                 return False
         return True
 
-    def _handle_full_publish_message(self, payload: str) -> None:
+    def _handle_full_publish_message(self, payload: str | None = None, skip_validation: bool = False) -> None:
         """Handle full publish message."""
-        echo = self.get_keepalive_echo(payload)
-        if not echo:
-            if self._first_full_publish:
-                _LOGGER.error("No echo found in keepalive message: %s. Probably old Venus OS version", payload)
-            else:
-                _LOGGER.debug("No echo found in keepalive message: %s. Probably old Venus OS version", payload)
+        echo: str | None = None
+        if not skip_validation:
+            assert payload is not None, "Payload must be provided when skip_validation is False"
+            echo = self.get_keepalive_echo(payload)
+            if not echo:
+                if self._first_full_publish:
+                    _LOGGER.error("No echo found in keepalive message: %s. Probably old Venus OS version", payload)
+                else:
+                    _LOGGER.debug("No echo found in keepalive message: %s. Probably old Venus OS version", payload)
 
-        # Check if it matches our client ID so we got full cycle or refresh
-        if echo and not echo.startswith(self._client_id):
-            _LOGGER.debug("Not our echo: %s", echo)
-            return
+            # Check if it matches our client ID so we got full cycle or refresh
+            if echo and not echo.startswith(self._client_id):
+                _LOGGER.debug("Not our echo: %s", echo)
+                return
         # Update the last-called timestamp when we handled a full-publish for our client
         self._last_full_publish_called = time.monotonic()
 

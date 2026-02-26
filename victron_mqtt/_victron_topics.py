@@ -2417,7 +2417,6 @@ topics: List[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="system_dc_battery_state",
         name="DC battery state",
-        metric_type=MetricType.NONE,
         value_type=ValueType.ENUM,
         enum=BatteryState
     ),

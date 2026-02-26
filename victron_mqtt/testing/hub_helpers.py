@@ -9,7 +9,7 @@ from itertools import count
 import asyncio
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from paho.mqtt.client import ConnectFlags
@@ -19,9 +19,6 @@ from paho.mqtt.reasoncodes import ReasonCode
 from victron_mqtt.hub import Hub
 from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
 from victron_mqtt._victron_enums import DeviceType
-
-if TYPE_CHECKING:
-    from unittest.mock import MagicMock
 
 logger = logging.getLogger(__name__)
 
@@ -66,11 +63,10 @@ async def create_mocked_hub(
             assert len(hub.devices) == 1
         ```
     """
-    # Create an async no-op function for patching keepalive loop
-    async def _async_noop(self):
+    async def _async_noop(_self: Any) -> None:
         pass
 
-    keepalive_patch = patch.object(Hub, "_keepalive_loop", new=_async_noop) if disable_keepalive_loop else None
+    keepalive_patch: Any = patch.object(Hub, "_keepalive_loop", new=_async_noop) if disable_keepalive_loop else None
 
     if keepalive_patch:
         keepalive_patch.start()
@@ -103,7 +99,7 @@ async def create_mocked_hub(
             setattr(hub, '_process_metric', MagicMock(name="_process_metric"))
 
             # Mock connect_async to trigger the _on_connect callback
-            def mock_connect_async(*args, **kwargs: Any):
+            def mock_connect_async(*_args: Any, **_kwargs: Any) -> None:
                 hub._on_connect(hub._client, None, ConnectFlags(False), ReasonCode(PacketTypes.CONNACK, identifier=0), None)
             mocked_client.connect_async = MagicMock(name="connect_async", side_effect=mock_connect_async)
 
@@ -138,8 +134,8 @@ async def create_mocked_hub(
                 except (json.JSONDecodeError, AttributeError, IndexError):
                     return ""
 
-            def mock_publish(topic, value):
-                if topic == "R/123/keepalive":
+            def mock_publish(topic: str, value: str) -> None:
+                if topic == "R/123/keepalive" and "suppress-republish" not in str(value):
                     echo = parse_keepalive_options(value)
                     keepalive_payload = json.dumps({"full-publish-completed-echo": echo, "value": 42})
                     logger.info("Sending mocked full_publish_completed")
@@ -221,7 +217,7 @@ async def inject_message(
         await inject_message(hub, "N/123/battery/0/Voltage", '{"value": 12.5}')
         ```
     """
-    assert hub_instance._client is not None 
+    assert hub_instance._client is not None
     assert hub_instance._client.on_message is not None
     hub_instance._client.on_message(hub_instance._client, None, MagicMock(topic=topic, payload=payload.encode()))
     await sleep_short(mock_time)
@@ -255,7 +251,7 @@ async def finalize_injection(
     """
     # Wait for the connect task to finish
     logger.info("Sending keepalive to finalize injection")
-    hub._keepalive()
+    hub._keepalive(force=True)
     logger.info("Waiting for first refresh to complete")
     await hub.wait_for_first_refresh()
     # Allow the event loop to process any pending call_soon_threadsafe callbacks

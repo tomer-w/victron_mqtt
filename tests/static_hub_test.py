@@ -1192,7 +1192,7 @@ async def test_old_cerbo(mock_time: MagicMock) -> None:
 
     # Inject messages after the event is set
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 42}", mock_time)
-    mock_time.return_value = 46
+    mock_time.return_value = 190
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", "{\"value\": 43}", mock_time)
 
     # Validate the Hub's state
@@ -1385,3 +1385,45 @@ async def test_on_connect_fail_tracking_time_after_first_connect(mock_time: Magi
     mock_time.return_value = 10
     hub._on_connect_fail(hub._client, None)
     assert hub._connect_failed_since == 7, "Should keep same failure time across retries"
+
+
+@pytest.mark.asyncio
+async def test_suppress_republish_still_creates_new_metrics():
+    """Test that new metrics are created even when suppress-republish prevents full_publish_completed.
+
+    When the keepalive includes suppress-republish, Venus OS does not send
+    full_publish_completed. The hub should still process pending placeholders
+    into metrics via the periodic trigger in the keepalive loop.
+    """
+    hub: Hub = await create_mocked_hub()
+
+    # Track new metrics via callback
+    mock_on_new_metric = MagicMock()
+    hub.on_new_metric = mock_on_new_metric
+
+    # Inject messages to create placeholders
+    await inject_message(hub, "N/123/system/170/Dc/System/Power", '{"value": 1.1}')
+
+    # Verify placeholders were created
+    assert len(hub._metrics_placeholders) > 0, "Should have pending placeholders after inject"
+
+    # Non-forced keepalive sends suppress-republish; mock won't respond with full_publish_completed
+    hub._keepalive()
+    await sleep_short()
+
+    # Placeholders are NOT processed by a regular keepalive (suppress-republish, no response)
+    assert len(hub._metrics_placeholders) > 0, "Placeholders should still be pending after suppress-republish keepalive"
+
+    # Simulate what the keepalive loop does every 3 minutes: call _handle_full_publish_message directly
+    hub._handle_full_publish_message("{}", skip_validation=True)
+    await sleep_short()
+
+    # Now placeholders should be converted to metrics
+    assert len(hub._metrics_placeholders) == 0, "Placeholders should be cleared after periodic trigger"
+    device = hub.devices.get("system_170")
+    assert device is not None, "Device should exist"
+    metric = device.get_metric("system_dc_consumption")
+    assert metric is not None, "Metric should have been created"
+    assert metric.value == 1.1, f"Expected metric value to be 1.1, got {metric.value}"
+
+    await hub_disconnect(hub)
