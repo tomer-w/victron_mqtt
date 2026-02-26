@@ -431,7 +431,8 @@ topics: List[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="battery_cumulative_ah_drawn",
         name="Cumulative Ah Drawn",
-        metric_type=MetricType.CURRENT,
+        unit_of_measurement="Ah",
+        metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
         metric_nature=MetricNature.CUMULATIVE,
     ),
     TopicDescriptor(
