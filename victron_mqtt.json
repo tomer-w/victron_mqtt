@@ -979,7 +979,7 @@
       "message_type": "MetricKind.SENSOR",
       "short_id": "battery_cumulative_ah_drawn",
       "name": "Cumulative Ah Drawn",
-      "unit_of_measurement": "A",
+      "unit_of_measurement": "Ah",
       "metric_type": "MetricType.ELECTRIC_STORAGE_CAPACITY",
       "metric_nature": "MetricNature.CUMULATIVE",
       "value_type": "ValueType.FLOAT",
