@@ -63,7 +63,7 @@ MINIMUM_FULLY_SUPPORTED_VERSION = 3.5
 #         else:
 #             print(f"[TASK DONE] {self.get_name()} - Result: {result}")
 
-running_client_id=0
+_running_client_id = 0
 
 CallbackOnNewMetric = Callable[["Hub", Device, Metric], None]
 
@@ -141,9 +141,9 @@ class Hub:
         TypeError
             If an argument has an incorrect type.
         """
-        global running_client_id
-        self._instance_id = running_client_id
-        running_client_id += 1
+        global _running_client_id  # pylint: disable=global-statement
+        self._instance_id = _running_client_id
+        _running_client_id += 1
 
         # Add the instance_id filter to the logger only if it doesn't already exist
         # self.logger = logging.getLogger(__name__)

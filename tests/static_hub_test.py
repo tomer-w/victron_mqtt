@@ -1380,8 +1380,8 @@ async def test_on_connect_fail_tracking_time_after_first_connect(mock_time: Magi
     # First failure - should initialize _connect_failed_since
     hub._on_connect_fail(hub._client, None)
     assert hub._connect_failed_since == 7, "Should have recorded failure time"
-    
-    # Second failure - should keep same _connect_failed_since
+
+    # Second failure- should keep same _connect_failed_since
     mock_time.return_value = 10
     hub._on_connect_fail(hub._client, None)
     assert hub._connect_failed_since == 7, "Should keep same failure time across retries"

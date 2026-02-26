@@ -31,11 +31,11 @@ async def create_mocked_hub(
     disable_keepalive_loop: bool = True
 ) -> Hub:
     """Create and return a mocked Hub object for testing.
-    
+
     This function creates a Hub instance with a fully mocked MQTT client,
     allowing you to simulate MQTT messages and test Hub behavior without
     connecting to an actual MQTT broker.
-    
+
     Args:
         installation_id: Optional Victron installation ID. If None, will be
             automatically set to "123" during connection.
@@ -44,21 +44,21 @@ async def create_mocked_hub(
         update_frequency_seconds: Optional update frequency for metrics in seconds.
         disable_keepalive_loop: If True (default), disables the keepalive loop to prevent
             background tasks during testing. Set to False if you need to test keepalive behavior.
-    
+
     Returns:
         A Hub instance with a mocked MQTT client, ready for testing.
-    
+
     Example:
         ```python
         import pytest
         from victron_mqtt.testing import create_mocked_hub, inject_message, finalize_injection
-        
+
         @pytest.mark.asyncio
         async def test_my_hub_integration():
             hub = await create_mocked_hub()
             await inject_message(hub, "N/123/battery/0/Soc", '{"value": 85}')
             await finalize_injection(hub)
-            
+
             # Now test your code that uses the hub
             assert len(hub.devices) == 1
         ```
@@ -126,7 +126,7 @@ async def create_mocked_hub(
             def parse_keepalive_options(json_string: str) -> str:
                 """Parse the JSON string for keepalive options and return the echo value."""
                 try:
-                    options = json.loads(json_string)
+                    options: dict[str, list[dict[str, str]]] = json.loads(json_string)
                     keepalive_options = options.get("keepalive-options", [])
                     if keepalive_options and isinstance(keepalive_options, list):
                         return keepalive_options[0].get("full-publish-completed-echo", "")
@@ -164,7 +164,7 @@ async def create_mocked_hub(
 
 async def sleep_short(mock_time: MagicMock | None = None):
     """Short async sleep to allow event loop to process callbacks.
-    
+
     Args:
         mock_time: Optional MagicMock for time.monotonic() to advance time simulation.
     """
@@ -178,7 +178,7 @@ async def sleep_short(mock_time: MagicMock | None = None):
 
 async def hub_disconnect(hub: Hub, mock_time: MagicMock | None = None):
     """Disconnect a Hub instance gracefully.
-    
+
     Args:
         hub: The Hub instance to disconnect.
         mock_time: Optional MagicMock for time.monotonic() to advance time simulation.
@@ -200,17 +200,17 @@ async def inject_message(
     mock_time: MagicMock | None = None
 ):
     """Inject a single MQTT message into a mocked Hub.
-    
+
     This simulates receiving an MQTT message on the given topic with the
     specified payload. The Hub will process it as if it came from a real
     MQTT broker.
-    
+
     Args:
         hub_instance: The Hub instance to inject the message into.
         topic: The MQTT topic string (e.g., "N/123/battery/0/Soc").
         payload: The JSON payload as a string (e.g., '{"value": 85}').
         mock_time: Optional MagicMock for time.monotonic() to advance time simulation.
-    
+
     Example:
         ```python
         await inject_message(hub, "N/123/battery/0/Soc", '{"value": 85}')
@@ -229,22 +229,22 @@ async def finalize_injection(
     mock_time: MagicMock | None = None
 ):
     """Finalize the injection of messages into the Hub.
-    
+
     This completes the message injection process by triggering keepalive,
     waiting for the first refresh to complete, and optionally disconnecting
     the Hub.
-    
+
     Args:
         hub: The Hub instance to finalize.
         disconnect: Whether to disconnect the Hub after finalization. Default True.
         mock_time: Optional MagicMock for time.monotonic() to advance time simulation.
-    
+
     Example:
         ```python
         hub = await create_mocked_hub()
         await inject_message(hub, "N/123/battery/0/Soc", '{"value": 85}')
         await finalize_injection(hub)
-        
+
         # Hub is now ready for assertions
         assert hub.devices["battery_0"].get_metric("battery_soc").value == 85
         ```
