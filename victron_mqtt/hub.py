@@ -33,6 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 CONNECT_MAX_FAILED_ATTEMPTS = 3
 FORCE_INVALIDATE_AFTER_NOT_CONNECTED_SECONDS = 120
 FULL_PUBLISH_MIN_INTERVAL_SECONDS = 180
+FIRST_FULL_PUBLISH_MIN_INTERVAL_SECONDS = 30
 MINIMUM_FULLY_SUPPORTED_VERSION = 3.5
 
 # Modify the logger to include instance_id without changing the tracing level
@@ -194,6 +195,7 @@ class Hub:
         # Track when _handle_full_publish_message was last invoked for our client
         # Use monotonic time to avoid issues with system clock changes
         self._last_full_publish_called: float = 0.0
+        self._periodic_full_publish_triggered_once = False
         self._firmware_version: float = 0.0
         self._connect_failed_since: float = 0.0
 
@@ -297,6 +299,7 @@ class Hub:
         self._connect_failed_reason = None
         #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop, name=name))
         self._last_full_publish_called = time.monotonic() # Initialize last full publish time
+        self._periodic_full_publish_triggered_once = False
 
 
         _LOGGER.info("Starting paho mqtt")
@@ -413,11 +416,14 @@ class Hub:
         # This is to handle old cerbo versions that do not send full publish completed messages.
         # Issue #139 and #205
         now = time.monotonic()
+        min_interval = FIRST_FULL_PUBLISH_MIN_INTERVAL_SECONDS if not self._periodic_full_publish_triggered_once else FULL_PUBLISH_MIN_INTERVAL_SECONDS
         # If we've never called it or it's been longer than the configured interval,
         # call _handle_full_publish_message with an empty payload to trigger periodic handling.
-        if now - self._last_full_publish_called >= FULL_PUBLISH_MIN_INTERVAL_SECONDS:
-            _LOGGER.debug("Periodic trigger: calling _handle_full_publish_message (last %.1fs ago)", now - self._last_full_publish_called)
+        if now - self._last_full_publish_called >= min_interval:
+            _LOGGER.debug("Periodic trigger: calling _handle_full_publish_message (last %.1fs ago, interval %.1fs)", now - self._last_full_publish_called, min_interval)
             self._handle_full_publish_message(skip_validation=True)
+            self._last_full_publish_called = time.monotonic()
+            self._periodic_full_publish_triggered_once = True
 
     def _is_formula_dependency_met(self, topic: TopicDescriptor, relevant_device: Device, key_values: dict[str, str]) -> Tuple[bool, list[Metric]]:
         if not topic.depends_on:
@@ -461,8 +467,6 @@ class Hub:
             if echo and not echo.startswith(self._client_id):
                 _LOGGER.debug("Not our echo: %s", echo)
                 return
-        # Update the last-called timestamp when we handled a full-publish for our client
-        self._last_full_publish_called = time.monotonic()
 
         _LOGGER.debug("Full publish completed: %s", echo)
         new_metrics: list[tuple[Device, Metric]] = []
