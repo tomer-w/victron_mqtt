@@ -1466,17 +1466,17 @@ topics: List[TopicDescriptor] = [
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/multi/{device_id}/History/Daily/0/Yield",
-        message_type=MetricKind.SENSOR,
-        short_id="multi_yield_today",
-        name="Yield today",
-        metric_type=MetricType.ENERGY,
-    ),
-    TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/History/Daily/0/Pv/{mppt_id}/Yield",
         message_type=MetricKind.SENSOR,
         short_id="multi_mppt_{mppt_id}_yield_today",
         name="MPPT {mppt_id} yield today",
+        metric_type=MetricType.ENERGY,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/multi/{device_id}/History/Daily/0/Yield",
+        message_type=MetricKind.SENSOR,
+        short_id="multi_yield_today",
+        name="Yield today",
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
