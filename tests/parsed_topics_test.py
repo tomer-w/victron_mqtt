@@ -86,7 +86,7 @@ def test_parsed_topic_with_phase_and_placeholder():
     parsed_topic.finalize_topic_fields(descriptor)
     # Validate the ParsedTopic instance additional fields after matching description
     assert parsed_topic.key_values["phase"] == "L1", "Phase should match"
-    assert parsed_topic.short_id == "multirssolar_acout_1_current_l1", "Short ID should match"
+    assert parsed_topic.short_id == "multi_acout_1_current_l1", "Short ID should match"
 
 def test_settings_parsed_topic():
     """Test parsing a settings topic and ensure it is correctly extracted and matched to the TopicDescriptor, including handling of device type mapping."""
