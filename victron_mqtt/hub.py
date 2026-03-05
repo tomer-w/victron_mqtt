@@ -508,7 +508,13 @@ class Hub:
                         self._all_metrics[metric.unique_id] = metric
                         new_metrics.append((device, metric))
         # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
-        for device, metric in new_metrics:
+        # Prioritize callbacks for system metrics first, while preserving the original relative order.
+        # This is to ensure that HA via device works (other devices are marked depended on the system)
+        ordered_new_metrics = [
+            *[item for item in new_metrics if item[0].device_type == DeviceType.SYSTEM],
+            *[item for item in new_metrics if item[0].device_type != DeviceType.SYSTEM],
+        ]
+        for device, metric in ordered_new_metrics:
             metric.phase2_init(device.unique_id, self._all_metrics)
             try:
                 if callable(self._on_new_metric):

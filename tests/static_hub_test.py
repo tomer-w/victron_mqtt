@@ -678,6 +678,27 @@ async def test_new_metric():
     await hub_disconnect(hub)
 
 @pytest.mark.asyncio
+async def test_new_metric_system_callbacks_first():
+    """System device callbacks should be triggered before other device callbacks."""
+    hub: Hub = await create_mocked_hub()
+
+    callback_device_ids: list[str] = []
+
+    def on_new_metric_mock(_hub: Hub, device: object, _metric: Metric) -> None:
+        callback_device_ids.append(str(getattr(device, "unique_id")))
+
+    hub.on_new_metric = MagicMock(side_effect=on_new_metric_mock)
+
+    # Inject a non-system metric first, then a system metric.
+    await inject_message(hub, "N/123/gps/170/Position/Latitude", "{\"value\": 2.3456}")
+    await inject_message(hub, "N/123/system/170/Dc/System/Power", "{\"value\": 1.1234}")
+    await finalize_injection(hub, disconnect=False)
+
+    assert callback_device_ids == ["system_170", "gps_170"], "System metrics should be dispatched first"
+
+    await hub_disconnect(hub)
+
+@pytest.mark.asyncio
 async def test_new_metric_duplicate_messages():
     """Test that the Hub correctly triggers the on_new_metric callback."""
     hub: Hub = await create_mocked_hub()
