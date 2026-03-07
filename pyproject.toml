@@ -86,6 +86,7 @@ victron_mqtt = ["victron_mqtt"]
 tests = ["tests", "*/victron_mqtt/tests"]
 
 [tool.coverage.report]
+fail_under = 80
 exclude_lines = [
   "no cov",
   "if __name__ == .__main__.:",
@@ -99,10 +100,5 @@ target-version = "py313"
 
 [tool.ruff.lint]
 
-[tool.setuptools]
-packages = ["victron_mqtt"]
-
-[tool.setuptools.entry_points]
-console_scripts = [
-    "victron_mqtt-dump-mqtt=victron_mqtt.utils.dump_mqtt:main"
-]
+[project.scripts]
+victron_mqtt-dump-mqtt = "victron_mqtt.utils.dump_mqtt:main"

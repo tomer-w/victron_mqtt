@@ -1,5 +1,3 @@
-# pylint: disable=line-too-long
-# pylint: disable=too-many-lines
 """
 Maps all the MQTT topics to either attributes or metrics.
 """

@@ -1,5 +1,4 @@
 """Unit tests for the Victron MQTT Hub functionality."""
-# pylint: disable=protected-access
 # pyright: reportPrivateUsage=false
 
 import logging

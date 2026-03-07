@@ -46,7 +46,7 @@ autolabeler:
       - '*.md'
       - '.github/**/*'
       - '.gitignore'
-      - '.pylintrc'
+      - 'pyrightconfig.json'
       - 'pytest.ini'
   - label: 'documentation'
     files:

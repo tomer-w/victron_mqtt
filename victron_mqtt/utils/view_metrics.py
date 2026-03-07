@@ -126,7 +126,7 @@ class MetricContainer:
         self._tree_view = tree_view
         self._parent_item = parent_item
 
-    def _update(self, metric: Metric, value):  # pylint: disable=unused-argument
+    def _update(self, metric: Metric, value):  # noqa: ARG002
         formatted = self._metric.format_value(value)
         if self._tree_view.exists(self._parent_item):
             self._tree_view.item(self._parent_item, values=(formatted,))
@@ -182,7 +182,7 @@ class App:
     def to_quit(self):
         return self._to_quit
 
-    def _on_tree_select(self, event):  # pylint: disable=unused-argument
+    def _on_tree_select(self, event):  # noqa: ARG002
         if len(self.tree.selection()) == 0:  # nothing selected
             if str(self.info_button["state"]) == tk.NORMAL:
                 self.info_button.config(state=tk.DISABLED)
@@ -198,7 +198,7 @@ class App:
             self._fill_tree()
             self.disconnect_button.config(state=tk.NORMAL)
             return True
-        except Exception as e:  # pylint: disable=broad-except
+        except Exception as e:  # noqa: BLE001
             LOGGER.error("Error connecting to Venus device: %s", e, exc_info=True)
             message = str(e)
             messagebox.showerror("Error", f"Error connecting: {message}")

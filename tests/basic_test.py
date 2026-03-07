@@ -1,7 +1,7 @@
 """Tests basic connectivity functionality. Does require a running Venus OS instance to connect to."""
 
 import pytest
-import victron_mqtt  # pylint: disable=import-error
+import victron_mqtt
 import logging
 
 from victron_mqtt._victron_enums import DeviceType

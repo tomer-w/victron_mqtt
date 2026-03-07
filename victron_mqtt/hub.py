@@ -142,7 +142,7 @@ class Hub:
         TypeError
             If an argument has an incorrect type.
         """
-        global _running_client_id  # pylint: disable=global-statement
+        global _running_client_id  # noqa: PLW0603
         self._instance_id = _running_client_id
         _running_client_id += 1
 
