@@ -55,7 +55,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - name: Post test summary to PR
         if: github.event_name == 'pull_request_target'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const exitCode = '${{ steps.tests.outputs.exit_code }}';
