@@ -2,9 +2,10 @@
 Support for Victron Venus metrics based on formulas and not direct mqtt topic.
 """
 from __future__ import annotations
+from collections.abc import Callable
 from dataclasses import dataclass
 import time
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from .constants import FormulaTransientState
 

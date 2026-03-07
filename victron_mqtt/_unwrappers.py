@@ -1,5 +1,4 @@
 """Functions to unwrap the data from the JSON string."""
-from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime

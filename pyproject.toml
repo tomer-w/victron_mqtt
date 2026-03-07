@@ -7,7 +7,7 @@ name = "victron_mqtt"
 version = "2026.3.2"
 description = "Python library for communicating with Victron Venus OS MQTT interface"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.13"
 license = "MIT"
 keywords = ["victron", "mqtt", "venus os"]
 authors = [
@@ -16,10 +16,7 @@ authors = [
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
@@ -98,10 +95,9 @@ exclude_lines = [
 [tool.ruff]
 exclude = [".git", "__pycache__", "node_modules", "public", "venv"]
 line-length = 120
-target-version = "py39"
+target-version = "py313"
 
 [tool.ruff.lint]
-ignore = [  "UP007" ]
 
 [tool.setuptools]
 packages = ["victron_mqtt"]

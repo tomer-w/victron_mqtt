@@ -1,6 +1,6 @@
 """Utility functions for ID manipulation."""
+from collections.abc import Callable
 import re
-from typing import Callable
 
 # Complex is: "Switch {output:switch_{output}_custom_name} Dimming"
 def replace_complex_ids(orig_str: str, match_func: Callable[[re.Match[str]], str]) -> str:

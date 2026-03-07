@@ -1,6 +1,6 @@
 """Module to communicate with the Venus OS MQTT Broker."""
-from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
 import asyncio
 import copy
@@ -10,7 +10,7 @@ import random
 import ssl
 import re
 import string
-from typing import Any, Callable, Optional, Tuple
+from typing import Any
 import time
 
 import paho.mqtt.client as mqtt
@@ -342,7 +342,7 @@ class Hub:
     def _on_log(self, _client: MQTTClient, _userdata: Any, level:int, buf:str) -> None:
         _LOGGER.log(level, buf)
 
-    def _on_connect(self, client: MQTTClient, userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, properties: Optional[Properties] = None) -> None:
+    def _on_connect(self, client: MQTTClient, userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, properties: Properties | None = None) -> None:
         try:
             self._on_connect_internal(client, userdata, flags, reason_code, properties)
         except Exception as exc:
@@ -356,7 +356,7 @@ class Hub:
         except Exception as exc:
             _LOGGER.exception("Exception in _on_connect while setting connected event: %s", exc)
 
-    def _on_connect_internal(self, _client: MQTTClient, _userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, _properties: Optional[Properties] = None) -> None:
+    def _on_connect_internal(self, _client: MQTTClient, _userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, _properties: Properties | None = None) -> None:
         """Handle connection callback."""
         self._connect_failed_since = 0
         self._connect_failed_attempts = 0
@@ -376,7 +376,7 @@ class Hub:
         _LOGGER.info("Connected to MQTT broker successfully")
         self._setup_subscriptions()
 
-    def _on_disconnect(self, _client: MQTTClient, _userdata: Any, disconnect_flags: mqtt.DisconnectFlags, reason_code: ReasonCode, _properties: Optional[Properties] = None) -> None:
+    def _on_disconnect(self, _client: MQTTClient, _userdata: Any, disconnect_flags: mqtt.DisconnectFlags, reason_code: ReasonCode, _properties: Properties | None = None) -> None:
         """Handle disconnection callback."""
         if reason_code != 0:
             _LOGGER.warning("Unexpected disconnection from MQTT broker. Error: %s. flags: %s, Reconnecting...", reason_code, disconnect_flags)
@@ -425,7 +425,7 @@ class Hub:
             self._last_full_publish_called = time.monotonic()
             self._periodic_full_publish_triggered_once = True
 
-    def _is_formula_dependency_met(self, topic: TopicDescriptor, relevant_device: Device, key_values: dict[str, str]) -> Tuple[bool, list[Metric]]:
+    def _is_formula_dependency_met(self, topic: TopicDescriptor, relevant_device: Device, key_values: dict[str, str]) -> tuple[bool, list[Metric]]:
         if not topic.depends_on:
             return True, []
         dependencies: list[Metric] = []

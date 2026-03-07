@@ -3,7 +3,6 @@
 This module provides utilities for downstream projects that use victron_mqtt
 to write their own tests involving Hub objects and MQTT message simulation.
 """
-from __future__ import annotations
 
 from itertools import count
 import asyncio

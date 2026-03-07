@@ -4,7 +4,6 @@
 Maps all the MQTT topics to either attributes or metrics.
 """
 
-from typing import List
 from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
 from .data_classes import TopicDescriptor
 from ._victron_enums import (
@@ -46,7 +45,7 @@ from ._victron_enums import (
 # https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.victronenergy.com%2Fupload%2Fdocuments%2FCCGX-Modbus-TCP-register-list-3.60.xlsx
 # mqtt-explorer
 
-topics: List[TopicDescriptor] = [
+topics: list[TopicDescriptor] = [
     # generic device attributes
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Devices/0/SerialNumber",

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 import copy
 
 from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_bitmask, unwrap_float, unwrap_int_seconds_to_hours, unwrap_int_seconds_to_minutes, unwrap_float_m3_to_liters

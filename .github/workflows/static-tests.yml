@@ -33,7 +33,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - name: Install Hatch
         run: pip install hatch "virtualenv<20.29"
       - name: Run static tests

@@ -2,10 +2,9 @@
 Support for Victron Venus WritableMetric.
 """
 
-from __future__ import annotations
-
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from .constants import VictronEnum
 from .formula_metric import FormulaMetric

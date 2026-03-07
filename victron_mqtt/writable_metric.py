@@ -2,11 +2,10 @@
 Support for Victron Venus WritableMetric.
 """
 
-from __future__ import annotations
-
+from collections.abc import Callable, Iterable
 from enum import Enum
 import logging
-from typing import Any, Callable, Iterable, cast
+from typing import Any, cast
 
 from .metric import Metric
 from ._unwrappers import VALUE_TYPE_WRAPPER, wrap_bitmask, wrap_enum

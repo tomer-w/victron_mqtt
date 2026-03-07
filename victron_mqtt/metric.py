@@ -6,9 +6,10 @@ Support for Victron Venus sensors. The sensor itself has no logic,
 from __future__ import annotations
 
 from collections.abc import Callable
+import re
 import time
 import logging
-from typing import TYPE_CHECKING, Any, Match
+from typing import TYPE_CHECKING, Any
 
 from .id_utils import replace_complex_ids
 from .constants import MetricKind, MetricNature, MetricType, VictronEnum
@@ -80,7 +81,7 @@ class Metric:
         self._name = self._replace_ids(name_temp, device_id, all_metrics)
 
     def _replace_ids(self, orig_str: str, device_id: str, all_metrics: dict[str, Metric]) -> str:
-        def replace_match(match: Match[str]) -> str:
+        def replace_match(match: re.Match[str]) -> str:
             moniker = match.group('moniker')
             key, suffix = moniker.split(':', 1)
             assert key and suffix, f"Invalid moniker format: {moniker} in topic: {orig_str}"
