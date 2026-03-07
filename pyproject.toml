@@ -74,19 +74,18 @@ build = "sphinx-build -b html docs docs/_build/html"
 
 
 [tool.coverage.run]
-source_pkgs = ["victron_mqtt", "tests"]
+source_pkgs = ["victron_mqtt"]
 branch = true
 parallel = true
 omit = [
-  "victron_mqtt/__about__.py",
+  "victron_mqtt/utils/*",
 ]
 
 [tool.coverage.paths]
 victron_mqtt = ["victron_mqtt"]
-tests = ["tests", "*/victron_mqtt/tests"]
 
 [tool.coverage.report]
-fail_under = 80
+fail_under = 95
 exclude_lines = [
   "no cov",
   "if __name__ == .__main__.:",

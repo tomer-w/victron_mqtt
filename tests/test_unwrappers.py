@@ -8,6 +8,7 @@ from victron_mqtt._unwrappers import (
     unwrap_int_default_0,
     unwrap_int_seconds_to_hours,
     unwrap_float,
+    unwrap_float_m3_to_liters,
     unwrap_int_seconds_to_minutes,
     unwrap_string,
     unwrap_enum,
@@ -234,3 +235,69 @@ def test_wrap_functions_and_mappings():
     assert callable(VALUE_TYPE_WRAPPER[ValueType.INT_SECONDS_TO_HOURS])
     assert callable(VALUE_TYPE_UNWRAPPER[ValueType.INT_SECONDS_TO_MINUTES])
     assert callable(VALUE_TYPE_WRAPPER[ValueType.INT_SECONDS_TO_MINUTES])
+
+
+class TestUnwrapFloatM3ToLiters:
+    """Test unwrap_float_m3_to_liters (lines 69-73)."""
+
+    def test_valid_conversion(self):
+        result = unwrap_float_m3_to_liters('{"value": 0.5}', 1)
+        assert result == 500.0
+
+    def test_valid_no_precision(self):
+        result = unwrap_float_m3_to_liters('{"value": 0.123}', None)
+        assert result == 123.0
+
+    def test_none_value(self):
+        result = unwrap_float_m3_to_liters('{"value": null}', 1)
+        assert result is None
+
+    def test_invalid_json(self):
+        result = unwrap_float_m3_to_liters('bad json', 1)
+        assert result is None
+
+
+class TestUnwrapBitmaskEdgeCases:
+    """Test unwrap_bitmask edge cases (lines 99-100, 103)."""
+
+    def test_invalid_json(self):
+        result = unwrap_bitmask("not json", GenericOnOff)
+        assert result is None
+
+    def test_bitmask_value_zero(self):
+        result = unwrap_bitmask('{"value": 0}', GenericOnOff)
+        assert result == "Off"
+
+    def test_bitmask_combined(self):
+        result = unwrap_bitmask('{"value": 1}', GenericOnOff)
+        assert result is not None
+
+
+class TestWrapEnum:
+    """Test wrap_enum with string input (line 116-117)."""
+
+    def test_wrap_enum_string(self):
+        result = wrap_enum("Off", GenericOnOff)
+        data = json.loads(result)
+        assert data["value"] == 0
+
+    def test_wrap_enum_instance(self):
+        result = wrap_enum(GenericOnOff.ON, GenericOnOff)
+        data = json.loads(result)
+        assert data["value"] == 1
+
+
+class TestWrapEpoch:
+    """Test wrap_epoch (line 169)."""
+
+    def test_wrap_epoch_none(self):
+        result = wrap_epoch(None)
+        data = json.loads(result)
+        assert data["value"] is None
+
+    def test_wrap_epoch_value(self):
+        dt = datetime(2025, 1, 1, 0, 0, 0)
+        result = wrap_epoch(dt)
+        data = json.loads(result)
+        assert isinstance(data["value"], float)
+        assert data["value"] == dt.timestamp()

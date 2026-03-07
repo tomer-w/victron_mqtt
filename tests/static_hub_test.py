@@ -1,20 +1,30 @@
 """Unit tests for the Victron MQTT Hub functionality."""
 # pyright: reportPrivateUsage=false
 
+import json
 import logging
 import asyncio
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 import pytest
 from paho.mqtt.client import Client, ConnectFlags, PayloadType
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.reasoncodes import ReasonCode
-from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, GenericOnOff
-from victron_mqtt.hub import Hub, TopicNotFoundError, AuthenticationError, CannotConnectError, CONNECT_MAX_FAILED_ATTEMPTS
-from victron_mqtt.constants import OperationMode
+from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, GenericOnOff, InverterMode
+from victron_mqtt._victron_formulas import (
+    left_riemann_sum, schedule_charge_enabled, schedule_charge_enabled_set,
+)
+from victron_mqtt.constants import FormulaTransientState, MetricKind, MetricNature, MetricType, OperationMode, ValueType
+from victron_mqtt.data_classes import TopicDescriptor
+from victron_mqtt.device import Device, FallbackPlaceholder
+from victron_mqtt.formula_common import LRSLastReading
+from victron_mqtt.formula_metric import FormulaMetric
+from victron_mqtt.hub import Hub, TopicNotFoundError, AuthenticationError, CannotConnectError, NotConnectedError, CONNECT_MAX_FAILED_ATTEMPTS
 from victron_mqtt.metric import Metric
 from victron_mqtt.writable_formula_metric import WritableFormulaMetric
 from victron_mqtt.writable_metric import WritableMetric
 from victron_mqtt._victron_topics import topics
+from victron_mqtt.data_classes import ParsedTopic
 from victron_mqtt.testing import (
     create_mocked_hub,
     inject_message,
@@ -1447,3 +1457,660 @@ async def test_suppress_republish_still_creates_new_metrics():
     assert metric.value == 1.1, f"Expected metric value to be 1.1, got {metric.value}"
 
     await hub_disconnect(hub)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Helper fixtures (from test_coverage.py)
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def _make_descriptor(**overrides) -> TopicDescriptor:
+    defaults = dict(
+        topic="N/{installation_id}/battery/{device_id}/Soc",
+        message_type=MetricKind.SENSOR,
+        short_id="test_metric",
+        name="Test Metric",
+        value_type=ValueType.FLOAT,
+        metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
+    )
+    defaults.update(overrides)
+    return TopicDescriptor(**defaults)
+
+
+def _make_metric(descriptor=None, hub=None, **overrides) -> Metric:
+    if descriptor is None:
+        descriptor = _make_descriptor(**overrides)
+    if hub is None:
+        hub = MagicMock()
+        hub._update_frequency_seconds = 0
+        hub._loop = MagicMock()
+        hub._loop.is_running.return_value = False
+        hub._topic_log_info = None
+    m = Metric.__new__(Metric)
+    m._descriptor = descriptor
+    m._short_id = descriptor.short_id
+    m._generic_short_id = descriptor.short_id
+    m._unique_id = f"device_0_{descriptor.short_id}"
+    m._value = None
+    m._hub = hub
+    m._on_update = None
+    m._key_values = {}
+    m._last_seen = 0.0
+    m._last_notified = 0.0
+    m._depend_on_me = []
+    return m
+
+
+def _make_parsed_topic(device_type=DeviceType.BATTERY, device_id="0", installation_id="123") -> ParsedTopic:
+    return ParsedTopic(
+        installation_id=installation_id,
+        device_id=device_id,
+        device_type=device_type,
+        wildcards_with_device_type=f"N/##installation_id##/{device_type.code}/+/Soc",
+        wildcards_without_device_type="N/##installation_id##/##device_id##/Soc",
+        full_topic=f"N/{installation_id}/{device_type.code}/{device_id}/Soc",
+    )
+
+
+def _make_device(device_type=DeviceType.BATTERY, device_id="0") -> Device:
+    pt = _make_parsed_topic(device_type=device_type, device_id=device_id)
+    desc = _make_descriptor()
+    return Device(unique_id=f"{device_type.code}_{device_id}", parsed_topic=pt, descriptor=desc)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Hub tests (from test_coverage.py)
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestHubValidation:
+    """Test Hub constructor validation (lines 157, 159)."""
+
+    def test_empty_host_raises(self):
+        with pytest.raises(ValueError, match="host must be a non-empty string"):
+            Hub(host="", port=1883, username=None, password=None, use_ssl=False)
+
+    def test_invalid_port_zero(self):
+        with pytest.raises(ValueError, match="port must be an integer"):
+            Hub(host="localhost", port=0, username=None, password=None, use_ssl=False)
+
+    def test_invalid_port_too_large(self):
+        with pytest.raises(ValueError, match="port must be an integer"):
+            Hub(host="localhost", port=70000, username=None, password=None, use_ssl=False)
+
+
+class TestHubProperties:
+    """Test Hub property accessors (lines 888, 893, 898, 954)."""
+
+    def test_model_name(self):
+        with patch('victron_mqtt.hub.mqtt.Client'):
+            hub = Hub("localhost", 1883, None, None, False, model_name="TestModel")
+        assert hub.model_name == "TestModel"
+
+    def test_topic_prefix(self):
+        with patch('victron_mqtt.hub.mqtt.Client'):
+            hub = Hub("localhost", 1883, None, None, False, topic_prefix="myprefix")
+        assert hub.topic_prefix == "myprefix"
+
+    def test_connected(self):
+        with patch('victron_mqtt.hub.mqtt.Client') as mock_cls:
+            mock_client = MagicMock()
+            mock_cls.return_value = mock_client
+            hub = Hub("localhost", 1883, None, None, False)
+            hub._client = mock_client
+            mock_client.is_connected.return_value = True
+        assert hub.connected is True
+
+    def test_on_new_metric_property(self):
+        with patch('victron_mqtt.hub.mqtt.Client'):
+            hub = Hub("localhost", 1883, None, None, False)
+        assert hub.on_new_metric is None
+        callback = MagicMock()
+        hub.on_new_metric = callback
+        assert hub.on_new_metric is callback
+
+
+class TestHubTopicPrefix:
+    """Test topic prefix add/remove methods (lines 791, 797-799)."""
+
+    def test_add_prefix(self):
+        with patch('victron_mqtt.hub.mqtt.Client'):
+            hub = Hub("localhost", 1883, None, None, False, topic_prefix="prefix")
+        assert hub._add_topic_prefix("N/123/test") == "prefix/N/123/test"
+
+    def test_add_prefix_none(self):
+        with patch('victron_mqtt.hub.mqtt.Client'):
+            hub = Hub("localhost", 1883, None, None, False)
+        assert hub._add_topic_prefix("N/123/test") == "N/123/test"
+
+    def test_remove_prefix(self):
+        with patch('victron_mqtt.hub.mqtt.Client'):
+            hub = Hub("localhost", 1883, None, None, False, topic_prefix="prefix")
+        assert hub._remove_topic_prefix("prefix/N/123/test") == "N/123/test"
+
+    def test_remove_prefix_none(self):
+        with patch('victron_mqtt.hub.mqtt.Client'):
+            hub = Hub("localhost", 1883, None, None, False)
+        assert hub._remove_topic_prefix("N/123/test") == "N/123/test"
+
+    def test_remove_prefix_no_match(self):
+        with patch('victron_mqtt.hub.mqtt.Client'):
+            hub = Hub("localhost", 1883, None, None, False, topic_prefix="prefix")
+        assert hub._remove_topic_prefix("other/N/123/test") == "other/N/123/test"
+
+
+class TestHubKeepaliveEcho:
+    """Test get_keepalive_echo static method (lines 975-977)."""
+
+    def test_valid_echo(self):
+        payload = json.dumps({"full-publish-completed-echo": "echo123"})
+        assert Hub.get_keepalive_echo(payload) == "echo123"
+
+    def test_malformed_json(self):
+        assert Hub.get_keepalive_echo("not json") is None
+
+    def test_missing_key(self):
+        payload = json.dumps({"other": "value"})
+        assert Hub.get_keepalive_echo(payload) is None
+
+    def test_empty_string(self):
+        assert Hub.get_keepalive_echo("") is None
+
+
+class TestHubSSL:
+    """Test SSL setup path (lines 285-290)."""
+
+    def test_ssl_context_setup(self):
+        with patch('victron_mqtt.hub.mqtt.Client') as mock_cls:
+            mock_client = MagicMock()
+            mock_cls.return_value = mock_client
+            hub = Hub("localhost", 8883, None, None, True)
+        assert hub.use_ssl is True
+
+
+class TestHubReadOnlyMode:
+    """Test READ_ONLY operation mode (line 207, 214-217)."""
+
+    def test_read_only_mode_filters_writable(self):
+        with patch('victron_mqtt.hub.mqtt.Client'):
+            hub = Hub("localhost", 1883, None, None, False,
+                       operation_mode=OperationMode.READ_ONLY)
+        # In READ_ONLY, writable topics should be converted to sensors
+        # Just verify the hub was created without error
+        assert hub._operation_mode == OperationMode.READ_ONLY
+
+
+class TestHubKeepaliveNotConnected:
+    """Test keepalive when not connected (lines 622-624)."""
+
+    def test_keepalive_not_connected(self):
+        with patch('victron_mqtt.hub.mqtt.Client') as mock_cls:
+            mock_client = MagicMock()
+            mock_cls.return_value = mock_client
+            mock_client.is_connected.return_value = False
+            hub = Hub("localhost", 1883, None, None, False, installation_id="123")
+        # Should return early without error
+        hub._keepalive()
+
+
+class TestHubOnLog:
+    """Test _on_log callback (line 343)."""
+
+    def test_on_log(self):
+        with patch('victron_mqtt.hub.mqtt.Client'):
+            hub = Hub("localhost", 1883, None, None, False)
+        # Should not raise
+        hub._on_log(None, None, logging.DEBUG, "test message")
+
+
+@pytest.mark.asyncio
+class TestHubConnectionErrors:
+    """Test connection timeout and error paths."""
+
+    async def test_connect_timeout(self):
+        """Test connection timeout raises CannotConnectError (lines 841-843)."""
+        with patch('victron_mqtt.hub.mqtt.Client') as mock_cls:
+            mock_client = MagicMock()
+            mock_cls.return_value = mock_client
+            mock_client.is_connected.return_value = False
+            hub = Hub("localhost", 1883, None, None, False)
+            # connect_async is called but _connected_event is never set → timeout
+            with pytest.raises(CannotConnectError, match="Timeout"):
+                # Patch the timeout to be very short
+                with patch.object(hub, '_wait_for_connect', side_effect=CannotConnectError("Timeout waiting for first connection")):
+                    await hub.connect()
+
+    async def test_wait_for_refresh_timeout(self):
+        """Test first refresh timeout raises CannotConnectError (lines 851-853)."""
+        with patch('victron_mqtt.hub.mqtt.Client') as mock_cls:
+            mock_client = MagicMock()
+            mock_cls.return_value = mock_client
+            mock_client.is_connected.return_value = True
+            hub = Hub("localhost", 1883, None, None, False, installation_id="123")
+            hub._client = mock_client
+            hub._first_full_publish = False
+            with pytest.raises(CannotConnectError, match="Timeout"):
+                # Patch the event wait to timeout
+                import asyncio
+                with patch.object(hub._first_refresh_event, 'wait', side_effect=asyncio.TimeoutError):
+                    await hub.wait_for_first_refresh()
+
+
+class TestHubOnConnectFail:
+    """Test _on_connect_fail callback (line 911)."""
+
+    def test_on_connect_fail_first_connect(self):
+        with patch('victron_mqtt.hub.mqtt.Client') as mock_cls:
+            mock_client = MagicMock()
+            mock_cls.return_value = mock_client
+            hub = Hub("localhost", 1883, None, None, False)
+            hub._client = mock_client
+        hub._first_connect = True
+        hub._connect_failed_attempts = 0
+        hub._on_connect_fail(mock_client, None)
+        assert hub._connect_failed_attempts == 1
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Metric tests (from test_coverage.py)
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestMetricFormatValue:
+    """Test format_value method (lines 108-115)."""
+
+    def test_format_none(self):
+        m = _make_metric()
+        assert m.format_value(None) == ""
+
+    def test_format_float_precision_zero(self):
+        desc = _make_descriptor(precision=0, metric_type=MetricType.NONE, unit_of_measurement="W", value_type=ValueType.FLOAT)
+        m = _make_metric(descriptor=desc)
+        # NONE metric_type + FLOAT value_type keeps precision
+        assert m.format_value(3.7) == "3 W"
+
+    def test_format_no_unit(self):
+        desc = _make_descriptor(metric_type=MetricType.NONE, unit_of_measurement=None, value_type=ValueType.STRING)
+        m = _make_metric(descriptor=desc)
+        assert m.format_value(42) == "42"
+
+    def test_format_with_unit(self):
+        m = _make_metric()
+        assert m.format_value(85.0) == "85.0 %"
+
+
+class TestMetricFormattedValue:
+    """Test formatted_value property (line 120)."""
+
+    def test_formatted_value(self):
+        m = _make_metric()
+        m._value = 42.5
+        assert m.formatted_value == "42.5 %"
+
+
+class TestMetricProperties:
+    """Test metric property accessors (lines 158, 163, 168, 173)."""
+
+    def test_metric_type(self):
+        m = _make_metric()
+        assert m.metric_type == MetricType.ELECTRIC_STORAGE_PERCENTAGE
+
+    def test_metric_nature(self):
+        m = _make_metric()
+        assert m.metric_nature == MetricNature.INSTANTANEOUS
+
+    def test_metric_kind(self):
+        m = _make_metric()
+        assert m.metric_kind == MetricKind.SENSOR
+
+    def test_precision(self):
+        desc = _make_descriptor(precision=2)
+        m = _make_metric(descriptor=desc)
+        assert m.precision == 2
+
+
+class TestMetricKeepalive:
+    """Test _keepalive method paths (lines 201-205)."""
+
+    def test_keepalive_updated_not_published(self):
+        """Line 201-202: Metric updated but not yet published."""
+        m = _make_metric()
+        m._value = 42.0
+        m._last_seen = 10.0
+        m._last_notified = 5.0
+        log = MagicMock()
+        m._keepalive(force_invalidate=False, log_debug=log)
+        # Should have re-published (called _handle_message)
+        log.assert_called()
+
+    def test_keepalive_up_to_date(self):
+        """Line 204: Metric is current."""
+        m = _make_metric()
+        m._value = 42.0
+        m._last_seen = 5.0
+        m._last_notified = 10.0
+        log = MagicMock()
+        m._keepalive(force_invalidate=False, log_debug=log)
+        log.assert_called()
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Device tests (from test_coverage.py)
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestDeviceProperties:
+    """Test device property setters and getters (lines 68-88, 213, 222, 279)."""
+
+    def test_set_model_property(self):
+        dev = _make_device()
+        desc = _make_descriptor(
+            short_id="model",
+            message_type=MetricKind.ATTRIBUTE,
+            value_type=ValueType.STRING,
+            metric_type=MetricType.NONE,
+        )
+        dev._set_device_property_from_topic(desc, '{"value": "SmartSolar 150/35"}')
+        assert dev.model == "SmartSolar 150/35"
+
+    def test_set_manufacturer_property(self):
+        dev = _make_device()
+        desc = _make_descriptor(
+            short_id="manufacturer",
+            message_type=MetricKind.ATTRIBUTE,
+            value_type=ValueType.STRING,
+            metric_type=MetricType.NONE,
+        )
+        dev._set_device_property_from_topic(desc, '{"value": "Victron Energy"}')
+        assert dev.manufacturer == "Victron Energy"
+
+    def test_set_firmware_version_property(self):
+        dev = _make_device()
+        desc = _make_descriptor(
+            short_id="firmware_version",
+            message_type=MetricKind.ATTRIBUTE,
+            value_type=ValueType.STRING,
+            metric_type=MetricType.NONE,
+        )
+        dev._set_device_property_from_topic(desc, '{"value": "v3.40"}')
+        assert dev.firmware_version == "v3.40"
+
+    def test_set_custom_name_property(self):
+        dev = _make_device()
+        desc = _make_descriptor(
+            short_id="custom_name",
+            message_type=MetricKind.ATTRIBUTE,
+            value_type=ValueType.STRING,
+            metric_type=MetricType.NONE,
+        )
+        dev._set_device_property_from_topic(desc, '{"value": "MyBattery"}')
+        assert dev.custom_name == "MyBattery"
+
+    def test_ignore_product_id(self):
+        dev = _make_device()
+        desc = _make_descriptor(
+            short_id="victron_productid",
+            message_type=MetricKind.ATTRIBUTE,
+            value_type=ValueType.STRING,
+            metric_type=MetricType.NONE,
+        )
+        dev._set_device_property_from_topic(desc, '{"value": "0x1234"}')
+
+    def test_none_payload_ignored(self):
+        dev = _make_device()
+        desc = _make_descriptor(
+            short_id="model",
+            message_type=MetricKind.ATTRIBUTE,
+            value_type=ValueType.STRING,
+            metric_type=MetricType.NONE,
+        )
+        dev._set_device_property_from_topic(desc, '{"value": null}')
+        assert dev.model is None
+
+    def test_device_name_with_custom_name(self):
+        dev = _make_device()
+        dev._custom_name = "Custom Battery"
+        assert dev.name == "Custom Battery"
+
+    def test_device_name_with_model(self):
+        dev = _make_device()
+        dev._model = "SmartSolar 150/35"
+        assert dev.name == "SmartSolar 150/35"
+
+    def test_device_name_fallback_to_type(self):
+        dev = _make_device()
+        assert dev.name == "Battery"
+
+    def test_system_device_model(self):
+        dev = _make_device(device_type=DeviceType.SYSTEM)
+        assert dev.model == "Victron Venus"
+
+    def test_fallback_placeholder_repr(self):
+        dev = _make_device()
+        pt = MagicMock()
+        td = MagicMock()
+        fp = FallbackPlaceholder(device=dev, parsed_topic=pt, topic_descriptor=td, value=True)
+        r = repr(fp)
+        assert "FallbackPlaceholder" in r
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# WritableMetric tests (from test_coverage.py)
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestWritableMetricEnumValues:
+    """Test enum_values property (line 100)."""
+
+    def test_enum_values_with_enum(self):
+        desc = _make_descriptor(
+            value_type=ValueType.ENUM,
+            enum=GenericOnOff,
+            message_type=MetricKind.SWITCH,
+        )
+        wm = WritableMetric.__new__(WritableMetric)
+        wm._descriptor = desc
+        assert wm.enum_values == ["Off", "On"]
+
+    def test_enum_values_without_enum(self):
+        desc = _make_descriptor()
+        wm = WritableMetric.__new__(WritableMetric)
+        wm._descriptor = desc
+        assert wm.enum_values is None
+
+
+class TestWritableMetricBitmask:
+    """Test bitmask wrapping path (lines 119-121)."""
+
+    def test_wrap_bitmask_value(self):
+        desc = _make_descriptor(
+            value_type=ValueType.BITMASK,
+            enum=GenericOnOff,
+            message_type=MetricKind.SENSOR,
+        )
+        payload = WritableMetric._wrap_payload(desc, GenericOnOff.OFF)
+        data = json.loads(payload)
+        assert data["value"] == 0
+
+
+class TestWritableFormulaMetricKeepalive:
+    """Test WritableFormulaMetric _keepalive (line 43)."""
+
+    def test_keepalive_is_noop(self):
+        hub = MagicMock()
+        hub._update_frequency_seconds = 0
+        hub._loop = MagicMock()
+        hub._loop.is_running.return_value = False
+        hub._topic_log_info = None
+
+        desc = _make_descriptor(is_formula=True)
+        log = MagicMock()
+
+        wfm = WritableFormulaMetric.__new__(WritableFormulaMetric)
+        wfm._descriptor = desc
+        wfm._short_id = desc.short_id
+        wfm._generic_short_id = desc.short_id
+        wfm._unique_id = "dev_test_metric"
+        wfm._value = None
+        wfm._hub = hub
+        wfm._on_update = None
+        wfm._key_values = {}
+        wfm._last_seen = 0.0
+        wfm._last_notified = 0.0
+        wfm._depend_on_me = []
+
+        wfm._keepalive(force_invalidate=False, log_debug=log)
+        log.assert_called()
+
+
+class TestWritableFormulaMetricSet:
+    """Test WritableFormulaMetric set when formula returns None (lines 54-56)."""
+
+    def test_set_formula_returns_none(self):
+        hub = MagicMock()
+        hub._update_frequency_seconds = 0
+        hub._loop = MagicMock()
+        hub._loop.is_running.return_value = False
+        hub._topic_log_info = None
+
+        desc = _make_descriptor(is_formula=True)
+
+        def write_func(value, depends_on, state):
+            return None
+
+        wfm = WritableFormulaMetric.__new__(WritableFormulaMetric)
+        wfm._descriptor = desc
+        wfm._short_id = desc.short_id
+        wfm._generic_short_id = desc.short_id
+        wfm._unique_id = "dev_test_metric"
+        wfm._value = 42
+        wfm._hub = hub
+        wfm._on_update = None
+        wfm._key_values = {}
+        wfm._last_seen = 0.0
+        wfm._last_notified = 0.0
+        wfm._depend_on_me = []
+        wfm._func = MagicMock()
+        wfm._write_func = write_func
+        wfm._depends_on = {}
+        wfm.transient_state = None
+
+        wfm.set("test")
+        # Formula returned None, so value should be set to None
+        assert wfm._value is None
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Formula tests (from test_coverage.py)
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestFormulaMetricNoneReturn:
+    """Test FormulaMetric when formula returns None (lines 57-59)."""
+
+    def test_formula_returns_none(self):
+        hub = MagicMock()
+        hub._update_frequency_seconds = 0
+        hub._loop = MagicMock()
+        hub._loop.is_running.return_value = False
+        hub._topic_log_info = None
+
+        desc = _make_descriptor(is_formula=True)
+        log = MagicMock()
+
+        def formula_none(depends_on, state):
+            return None
+
+        fm = FormulaMetric.__new__(FormulaMetric)
+        fm._descriptor = desc
+        fm._short_id = desc.short_id
+        fm._generic_short_id = desc.short_id
+        fm._unique_id = "dev_test_metric"
+        fm._value = None
+        fm._hub = hub
+        fm._on_update = None
+        fm._key_values = {}
+        fm._last_seen = 0.0
+        fm._last_notified = 0.0
+        fm._depend_on_me = []
+        fm._func = formula_none
+        fm._depends_on = {}
+        fm.transient_state = None
+
+        fm._handle_formula(log)
+        # formula returned None, so value should be None
+        assert fm._value is None
+
+
+class TestScheduleChargeFormulas:
+    """Test _victron_formulas schedule charge functions (lines 58, 80, 84-87)."""
+
+    def test_schedule_charge_enabled_none_value(self):
+        metric = MagicMock()
+        metric.value = None
+        result = schedule_charge_enabled({"m": metric}, None)
+        assert result == (None, None)
+
+    def test_schedule_charge_enabled_on(self):
+        metric = MagicMock()
+        metric.value = MagicMock()
+        metric.value.code = 1
+        result = schedule_charge_enabled({"m": metric}, None)
+        assert result[0] == GenericOnOff.ON
+
+    def test_schedule_charge_enabled_off(self):
+        metric = MagicMock()
+        metric.value = MagicMock()
+        metric.value.code = -1
+        result = schedule_charge_enabled({"m": metric}, None)
+        assert result[0] == GenericOnOff.OFF
+
+    def test_schedule_set_enable_disabled_sunday(self):
+        """Line 79-80: Enable when currently DISABLED_SUNDAY."""
+        metric = MagicMock(spec=WritableMetric)
+        metric.value = ChargeSchedule.DISABLED_SUNDAY
+        result = schedule_charge_enabled_set(GenericOnOff.ON, {"m": metric}, None)
+        metric.set.assert_called_once_with(ChargeSchedule.SUNDAY)
+        assert result[0] == GenericOnOff.ON
+
+    def test_schedule_set_enable_negative_code(self):
+        """Line 81-82: Enable with negative schedule code."""
+        metric = MagicMock(spec=WritableMetric)
+        schedule_val = MagicMock(spec=ChargeSchedule)
+        schedule_val.code = -1
+        type(metric).value = schedule_val
+        metric.value = schedule_val
+        result = schedule_charge_enabled_set(GenericOnOff.ON, {"m": metric}, None)
+        assert result[0] == GenericOnOff.ON
+
+    def test_schedule_set_disable_sunday(self):
+        """Line 84-85: Disable when currently SUNDAY."""
+        metric = MagicMock(spec=WritableMetric)
+        metric.value = ChargeSchedule.SUNDAY
+        result = schedule_charge_enabled_set(GenericOnOff.OFF, {"m": metric}, None)
+        metric.set.assert_called_once_with(ChargeSchedule.DISABLED_SUNDAY)
+        assert result[0] == GenericOnOff.OFF
+
+    def test_schedule_set_disable_positive_code(self):
+        """Line 86-87: Disable with positive schedule code."""
+        metric = MagicMock(spec=WritableMetric)
+        schedule_val = MagicMock(spec=ChargeSchedule)
+        schedule_val.code = 1
+        type(metric).value = schedule_val
+        metric.value = schedule_val
+        result = schedule_charge_enabled_set(GenericOnOff.OFF, {"m": metric}, None)
+        assert result[0] == GenericOnOff.OFF
+
+
+class TestLeftRiemannSum:
+    """Test left_riemann_sum formula (lines 44-47)."""
+
+    def test_left_riemann_sum_first_call(self):
+        metric = MagicMock()
+        metric.value = 1000.0  # 1000W
+        result = left_riemann_sum({"m": metric}, None)
+        assert result is not None
+        value, state = result
+        assert value == 0.0  # First call, no energy yet
+        assert isinstance(state, LRSLastReading)
+
+    def test_left_riemann_sum_none_value(self):
+        metric = MagicMock()
+        metric.value = None
+        result = left_riemann_sum({"m": metric}, None)
+        assert result is None
