@@ -2,6 +2,7 @@
 
 import pytest
 
+
 def get_topics():
     from victron_mqtt._victron_topics import topics
     return topics
@@ -139,7 +140,7 @@ def test_metric_type_vs_unit():
             errors.append(f"Topic '{descriptor.topic}' has frequency unit 'Hz' but metric_type is {descriptor.metric_type}")
         if descriptor.unit_of_measurement == "kWh" and descriptor.metric_type != MetricType.ENERGY:
             errors.append(f"Topic '{descriptor.topic}' has energy unit 'kWh' but metric_type is {descriptor.metric_type}")
-        if descriptor.unit_of_measurement in ["s", "min", "h"] and (descriptor.metric_type != MetricType.TIME and descriptor.metric_type != MetricType.DURATION):
+        if descriptor.unit_of_measurement in ["s", "min", "h"] and descriptor.metric_type not in {MetricType.TIME, MetricType.DURATION}:
             errors.append(f"Topic '{descriptor.topic}' has time unit '{descriptor.unit_of_measurement}' but metric_type is {descriptor.metric_type}")
     if errors:
         pytest.fail("\n".join(errors))
@@ -172,11 +173,11 @@ def test_topic_pattern_structure():
         topic_parts = topic.split('/')
         if len(topic_parts) < 3:
             errors.append(f"Topic '{topic}' has invalid structure (too few parts)")
-        if descriptor.message_type != MetricKind.SERVICE and descriptor.message_type != MetricKind.BUTTON and not topic.startswith('N/{installation_id}/'):
+        if descriptor.message_type not in {MetricKind.SERVICE, MetricKind.BUTTON} and not topic.startswith('N/{installation_id}/'):
             errors.append(f"Topic '{topic}' must start with 'N{{installation_id}}/'")
         elif descriptor.message_type == MetricKind.SERVICE and not topic.startswith('W/{installation_id}/'):
             errors.append(f"Service topic '{topic}' must start with 'W{{installation_id}}/'")
-        if not topic.find('N/{device_id}/') == -1 and len(topic_parts) > 3:
+        if topic.find('N/{device_id}/') != -1 and len(topic_parts) > 3:
             errors.append(f"Topic '{topic}' must include 'N{{device_id}}/'")
     if errors:
         pytest.fail("\n".join(errors))
@@ -202,18 +203,22 @@ def test_no_literal_phase_identifiers():
     for descriptor in topics:
         topic = descriptor.topic
         topic_parts = topic.split('/')
-        for part in topic_parts:
-            if part in ['L1', 'L2', 'L3']:
-                errors.append(f"Topic '{topic}' contains literal phase identifier '{part}' - use '+' placeholder instead")
+        errors.extend(
+            f"Topic '{topic}' contains literal phase identifier '{part}' - use '+' placeholder instead"
+            for part in topic_parts
+            if part in ['L1', 'L2', 'L3']
+        )
     if errors:
         pytest.fail("\n".join(errors))
 
 def test_no_invalid_double_slash():
     topics = get_topics()
     errors = []
-    for descriptor in topics:
-        if '//' in descriptor.topic:
-            errors.append(f"Topic '{descriptor.topic}' contains invalid '//' sequence")
+    errors.extend(
+        f"Topic '{descriptor.topic}' contains invalid '//' sequence"
+        for descriptor in topics
+        if '//' in descriptor.topic
+    )
     if errors:
         pytest.fail("\n".join(errors))
 
@@ -261,8 +266,8 @@ def test_no_installation_id_or_device_id_in_short_id_or_name():
 
 def test_victron_enum_in_init():
     """Ensure all VictronEnum-derived enums are included in __init__.py's __all__."""
-    from victron_mqtt.constants import VictronEnum
     from victron_mqtt import __all__
+    from victron_mqtt.constants import VictronEnum
 
     # Collect all subclasses of VictronEnum
     victron_enum_classes = [cls.__name__ for cls in VictronEnum.__subclasses__()]
@@ -276,13 +281,13 @@ def test_topics_are_sorted_alphabetically():
     """Ensure TopicDescriptor entries are sorted alphabetically by topic field."""
     topics = get_topics()
     MetricKind = get_metric_kind()
-    
+
     # Separate attributes from other topics
     attributes = [topic for topic in topics if topic.message_type == MetricKind.ATTRIBUTE]
     other_topics = [topic for topic in topics if topic.message_type != MetricKind.ATTRIBUTE and not topic.topic.startswith("$$func/")]
-    
+
     errors = []
-    
+
     # Check that attributes are sorted alphabetically
     if len(attributes) > 1:
         for i in range(1, len(attributes)):
@@ -290,7 +295,7 @@ def test_topics_are_sorted_alphabetically():
             previous_topic = attributes[i-1].topic
             if current_topic < previous_topic:
                 errors.append(f"Attribute topics not in alphabetical order: '{previous_topic}' should come after '{current_topic}'")
-    
+
     # Check that all other topics are sorted alphabetically
     if len(other_topics) > 1:
         for i in range(1, len(other_topics)):
@@ -298,7 +303,7 @@ def test_topics_are_sorted_alphabetically():
             previous_topic = other_topics[i-1].topic
             if current_topic < previous_topic:
                 errors.append(f"Topics not in alphabetical order: '{previous_topic}' should come after '{current_topic}'")
-    
+
     if errors:
         pytest.fail("\n".join(errors))
 
@@ -306,10 +311,10 @@ def test_name_references_exist():
     """Test that when a topic name contains a reference like {key:short_id}, the referenced short_id exists."""
     topics = get_topics()
     errors = []
-    
+
     # First collect all short_ids
     short_ids = {descriptor.short_id for descriptor in topics}
-    
+
     # Check each topic's name for references
     for descriptor in topics:
         if descriptor.name:
@@ -320,23 +325,23 @@ def test_name_references_exist():
                 ref = ref_short_id.split(":", 1)[1]
                 if ref not in short_ids:
                     errors.append(f"Topic '{descriptor.topic}' name references non-existent short_id '{ref_short_id}' in name '{descriptor.name}'")
-    
+
     if errors:
         pytest.fail("\n".join(errors))
 
 def test_min_max_values_aligned_with_range_type():
     """Test that min/max values are properly formatted for _get_min_max_value logic.
-    
+
     Validates that _get_min_max_value can successfully parse all min/max values.
     Min/max values can be:
     - Numeric (int or float) - static values
     - String in format "metric_id:default_value" - dynamic references to other metrics
     """
     topics = get_topics()
-    from victron_mqtt.writable_metric import WritableMetric
     from victron_mqtt.data_classes import TopicDescriptor
+    from victron_mqtt.writable_metric import WritableMetric
     errors = []
-    
+
     # Create a mock WritableMetric instance to access _get_min_max_value
     mock_metric = WritableMetric.__new__(WritableMetric)
     mock_metric._key_values = {}
@@ -347,7 +352,7 @@ def test_min_max_values_aligned_with_range_type():
         name="mock"
     )
     mock_metric._descriptor = mock_descriptor
-    
+
     for descriptor in topics:
         # Test min value
         if descriptor.min is not None:
@@ -355,14 +360,14 @@ def test_min_max_values_aligned_with_range_type():
                 mock_metric._get_min_max_value(descriptor.min, "test_device", {})
             except Exception as e:
                 errors.append(f"Topic '{descriptor.topic}' has invalid min={descriptor.min}: {e}")
-        
+
         # Test max value
         if descriptor.max is not None:
             try:
                 mock_metric._get_min_max_value(descriptor.max, "test_device", {})
             except Exception as e:
                 errors.append(f"Topic '{descriptor.topic}' has invalid max={descriptor.max}: {e}")
-    
+
     if errors:
         pytest.fail("\n".join(errors))
 

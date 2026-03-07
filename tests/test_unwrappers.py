@@ -1,30 +1,30 @@
 """Unit tests for the Victron MQTT unwrappers."""
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 
 from victron_mqtt._unwrappers import (
+    VALUE_TYPE_UNWRAPPER,
+    VALUE_TYPE_WRAPPER,
+    unwrap_bitmask,
     unwrap_bool,
+    unwrap_enum,
+    unwrap_epoch,
+    unwrap_float,
+    unwrap_float_m3_to_liters,
     unwrap_int,
     unwrap_int_default_0,
     unwrap_int_seconds_to_hours,
-    unwrap_float,
-    unwrap_float_m3_to_liters,
     unwrap_int_seconds_to_minutes,
     unwrap_string,
-    unwrap_enum,
-    unwrap_epoch,
-    unwrap_bitmask,
+    wrap_bitmask,
     wrap_enum,
+    wrap_epoch,
+    wrap_float,
     wrap_int,
     wrap_int_default_0,
     wrap_int_hours_to_seconds,
-    wrap_float,
     wrap_int_minutes_to_seconds,
     wrap_string,
-    wrap_epoch,
-    wrap_bitmask,
-    VALUE_TYPE_UNWRAPPER,
-    VALUE_TYPE_WRAPPER,
 )
 from victron_mqtt._victron_enums import GenericOnOff, SolarChargerDeviceOffReason
 from victron_mqtt.constants import ValueType
@@ -87,7 +87,7 @@ def test_unwrap_enum_and_epoch():
 
     # epoch
     ts = 1609459200  # 2021-01-01 00:00:00 UTC
-    dt = datetime.fromtimestamp(ts)
+    dt = datetime.fromtimestamp(ts, tz=UTC)
     res_dt = unwrap_epoch(json.dumps({"value": ts}))
     assert isinstance(res_dt, datetime)
     assert res_dt == dt

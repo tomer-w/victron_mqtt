@@ -5,20 +5,21 @@ Support for Victron Venus sensors. The sensor itself has no logic,
 
 from __future__ import annotations
 
-from collections.abc import Callable
-import re
-import time
 import logging
+import time
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from .id_utils import replace_complex_ids
-from .constants import MetricKind, MetricNature, MetricType, VictronEnum
+from .constants import MetricKind, MetricNature, MetricType, VictronEnum  # noqa: TC001
 from .data_classes import ParsedTopic, TopicDescriptor
+from .id_utils import replace_complex_ids
 
 if TYPE_CHECKING:
-    from .hub import Hub
+    import re
+
     from .device import Device
     from .formula_metric import FormulaMetric
+    from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +85,8 @@ class Metric:
         def replace_match(match: re.Match[str]) -> str:
             moniker = match.group('moniker')
             key, suffix = moniker.split(':', 1)
-            assert key and suffix, f"Invalid moniker format: {moniker} in topic: {orig_str}"
+            assert key, f"Invalid moniker format: {moniker} in topic: {orig_str}"
+            assert suffix, f"Invalid moniker format: {moniker} in topic: {orig_str}"
             metric = all_metrics.get(f"{device_id}_{suffix}")
             if metric:
                 result = str(metric.value)
@@ -111,8 +113,7 @@ class Metric:
             value = int(value)
         if self._descriptor.unit_of_measurement is None:
             return str(value)
-        else:
-            return f"{value} {self._descriptor.unit_of_measurement}"
+        return f"{value} {self._descriptor.unit_of_measurement}"
 
     @property
     def formatted_value(self):
@@ -132,19 +133,19 @@ class Metric:
     @property
     def name(self) -> str:
         """Returns the short id of the metric."""
-        assert self._name is not None, f"Metric name is None for metric: {repr(self)}"
+        assert self._name is not None, f"Metric name is None for metric: {self!r}"
         return self._name
 
     @property
     def generic_name(self) -> str:
         """Returns the generic name of the metric."""
-        assert self._generic_name is not None, f"Metric generic_name is None for metric: {repr(self)}"
+        assert self._generic_name is not None, f"Metric generic_name is None for metric: {self!r}"
         return self._generic_name
 
     @property
     def generic_short_id(self) -> str:
         """Returns the generic short id of the metric."""
-        assert self._generic_short_id is not None, f"Metric generic_short_id is None for metric: {repr(self)}"
+        assert self._generic_short_id is not None, f"Metric generic_short_id is None for metric: {self!r}"
         return self._generic_short_id
 
     @property

@@ -1,33 +1,33 @@
 """Module to communicate with the Venus OS MQTT Broker."""
 
-from collections.abc import Callable
-from dataclasses import replace
 import asyncio
 import copy
 import json
 import logging
 import random
-import ssl
 import re
+import ssl
 import string
-from typing import Any
 import time
+from collections.abc import Callable
+from dataclasses import replace
+from typing import Any
 
 import paho.mqtt.client as mqtt
-from paho.mqtt.client import Client as MQTTClient, PayloadType, ConnectFlags, connack_string
+from paho.mqtt.client import Client as MQTTClient
+from paho.mqtt.client import ConnectFlags, PayloadType, connack_string
 from paho.mqtt.enums import CallbackAPIVersion
-from paho.mqtt.reasoncodes import ReasonCode
 from paho.mqtt.properties import Properties
+from paho.mqtt.reasoncodes import ReasonCode
 
-from .writable_metric import WritableMetric
-
-from ._victron_topics import topics
 from ._victron_enums import DeviceType
+from ._victron_topics import topics
 from .constants import TOPIC_INSTALLATION_ID, MetricKind, OperationMode
 from .data_classes import ParsedTopic, TopicDescriptor, topic_to_device_type
 from .device import Device, FallbackPlaceholder, MetricPlaceholder
-from .metric import Metric
 from .id_utils import reraise_same_exception
+from .metric import Metric
+from .writable_metric import WritableMetric
 
 _LOGGER = logging.getLogger(__name__)
 CONNECT_MAX_FAILED_ATTEMPTS = 3
@@ -207,15 +207,14 @@ class Hub:
                 continue
             if topic.message_type == MetricKind.SERVICE:
                 self._service_active_topics[topic.short_id] = topic
-            else:
-                #if operation_mode is READ_ONLY we should change all TopicDescriptor to SENSOR and BINARY_SENSOR
-                if operation_mode != OperationMode.READ_ONLY or topic.message_type in [MetricKind.ATTRIBUTE, MetricKind.SENSOR, MetricKind.BINARY_SENSOR]:
-                    metrics_active_topics.append(topic)
-                else: # READ ONLY and writable topic
-                    #deep copy the topic
-                    new_topic = copy.deepcopy(topic)
-                    new_topic.message_type = MetricKind.BINARY_SENSOR if topic.message_type == MetricKind.SWITCH else MetricKind.SENSOR
-                    metrics_active_topics.append(new_topic)
+            #if operation_mode is READ_ONLY we should change all TopicDescriptor to SENSOR and BINARY_SENSOR
+            elif operation_mode != OperationMode.READ_ONLY or topic.message_type in [MetricKind.ATTRIBUTE, MetricKind.SENSOR, MetricKind.BINARY_SENSOR]:
+                metrics_active_topics.append(topic)
+            else: # READ ONLY and writable topic
+                #deep copy the topic
+                new_topic = copy.deepcopy(topic)
+                new_topic.message_type = MetricKind.BINARY_SENSOR if topic.message_type == MetricKind.SWITCH else MetricKind.SENSOR
+                metrics_active_topics.append(new_topic)
 
         # Replace all {placeholder} patterns with + for MQTT wildcards
         expanded_topics = Hub.expand_topic_list(metrics_active_topics)
@@ -346,7 +345,7 @@ class Hub:
         try:
             self._on_connect_internal(client, userdata, flags, reason_code, properties)
         except Exception as exc:
-            _LOGGER.exception("_on_connect exception %s: %s", type(exc), exc, exc_info=True)
+            _LOGGER.exception("_on_connect exception %s: %s", type(exc), exc)
             self._connect_failed_reason = exc
             client.disconnect()
 
@@ -370,8 +369,7 @@ class Hub:
             _LOGGER.warning("Failed to connect with error code: %s. flags: %s", reason_code, flags)
             if reason_code.value in (134, 135, 4, 5):
                 raise AuthenticationError(f"Authentication failed: {connack_string(reason_code)}")
-            else:
-                raise CannotConnectError(f"Failed to connect to MQTT broker: {self.host}:{self.port}. Error: {connack_string(reason_code)}")
+            raise CannotConnectError(f"Failed to connect to MQTT broker: {self.host}:{self.port}. Error: {connack_string(reason_code)}")
 
         _LOGGER.info("Connected to MQTT broker successfully")
         self._setup_subscriptions()
@@ -387,7 +385,7 @@ class Hub:
         try:
             self._on_message_internal(client, userdata, message)
         except Exception as exc:
-            _LOGGER.exception("_on_message exception %s: %s", type(exc), exc, exc_info=True)
+            _LOGGER.exception("_on_message exception %s: %s", type(exc), exc)
 
     def _on_message_internal(self, _client: MQTTClient, _userdata: Any, message: mqtt.MQTTMessage) -> None:
         """Process MQTT message asynchronously."""
@@ -517,12 +515,11 @@ class Hub:
         for device, metric in ordered_new_metrics:
             metric.phase2_init(device.unique_id, self._all_metrics)
             try:
-                if callable(self._on_new_metric):
-                    if self._loop.is_running():
-                        # If the event loop is running, schedule the callback
-                        self._loop.call_soon_threadsafe(self._on_new_metric, self, device, metric)
+                if callable(self._on_new_metric) and self._loop.is_running():
+                    # If the event loop is running, schedule the callback
+                    self._loop.call_soon_threadsafe(self._on_new_metric, self, device, metric)
             except Exception as exc:
-                _LOGGER.error("Error calling _on_new_metric callback %s", exc, exc_info=True)
+                _LOGGER.exception("Error calling _on_new_metric callback %s", exc)
         # Trace the version once
         if self._first_full_publish:
             version_metric_name = "system_0_platform_venus_firmware_installed_version"
@@ -654,7 +651,7 @@ class Hub:
                 _LOGGER.info("Keepalive loop canceled")
                 raise
             except Exception as exc:
-                _LOGGER.error("Error in keepalive loop: %s", exc, exc_info=True)
+                _LOGGER.exception("Error in keepalive loop: %s", exc)
                 await asyncio.sleep(5)  # Short delay before retrying
 
     def _keepalive_metrics(self, force_invalidate: bool = False) -> None:
@@ -726,7 +723,7 @@ class Hub:
             value = json.loads(message.payload.decode())
             self._set_nested_dict_value(self._snapshot, topic_parts, value)
         except Exception as exc:
-            _LOGGER.error("Error processing snapshot message: %s", exc, exc_info=True)
+            _LOGGER.exception("Error processing snapshot message: %s", exc)
 
     def _on_installation_id_message(
         self,
@@ -757,7 +754,7 @@ class Hub:
         self._subscribe(TOPIC_INSTALLATION_ID)
         try:
             await asyncio.wait_for(self._installation_id_event.wait(), timeout=60)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error("Timeout waiting for installation ID")
             raise
         self._unsubscribe(TOPIC_INSTALLATION_ID)
@@ -838,7 +835,7 @@ class Hub:
         """Wait for the first connection to complete."""
         try:
             await asyncio.wait_for(self._connected_event.wait(), timeout=25) # 25 seconds
-        except asyncio.TimeoutError as exc:
+        except TimeoutError as exc:
             _LOGGER.error("Timeout waiting for first first connection")
             raise CannotConnectError("Timeout waiting for first connection") from exc
 
@@ -848,7 +845,7 @@ class Hub:
         try:
             await asyncio.wait_for(self._first_refresh_event.wait(), timeout=60)
             _LOGGER.info("Devices and metrics initialized. Found %d devices", len(self._devices))
-        except asyncio.TimeoutError as exc:
+        except TimeoutError as exc:
             _LOGGER.error("Timeout waiting for first full refresh")
             raise CannotConnectError("Timeout waiting for first full refresh") from exc
 
@@ -917,7 +914,7 @@ class Hub:
                 self._keepalive_metrics(force_invalidate=True)
                 self._connect_failed_since = 0  # Reset the timer
         except Exception as exc:
-            _LOGGER.exception("_on_connect_fail exception %s: %s", type(exc), exc, exc_info=True)
+            _LOGGER.exception("_on_connect_fail exception %s: %s", type(exc), exc)
             self._connect_failed_reason = exc
             client.disconnect()
             if self._loop.is_running():
@@ -937,12 +934,11 @@ class Hub:
                 # Only support one placeholder per field for now
                 match = matches[0]
                 key, start, end = match.group(1), int(match.group(2)), int(match.group(3))
-                for i in range(start, end+1):
-                    expanded.append(replace(
-                        td,
-                        topic=pattern.sub(str(i), td.topic),
-                        key_values={key: str(i)}
-                    ))
+                expanded.extend(replace(
+                    td,
+                    topic=pattern.sub(str(i), td.topic),
+                    key_values={key: str(i)}
+                ) for i in range(start, end+1))
             else:
                 # Use replace to trigger __post_init__ even for unchanged items
                 expanded.append(replace(td))

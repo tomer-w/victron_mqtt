@@ -1,9 +1,10 @@
 """Tests basic connectivity functionality. Does require a running Venus OS instance to connect to."""
 
-import pytest
-import victron_mqtt
 import logging
 
+import pytest
+
+import victron_mqtt
 from victron_mqtt._victron_enums import DeviceType
 from victron_mqtt.hub import AuthenticationError
 
@@ -20,7 +21,7 @@ async def test_connect(config_host, config_port, config_username, config_passwor
     assert hub.connected
     await hub.disconnect()
     logger.debug("Disconnected from hub")
-    
+
     # Check that no error logs were emitted
     error_logs = [record for record in caplog.records if record.levelno >= logging.ERROR]
     assert len(error_logs) == 0, f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"
@@ -46,9 +47,9 @@ async def test_create_full_raw_snapshot(config_host, config_port, config_usernam
     await hub.connect()
     logger.debug("Connected to hub")
     snapshot = await hub.create_full_raw_snapshot()
-    logger.debug(f"Snapshot created with length: {len(snapshot)}")
+    logger.debug("Snapshot created with length: %d", len(snapshot))
     assert len(snapshot) > 0
-    
+
     # Check that no error logs were emitted
     error_logs = [record for record in caplog.records if record.levelno >= logging.ERROR]
     assert len(error_logs) == 0, f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"
@@ -71,7 +72,7 @@ async def test_devices_and_metrics(config_host, config_port, config_username, co
             assert len(metric.short_id) > 0
 
     await hub.disconnect()
-    
+
     # Check that no error logs were emitted
     error_logs = [record for record in caplog.records if record.levelno >= logging.ERROR]
     assert len(error_logs) == 0, f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"

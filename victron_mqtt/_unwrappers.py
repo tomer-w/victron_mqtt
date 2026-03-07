@@ -1,10 +1,10 @@
 """Functions to unwrap the data from the JSON string."""
 
-from collections.abc import Iterable
-from datetime import datetime
 import json
+from collections.abc import Iterable
+from datetime import UTC, datetime
 
-from victron_mqtt.constants import ValueType, VictronEnum, BITMASK_SEPARATOR
+from victron_mqtt.constants import BITMASK_SEPARATOR, ValueType, VictronEnum
 
 
 def unwrap_bool(json_str: str) -> bool | None:
@@ -112,7 +112,7 @@ def unwrap_epoch(json_str: str) -> datetime | None:
         if data["value"] is None:
             return None
         value = data["value"]
-        return datetime.fromtimestamp(value)
+        return datetime.fromtimestamp(value, tz=UTC)
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
 

@@ -1,37 +1,45 @@
 """Unit tests for the Victron MQTT Hub functionality."""
 # pyright: reportPrivateUsage=false
 
+import asyncio
 import json
 import logging
-import asyncio
-from datetime import datetime
 from unittest.mock import MagicMock, patch
+
 import pytest
 from paho.mqtt.client import Client, ConnectFlags, PayloadType
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.reasoncodes import ReasonCode
-from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, GenericOnOff, InverterMode
+
+from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, GenericOnOff
 from victron_mqtt._victron_formulas import (
-    left_riemann_sum, schedule_charge_enabled, schedule_charge_enabled_set,
+    left_riemann_sum,
+    schedule_charge_enabled,
+    schedule_charge_enabled_set,
 )
-from victron_mqtt.constants import FormulaTransientState, MetricKind, MetricNature, MetricType, OperationMode, ValueType
-from victron_mqtt.data_classes import TopicDescriptor
+from victron_mqtt._victron_topics import topics
+from victron_mqtt.constants import MetricKind, MetricNature, MetricType, OperationMode, ValueType
+from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor
 from victron_mqtt.device import Device, FallbackPlaceholder
 from victron_mqtt.formula_common import LRSLastReading
 from victron_mqtt.formula_metric import FormulaMetric
-from victron_mqtt.hub import Hub, TopicNotFoundError, AuthenticationError, CannotConnectError, NotConnectedError, CONNECT_MAX_FAILED_ATTEMPTS
+from victron_mqtt.hub import (
+    CONNECT_MAX_FAILED_ATTEMPTS,
+    AuthenticationError,
+    CannotConnectError,
+    Hub,
+    TopicNotFoundError,
+)
 from victron_mqtt.metric import Metric
-from victron_mqtt.writable_formula_metric import WritableFormulaMetric
-from victron_mqtt.writable_metric import WritableMetric
-from victron_mqtt._victron_topics import topics
-from victron_mqtt.data_classes import ParsedTopic
 from victron_mqtt.testing import (
     create_mocked_hub,
-    inject_message,
     finalize_injection,
-    sleep_short,
     hub_disconnect,
+    inject_message,
+    sleep_short,
 )
+from victron_mqtt.writable_formula_metric import WritableFormulaMetric
+from victron_mqtt.writable_metric import WritableMetric
 
 # Configure logging for the test
 logging.basicConfig(level=logging.DEBUG)
@@ -156,7 +164,7 @@ async def test_dynamic_min_max_message():
     assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
 
     # Validate that the device has the metric we published
-    device = list(hub.devices.values())[0]
+    device = next(iter(hub.devices.values()))
     writable_metric = device.get_metric("system_ac_power_set_point")
     assert writable_metric is not None, "WritableMetric should exist in the device"
     assert isinstance(writable_metric, WritableMetric), f"Expected writable_metric to be of type WritableMetric, got {type(writable_metric)}"
@@ -190,7 +198,8 @@ async def test_number_message():
         published['value'] = value
         # Call the original publish if needed
         if hasattr(hub._publish, '__wrapped__'):
-            return hub._publish.__wrapped__(topic, value) # type: ignore
+            return hub._publish.__wrapped__(topic, value) # type: ignore[union-attr]
+        return None
     orig__publish = hub._publish
     hub._publish = mock__publish
 
@@ -694,7 +703,7 @@ async def test_new_metric_system_callbacks_first():
     callback_device_ids: list[str] = []
 
     def on_new_metric_mock(_hub: Hub, device: object, _metric: Metric) -> None:
-        callback_device_ids.append(str(getattr(device, "unique_id")))
+        callback_device_ids.append(str(device.unique_id))
 
     hub.on_new_metric = MagicMock(side_effect=on_new_metric_mock)
 
@@ -826,7 +835,7 @@ async def test_read_only_creates_plain_metrics():
 async def test_publish():
     """Test that the Hub correctly publishes MQTT messages."""
     hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
-    mocked_client: MagicMock = hub._client # type: ignore
+    mocked_client: MagicMock = hub._client # type: ignore[assignment]
 
     # Clear any previous publish calls recorded by the mocked client
     if hasattr(mocked_client.publish, 'reset_mock'):
@@ -849,7 +858,7 @@ async def test_publish():
 async def test_publish_topic_not_found():
     """Test that publishing to a non-existent topic raises TopicNotFoundError."""
     hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
-    mocked_client: MagicMock = hub._client # type: ignore
+    mocked_client: MagicMock = hub._client # type: ignore[assignment]
 
     # Clear any previous publish calls recorded by the mocked client
     if hasattr(mocked_client.publish, 'reset_mock'):
@@ -1465,14 +1474,14 @@ async def test_suppress_republish_still_creates_new_metrics():
 
 
 def _make_descriptor(**overrides) -> TopicDescriptor:
-    defaults = dict(
-        topic="N/{installation_id}/battery/{device_id}/Soc",
-        message_type=MetricKind.SENSOR,
-        short_id="test_metric",
-        name="Test Metric",
-        value_type=ValueType.FLOAT,
-        metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
-    )
+    defaults = {
+        "topic": "N/{installation_id}/battery/{device_id}/Soc",
+        "message_type": MetricKind.SENSOR,
+        "short_id": "test_metric",
+        "name": "Test Metric",
+        "value_type": ValueType.FLOAT,
+        "metric_type": MetricType.ELECTRIC_STORAGE_PERCENTAGE,
+    }
     defaults.update(overrides)
     return TopicDescriptor(**defaults)
 
@@ -1674,9 +1683,8 @@ class TestHubConnectionErrors:
             mock_client.is_connected.return_value = False
             hub = Hub("localhost", 1883, None, None, False)
             # connect_async is called but _connected_event is never set → timeout
-            with pytest.raises(CannotConnectError, match="Timeout"):
-                # Patch the timeout to be very short
-                with patch.object(hub, '_wait_for_connect', side_effect=CannotConnectError("Timeout waiting for first connection")):
+            with pytest.raises(CannotConnectError, match="Timeout"), \
+                 patch.object(hub, '_wait_for_connect', side_effect=CannotConnectError("Timeout waiting for first connection")):
                     await hub.connect()
 
     async def test_wait_for_refresh_timeout(self):

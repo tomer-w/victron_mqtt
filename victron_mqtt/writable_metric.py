@@ -2,15 +2,15 @@
 Support for Victron Venus WritableMetric.
 """
 
+import logging
 from collections.abc import Callable, Iterable
 from enum import Enum
-import logging
 from typing import Any, cast
 
-from .metric import Metric
 from ._unwrappers import VALUE_TYPE_WRAPPER, wrap_bitmask, wrap_enum
-from .data_classes import ParsedTopic, TopicDescriptor
 from .constants import ValueType, VictronEnum
+from .data_classes import ParsedTopic, TopicDescriptor
+from .metric import Metric
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,7 +120,7 @@ class WritableMetric(Metric):
             assert isinstance(value, (VictronEnum, str, Iterable)), "Bitmask values must be VictronEnum, str or iterable"
             return wrap_bitmask(value, topic_desc.enum)
 
-        wrapper = cast(Callable[[Any], str], VALUE_TYPE_WRAPPER[value_type])
+        wrapper = cast("Callable[[Any], str]", VALUE_TYPE_WRAPPER[value_type])
         return wrapper(value)
 
     @property

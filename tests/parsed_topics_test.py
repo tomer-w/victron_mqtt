@@ -2,9 +2,10 @@
 import pytest
 
 from victron_mqtt._victron_enums import DeviceType, GenericOnOff
-from victron_mqtt.constants import MetricKind, MetricNature, MetricType, ValueType, VictronEnum
-from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor, topic_to_device_type
 from victron_mqtt._victron_topics import topics
+from victron_mqtt.constants import MetricKind, MetricNature, MetricType, ValueType
+from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor, topic_to_device_type
+
 
 def test_parsed_topic_with_pattern():
     """Test parsing a topic that includes a placeholder and ensure it is correctly extracted and matched to the TopicDescriptor."""

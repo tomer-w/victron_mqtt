@@ -1,6 +1,7 @@
 """Utility functions for ID manipulation."""
-from collections.abc import Callable
 import re
+from collections.abc import Callable
+
 
 # Complex is: "Switch {output:switch_{output}_custom_name} Dimming"
 def replace_complex_ids(orig_str: str, match_func: Callable[[re.Match[str]], str]) -> str:
@@ -17,7 +18,8 @@ def replace_complex_id_to_simple(orig_str: str) -> str:
     def replace_match(match: re.Match[str]) -> str:
         moniker = match.group('moniker')
         key, suffix = moniker.split(':', 1)
-        assert key and suffix, f"Invalid moniker format: {moniker} in topic: {orig_str}"
+        assert key, f"Invalid moniker format: {moniker} in topic: {orig_str}"
+        assert suffix, f"Invalid moniker format: {moniker} in topic: {orig_str}"
         return f"{{{key}}}"
 
     return replace_complex_ids(orig_str, replace_match)

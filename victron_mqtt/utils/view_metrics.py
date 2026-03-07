@@ -1,17 +1,16 @@
 """A simple utility to illustrate how to use the Victron Venus Client library
 to connect to a Venus OS device and display the metrics."""
 
+import argparse
 import asyncio
 import inspect
 import logging
-import argparse
-from logging import getLogger
-import tkinter as tk
-from tkinter import simpledialog, messagebox
-import tkinter.ttk as ttk
-from victron_mqtt import Hub, Device, Metric
 import os
+import tkinter as tk
+from logging import getLogger
+from tkinter import messagebox, simpledialog, ttk
 
+from victron_mqtt import Device, Hub, Metric
 from victron_mqtt.constants import MetricKind, OperationMode
 from victron_mqtt.writable_metric import WritableMetric
 
@@ -38,7 +37,7 @@ class ConnectionDialog(simpledialog.Dialog):
         port = os.environ.get("VICTRON_MQTT_PORT", DEFAULT_PORT)
         user = os.environ.get("VICTRON_MQTT_USER", DEFAULT_USER)
         password = os.environ.get("VICTRON_MQTT_PASSWORD", DEFAULT_PASSWORD)
-        ssl = os.environ.get("VICTRON_MQTT_SSL", False) not in [False, "0", "False", "false", "F", "f", "No", "no", "N", "n"]
+        ssl = os.environ.get("VICTRON_MQTT_SSL", "") not in ["", "0", "False", "false", "F", "f", "No", "no", "N", "n"]
 
         self.server_entry = tk.Entry(master)
         self.server_entry.insert(0, host)
@@ -82,15 +81,15 @@ class AttributeViewerDialog(simpledialog.Dialog):
 
     def body(self, master):
         row = 0
-        for name, value in inspect.getmembers(type(self.instance), lambda v: isinstance(v, property)):
+        for name, _value in inspect.getmembers(type(self.instance), lambda v: isinstance(v, property)):
             try:
-                value = getattr(self.instance, name)
-                if isinstance(value, (Device, Metric, list, dict)):
+                prop_value = getattr(self.instance, name)
+                if isinstance(prop_value, (Device, Metric, list, dict)):
                     continue
-                if callable(value):
+                if callable(prop_value):
                     continue
                 ttk.Label(master, text=f"{name}:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
-                ttk.Label(master, text=str(value)).grid(row=row, column=1, sticky=tk.W, padx=5, pady=5)
+                ttk.Label(master, text=str(prop_value)).grid(row=row, column=1, sticky=tk.W, padx=5, pady=5)
                 row += 1
             except AttributeError:
                 continue
@@ -126,11 +125,11 @@ class MetricContainer:
         self._tree_view = tree_view
         self._parent_item = parent_item
 
-    def _update(self, metric: Metric, value):  # noqa: ARG002
+    def _update(self, metric: Metric, value):
         formatted = self._metric.format_value(value)
         if self._tree_view.exists(self._parent_item):
             self._tree_view.item(self._parent_item, values=(formatted,))
-        
+
 
 class App:
     def __init__(self, log_topic: str | None):
@@ -182,13 +181,12 @@ class App:
     def to_quit(self):
         return self._to_quit
 
-    def _on_tree_select(self, event):  # noqa: ARG002
+    def _on_tree_select(self, event):
         if len(self.tree.selection()) == 0:  # nothing selected
             if str(self.info_button["state"]) == tk.NORMAL:
                 self.info_button.config(state=tk.DISABLED)
-        else:
-            if str(self.info_button["state"]) == tk.DISABLED:
-                self.info_button.config(state=tk.NORMAL)
+        elif str(self.info_button["state"]) == tk.DISABLED:
+            self.info_button.config(state=tk.NORMAL)
 
     async def _async_connect(self, server: str, port: int, username: str | None, password: str | None, use_ssl: bool) -> bool:
         try:
@@ -198,8 +196,8 @@ class App:
             self._fill_tree()
             self.disconnect_button.config(state=tk.NORMAL)
             return True
-        except Exception as e:  # noqa: BLE001
-            LOGGER.error("Error connecting to Venus device: %s", e, exc_info=True)
+        except Exception as e:
+            LOGGER.exception("Error connecting to Venus device: %s", e)
             message = str(e)
             messagebox.showerror("Error", f"Error connecting: {message}")
             self.connect_button.config(state=tk.NORMAL)
@@ -208,7 +206,7 @@ class App:
     def _fill_tree(self):
         if not self._client:
             return
-            
+
         devices = sorted(self._client.devices.values(), key=lambda x: x.unique_id)
         for device in devices:
             device_item = self.tree.insert(
@@ -232,7 +230,7 @@ class App:
     def _info(self):
         if not self._client:
             return
-            
+
         item = self.tree.selection()[0]
         unique_id = item[1:]
         if item[0] == "D":
@@ -272,7 +270,7 @@ class App:
                 self.connect_button.config(state=tk.NORMAL)
 
         # Use asyncio.create_task to schedule the coroutine in the existing event loop
-        asyncio.create_task(connect())
+        self._task = asyncio.create_task(connect())
 
     def _disconnect(self):
         self.disconnect_button.config(state=tk.DISABLED)
@@ -288,7 +286,7 @@ class App:
 
 async def run_app(log_topic: str | None):
     app = App(log_topic)
-    global asyncio_loop
+    global asyncio_loop  # noqa: PLW0603
     asyncio_loop = asyncio.get_running_loop()
     while not app.to_quit:
         app.update()

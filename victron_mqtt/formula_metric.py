@@ -2,15 +2,19 @@
 Support for Victron Venus WritableMetric.
 """
 
-from collections.abc import Callable
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING, Any
 
-from typing import Any
-
-from .constants import FormulaTransientState
-from .metric import Metric
-from .data_classes import TopicDescriptor
 from . import _victron_formulas as formulas
+from .metric import Metric
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from .constants import FormulaTransientState
+    from .data_classes import TopicDescriptor
 
 _LOGGER = logging.getLogger(__name__)
 

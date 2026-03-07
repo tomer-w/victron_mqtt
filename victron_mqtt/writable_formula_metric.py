@@ -2,15 +2,15 @@
 Support for Victron Venus WritableMetric.
 """
 
-from collections.abc import Callable
 import logging
+from collections.abc import Callable
 from typing import Any
 
+from . import _victron_formulas as formulas
 from .constants import VictronEnum
+from .data_classes import TopicDescriptor
 from .formula_metric import FormulaMetric
 from .writable_metric import WritableMetric
-from .data_classes import TopicDescriptor
-from . import _victron_formulas as formulas
 
 _LOGGER = logging.getLogger(__name__)
 

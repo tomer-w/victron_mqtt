@@ -1,6 +1,7 @@
 """Victron Enums Module."""
 from .constants import VictronDeviceEnum, VictronEnum
 
+
 class DeviceType(VictronDeviceEnum):
     """Type of device."""
     # This is used to identify the type of device in the system.

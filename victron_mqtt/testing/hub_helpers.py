@@ -4,10 +4,10 @@ This module provides utilities for downstream projects that use victron_mqtt
 to write their own tests involving Hub objects and MQTT message simulation.
 """
 
-from itertools import count
 import asyncio
 import json
 import logging
+from itertools import count
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -15,9 +15,9 @@ from paho.mqtt.client import ConnectFlags
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.reasoncodes import ReasonCode
 
-from victron_mqtt.hub import Hub
-from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
 from victron_mqtt._victron_enums import DeviceType
+from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
+from victron_mqtt.hub import Hub
 
 logger = logging.getLogger(__name__)
 
@@ -94,8 +94,8 @@ async def create_mocked_hub(
             hub._client = mocked_client
 
             # Dynamically mock undefined attributes
-            setattr(hub, '_process_device', MagicMock(name="_process_device"))
-            setattr(hub, '_process_metric', MagicMock(name="_process_metric"))
+            hub._process_device = MagicMock(name="_process_device")
+            hub._process_metric = MagicMock(name="_process_metric")
 
             # Mock connect_async to trigger the _on_connect callback
             def mock_connect_async(*_args: Any, **_kwargs: Any) -> None:

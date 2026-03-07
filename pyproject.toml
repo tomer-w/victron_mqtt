@@ -98,6 +98,52 @@ line-length = 120
 target-version = "py313"
 
 [tool.ruff.lint]
+select = [
+    "E", "F", "W",   # pycodestyle + pyflakes
+    "I",              # isort
+    "UP",             # pyupgrade
+    "B",              # flake8-bugbear
+    "SIM",            # flake8-simplify
+    "RET",            # flake8-return
+    "PIE",            # flake8-pie
+    "RUF",            # ruff-specific
+    "PERF",           # perflint
+    "FURB",           # refurb
+    "C4",             # flake8-comprehensions
+    "TC",             # flake8-type-checking
+    "PTH",            # flake8-use-pathlib
+    "PLC",            # pylint convention
+    "PLW",            # pylint warnings
+    "PLR",            # pylint refactor
+    "G",              # flake8-logging-format
+    "PT",             # flake8-pytest-style
+    "T20",            # flake8-print
+    "DTZ",            # flake8-datetimez
+    "PGH",            # pygrep-hooks
+    "SLF",            # flake8-self
+]
+ignore = [
+    "E501",    # line-too-long (formatter responsibility)
+    "PLR2004", # magic-value-comparison
+    "PLR0913", # too-many-arguments
+    "PLR0912", # too-many-branches
+    "PLR0915", # too-many-statements
+    "RET504",  # unnecessary-assign (readable intermediate vars)
+    "SLF001",  # private-member-access (internal cross-module access)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "SLF001",  # private-member-access (tests access internals)
+    "PLC0415", # import-outside-top-level
+    "T201",    # print (debug output)
+    "DTZ001",  # call-datetime-without-tzinfo
+    "DTZ006",  # call-datetime-fromtimestamp
+    "PT012",   # pytest-raises-with-multiple-statements
+]
+"victron_mqtt/utils/*" = [
+    "T201",    # print (CLI tool output)
+]
 
 [project.scripts]
 victron_mqtt-dump-mqtt = "victron_mqtt.utils.dump_mqtt:main"

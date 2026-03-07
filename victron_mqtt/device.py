@@ -2,22 +2,32 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-import logging
-from typing import TYPE_CHECKING
 import copy
+import logging
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from ._unwrappers import VALUE_TYPE_UNWRAPPER, unwrap_bool, unwrap_enum, unwrap_bitmask, unwrap_float, unwrap_int_seconds_to_hours, unwrap_int_seconds_to_minutes, unwrap_float_m3_to_liters
-from .constants import MetricKind, RangeType, VictronEnum
-from .metric import Metric
-from .formula_metric import FormulaMetric
-from .writable_formula_metric import WritableFormulaMetric
+from ._unwrappers import (
+    VALUE_TYPE_UNWRAPPER,
+    unwrap_bitmask,
+    unwrap_bool,
+    unwrap_enum,
+    unwrap_float,
+    unwrap_float_m3_to_liters,
+    unwrap_int_seconds_to_hours,
+    unwrap_int_seconds_to_minutes,
+)
 from ._victron_enums import DeviceType
-from .writable_metric import WritableMetric
+from .constants import MetricKind, RangeType, VictronEnum
 from .data_classes import ParsedTopic, TopicDescriptor
+from .formula_metric import FormulaMetric
+from .metric import Metric
+from .writable_formula_metric import WritableFormulaMetric
+from .writable_metric import WritableMetric
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,19 +111,18 @@ class Device:
             value = unwrap_bool(payload)
             if value is None:
                 log_debug(
-                    "Ignoring null fallback_to_metric_topic value for device %s metric %s", 
+                    "Ignoring null fallback_to_metric_topic value for device %s metric %s",
                     self.unique_id, topic_desc.short_id
                 )
                 return None
             return FallbackPlaceholder(device=self, parsed_topic=parsed_topic, topic_descriptor=topic_desc, value=value)
-        else:
-            value = Device._unwrap_payload(topic_desc, payload)
-            if value is None:
-                log_debug(
-                    "Ignoring null topic value for device %s metric %s", 
-                    self.unique_id, topic_desc.short_id
-                )
-                return None
+        value = Device._unwrap_payload(topic_desc, payload)
+        if value is None:
+            log_debug(
+                "Ignoring null topic value for device %s metric %s",
+                self.unique_id, topic_desc.short_id
+            )
+            return None
 
         metric = self._metrics.get(parsed_topic.short_id)
         if metric:
@@ -128,10 +137,9 @@ class Device:
         unwrapper = VALUE_TYPE_UNWRAPPER[topic_desc.value_type]
         if unwrapper in [unwrap_enum, unwrap_bitmask]:
             return unwrapper(payload, topic_desc.enum)
-        elif unwrapper in [unwrap_float, unwrap_int_seconds_to_hours, unwrap_int_seconds_to_minutes, unwrap_float_m3_to_liters]:
+        if unwrapper in [unwrap_float, unwrap_int_seconds_to_hours, unwrap_int_seconds_to_minutes, unwrap_float_m3_to_liters]:
             return unwrapper(payload, topic_desc.precision)
-        else:
-            return unwrapper(payload)
+        return unwrapper(payload)
 
     @staticmethod
     def _is_same_adjustable_topics(topic: str, adjustable_topic: str) -> bool:
@@ -223,6 +231,8 @@ class Device:
 
         if self._device_type == DeviceType.SYSTEM:
             return "Victron Venus"
+
+        return None
 
     @property
     def manufacturer(self) -> str | None:

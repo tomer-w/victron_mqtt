@@ -1,6 +1,9 @@
 import argparse
+
 import paho.mqtt.client as mqtt
+
 from victron_mqtt._victron_topics import topics
+
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:

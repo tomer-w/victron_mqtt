@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import logging
 import re
-from .id_utils import replace_complex_id_to_simple
+from dataclasses import dataclass, field
+
 from ._victron_enums import DeviceType
 from .constants import MetricKind, MetricNature, MetricType, RangeType, ValueType, VictronEnum
+from .id_utils import replace_complex_id_to_simple
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,12 +48,12 @@ class TopicDescriptor:
     max: float | int | str | None = None
     step: float | int | None = None
     is_adjustable_suffix: str | None = None
-    key_values: dict[str, str] = field(default_factory=lambda: {})
+    key_values: dict[str, str] = field(default_factory=dict)
     experimental: bool = False
     # Depends on format is different for regular and formula topics:
     # For regular topics, the depends_on list contains the {device_id}_{metric_short_id} of the metric it depends on
     # For formula topics, the depends_on list contains the {device_type}_{metric_short_id} of the metrics it depends on as it will be generated for all device ids from the specific device type
-    depends_on: list[str] = field(default_factory=lambda: [])
+    depends_on: list[str] = field(default_factory=list)
     generic_name: str | None = None
     is_formula: bool = False  # True if this topic is calculated from other topics
 
@@ -68,7 +69,7 @@ class TopicDescriptor:
     def __post_init__(self):
         assert self.message_type == MetricKind.ATTRIBUTE or self.name is not None
         self.generic_name = replace_complex_id_to_simple(self.name) if self.name else None
-        self.is_formula = True if self.topic.startswith("$$func/") else False
+        self.is_formula = self.topic.startswith("$$func/")
         # Voltage default
         if self.metric_type == MetricType.VOLTAGE:
             if self.unit_of_measurement is None:
@@ -232,7 +233,7 @@ class ParsedTopic:
 
     def __hash__(self):
         """Make ParsedTopic hashable for use as dictionary keys."""
-        return hash((self.full_topic))
+        return hash(self.full_topic)
 
     @classmethod
     def normalize_topic(cls, topic: str) -> str:
@@ -253,9 +254,7 @@ class ParsedTopic:
         full_topic = topic
         topic_parts = topic.split("/")
 
-        if len(topic_parts) < 3:  # noqa: PLR2004"
-            return None
-        elif len(topic_parts) == 3 and topic_parts[2] != "heartbeat":  # noqa: PLR2004"
+        if len(topic_parts) < 3 or (len(topic_parts) == 3 and topic_parts[2] != "heartbeat"):
             return None
 
         installation_id = topic_parts[1]
@@ -370,9 +369,8 @@ class ParsedTopic:
         """Get the next phase in rotation (L1 -> L2 -> L3 -> L1)."""
         if phase == "L1":
             return "L2"
-        elif phase == "L2":
+        if phase == "L2":
             return "L3"
-        elif phase == "L3":
+        if phase == "L3":
             return "L1"
-        else:
-            raise ValueError(f"Invalid phase: {phase}. Expected L1, L2, or L3.")
+        raise ValueError(f"Invalid phase: {phase}. Expected L1, L2, or L3.")

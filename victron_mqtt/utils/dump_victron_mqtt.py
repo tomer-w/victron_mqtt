@@ -3,13 +3,14 @@ Command-line tool to dump all data from topics list and enums in _victron_enums.
 """
 
 
-import json
 import argparse
+import json
+from pathlib import Path
 
-from .._victron_topics import topics
-from ..constants import MetricKind
 from .. import _victron_enums
-from ..constants import VictronEnum
+from .._victron_topics import topics
+from ..constants import MetricKind, VictronEnum
+
 
 def enum_to_dict(enum_cls):
     # Handles both Enum and IntEnum, flattening tuple values if present
@@ -69,7 +70,7 @@ def main():
         ],
         "enums": get_all_enums(_victron_enums),
     }
-    with open(args.output_file, "w", encoding="utf-8") as f:
+    with Path(args.output_file).open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, default=str)
 
 if __name__ == "__main__":

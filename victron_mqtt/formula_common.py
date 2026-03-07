@@ -2,14 +2,16 @@
 Support for Victron Venus metrics based on formulas and not direct mqtt topic.
 """
 from __future__ import annotations
-from collections.abc import Callable
-from dataclasses import dataclass
+
 import time
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .constants import FormulaTransientState
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .metric import Metric
 
 @dataclass
@@ -21,7 +23,7 @@ class LRSLastReading(FormulaTransientState):
 
 def _get_lrs_input(depends_on: dict[str, Metric]) -> float | None:
     assert len(depends_on) == 1, "Expected exactly one input metric for LRS"
-    metric = list(depends_on.values())[0]
+    metric = next(iter(depends_on.values()))
     return metric.value
 
 def calculate_rolling_riemann_sum(
@@ -81,12 +83,12 @@ def left_riemann_sum_internal(
     transient_state: FormulaTransientState | None) -> tuple[float, FormulaTransientState] | None:
     """
     Calculate rolling Left Riemann Sum on input.
-    
+
     Args:
         depends_on: Dictionary of metrics to depend on
         last_reading: Previous reading with accumulated value
         time_interval: Time interval in seconds for the Riemann sum calculation
-        
+
     Returns:
         Tuple of (accumulated_energy, new_last_reading):
         - accumulated_energy: Total energy accumulated since first reading

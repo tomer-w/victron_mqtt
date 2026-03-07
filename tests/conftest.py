@@ -10,10 +10,10 @@ VICTRON_TEST_ROOT_PREFIX - The root prefix for the MQTT topics. Default None
 
 """
 
-import os
-import pytest
-import traceback
 import asyncio
+import os
+
+import pytest
 
 orig_close = asyncio.BaseEventLoop.close
 
@@ -46,10 +46,9 @@ def config_password():
 @pytest.fixture
 def config_root_prefix():
     prefix = os.getenv("VICTRON_TEST_ROOT_PREFIX", None)
-    if prefix and prefix not in [""]:
+    if prefix and prefix != "":
         return prefix
-    else:
-        return None
+    return None
 
 @pytest.fixture
 def config_use_ssl() -> bool:

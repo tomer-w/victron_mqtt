@@ -2,41 +2,41 @@
 Maps all the MQTT topics to either attributes or metrics.
 """
 
-from .constants import MetricKind, MetricNature, MetricType, ValueType, RangeType
-from .data_classes import TopicDescriptor
 from ._victron_enums import (
     AcActiveInputSource,
+    ActiveInputEnum,
+    BatteryState,
+    ChargerMode,
     ChargeSchedule,
+    DESSErrorCode,
     DESSMode,
     DESSReactiveStrategy,
+    DESSRestrictions,
     DESSStrategy,
     DigitalInputInputState,
     DigitalInputState,
     DigitalInputType,
-    ESSMode,
     ErrorCode,
-    FluidType,
-    GeneratorRunningByConditionCode,
-    InverterMode,
-    GenericOnOff,
-    ChargerMode,
+    ESSMode,
+    ESSModeHub4,
+    ESSState,
     EvChargerMode,
     EvChargerPosition,
     EvChargerStatus,
+    FluidType,
+    GeneratorRunningByConditionCode,
+    GenericAlarmEnum,
+    GenericOnOff,
+    InverterMode,
     MppOperationMode,
     PhoenixInverterMode,
+    SolarChargerDeviceOffReason,
     State,
     TemperatureStatus,
     TemperatureType,
-    DESSErrorCode,
-    DESSRestrictions,
-    GenericAlarmEnum,
-    ESSState,
-    ESSModeHub4,
-    ActiveInputEnum,
-    SolarChargerDeviceOffReason,
-    BatteryState
 )
+from .constants import MetricKind, MetricNature, MetricType, RangeType, ValueType
+from .data_classes import TopicDescriptor
 
 # Good sources for topics is:
 # https://github.com/victronenergy/venus/wiki/dbus

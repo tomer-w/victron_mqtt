@@ -1,9 +1,8 @@
 """Constants for the victron venus OS client."""
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import Self
-
-from dataclasses import dataclass
 
 TOPIC_INSTALLATION_ID = "N/+/system/0/Serial"
 
@@ -138,12 +137,12 @@ class VictronDeviceEnum(VictronEnum):
     @classmethod
     def from_code(cls: type[Self], value: int | str, default_value: "VictronEnum | None" = None) -> Self | None:
         """Get enum member from its device code representation, following mappings if necessary."""
-        result = super(VictronDeviceEnum, cls).from_code(value, default_value)
+        result = super().from_code(value, default_value)
         if result is None:
             return None
         assert isinstance(result, cls)
         if result.mapped_to:
-            mapped_result = super(VictronDeviceEnum, cls).from_code(result.mapped_to, default_value)
+            mapped_result = super().from_code(result.mapped_to, default_value)
             if mapped_result is None:
                 return None
             assert isinstance(mapped_result, cls)
