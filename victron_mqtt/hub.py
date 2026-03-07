@@ -268,6 +268,13 @@ class Hub:
         self._loop = asyncio.get_event_loop()
         _LOGGER.info("Hub initialized. Client ID: %s", self._client_id)
 
+    def _schedule_threadsafe(self, callback: Callable[..., object], *args: object) -> None:
+        """Schedule a callback on the event loop from any thread."""
+        try:
+            self._loop.call_soon_threadsafe(callback, *args)
+        except RuntimeError:
+            _LOGGER.debug("Event loop closed, callback %s not scheduled", callback.__name__)
+
     async def connect(self) -> None:
         """Connect to the hub."""
         _LOGGER.info("Connecting to MQTT broker at %s:%d", self.host, self.port)
@@ -350,8 +357,7 @@ class Hub:
             client.disconnect()
 
         try:
-            if self._loop.is_running():
-                self._loop.call_soon_threadsafe(self._connected_event.set)
+            self._schedule_threadsafe(self._connected_event.set)
         except Exception as exc:
             _LOGGER.exception("Exception in _on_connect while setting connected event: %s", exc)
 
@@ -515,9 +521,8 @@ class Hub:
         for device, metric in ordered_new_metrics:
             metric.phase2_init(device.unique_id, self._all_metrics)
             try:
-                if callable(self._on_new_metric) and self._loop.is_running():
-                    # If the event loop is running, schedule the callback
-                    self._loop.call_soon_threadsafe(self._on_new_metric, self, device, metric)
+                if callable(self._on_new_metric):
+                    self._schedule_threadsafe(self._on_new_metric, self, device, metric)
             except Exception as exc:
                 _LOGGER.exception("Error calling _on_new_metric callback %s", exc)
         # Trace the version once
@@ -542,8 +547,7 @@ class Hub:
                     _LOGGER.error("Firmware version format not supported: %s", version_metric.value)
             else:
                 _LOGGER.warning("Version metric not found: %s", version_metric_name)
-        if self._loop.is_running():
-            self._loop.call_soon_threadsafe(self._first_refresh_event.set)
+        self._schedule_threadsafe(self._first_refresh_event.set)
         self._first_full_publish = False
         _LOGGER.debug("Full publish handling completed")
 
@@ -556,8 +560,7 @@ class Hub:
 
         self._installation_id = parsed_topic.installation_id
         _LOGGER.info("Installation ID received: %s. Original topic: %s", self._installation_id, topic)
-        if self._loop.is_running():
-            self._loop.call_soon_threadsafe(self._installation_id_event.set)
+        self._schedule_threadsafe(self._installation_id_event.set)
 
     def _handle_normal_message(self, topic: str, payload: str, log_debug: Callable[..., None]) -> None:
         """Handle regular MQTT message."""
@@ -715,8 +718,7 @@ class Hub:
             if "full_publish_completed" in topic:
                 _LOGGER.info("Full publish completed, unsubscribing from notification")
                 self._unsubscribe("#")
-                if self._loop.is_running():
-                    self._loop.call_soon_threadsafe(self._first_refresh_event.set)
+                self._schedule_threadsafe(self._first_refresh_event.set)
                 return
 
             topic_parts = topic.split("/")
@@ -739,8 +741,7 @@ class Hub:
                 payload_json = json.loads(message.payload.decode())
                 self._installation_id = payload_json.get("value")
                 _LOGGER.info("Installation ID received: %s", self._installation_id)
-                if self._loop.is_running():
-                    self._loop.call_soon_threadsafe(self._installation_id_event.set)
+                self._schedule_threadsafe(self._installation_id_event.set)
         except Exception as exc:
             _LOGGER.error("Error processing installation ID message: %s", exc)
 
@@ -753,7 +754,8 @@ class Hub:
 
         self._subscribe(TOPIC_INSTALLATION_ID)
         try:
-            await asyncio.wait_for(self._installation_id_event.wait(), timeout=60)
+            async with asyncio.timeout(60):
+                await self._installation_id_event.wait()
         except TimeoutError:
             _LOGGER.error("Timeout waiting for installation ID")
             raise
@@ -834,16 +836,18 @@ class Hub:
     async def _wait_for_connect(self) -> None:
         """Wait for the first connection to complete."""
         try:
-            await asyncio.wait_for(self._connected_event.wait(), timeout=25) # 25 seconds
+            async with asyncio.timeout(25):
+                await self._connected_event.wait()
         except TimeoutError as exc:
-            _LOGGER.error("Timeout waiting for first first connection")
+            _LOGGER.error("Timeout waiting for first connection")
             raise CannotConnectError("Timeout waiting for first connection") from exc
 
     async def wait_for_first_refresh(self) -> None:
         """Wait for the first full refresh to complete."""
         _LOGGER.info("Waiting for first refresh")
         try:
-            await asyncio.wait_for(self._first_refresh_event.wait(), timeout=60)
+            async with asyncio.timeout(60):
+                await self._first_refresh_event.wait()
             _LOGGER.info("Devices and metrics initialized. Found %d devices", len(self._devices))
         except TimeoutError as exc:
             _LOGGER.error("Timeout waiting for first full refresh")
@@ -917,8 +921,7 @@ class Hub:
             _LOGGER.exception("_on_connect_fail exception %s: %s", type(exc), exc)
             self._connect_failed_reason = exc
             client.disconnect()
-            if self._loop.is_running():
-                self._loop.call_soon_threadsafe(self._connected_event.set)
+            self._schedule_threadsafe(self._connected_event.set)
 
     @staticmethod
     def expand_topic_list(topic_list: list[TopicDescriptor]) -> list[TopicDescriptor]:
