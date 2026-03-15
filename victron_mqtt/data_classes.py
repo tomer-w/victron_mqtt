@@ -307,14 +307,34 @@ class ParsedTopic:
     # This is needed in cases of solarcharger_max_power_today and solarcharger_max_power_yesterday
     # which has the same topic but different meaning
     def match_from_list(self, topic_desc_list: list[TopicDescriptor]) -> TopicDescriptor | None:
-        """Match the ParsedTopic to a TopicDescriptor from a list."""
+        """Match the ParsedTopic to a TopicDescriptor from a list.
+
+        First tries an exact match (after normalising installation_id and device_id).
+        Falls back to a wildcard match where {placeholder} parts in the descriptor
+        match any concrete value in the incoming topic.
+        """
         topic_parts = self.full_topic.split("/")
         topic_parts[1] = "{installation_id}"
         topic_parts[3] = "{device_id}"
         normalized_topic = "/".join(topic_parts)
+
+        # Pass 1: exact match (e.g. Daily/0/Yield vs Daily/1/Yield)
         for topic_desc in topic_desc_list:
             if topic_desc.topic == normalized_topic:
                 return topic_desc
+
+        # Pass 2: wildcard match — {placeholder} in descriptor matches any value
+        # (e.g. Daily/0/Pv/{mppt_id}/Yield matches Daily/0/Pv/0/Yield)
+        for topic_desc in topic_desc_list:
+            desc_parts = topic_desc.topic.split("/")
+            if len(desc_parts) != len(topic_parts):
+                continue
+            if all(
+                dp == ip or (dp.startswith("{") and dp.endswith("}"))
+                for dp, ip in zip(desc_parts, topic_parts)
+            ):
+                return topic_desc
+
         return None
 
     @property

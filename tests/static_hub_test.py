@@ -322,6 +322,34 @@ async def test_today_message():
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 2, f"Expected metric value to be 2, got {metric.value}"
 
+
+@pytest.mark.asyncio
+async def test_parameterized_topic_with_shared_map_key():
+    """Test that topics with a named placeholder (e.g. {mppt_id}) are matched correctly
+    when they share a topic-map key with another descriptor (e.g. Daily/0 vs Daily/1).
+    Previously match_from_list only did exact matching, so {mppt_id} never matched a
+    concrete value like 0 and the message was silently dropped."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/multi/0/History/Daily/0/Pv/0/Yield", "{\"value\": 9.5}")
+    await inject_message(hub, "N/123/multi/0/History/Daily/0/Pv/1/Yield", "{\"value\": 2.5}")
+    await inject_message(hub, "N/123/multi/0/History/Daily/1/Pv/0/Yield", "{\"value\": 7.0}")
+    await finalize_injection(hub)
+
+    device = hub.devices["multi_0"]
+    metric = device.get_metric("multi_mppt_0_yield_today")
+    assert metric is not None, "multi_mppt_0_yield_today should be created"
+    assert metric.value == 9.5
+
+    metric = device.get_metric("multi_mppt_1_yield_today")
+    assert metric is not None, "multi_mppt_1_yield_today should be created"
+    assert metric.value == 2.5
+
+    metric = device.get_metric("multi_mppt_0_yield_yesterday")
+    assert metric is not None, "multi_mppt_0_yield_yesterday should be created"
+    assert metric.value == 7.0
+
+
 def test_expend_topics():
     """Test that the Hub correctly expands topic descriptors with placeholders."""
     descriptor = next((t for t in topics if t.topic == "N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/State"), None)
