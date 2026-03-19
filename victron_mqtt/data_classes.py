@@ -70,6 +70,8 @@ class TopicDescriptor:
         assert self.message_type == MetricKind.ATTRIBUTE or self.name is not None
         self.generic_name = replace_complex_id_to_simple(self.name) if self.name else None
         self.is_formula = self.topic.startswith("$$func/")
+        if self.value_type == ValueType.ENUM:
+            self.metric_type = MetricType.ENUM
         # Voltage default
         if self.metric_type == MetricType.VOLTAGE:
             if self.unit_of_measurement is None:

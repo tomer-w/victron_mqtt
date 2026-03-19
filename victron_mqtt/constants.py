@@ -33,6 +33,7 @@ class MetricType(Enum):
     """The type of metric."""
 
     NONE = "none"
+    ENUM = "enum"
     POWER = "power"
     APPARENT_POWER = "apparent_power"
     ENERGY = "energy"

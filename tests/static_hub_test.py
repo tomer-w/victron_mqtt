@@ -396,7 +396,7 @@ async def test_expend_message_2():
     assert metric.generic_short_id == "battery_cell_{cell_id}_voltage"
     assert metric.key_values["cell_id"] == "3"
     assert metric.value == 3.331, f"Expected metric value to be 3.331, got {metric.value}"
-    assert metric.generic_name == "Battery cell {cell_id} voltage", f"Expected metric generic_name to be 'Battery cell {{cell_id}} voltage', got {metric.generic_name}"
+    assert metric.generic_name == "Cell {cell_id} voltage", f"Expected metric generic_name to be 'Cell {{cell_id}} voltage', got {metric.generic_name}"
 
 @pytest.mark.asyncio
 async def test_same_message_events_none():
