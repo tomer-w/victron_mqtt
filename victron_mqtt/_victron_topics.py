@@ -349,7 +349,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="battery_automatic_syncs",
         name="Automatic syncs",
-        unit_of_measurement="count",
+        unit_of_measurement="syncs",
         metric_nature=MetricNature.CUMULATIVE,
         value_type=ValueType.INT,
     ),
@@ -365,7 +365,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="battery_total_charge_cycles",
         name="Total charge cycles",
-        unit_of_measurement="count",
+        unit_of_measurement="cycles",
         metric_nature=MetricNature.CUMULATIVE,
         value_type=ValueType.INT,
     ),
@@ -545,6 +545,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="battery_nr_modules_blocking_charge",
         name="Number of modules blocking charge",
+        unit_of_measurement="modules",
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
@@ -552,6 +553,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="battery_nr_modules_blocking_discharge",
         name="Number of modules blocking discharge",
+        unit_of_measurement="modules",
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
@@ -559,6 +561,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="battery_nr_modules_offline",
         name="Number of modules offline",
+        unit_of_measurement="modules",
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
@@ -566,6 +569,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="battery_nr_modules_online",
         name="Number of modules online",
+        unit_of_measurement="modules",
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
@@ -619,6 +623,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="charger_nr_of_outputs",
         name="Number of outputs",
+        unit_of_measurement="outputs",
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
@@ -923,6 +928,7 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.HEADING,
         value_type=ValueType.FLOAT,
         precision=2,
+        unit_of_measurement="°",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Fix",
@@ -937,6 +943,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="gps_nrofsatellites",
         name="Number of satellites",
+        unit_of_measurement="satellites",
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.INT,
     ),
@@ -949,6 +956,7 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.LOCATION,
         value_type=ValueType.FLOAT,
         precision=None,  # Use full precision of GPS device
+        unit_of_measurement="lat",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Position/Longitude",
@@ -959,6 +967,7 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.LOCATION,
         value_type=ValueType.FLOAT,
         precision=None,  # Use full precision of GPS device
+        unit_of_measurement="long",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Speed",
@@ -2528,6 +2537,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_schedule_count",
         name="Dynamic ESS number of schedules",
+        unit_of_measurement="count",
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.INT,
     ),
@@ -3096,6 +3106,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SERVICE,
         short_id="generator_service_counter_reset",
         name="Generator service counter reset",
+        unit_of_measurement="count",
         value_type=ValueType.INT,
     ),
 ]
