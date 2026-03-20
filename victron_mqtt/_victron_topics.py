@@ -2594,7 +2594,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="system_dynamicess_schedule_count",
         name="Dynamic ESS number of schedules",
-        unit_of_measurement="count",
+        unit_of_measurement="schedules",
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.INT,
     ),
@@ -3164,7 +3164,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SERVICE,
         short_id="generator_service_counter_reset",
         name="Generator service counter reset",
-        unit_of_measurement="count",
+        unit_of_measurement="resets",
         value_type=ValueType.INT,
     ),
 ]
