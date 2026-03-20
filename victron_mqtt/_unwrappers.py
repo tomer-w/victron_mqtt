@@ -120,7 +120,7 @@ def wrap_enum(enum_val: VictronEnum | str, enum_expected: type[VictronEnum]) -> 
     """Wrap an Enum value into a JSON string with a 'value' key."""
     if isinstance(enum_val, VictronEnum):
         return json.dumps({"value": enum_val.code})
-    return json.dumps({"value": enum_expected.from_string(enum_val).code})
+    return json.dumps({"value": enum_expected.from_id_or_string(enum_val).code})
 
 def wrap_bitmask(bitmask_val: VictronEnum | str | Iterable[VictronEnum] | Iterable[str], enum_expected: type[VictronEnum]) -> str:
     """Wrap an bitmask value into a JSON string with a 'value' key."""

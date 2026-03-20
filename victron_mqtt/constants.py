@@ -90,13 +90,14 @@ BITMASK_SEPARATOR = ","
 
 class VictronEnum(Enum):
     """Base class for Victron Enums with code and string representation."""
-    def __init__(self, code: int | str, string: str):
+    def __init__(self, code: int | str, enum_id: str, string: str):
         self._value_ = (code, string)
         self.code = code
+        self.id = enum_id
         self.string = string
 
     def __repr__(self):
-        return f"{self.__class__.__name__}.{self.name}(code={self.code}, string={self.string})"
+        return f"{self.__class__.__name__}.{self.name}(code={self.code}, id={self.id}, string={self.string})"
 
     def __str__(self) -> str:
         return self.string
@@ -124,15 +125,43 @@ class VictronEnum(Enum):
     def from_string(cls: type[Self], value: str) -> Self:
         """Get enum member from its string representation."""
         lookup = cls._build_string_lookup()
-        try:
-            return lookup[value]
-        except KeyError as exc:
-            raise ValueError(f"No enum member found with string={value}") from exc
+        result = lookup.get(value)
+        if result is None:
+            raise ValueError(f"No enum member found with string={value}")
+        return result
+
+    @classmethod
+    def _build_id_lookup(cls):
+        if not hasattr(cls, '_lookup_by_id'):
+            cls._lookup_by_id = {member.id: member for member in cls}
+        return cls._lookup_by_id
+
+    @classmethod
+    def from_id(cls: type[Self], value: str) -> Self:
+        """Get enum member from its ID representation."""
+        lookup = cls._build_id_lookup()
+        result = lookup.get(value)
+        if result is None:
+            raise ValueError(f"No enum member found with id={value}")
+        return result
+
+    @classmethod
+    def from_id_or_string(cls: type[Self], value: str) -> Self:
+        """Get enum member from its ID or string representation."""
+        lookup = cls._build_id_lookup()
+        result = lookup.get(value)
+        if result is not None:
+            return result
+        lookup = cls._build_string_lookup()
+        result = lookup.get(value)
+        if result is not None:
+            return result
+        raise ValueError(f"No enum member found with id or string={value}")
 
 class VictronDeviceEnum(VictronEnum):
     """Base class for Victron Enums that may map to other enum values."""
-    def __init__(self, code: str, string: str, mapped_to: str | None = None):
-        super().__init__(code, string)
+    def __init__(self, code: str, enum_id: str, string: str, mapped_to: str | None = None):
+        super().__init__(code, enum_id, string)
         self.mapped_to = mapped_to
 
     @classmethod

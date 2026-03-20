@@ -27,7 +27,7 @@ from victron_mqtt._unwrappers import (
     wrap_string,
 )
 from victron_mqtt._victron_enums import GenericOnOff, SolarChargerDeviceOffReason
-from victron_mqtt.constants import ValueType
+from victron_mqtt.constants import ValueType, VictronEnum
 
 
 def test_unwrap_bool_true_false_null_and_malformed():
@@ -301,3 +301,77 @@ class TestWrapEpoch:
         data = json.loads(result)
         assert isinstance(data["value"], float)
         assert data["value"] == dt.timestamp()
+
+
+class TestVictronEnumFunctions:
+    """Coverage for all VictronEnum methods."""
+
+    def test_init_sets_fields_and_value(self):
+        member = GenericOnOff.ON
+        assert isinstance(member, VictronEnum)
+        assert member.code == 1
+        assert member.id == "on"
+        assert member.string == "On"
+        assert member.value == (1, "On")
+
+    def test_repr_contains_core_fields(self):
+        member = GenericOnOff.ON
+        result = repr(member)
+        assert "GenericOnOff.ON" in result
+        assert "code=1" in result
+        assert "id=on" in result
+        assert "string=On" in result
+
+    def test_str_returns_string_value(self):
+        assert str(GenericOnOff.OFF) == "Off"
+
+    def test_build_code_lookup(self):
+        lookup = GenericOnOff._build_code_lookup()
+        assert lookup[0] is GenericOnOff.OFF
+        assert lookup[1] is GenericOnOff.ON
+        # Ensure lookup is cached.
+        assert lookup is GenericOnOff._build_code_lookup()
+
+    def test_from_code_found_none_and_default(self):
+        assert GenericOnOff.from_code(1) is GenericOnOff.ON
+        assert GenericOnOff.from_code(999) is None
+        assert GenericOnOff.from_code(999, GenericOnOff.OFF) is GenericOnOff.OFF
+
+    def test_build_string_lookup(self):
+        lookup = GenericOnOff._build_string_lookup()
+        assert lookup["Off"] is GenericOnOff.OFF
+        assert lookup["On"] is GenericOnOff.ON
+        # Ensure lookup is cached.
+        assert lookup is GenericOnOff._build_string_lookup()
+
+    def test_from_string_found_and_not_found(self):
+        assert GenericOnOff.from_string("On") is GenericOnOff.ON
+        try:
+            GenericOnOff.from_string("does-not-exist")
+            assert False, "Expected ValueError"
+        except ValueError as exc:
+            assert "No enum member found with string=does-not-exist" in str(exc)
+
+    def test_build_id_lookup(self):
+        lookup = GenericOnOff._build_id_lookup()
+        assert lookup["off"] is GenericOnOff.OFF
+        assert lookup["on"] is GenericOnOff.ON
+        # Ensure lookup is cached.
+        assert lookup is GenericOnOff._build_id_lookup()
+
+    def test_from_id_found_and_not_found(self):
+        assert GenericOnOff.from_id("on") is GenericOnOff.ON
+        try:
+            GenericOnOff.from_id("does-not-exist")
+            assert False, "Expected ValueError"
+        except ValueError as exc:
+            assert "No enum member found with id=does-not-exist" in str(exc)
+
+    def test_from_id_or_string_by_id_by_string_and_missing(self):
+        assert GenericOnOff.from_id_or_string("on") is GenericOnOff.ON
+        assert GenericOnOff.from_id_or_string("On") is GenericOnOff.ON
+        try:
+            GenericOnOff.from_id_or_string("does-not-exist")
+            assert False, "Expected ValueError"
+        except ValueError as exc:
+            assert "No enum member found with id or string=does-not-exist" in str(exc)
