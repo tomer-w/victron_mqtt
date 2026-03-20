@@ -5,6 +5,7 @@ Maps all the MQTT topics to either attributes or metrics.
 from ._victron_enums import (
     AcActiveInputSource,
     ActiveInputEnum,
+    ACSYSTEMMode,
     BatteryState,
     ChargerMode,
     ChargeSchedule,
@@ -73,7 +74,7 @@ topics: list[TopicDescriptor] = [
         topic="N/{installation_id}/{device_type}/{device_id}/ProductId",
         message_type=MetricKind.ATTRIBUTE,
         short_id="victron_productid",
-        value_type=ValueType.INT,
+        value_type=ValueType.STRING,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/{device_type}/{device_id}/ProductName",
@@ -151,6 +152,15 @@ topics: list[TopicDescriptor] = [
         short_id="acload_voltage_{phase}",
         name="Voltage on {phase}",
         metric_type=MetricType.VOLTAGE,
+    ),
+    # ACSYSTEM topics
+    TopicDescriptor(
+        topic="N/{installation_id}/acsystem/{device_id}/Mode",
+        message_type=MetricKind.SELECT,
+        short_id="acsystem_mode",
+        name="Mode",
+        value_type=ValueType.ENUM,
+        enum=ACSYSTEMMode,
     ),
     # Alternator topics
     TopicDescriptor(
@@ -800,6 +810,7 @@ topics: list[TopicDescriptor] = [
         short_id="evcharger_session_cost",
         name="Last session cost",
         metric_type=MetricType.COST,
+        unit_of_measurement="$",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/evcharger/{device_id}/Session/Energy",
@@ -910,6 +921,7 @@ topics: list[TopicDescriptor] = [
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.FLOAT,
         precision=2,
+        unit_of_measurement="m",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Connected",
@@ -1038,6 +1050,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         metric_nature=MetricNature.INSTANTANEOUS,
         precision=3,
+        unit_of_measurement="factor",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/grid/{device_id}/Ac/Voltage",
@@ -1082,6 +1095,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         metric_nature=MetricNature.INSTANTANEOUS,
         precision=3,
+        unit_of_measurement="factor",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/grid/{device_id}/Ac/{phase}/Voltage",
@@ -1104,6 +1118,7 @@ topics: list[TopicDescriptor] = [
         short_id="system_heartbeat",
         name="GX system heartbeat",
         value_type=ValueType.INT,
+        unit_of_measurement="s",
     ),
     # Heatpump topics
     TopicDescriptor(
@@ -1327,6 +1342,16 @@ topics: list[TopicDescriptor] = [
         enum=ActiveInputEnum,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/multi/{device_id}/Ac/In/1/CurrentLimit",
+        message_type=MetricKind.NUMBER,
+        short_id="multi_shore_current_limit",
+        name="Shore current limit",
+        metric_type=MetricType.CURRENT,
+        value_type=ValueType.FLOAT,
+        min=0,
+        max=200,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ac/In/1/{phase}/I",
         message_type=MetricKind.SENSOR,
         short_id="multi_acin_current_{phase}",
@@ -1354,6 +1379,7 @@ topics: list[TopicDescriptor] = [
         name="Phases",
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.INT,
+        unit_of_measurement="phases",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ac/Out/{output}/{phase}/I",
@@ -1472,6 +1498,13 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/multi/{device_id}/History/Daily/0/MaxPower",
+        message_type=MetricKind.SENSOR,
+        short_id="multi_max_power_today",
+        name="Max power today",
+        metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/History/Daily/0/Pv/{mppt_id}/Yield",
         message_type=MetricKind.SENSOR,
         short_id="multi_mppt_{mppt_id}_yield_today",
@@ -1486,10 +1519,24 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/multi/{device_id}/History/Daily/1/MaxPower",
+        message_type=MetricKind.SENSOR,
+        short_id="multi_max_power_yesterday",
+        name="Max power yesterday",
+        metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/History/Daily/1/Pv/{mppt_id}/Yield",
         message_type=MetricKind.SENSOR,
         short_id="multi_mppt_{mppt_id}_yield_yesterday",
         name="MPPT {mppt_id} yield yesterday",
+        metric_type=MetricType.ENERGY,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/multi/{device_id}/History/Daily/1/Yield",
+        message_type=MetricKind.SENSOR,
+        short_id="multi_yield_yesterday",
+        name="Yield yesterday",
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
@@ -1920,6 +1967,7 @@ topics: list[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStartValue",
         message_type=MetricKind.NUMBER,
+        metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
         short_id="generator_{gen_id}_qh_start_on_soc",
         name="Generator QH start on SOC",
         value_type=ValueType.INT,
@@ -1929,6 +1977,7 @@ topics: list[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStopValue",
         message_type=MetricKind.NUMBER,
+        metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
         short_id="generator_{gen_id}_qh_stop_on_soc",
         name="Generator QH stop on SOC",
         value_type=ValueType.INT,
@@ -1948,6 +1997,7 @@ topics: list[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StartValue",
         message_type=MetricKind.NUMBER,
+        metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
         short_id="generator_{gen_id}_start_on_soc",
         name="Generator start on SOC",
         value_type=ValueType.INT,
@@ -1967,6 +2017,7 @@ topics: list[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StopValue",
         message_type=MetricKind.NUMBER,
+        metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
         short_id="generator_{gen_id}_stop_on_soc",
         name="Generator stop on SOC",
         value_type=ValueType.INT,
@@ -2245,6 +2296,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=0,
         max=100,
+        unit_of_measurement="%",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/Settings/CustomName",
@@ -2277,6 +2329,7 @@ topics: list[TopicDescriptor] = [
         name="Consumption phases",
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.INT,
+        unit_of_measurement="phases",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Ac/Consumption/{phase}/Current",
@@ -2306,6 +2359,7 @@ topics: list[TopicDescriptor] = [
         name="Consumption on output phases",
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.INT,
+        unit_of_measurement="phases",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Ac/ConsumptionOnOutput/{phase}/Power",
@@ -2328,6 +2382,7 @@ topics: list[TopicDescriptor] = [
         name="Grid phases",
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.INT_DEFAULT_0,
+        unit_of_measurement="phases",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Ac/Grid/{phase}/Current",
@@ -2350,6 +2405,7 @@ topics: list[TopicDescriptor] = [
         name="PV on output phases",
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.INT,
+        unit_of_measurement="phases",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Ac/PvOnOutput/{phase}/Current",
@@ -2697,11 +2753,11 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.NUMBER,
         short_id="temperature_scale",
         name="Scale factor",
-        unit_of_measurement=None,
         metric_type=MetricType.NONE,
         metric_nature=MetricNature.INSTANTANEOUS,
         value_type=ValueType.FLOAT,
         precision=2,
+        unit_of_measurement="factor",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/temperature/{device_id}/Status",
@@ -3091,6 +3147,7 @@ topics: list[TopicDescriptor] = [
         max=3.5,
         step=0.125,
         precision=3,
+        unit_of_measurement="factor",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/State",

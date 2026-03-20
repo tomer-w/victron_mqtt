@@ -92,6 +92,43 @@ def test_required_fields_for_sensor():
     if errors:
         pytest.fail("\n".join(errors))
 
+def test_unit_of_measurement_is_not_none():
+    topics = get_topics()
+    ValueType = get_value_type()
+    missing_unit_topics = [
+        descriptor.topic
+        for descriptor in topics
+        if descriptor.unit_of_measurement is None
+        and descriptor.value_type not in [ValueType.ENUM, ValueType.STRING, ValueType.EPOCH, ValueType.BITMASK]
+    ]
+
+    if missing_unit_topics:
+        preview = "\n".join(missing_unit_topics[:20])
+        pytest.fail(
+            f"Found {len(missing_unit_topics)} TopicDescriptor entries with unit_of_measurement=None. "
+            f"First 20:\n{preview}"
+        )
+
+def test_name_starts_with_capital_letter():
+    topics = get_topics()
+    errors = []
+
+    for descriptor in topics:
+        if not descriptor.name:
+            continue
+        stripped_name = descriptor.name.lstrip()
+        # Dynamic template-based names can start with placeholders; skip them.
+        if stripped_name.startswith("{"):
+            continue
+        first_letter = next((char for char in stripped_name if char.isalpha()), None)
+        if first_letter and not first_letter.isupper():
+            errors.append(
+                f"Topic '{descriptor.topic}' has name '{descriptor.name}' where first letter '{first_letter}' is not capitalized"
+            )
+
+    if errors:
+        pytest.fail("\n".join(errors))
+
 def test_enum_message_type():
     topics = get_topics()
     MetricKind = get_metric_kind()

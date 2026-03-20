@@ -1304,7 +1304,7 @@ async def test_min_max_float():
 
     # Validate the Hub's state
     assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
-    device = hub.devices["systemsetup_170"]
+    device = hub.devices["system_170"]
     metric = device.get_metric("system_ess_max_charge_voltage")
     assert isinstance(metric, WritableMetric), "Metric should exist in the device"
     assert metric.value == 55.6, f"Expected metric value to be 55.6, got {metric.value}"

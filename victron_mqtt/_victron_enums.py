@@ -26,7 +26,7 @@ class DeviceType(VictronDeviceEnum):
     ALTERNATOR = ("alternator", "Charger (Orion/Alternator)")
     SWITCH = ("switch", "Switch")
     GPS = ("gps", "Gps")
-    SYSTEM_SETUP = ("SystemSetup", "System Setup")
+    SYSTEM_SETUP = ("SystemSetup", "System Setup", "system") # Should be mapped to SYSTEM
     TRANSFER_SWITCH = ("TransferSwitch", "Transfer Switch")
     DIGITAL_INPUT = ("digitalinput", "Digital Input")
     DC_SYSTEM = ("dcsystem", "DC System")
@@ -37,12 +37,21 @@ class DeviceType(VictronDeviceEnum):
     ACLOAD = ("acload", "AC Load")
     CHARGER = ("charger", "Charger")
     HUB4 = ("hub4", "Hub4")
+    ACSYSTEM = ("acsystem", "AC System", "system") # Should be mapped to SYSTEM
 
 
 class GenericOnOff(VictronEnum):
     """On/Off Enum"""
     OFF = (0, "Off")
     ON = (1, "On")
+
+class ACSYSTEMMode(VictronEnum):
+    """AC System Mode Enum"""
+    CHARGER_ONLY = (1, "Charger only")
+    INVERTER_ONLY = (2, "Inverter only")
+    ON = (3, "On")
+    OFF = (4, "Off")
+    PASSTHROUGH = (251, "Passthrough")
 
 class ChargerMode(VictronEnum):
     """Charger Mode Enum"""
