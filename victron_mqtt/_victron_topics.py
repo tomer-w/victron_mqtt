@@ -1118,8 +1118,8 @@ topics: list[TopicDescriptor] = [
         short_id="system_heartbeat",
         name="GX system heartbeat",
         value_type=ValueType.INT,
-        unit_of_measurement="s",
-    ),
+        metric_type=MetricType.DURATION,
+   ),
     # Heatpump topics
     TopicDescriptor(
         topic="N/{installation_id}/heatpump/{device_id}/Ac/Current",
@@ -2294,6 +2294,7 @@ topics: list[TopicDescriptor] = [
         short_id="switch_{output}_dimming",
         name="{output:switch_{output}_custom_name} dimming",
         value_type=ValueType.INT,
+        metric_type=MetricType.PERCENTAGE,
         min=0,
         max=100,
         unit_of_measurement="%",
