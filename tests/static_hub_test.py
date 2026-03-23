@@ -1931,7 +1931,7 @@ class TestDeviceProperties:
 # WritableMetric tests (from test_coverage.py)
 # ═══════════════════════════════════════════════════════════════════════════
 
-class TestWritableMetricEnumValues:
+class TestMetricEnumValues:
     """Test enum_values property (line 100)."""
 
     def test_enum_values_with_enum(self):
@@ -1940,13 +1940,13 @@ class TestWritableMetricEnumValues:
             enum=GenericOnOff,
             message_type=MetricKind.SWITCH,
         )
-        wm = WritableMetric.__new__(WritableMetric)
+        wm = Metric.__new__(Metric)
         wm._descriptor = desc
-        assert wm.enum_values == ["Off", "On"]
+        assert wm.enum_values == ["off", "on"]
 
     def test_enum_values_without_enum(self):
         desc = _make_descriptor()
-        wm = WritableMetric.__new__(WritableMetric)
+        wm = Metric.__new__(Metric)
         wm._descriptor = desc
         assert wm.enum_values is None
 

@@ -184,6 +184,11 @@ class Metric:
         return self._key_values
 
     @property
+    def enum_values(self) -> list[str] | None:
+        """Get the enum string values for this metric, if defined."""
+        return [e.id for e in self._descriptor.enum] if self._descriptor.enum else None
+
+    @property
     def on_update(self) -> CallbackOnUpdate | None:
         """Returns the on_update callback."""
         return self._on_update

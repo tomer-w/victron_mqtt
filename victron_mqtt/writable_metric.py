@@ -94,11 +94,6 @@ class WritableMetric(Metric):
         """Get the step value for this metric, if defined."""
         return self._descriptor.step
 
-    @property
-    def enum_values(self) -> list[str] | None:
-        """Get the enum string values for this metric, if defined."""
-        return [e.string for e in self._descriptor.enum] if self._descriptor.enum else None
-
     def set(self, value: str | float | int | bool | VictronEnum) -> None:
         """Set the value of this metric by publishing to the write topic."""
         assert self._write_topic is not None
