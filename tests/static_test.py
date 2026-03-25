@@ -301,6 +301,32 @@ def test_no_installation_id_or_device_id_in_short_id_or_name():
     if errors:
         pytest.fail("\n".join(errors))
 
+def test_switch_topics_are_binary_enums():
+    """Ensure SWITCH topics use ENUM value_type with exactly two members: id='on' and id='off'."""
+    topics = get_topics()
+    MetricKind = get_metric_kind()
+    ValueType = get_value_type()
+    errors = []
+    for descriptor in topics:
+        if descriptor.message_type != MetricKind.SWITCH:
+            continue
+        if descriptor.value_type != ValueType.ENUM:
+            errors.append(f"SWITCH topic '{descriptor.topic}' has value_type {descriptor.value_type} (expected ENUM)")
+            continue
+        if descriptor.enum is None:
+            errors.append(f"SWITCH topic '{descriptor.topic}' has no enum defined")
+            continue
+        members = list(descriptor.enum)
+        member_ids = {m.id for m in members}
+        if len(members) != 2:
+            errors.append(f"SWITCH topic '{descriptor.topic}' enum {descriptor.enum.__name__} has {len(members)} members (expected 2)")
+        if "on" not in member_ids:
+            errors.append(f"SWITCH topic '{descriptor.topic}' enum {descriptor.enum.__name__} missing member with id='on'")
+        if "off" not in member_ids:
+            errors.append(f"SWITCH topic '{descriptor.topic}' enum {descriptor.enum.__name__} missing member with id='off'")
+    if errors:
+        pytest.fail("\n".join(errors))
+
 def test_victron_enum_in_init():
     """Ensure all VictronEnum-derived enums are included in __init__.py's __all__."""
     from victron_mqtt import __all__
