@@ -1783,6 +1783,17 @@ topics: list[TopicDescriptor] = [
         enum=ESSModeHub4,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxChargePower",
+        message_type=MetricKind.NUMBER,
+        short_id="system_ess_max_charge_power",
+        name="ESS max charge power limit",
+        metric_type=MetricType.POWER,
+        value_type=ValueType.INT,
+        min_max_range=RangeType.DYNAMIC,
+        min=-1,
+        max=1000000,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxDischargePower",
         message_type=MetricKind.NUMBER,
         short_id="system_ess_max_inverter_power_limit",
