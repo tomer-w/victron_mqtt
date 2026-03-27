@@ -270,9 +270,7 @@ class Hub:
 
     def _schedule_threadsafe(self, callback: Callable[..., object], *args: object) -> None:
         """Schedule a callback on the event loop from any thread."""
-        if self._loop is None:
-            _LOGGER.debug("Event loop not yet set, callback %s not scheduled", callback.__name__)
-            return
+        assert self._loop is not None, "Event loop not set; connect() must be awaited before callbacks fire"
         try:
             self._loop.call_soon_threadsafe(callback, *args)
         except RuntimeError:
