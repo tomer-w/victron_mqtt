@@ -218,7 +218,7 @@ class TestTopicDescriptorPostInit:
         )
         assert desc.unit_of_measurement == "s"
         assert desc.value_type == ValueType.INT
-        assert desc.metric_nature == MetricNature.INSTANTANEOUS
+        assert desc.metric_nature == MetricNature.MEASUREMENT
         # Note: precision is reset to None by __post_init__ for non-float types
         assert desc.precision is None
         assert desc.min == 0

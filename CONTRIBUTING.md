@@ -162,7 +162,7 @@ Add a new entry to the `topic_map` dictionary:
     name="Human Readable Name",              # Display name
     unit_of_measurement="V",                 # Physical unit
     metric_type=MetricType.VOLTAGE,          # Measurement type
-    metric_nature=MetricNature.INSTANTANEOUS, # Measurement nature
+    metric_nature=MetricNature.MEASUREMENT, # Measurement nature
     device_type=DeviceType.BATTERY,          # Device category
     value_type=ValueType.FLOAT,              # Data type
     precision=1,                             # Decimal places
@@ -180,7 +180,7 @@ For multi-phase systems, use the `{phase}` placeholder in `short_id` and `name`:
     name="Grid voltage on {phase}",          # Will become "Grid voltage on L1"
     unit_of_measurement="V",
     metric_type=MetricType.VOLTAGE,
-    metric_nature=MetricNature.INSTANTANEOUS,
+    metric_nature=MetricNature.MEASUREMENT,
     device_type=DeviceType.GRID,
     value_type=ValueType.FLOAT,
     precision=1,
@@ -286,7 +286,7 @@ For metrics that can be controlled (switches, selects, numbers), use appropriate
     name="Battery minimum cell voltage",
     unit_of_measurement="V",
     metric_type=MetricType.VOLTAGE,
-    metric_nature=MetricNature.INSTANTANEOUS,
+    metric_nature=MetricNature.MEASUREMENT,
     device_type=DeviceType.BATTERY,
     value_type=ValueType.FLOAT,
     precision=3,
@@ -301,7 +301,7 @@ For metrics that can be controlled (switches, selects, numbers), use appropriate
     name="Tank level",
     unit_of_measurement="%",
     metric_type=MetricType.PERCENTAGE,
-    metric_nature=MetricNature.INSTANTANEOUS,
+    metric_nature=MetricNature.MEASUREMENT,
     device_type=DeviceType.TANK,  # You'd need to add this to DeviceType
     value_type=ValueType.FLOAT,
     precision=1,
@@ -316,7 +316,7 @@ For metrics that can be controlled (switches, selects, numbers), use appropriate
     name="Temperature",
     unit_of_measurement="°C",
     metric_type=MetricType.TEMPERATURE,
-    metric_nature=MetricNature.INSTANTANEOUS,
+    metric_nature=MetricNature.MEASUREMENT,
     device_type=DeviceType.TEMPERATURE,  # You'd need to add this to DeviceType
     value_type=ValueType.FLOAT,
     precision=1,

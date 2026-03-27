@@ -81,7 +81,7 @@ class TopicDescriptor:
             if self.precision is None:
                 self.precision = 3
             if self.metric_nature == MetricNature.NONE:
-                self.metric_nature = MetricNature.INSTANTANEOUS
+                self.metric_nature = MetricNature.MEASUREMENT
         # Power default
         if self.metric_type == MetricType.POWER:
             if self.unit_of_measurement is None:
@@ -91,7 +91,7 @@ class TopicDescriptor:
             if self.precision is None:
                 self.precision = 1
             if self.metric_nature == MetricNature.NONE:
-                self.metric_nature = MetricNature.INSTANTANEOUS
+                self.metric_nature = MetricNature.MEASUREMENT
         # Current default
         if self.metric_type == MetricType.CURRENT:
             if self.unit_of_measurement is None:
@@ -101,7 +101,7 @@ class TopicDescriptor:
             if self.precision is None:
                 self.precision = 1
             if self.metric_nature == MetricNature.NONE:
-                self.metric_nature = MetricNature.INSTANTANEOUS
+                self.metric_nature = MetricNature.MEASUREMENT
         # Energy default
         if self.metric_type == MetricType.ENERGY:
             if self.unit_of_measurement is None:
@@ -111,7 +111,7 @@ class TopicDescriptor:
             if self.precision is None:
                 self.precision = 1
             if self.metric_nature == MetricNature.NONE:
-                self.metric_nature = MetricNature.CUMULATIVE
+                self.metric_nature = MetricNature.TOTAL
         # frequency default
         if self.metric_type == MetricType.FREQUENCY:
             if self.unit_of_measurement is None:
@@ -121,7 +121,7 @@ class TopicDescriptor:
             if self.precision is None:
                 self.precision = 2
             if self.metric_nature == MetricNature.NONE:
-                self.metric_nature = MetricNature.INSTANTANEOUS
+                self.metric_nature = MetricNature.MEASUREMENT
         # Temperature default
         if self.metric_type == MetricType.TEMPERATURE:
             if self.unit_of_measurement is None:
@@ -131,7 +131,7 @@ class TopicDescriptor:
             if self.precision is None:
                 self.precision = 1
             if self.metric_nature == MetricNature.NONE:
-                self.metric_nature = MetricNature.INSTANTANEOUS
+                self.metric_nature = MetricNature.MEASUREMENT
         # Electric storage capacity default
         if self.metric_type == MetricType.ELECTRIC_STORAGE_CAPACITY:
             if self.unit_of_measurement is None:
@@ -141,7 +141,7 @@ class TopicDescriptor:
             if self.precision is None:
                 self.precision = 1
             if self.metric_nature == MetricNature.NONE:
-                self.metric_nature = MetricNature.INSTANTANEOUS
+                self.metric_nature = MetricNature.MEASUREMENT
         # Electric storage percentage default
         if self.metric_type == MetricType.ELECTRIC_STORAGE_PERCENTAGE:
             if self.unit_of_measurement is None:
@@ -151,7 +151,7 @@ class TopicDescriptor:
             if self.precision is None:
                 self.precision = 1
             if self.metric_nature == MetricNature.NONE:
-                self.metric_nature = MetricNature.INSTANTANEOUS
+                self.metric_nature = MetricNature.MEASUREMENT
             if self.min is None:
                 self.min = 0
             if self.max is None:
@@ -165,7 +165,7 @@ class TopicDescriptor:
             if self.precision is None:
                 self.precision = 1
             if self.metric_nature == MetricNature.NONE:
-                self.metric_nature = MetricNature.INSTANTANEOUS
+                self.metric_nature = MetricNature.MEASUREMENT
         # Time default
         if self.metric_type == MetricType.TIME:
             if self.unit_of_measurement is None:
@@ -173,7 +173,7 @@ class TopicDescriptor:
             if self.value_type is None:
                 self.value_type = ValueType.INT
             if self.metric_nature == MetricNature.NONE:
-                self.metric_nature = MetricNature.INSTANTANEOUS
+                self.metric_nature = MetricNature.MEASUREMENT
             if self.min is None:
                 self.min = 0
             if self.max is None:
@@ -187,7 +187,7 @@ class TopicDescriptor:
             if self.value_type is None:
                 self.value_type = ValueType.INT
             if self.metric_nature == MetricNature.NONE:
-                self.metric_nature = MetricNature.INSTANTANEOUS
+                self.metric_nature = MetricNature.MEASUREMENT
             if self.precision is None:
                 self.precision = 0
         # Cost default
@@ -197,7 +197,7 @@ class TopicDescriptor:
             if self.precision is None:
                 self.precision = 2
             if self.metric_nature == MetricNature.NONE:
-                self.metric_nature = MetricNature.INSTANTANEOUS
+                self.metric_nature = MetricNature.MEASUREMENT
         # General initialization
         if self.value_type not in [ValueType.FLOAT, ValueType.FLOAT_M3_TO_LITERS, ValueType.INT_SECONDS_TO_HOURS, ValueType.INT_SECONDS_TO_MINUTES]:
             self.precision = None

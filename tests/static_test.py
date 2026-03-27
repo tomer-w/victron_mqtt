@@ -188,10 +188,10 @@ def test_metric_nature_for_energy_and_power():
     MetricNature = get_metric_nature()
     errors = []
     for descriptor in topics:
-        if descriptor.metric_type == MetricType.ENERGY and descriptor.metric_nature != MetricNature.CUMULATIVE:
-            errors.append(f"Topic '{descriptor.topic}' has metric_type ENERGY but metric_nature is {descriptor.metric_nature} (should be CUMULATIVE)")
-        if descriptor.metric_type == MetricType.POWER and descriptor.metric_nature not in [MetricNature.INSTANTANEOUS, MetricNature.NONE]:
-            errors.append(f"Topic '{descriptor.topic}' has metric_type POWER but metric_nature is {descriptor.metric_nature} (should be INSTANTANEOUS)")
+        if descriptor.metric_type == MetricType.ENERGY and descriptor.metric_nature != MetricNature.TOTAL:
+            errors.append(f"Topic '{descriptor.topic}' has metric_type ENERGY but metric_nature is {descriptor.metric_nature} (should be TOTAL)")
+        if descriptor.metric_type == MetricType.POWER and descriptor.metric_nature not in [MetricNature.MEASUREMENT, MetricNature.NONE]:
+            errors.append(f"Topic '{descriptor.topic}' has metric_type POWER but metric_nature is {descriptor.metric_nature} (should be MEASUREMENT)")
     if errors:
         pytest.fail("\n".join(errors))
 

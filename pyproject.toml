@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "victron_mqtt"
-version = "2026.3.10"
+version = "2026.3.11"
 description = "Python library for communicating with Victron Venus OS MQTT interface"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -144,6 +144,9 @@ ignore = [
 "victron_mqtt/utils/*" = [
     "T201",    # print (CLI tool output)
 ]
+
+[tool.pylint.format]
+max-line-length = 120
 
 [project.scripts]
 victron_mqtt-dump-mqtt = "victron_mqtt.utils.dump_mqtt:main"

@@ -25,8 +25,9 @@ class MetricNature(Enum):
     """Nature of the metric."""
 
     NONE = "none"
-    INSTANTANEOUS = "instantaneous"
-    CUMULATIVE = "cumulative"
+    MEASUREMENT = "measurement"
+    TOTAL = "total"
+    TOTAL_INCREASING = "total_increasing"
 
 
 class MetricType(Enum):

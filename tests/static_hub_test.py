@@ -1791,7 +1791,7 @@ class TestMetricProperties:
 
     def test_metric_nature(self):
         m = _make_metric()
-        assert m.metric_nature == MetricNature.INSTANTANEOUS
+        assert m.metric_nature == MetricNature.MEASUREMENT
 
     def test_metric_kind(self):
         m = _make_metric()
