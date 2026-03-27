@@ -265,11 +265,14 @@ class Hub:
         for topic in self._pending_formula_topics:
             _LOGGER.info("Formula topic detected: %s", topic.topic)
         self._client = MQTTClient(callback_api_version=CallbackAPIVersion.VERSION2, client_id=self._client_id)
-        self._loop = asyncio.get_event_loop()
+        self._loop: asyncio.AbstractEventLoop | None = None
         _LOGGER.info("Hub initialized. Client ID: %s", self._client_id)
 
     def _schedule_threadsafe(self, callback: Callable[..., object], *args: object) -> None:
         """Schedule a callback on the event loop from any thread."""
+        if self._loop is None:
+            _LOGGER.debug("Event loop not yet set, callback %s not scheduled", callback.__name__)
+            return
         try:
             self._loop.call_soon_threadsafe(callback, *args)
         except RuntimeError:
@@ -279,6 +282,7 @@ class Hub:
         """Connect to the hub."""
         _LOGGER.info("Connecting to MQTT broker at %s:%d", self.host, self.port)
         assert self._client is not None
+        self._loop = asyncio.get_running_loop()
 
         # Based on https://community.victronenergy.com/t/cerbo-mqtt-webui-network-security-profile-configuration/34112
         # it seems that Cerbos will not allow you to configure username, only passwords.
