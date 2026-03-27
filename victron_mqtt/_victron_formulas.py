@@ -64,7 +64,7 @@ def schedule_charge_enabled_set(
     """Set schedule charge enabled state."""
 
     assert len(depends_on) == 1, "Expected exactly one input metric for schedule_charge_enabled"
-    enabled: GenericOnOff | None = value if isinstance(value, GenericOnOff) else GenericOnOff.from_string(value) #Support both the int value and the enum itself
+    enabled: GenericOnOff | None = value if isinstance(value, GenericOnOff) else GenericOnOff.from_id_or_string(value) #Support both the int value and the enum itself
     assert enabled is not None, "Failed to determine enabled state"
     metric = next(iter(depends_on.values()))
     assert isinstance(metric, WritableMetric), "Expected WritableMetric for schedule_charge_enabled_set"

@@ -134,7 +134,7 @@ def wrap_bitmask(bitmask_val: VictronEnum | str | Iterable[VictronEnum] | Iterab
         if isinstance(v, VictronEnum):
             val += int(v.code)
         else:
-            val += int(enum_expected.from_string(v).code)
+            val += int(enum_expected.from_id_or_string(v).code)
     return json.dumps({"value": val})
 
 def wrap_int(value: int | None) -> str:

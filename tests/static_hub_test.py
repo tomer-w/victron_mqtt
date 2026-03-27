@@ -2132,6 +2132,24 @@ class TestScheduleChargeFormulas:
         result = schedule_charge_enabled_set(GenericOnOff.OFF, {"m": metric}, None)
         assert result[0] == GenericOnOff.OFF
 
+    def test_schedule_set_with_string_id_off(self):
+        """Passing string id 'off' should resolve via from_id_or_string."""
+        metric = MagicMock(spec=WritableMetric)
+        schedule_val = MagicMock(spec=ChargeSchedule)
+        schedule_val.code = 1
+        type(metric).value = schedule_val
+        metric.value = schedule_val
+        result = schedule_charge_enabled_set("off", {"m": metric}, None)
+        assert result[0] == GenericOnOff.OFF
+
+    def test_schedule_set_with_string_id_on(self):
+        """Passing string id 'on' should resolve via from_id_or_string."""
+        metric = MagicMock(spec=WritableMetric)
+        metric.value = ChargeSchedule.DISABLED_SUNDAY
+        result = schedule_charge_enabled_set("on", {"m": metric}, None)
+        metric.set.assert_called_once_with(ChargeSchedule.SUNDAY)
+        assert result[0] == GenericOnOff.ON
+
 
 class TestLeftRiemannSum:
     """Test left_riemann_sum formula (lines 44-47)."""
