@@ -430,7 +430,7 @@ topics: list[TopicDescriptor] = [
         name="Time since last full charge",
         unit_of_measurement="seconds",
         metric_type=MetricType.NONE,
-        metric_nature=MetricNature.TOTAL_INCREASING,
+        metric_nature=MetricNature.TOTAL,
         value_type=ValueType.FLOAT,
     ),
     TopicDescriptor(
@@ -440,7 +440,7 @@ topics: list[TopicDescriptor] = [
         name="Cumulative Ah drawn",
         unit_of_measurement="Ah",
         metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
-        metric_nature=MetricNature.TOTAL_INCREASING,
+        metric_nature=MetricNature.TOTAL,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Info/ChargeMode",
