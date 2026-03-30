@@ -23,7 +23,7 @@ class DeviceType(VictronDeviceEnum):
     MULTI_RS_SOLAR = ("multi", "multi_rs_solar", "Multi RS Solar")
     CGWACS = ("CGwacs", "cgwacs", "<Not used>", "system") # Should be mapped to SYSTEM
     DC_LOAD = ("dcload", "dc_load", "DC Load")
-    ALTERNATOR = ("alternator", "alternator", "Charger (Orion/Alternator)")
+    ALTERNATOR = ("alternator", "alternator", "Alternator Charger") # Orion XS 1400 in alternator to battery charging mode.
     SWITCH = ("switch", "switch", "Switch")
     GPS = ("gps", "gps", "Gps")
     SYSTEM_SETUP = ("SystemSetup", "system_setup", "System Setup", "system") # Should be mapped to SYSTEM
@@ -38,6 +38,7 @@ class DeviceType(VictronDeviceEnum):
     CHARGER = ("charger", "charger", "Charger")
     HUB4 = ("hub4", "hub4", "Hub4")
     ACSYSTEM = ("acsystem", "acsystem", "AC System", "system") # Should be mapped to SYSTEM
+    DCDC = ("dcdc", "dcdc", "DC/DC Charger")  # Orion XS 1400 in battery to battery charging mode.
 
 
 class GenericOnOff(VictronEnum):
