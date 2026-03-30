@@ -8,3 +8,10 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
+      - id: static-tests
+        name: Run static tests
+        entry: hatch test tests/static_test.py tests/static_hub_test.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

@@ -8133,6 +8133,28 @@
       "is_formula": false
     },
     {
+      "topic": "N/{installation_id}/vebus/{device_id}/Dc/0/Voltage",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "vebus_inverter_dc_voltage",
+      "name": "DC voltage",
+      "unit_of_measurement": "V",
+      "metric_type": "MetricType.VOLTAGE",
+      "metric_nature": "MetricNature.MEASUREMENT",
+      "value_type": "ValueType.FLOAT",
+      "precision": 3,
+      "enum": null,
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "DC voltage",
+      "is_formula": false
+    },
+    {
       "topic": "N/{installation_id}/vebus/{device_id}/Devices/{device_number}/Ac/In/P",
       "message_type": "MetricKind.SENSOR",
       "short_id": "vebus_device_{device_number}_input_power_l1",
