@@ -56,10 +56,13 @@ jobs:
       - name: Post test summary to PR
         if: github.event_name == 'pull_request_target'
         uses: actions/github-script@v8
+        env:
+          TEST_EXIT_CODE: ${{ steps.tests.outputs.exit_code }}
+          TEST_SUMMARY: ${{ steps.tests.outputs.summary }}
         with:
           script: |
-            const exitCode = '${{ steps.tests.outputs.exit_code }}';
-            const summary = `${{ steps.tests.outputs.summary }}`;
+            const exitCode = process.env.TEST_EXIT_CODE;
+            const summary = process.env.TEST_SUMMARY;
             const icon = exitCode === '0' ? '✅' : '❌';
             const status = exitCode === '0' ? 'passed' : 'failed';
             const body = `## ${icon} Static Tests ${status}\n\n\`\`\`\n${summary}\n\`\`\``;
