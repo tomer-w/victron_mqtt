@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  pull_request_target:
+  pull_request:
     types: [opened, reopened, synchronize]
   workflow_dispatch:
         inputs:
@@ -15,20 +15,12 @@ on:
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
   static_tests:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code (PR)
-        if: github.event_name == 'pull_request_target'
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: Checkout code (non-PR)
-        if: github.event_name != 'pull_request_target'
+      - name: Checkout code
         uses: actions/checkout@v6
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -53,42 +45,23 @@ jobs:
             echo "$SUMMARY"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
-      - name: Post test summary to PR
-        if: github.event_name == 'pull_request_target'
-        uses: actions/github-script@v8
+      - name: Save test results
+        if: always() && github.event_name == 'pull_request'
+        shell: bash
         env:
           TEST_EXIT_CODE: ${{ steps.tests.outputs.exit_code }}
           TEST_SUMMARY: ${{ steps.tests.outputs.summary }}
+        run: |
+          mkdir -p ./test-results
+          echo "${{ github.event.number }}" > ./test-results/pr_number
+          echo "$TEST_EXIT_CODE" > ./test-results/exit_code
+          echo "$TEST_SUMMARY" > ./test-results/summary
+      - name: Upload test results
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
         with:
-          script: |
-            const exitCode = process.env.TEST_EXIT_CODE;
-            const summary = process.env.TEST_SUMMARY;
-            const icon = exitCode === '0' ? '✅' : '❌';
-            const status = exitCode === '0' ? 'passed' : 'failed';
-            const body = `## ${icon} Static Tests ${status}\n\n\`\`\`\n${summary}\n\`\`\``;
-
-            // Delete previous bot comments for this workflow
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            for (const comment of comments) {
-              if (comment.user.type === 'Bot' && comment.body.includes('Static Tests')) {
-                await github.rest.issues.deleteComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: comment.id,
-                });
-              }
-            }
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body,
-            });
+          name: test-results
+          path: test-results/
       - name: Fail if tests failed
         if: steps.tests.outputs.exit_code != '0'
         run: exit 1
