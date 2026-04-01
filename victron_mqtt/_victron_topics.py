@@ -696,15 +696,6 @@ topics: list[TopicDescriptor] = [
         enum=ChargerMode,
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/dcdc/{device_id}/Settings/ChargeCurrentLimit",
-        message_type=MetricKind.NUMBER,
-        short_id="dcdc_charge_current_limit",
-        name="Charge current limit",
-        metric_type=MetricType.CURRENT,
-        min=0,
-        max=200,
-    ),
-    TopicDescriptor(
         topic="N/{installation_id}/dcdc/{device_id}/State",
         message_type=MetricKind.SENSOR,
         short_id="dcdc_state",
