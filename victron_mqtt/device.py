@@ -215,24 +215,20 @@ class Device:
         return self._unique_id
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the device."""
-        if (custom_name := self.custom_name):
-            return custom_name
-        if (model := self.model):
-            return model
-        return self.device_type.string
+        if self._custom_name:
+            return self._custom_name
+
+        name = self.model or self.device_type.string
+        if self._device_id != "0":
+            name += f" (ID: {self._device_id})"
+        return name
 
     @property
     def model(self) -> str | None:
         """Return the model of the device."""
-        if (model := self._model):
-            return model
-
-        if self._device_type == DeviceType.SYSTEM:
-            return "Victron Venus"
-
-        return None
+        return self._model
 
     @property
     def manufacturer(self) -> str | None:

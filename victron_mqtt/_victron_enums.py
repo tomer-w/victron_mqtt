@@ -7,7 +7,7 @@ class DeviceType(VictronDeviceEnum):
     # This is used to identify the type of device in the system.
     # BEWARE!!! The code is used for mapping from the victron topic, IT IS NOT RANDOM FREE TEXT. The string is used for display purposes.
     # For settings this will be used to identify the device type in the settings.
-    SYSTEM = ("system", "system", "System")
+    SYSTEM = ("system", "system", "Victron Venus")
     SOLAR_CHARGER = ("solarcharger", "solar_charger", "Solar Charger")
     INVERTER = ("inverter", "inverter", "Inverter")
     BATTERY = ("battery", "battery", "Battery")

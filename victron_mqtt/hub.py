@@ -300,7 +300,7 @@ class Hub:
         self._client.on_connect = self._on_connect
         self._client.on_disconnect = self._on_disconnect
         self._client.on_message = self._on_message
-        self._client._on_connect_fail = self._on_connect_fail
+        self._client.on_connect_fail = self._on_connect_fail
         #self._client.on_log = self._on_log
         self._connect_failed_attempts = 0
         self._connect_failed_since = 0.0

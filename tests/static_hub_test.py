@@ -116,6 +116,9 @@ async def test_phase_message():
     device = hub.devices["grid_30"]
     assert device.device_type == DeviceType.GRID, f"Expected metric type to be 'grid', got {device.device_type}"
     assert device.unique_id == "grid_30", f"Expected device unique_id to be 'grid_30', got {device.unique_id}"
+    assert device.model is None, f"Expected device model to be None, got {device.model}"
+    assert device.manufacturer is None, f"Expected device manufacturer to be None, got {device.manufacturer}"
+    assert device.name == "Grid (ID: 30)", f"Expected device name to be 'Grid (ID: 30)', got {device.name}"
     metric = device.get_metric("grid_energy_forward_l1")
     metric2 = hub.get_metric("grid_30_grid_energy_forward_l1")
     assert metric == metric2, "Metrics should be equal"
@@ -1538,7 +1541,7 @@ def _make_metric(descriptor=None, hub=None, **overrides) -> Metric:
     return m
 
 
-def _make_parsed_topic(device_type=DeviceType.BATTERY, device_id="0", installation_id="123") -> ParsedTopic:
+def _make_parsed_topic(device_type: DeviceType, device_id: str, installation_id: str) -> ParsedTopic:
     return ParsedTopic(
         installation_id=installation_id,
         device_id=device_id,
@@ -1549,8 +1552,8 @@ def _make_parsed_topic(device_type=DeviceType.BATTERY, device_id="0", installati
     )
 
 
-def _make_device(device_type=DeviceType.BATTERY, device_id="0") -> Device:
-    pt = _make_parsed_topic(device_type=device_type, device_id=device_id)
+def _make_device(device_type: DeviceType = DeviceType.BATTERY, device_id: str = "0") -> Device:
+    pt = _make_parsed_topic(device_type=device_type, device_id=device_id, installation_id="123")
     desc = _make_descriptor()
     return Device(unique_id=f"{device_type.code}_{device_id}", parsed_topic=pt, descriptor=desc)
 
@@ -1829,7 +1832,7 @@ class TestMetricKeepalive:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Device tests (from test_coverage.py)
+# Device tests
 # ═══════════════════════════════════════════════════════════════════════════
 
 class TestDeviceProperties:
@@ -1913,10 +1916,6 @@ class TestDeviceProperties:
     def test_device_name_fallback_to_type(self):
         dev = _make_device()
         assert dev.name == "Battery"
-
-    def test_system_device_model(self):
-        dev = _make_device(device_type=DeviceType.SYSTEM)
-        assert dev.model == "Victron Venus"
 
     def test_fallback_placeholder_repr(self):
         dev = _make_device()
