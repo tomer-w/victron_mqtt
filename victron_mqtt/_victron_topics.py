@@ -4,8 +4,8 @@ Maps all the MQTT topics to either attributes or metrics.
 
 from ._victron_enums import (
     AcActiveInputSource,
-    ActiveInputEnum,
     ACSYSTEMMode,
+    ActiveInputEnum,
     BatteryState,
     ChargerMode,
     ChargeSchedule,
@@ -238,6 +238,7 @@ topics: list[TopicDescriptor] = [
         name="Cell imbalance",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Alarms/HighChargeCurrent",
@@ -246,6 +247,7 @@ topics: list[TopicDescriptor] = [
         name="High charge current",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Alarms/HighChargeTemperature",
@@ -254,6 +256,7 @@ topics: list[TopicDescriptor] = [
         name="High charge temperature",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Alarms/HighDischargeCurrent",
@@ -270,6 +273,7 @@ topics: list[TopicDescriptor] = [
         name="Internal failure",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Alarms/LowCellVoltage",
@@ -278,6 +282,7 @@ topics: list[TopicDescriptor] = [
         name="Low cell voltage",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Alarms/LowChargeTemperature",
@@ -286,6 +291,7 @@ topics: list[TopicDescriptor] = [
         name="Low charge temperature",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Capacity",
@@ -761,6 +767,7 @@ topics: list[TopicDescriptor] = [
         name="Alarm",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/digitalinput/{device_id}/InputState",
@@ -823,6 +830,7 @@ topics: list[TopicDescriptor] = [
         name="Connected",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.CONNECTIVITY,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/evcharger/{device_id}/Current",
@@ -989,6 +997,7 @@ topics: list[TopicDescriptor] = [
         name="Connected",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.CONNECTIVITY,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Course",
@@ -1178,7 +1187,7 @@ topics: list[TopicDescriptor] = [
         name="GX system heartbeat",
         value_type=ValueType.INT,
         metric_type=MetricType.DURATION,
-   ),
+    ),
     # Heatpump topics
     TopicDescriptor(
         topic="N/{installation_id}/heatpump/{device_id}/Ac/Current",
@@ -1290,6 +1299,7 @@ topics: list[TopicDescriptor] = [
         name="High temperature alarm",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/HighVoltage",
@@ -1298,6 +1308,7 @@ topics: list[TopicDescriptor] = [
         name="High voltage alarm",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/HighVoltageAcOut",
@@ -1306,6 +1317,7 @@ topics: list[TopicDescriptor] = [
         name="High voltage AC-out alarm",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/LowTemperature",
@@ -1314,6 +1326,7 @@ topics: list[TopicDescriptor] = [
         name="Low temperature alarm",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/LowVoltage",
@@ -1322,6 +1335,7 @@ topics: list[TopicDescriptor] = [
         name="Low voltage alarm",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/LowVoltageAcOut",
@@ -1330,6 +1344,7 @@ topics: list[TopicDescriptor] = [
         name="Low voltage AC-out alarm",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/Overload",
@@ -1338,6 +1353,7 @@ topics: list[TopicDescriptor] = [
         name="Overload alarm",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Alarms/Ripple",
@@ -1346,6 +1362,7 @@ topics: list[TopicDescriptor] = [
         name="Ripple alarm",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Mode",
@@ -1787,7 +1804,7 @@ topics: list[TopicDescriptor] = [
         short_id="system_ess_schedule_charge_{slot}_enabled",
         name="ESS BatteryLife schedule charge {slot} enabled",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Duration",
@@ -1795,10 +1812,10 @@ topics: list[TopicDescriptor] = [
         short_id="system_ess_schedule_charge_{slot}_duration",
         name="ESS BatteryLife schedule charge {slot} duration",
         metric_type=MetricType.DURATION,
-        unit_of_measurement = "min",
-        value_type = ValueType.INT_SECONDS_TO_MINUTES,
-        min = 0,
-        max = 1440, # 24 hours maximum
+        unit_of_measurement="min",
+        value_type=ValueType.INT_SECONDS_TO_MINUTES,
+        min=0,
+        max=1440,  # 24 hours maximum
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Soc",
@@ -2129,7 +2146,7 @@ topics: list[TopicDescriptor] = [
         name="ESS max charge voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
-        step=0.1
+        step=0.1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/TransferSwitch/GeneratorCurrentLimit",
@@ -2558,7 +2575,7 @@ topics: list[TopicDescriptor] = [
         short_id="system_dc_battery_state",
         name="DC battery state",
         value_type=ValueType.ENUM,
-        enum=BatteryState
+        enum=BatteryState,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Dc/Battery/Voltage",
@@ -2968,6 +2985,7 @@ topics: list[TopicDescriptor] = [
         name="Grid lost alarm",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Alarms/HighDcCurrent",
@@ -2976,6 +2994,7 @@ topics: list[TopicDescriptor] = [
         name="High DC current alarm",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Alarms/HighDcVoltage",
@@ -2984,6 +3003,7 @@ topics: list[TopicDescriptor] = [
         name="High DC voltage alarm",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Alarms/HighTemperature",
@@ -2992,6 +3012,7 @@ topics: list[TopicDescriptor] = [
         name="High temperature alarm",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Alarms/LowBattery",
@@ -3000,6 +3021,7 @@ topics: list[TopicDescriptor] = [
         name="Low battery alarm",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Alarms/Overload",
@@ -3008,6 +3030,7 @@ topics: list[TopicDescriptor] = [
         name="Overload alarm",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Alarms/PhaseRotation",
@@ -3016,6 +3039,7 @@ topics: list[TopicDescriptor] = [
         name="Phase rotation alarm",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Alarms/Ripple",
@@ -3024,6 +3048,7 @@ topics: list[TopicDescriptor] = [
         name="Ripple alarm",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Alarms/TemperatureSensor",
@@ -3032,6 +3057,7 @@ topics: list[TopicDescriptor] = [
         name="Temperature sensor alarm",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Alarms/VoltageSensor",
@@ -3040,6 +3066,7 @@ topics: list[TopicDescriptor] = [
         name="Voltage sensor alarm",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Connected",
@@ -3048,6 +3075,7 @@ topics: list[TopicDescriptor] = [
         name="Connected",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.CONNECTIVITY,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Dc/0/Current",
@@ -3214,6 +3242,7 @@ topics: list[TopicDescriptor] = [
         name="Grid lost alarm setting",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Settings/AssistCurrentBoostFactor",
