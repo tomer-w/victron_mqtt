@@ -104,9 +104,15 @@ def main():
             if 'sensor' not in entity:
                 entity['sensor'] = {}
             entity['sensor'][translation_key] = entity_entry
+    # Entity types to include in the output. Add more as platforms are added.
+    # To publish all entity types, replace this with: INCLUDED_ENTITY_TYPES = None
+    INCLUDED_ENTITY_TYPES = {"sensor"}
+
     # Sort the entity dictionary and its nested dictionaries
     sorted_entity = {}
     for entity_type in sorted(entity.keys()):
+        if INCLUDED_ENTITY_TYPES is not None and entity_type not in INCLUDED_ENTITY_TYPES:
+            continue
         sorted_entity[entity_type] = {}
         for translation_key in sorted(entity[entity_type].keys()):
             entry = entity[entity_type][translation_key]
@@ -130,6 +136,7 @@ def main():
 
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(en, f, ensure_ascii=False, indent=2, sort_keys=True)
+        f.write('\n')
 
     print(f"Updated {count} entities")
 
