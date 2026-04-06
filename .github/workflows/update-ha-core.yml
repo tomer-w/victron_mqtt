@@ -1,0 +1,137 @@
+name: Update Home Assistant Core Integration
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  update-ha-core:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout victron_mqtt
+        uses: actions/checkout@v4
+        with:
+          path: victron_mqtt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Get new victron_mqtt version
+        id: new_version
+        run: |
+          VERSION=$(python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('victron_mqtt/pyproject.toml').read_text())['project']['version'])")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Home Assistant Core
+        uses: actions/checkout@v4
+        with:
+          repository: home-assistant/core
+          ref: dev
+          path: core
+          token: ${{ secrets.HA_CORE_PAT }}
+
+      - name: Get current version from manifest
+        id: current_version
+        run: |
+          CURRENT=$(python -c "
+          import json, pathlib
+          m = json.loads(pathlib.Path('core/homeassistant/components/victron_gx/manifest.json').read_text())
+          req = [r for r in m['requirements'] if 'victron-mqtt' in r][0]
+          print(req.split('==')[1])
+          ")
+          echo "version=$CURRENT" >> "$GITHUB_OUTPUT"
+
+      - name: Check if update is needed
+        id: check
+        run: |
+          if [ "${{ steps.current_version.outputs.version }}" = "${{ steps.new_version.outputs.version }}" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Version ${{ steps.new_version.outputs.version }} already in HA core, skipping."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Updating from ${{ steps.current_version.outputs.version }} to ${{ steps.new_version.outputs.version }}"
+          fi
+
+      - name: Update manifest.json
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          cd core
+          sed -i 's/victron-mqtt==${{ steps.current_version.outputs.version }}/victron-mqtt==${{ steps.new_version.outputs.version }}/g' homeassistant/components/victron_gx/manifest.json
+
+      - name: Update requirements_all.txt and requirements_test_all.txt
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          cd core
+          sed -i 's/victron-mqtt==${{ steps.current_version.outputs.version }}/victron-mqtt==${{ steps.new_version.outputs.version }}/g' requirements_all.txt
+          sed -i 's/victron-mqtt==${{ steps.current_version.outputs.version }}/victron-mqtt==${{ steps.new_version.outputs.version }}/g' requirements_test_all.txt
+
+      - name: Update strings.json
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          python victron_mqtt/.github/scripts/merge_topics.py \
+            --topics victron_mqtt/victron_mqtt.json \
+            --strings core/homeassistant/components/victron_gx/strings.json
+
+      - name: Create Pull Request
+        if: steps.check.outputs.skip != 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.HA_CORE_PAT }}
+          path: core
+          push-to-fork: tomer-w/core
+          branch: victron-gx/bump-${{ steps.new_version.outputs.version }}
+          delete-branch: true
+          base: dev
+          title: "Bump victron-mqtt to ${{ steps.new_version.outputs.version }}"
+          commit-message: "Bump victron-mqtt to ${{ steps.new_version.outputs.version }}"
+          body: |
+            ## Proposed change
+
+            Bump `victron-mqtt` library from `${{ steps.current_version.outputs.version }}` to `${{ steps.new_version.outputs.version }}` for the `victron_gx` integration.
+
+            Changes include:
+            - Update `victron-mqtt` dependency version in `manifest.json`, `requirements_all.txt`, and `requirements_test_all.txt`
+            - Update entity translations (`strings.json`) from latest topic definitions
+
+            Changelog: https://github.com/tomer-w/victron_mqtt/releases/tag/v${{ steps.new_version.outputs.version }}
+
+            ## Type of change
+
+            - [x] Dependency upgrade
+
+            ## Additional information
+
+            - This PR is related to issue:
+            - Link to documentation pull request:
+
+            ## Checklist
+
+            - [x] I understand the code I am submitting and can explain how it works.
+            - [x] The code change is tested and works locally.
+            - [x] Local tests pass. **Your PR cannot be merged unless tests pass**
+            - [x] There is no commented out code in this PR.
+            - [x] I have followed the [development checklist][dev-checklist]
+            - [x] I have followed the [perfect PR recommendations][perfect-pr]
+            - [x] The code has been formatted using Ruff (`ruff format homeassistant tests`)
+            - [ ] Tests have been added to verify that the new code works.
+            - [x] Any generated code has been carefully reviewed for correctness and compliance with project standards.
+
+            If the code communicates with devices, web services, or third-party tools:
+
+            - [x] The [manifest file][manifest-docs] has all fields filled out correctly.
+                  Updated and included derived files by running: `python3 -m script.hassfest`.
+            - [x] New or updated dependencies have been added to `requirements_all.txt`.
+                  Updated by running `python3 -m script.gen_requirements_all`.
+            - [x] For the updated dependencies a diff between library versions and ideally a link to the changelog/release notes is added to the PR description.
+
+            To help with the load of incoming pull requests:
+
+            - [ ] I have reviewed two other [open pull requests][prs] in this repository.
+
+            [prs]: https://github.com/home-assistant/core/pulls?q=is%3Aopen+is%3Apr+-author%3A%40m+-draft%3Atrue+-label%3Awaiting-for-upstream+sort%3Acreated-desc+review%3Anone+-status%3Afailure
+            [dev-checklist]: https://developers.home-assistant.io/docs/development_checklist/
+            [manifest-docs]: https://developers.home-assistant.io/docs/creating_integration_manifest/
+            [perfect-pr]: https://developers.home-assistant.io/docs/review-process/#creating-the-perfect-pr
