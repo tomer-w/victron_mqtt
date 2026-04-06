@@ -106,7 +106,7 @@ def main():
             entity['sensor'][translation_key] = entity_entry
     # Entity types to include in the output. Add more as platforms are added.
     # To publish all entity types, replace this with: INCLUDED_ENTITY_TYPES = None
-    INCLUDED_ENTITY_TYPES = {"sensor"}
+    INCLUDED_ENTITY_TYPES = {"sensor", "binary_sensor"}
 
     # Sort the entity dictionary and its nested dictionaries
     sorted_entity = {}
