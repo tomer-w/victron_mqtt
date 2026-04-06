@@ -248,6 +248,28 @@ def test_no_literal_phase_identifiers():
     if errors:
         pytest.fail("\n".join(errors))
 
+def test_problem_and_connectivity_have_on_off_enum():
+    """Ensure PROBLEM and CONNECTIVITY topics have an enum with exactly two states: id='on' and id='off'."""
+    topics = get_topics()
+    MetricType = get_metric_type()
+    errors = []
+    for descriptor in topics:
+        if descriptor.metric_type not in (MetricType.PROBLEM, MetricType.CONNECTIVITY):
+            continue
+        if descriptor.enum is None:
+            errors.append(f"Topic '{descriptor.topic}' has metric_type {descriptor.metric_type} but no enum defined")
+            continue
+        members = list(descriptor.enum)
+        member_ids = {m.id for m in members}
+        if len(members) != 2:
+            errors.append(f"Topic '{descriptor.topic}' enum {descriptor.enum.__name__} has {len(members)} members (expected 2)")
+        if "on" not in member_ids:
+            errors.append(f"Topic '{descriptor.topic}' enum {descriptor.enum.__name__} missing member with id='on'")
+        if "off" not in member_ids:
+            errors.append(f"Topic '{descriptor.topic}' enum {descriptor.enum.__name__} missing member with id='off'")
+    if errors:
+        pytest.fail("\n".join(errors))
+
 def test_no_invalid_double_slash():
     topics = get_topics()
     errors = []
