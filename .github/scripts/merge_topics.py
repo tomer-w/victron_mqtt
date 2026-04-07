@@ -121,14 +121,15 @@ def main():
             if "unit_of_measurement" in entry:
                 sorted_entry["unit_of_measurement"] = entry["unit_of_measurement"]
             if "state" in entry:
-                # For binary_sensor, skip state if it only has on/off options
+                # For binary_sensor and switches, skip state if it only has on/off options
                 state_keys = set(entry["state"].keys())
-                if entity_type == "binary_sensor" and state_keys <= {"on", "off"}:
+                if entity_type in ["binary_sensor", "switch"] and state_keys <= {"on", "off"}:
                     pass
                 else:
                     # Sort the state dictionary alphabetically by key
                     sorted_entry["state"] = dict(sorted(entry["state"].items()))
-            sorted_entity[entity_type][translation_key] = sorted_entry
+            if sorted_entry:
+                sorted_entity[entity_type][translation_key] = sorted_entry
 
     en["entity"] = sorted_entity
 
