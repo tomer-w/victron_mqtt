@@ -3,8 +3,8 @@ Maps all the MQTT topics to either attributes or metrics.
 """
 
 from ._victron_enums import (
-    AcActiveInputSource,
-    ACSYSTEMMode,
+    ACActiveInputSource,
+    ACSystemMode,
     ActiveInputEnum,
     BatteryState,
     ChargerMode,
@@ -160,7 +160,8 @@ topics: list[TopicDescriptor] = [
         short_id="acsystem_mode",
         name="Mode",
         value_type=ValueType.ENUM,
-        enum=ACSYSTEMMode,
+        enum=ACSystemMode,
+        main_topic=True,
     ),
     # Alternator topics
     TopicDescriptor(
@@ -212,6 +213,8 @@ topics: list[TopicDescriptor] = [
         name="Mode",
         value_type=ValueType.ENUM,
         enum=ChargerMode,
+        main_topic=True,
+        metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/alternator/{device_id}/Settings/ChargeCurrentLimit",
@@ -650,7 +653,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=State,
     ),
-    # Orion XS 1400 Batery Output Mode
+    # Orion XS 1400 Battery Output Mode
     TopicDescriptor(
         topic="N/{installation_id}/dcdc/{device_id}/Dc/0/Current",
         message_type=MetricKind.SENSOR,
@@ -700,6 +703,8 @@ topics: list[TopicDescriptor] = [
         name="Mode",
         value_type=ValueType.ENUM,
         enum=ChargerMode,
+        main_topic=True,
+        metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/dcdc/{device_id}/State",
@@ -1371,6 +1376,7 @@ topics: list[TopicDescriptor] = [
         name="Mode",
         value_type=ValueType.ENUM,
         enum=PhoenixInverterMode,
+        main_topic=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/inverter/{device_id}/Pv/V",
@@ -1622,6 +1628,7 @@ topics: list[TopicDescriptor] = [
         name="MPPT {mpptnumber} state",
         value_type=ValueType.ENUM,
         enum=MppOperationMode,
+        main_topic=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Pv/{mpptnumber}/P",
@@ -2299,6 +2306,7 @@ topics: list[TopicDescriptor] = [
         name="Mode",
         value_type=ValueType.ENUM,
         enum=ChargerMode,
+        main_topic=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/MppOperationMode",
@@ -2408,7 +2416,7 @@ topics: list[TopicDescriptor] = [
         short_id="system_ac_active_input_source",
         name="AC active input source",
         value_type=ValueType.ENUM,
-        enum=AcActiveInputSource,
+        enum=ACActiveInputSource,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Ac/Consumption/NumberOfPhases",
@@ -2877,7 +2885,7 @@ topics: list[TopicDescriptor] = [
         short_id="vebus_inverter_active_input",
         name="Active AC input",
         value_type=ValueType.ENUM,
-        enum=AcActiveInputSource,
+        enum=ACActiveInputSource,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Ac/ActiveIn/CurrentLimit",
@@ -3234,6 +3242,7 @@ topics: list[TopicDescriptor] = [
         name="Mode",
         value_type=ValueType.ENUM,
         enum=InverterMode,
+        main_topic=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Settings/Alarm/System/GridLost",

@@ -33,10 +33,11 @@ def topic_to_device_type(topic_parts: list[str]) -> DeviceType | None:
 @dataclass
 class TopicDescriptor:
     """Describes the topic, how to map it and how to parse it."""
+
     topic: str
     message_type: MetricKind
     short_id: str  # Unique short id of the attribute/value
-    name: str | None  = None # More user friendly name, doesnt have to be unique
+    name: str | None = None  # More user friendly name, doesnt have to be unique
     unit_of_measurement: str | None = None
     metric_type: MetricType = MetricType.NONE
     metric_nature: MetricNature = MetricNature.NONE
@@ -53,9 +54,10 @@ class TopicDescriptor:
     # Depends on format is different for regular and formula topics:
     # For regular topics, the depends_on list contains the {device_id}_{metric_short_id} of the metric it depends on
     # For formula topics, the depends_on list contains the {device_type}_{metric_short_id} of the metrics it depends on as it will be generated for all device ids from the specific device type
-    depends_on: list[str] = field(default_factory=list)
+    depends_on: list[str] = field(default_factory=list[str])
     generic_name: str | None = None
     is_formula: bool = False  # True if this topic is calculated from other topics
+    main_topic: bool = False  # True if this topic is the main topic for the dvice. Not all devices has to have main entity, but if it has, it should be the one with main_topic = True.
 
     def __repr__(self) -> str:
         """Return a string representation of the topic."""
@@ -199,7 +201,12 @@ class TopicDescriptor:
             if self.metric_nature == MetricNature.NONE:
                 self.metric_nature = MetricNature.MEASUREMENT
         # General initialization
-        if self.value_type not in [ValueType.FLOAT, ValueType.FLOAT_M3_TO_LITERS, ValueType.INT_SECONDS_TO_HOURS, ValueType.INT_SECONDS_TO_MINUTES]:
+        if self.value_type not in [
+            ValueType.FLOAT,
+            ValueType.FLOAT_M3_TO_LITERS,
+            ValueType.INT_SECONDS_TO_HOURS,
+            ValueType.INT_SECONDS_TO_MINUTES,
+        ]:
             self.precision = None
 
 
@@ -263,15 +270,19 @@ class ParsedTopic:
         device_type = topic_to_device_type(topic_parts)
         wildcard_topic_parts = topic_parts.copy()
         wildcard_topic_parts[1] = "##installation_id##"
-        if device_type is None: # This can happen as we register for the attribute topics so we get them for devices we dont have topics for
+        if (
+            device_type is None
+        ):  # This can happen as we register for the attribute topics so we get them for devices we dont have topics for
             _LOGGER.debug("Unknown device type for topic: %s", topic)
             # If the device type is unknown, we cannot create a ParsedTopic
             return None
 
-        #Special handling for root topic. Currently only: N/##installation_id##/heartbeat
+        # Special handling for root topic. Currently only: N/##installation_id##/heartbeat
         if len(topic_parts) == 3:
             device_id = "0"
-            wildcards_without_device_type = wildcards_with_device_type = ParsedTopic.normalize_topic("/".join(wildcard_topic_parts))
+            wildcards_without_device_type = wildcards_with_device_type = ParsedTopic.normalize_topic(
+                "/".join(wildcard_topic_parts)
+            )
         else:
             device_id = topic_parts[3]
             wildcard_topic_parts[3] = "##device_id##"
@@ -333,7 +344,7 @@ class ParsedTopic:
                 continue
             if all(
                 dp == ip or (dp.startswith("{") and dp.endswith("}"))
-                for dp, ip in zip(desc_parts, topic_parts)
+                for dp, ip in zip(desc_parts, topic_parts, strict=False)
             ):
                 return topic_desc
 
@@ -363,6 +374,7 @@ class ParsedTopic:
     @staticmethod
     def replace_ids(string: str, key_values: dict[str, str]) -> str:
         """Replace placeholders in the string with matched items from self.key_values."""
+
         def replace_match(match: re.Match[str]) -> str:
             key = match.group(1)
             if key in key_values:
@@ -381,7 +393,7 @@ class ParsedTopic:
         for i, part in enumerate(topic_descriptor_parts):
             if part.startswith("{") and part.endswith("}"):
                 result_key_values[part.strip("{}")] = topic_parts[i]
-        #hack for next phase
+        # hack for next phase
         if "phase" in result_key_values:
             result_key_values["next_phase"] = ParsedTopic._get_next_phase(result_key_values["phase"])
         return result_key_values

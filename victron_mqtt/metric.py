@@ -25,10 +25,21 @@ _LOGGER = logging.getLogger(__name__)
 
 CallbackOnUpdate = Callable[["Metric", Any], None]
 
+
 class Metric:
     """Representation of a Victron Venus sensor."""
 
-    def __init__(self, *, device: Device | None = None, name: str | None = None, descriptor: TopicDescriptor | None = None, unique_id: str | None = None, short_id: str | None = None, key_values: dict[str, str] | None = None, hub: Hub | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        device: Device | None = None,
+        name: str | None = None,
+        descriptor: TopicDescriptor | None = None,
+        unique_id: str | None = None,
+        short_id: str | None = None,
+        key_values: dict[str, str] | None = None,
+        hub: Hub | None = None,
+    ) -> None:
         """Initialize the sensor."""
         assert device is not None
         assert name is not None
@@ -40,14 +51,16 @@ class Metric:
         assert hub is not None
         _LOGGER.debug(
             "Creating new metric: short_id=%s, type=%s, nature=%s",
-            short_id, descriptor.metric_type, descriptor.metric_nature
+            short_id,
+            descriptor.metric_type,
+            descriptor.metric_nature,
         )
         self._device: Device = device
         self._descriptor: TopicDescriptor = descriptor
         self._unique_id: str = unique_id
         self._value: Any = None
         self._short_id: str = short_id
-        self._name: str  = name
+        self._name: str = name
         self._key_values: dict[str, str] = key_values
         self._on_update: CallbackOnUpdate | None = None
         self._depend_on_me: list[FormulaMetric] = []
@@ -70,7 +83,7 @@ class Metric:
             f"short_id={self._short_id}, "
             f"name={self._name}, "
             f"{key_values_part})"
-            )
+        )
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -83,8 +96,8 @@ class Metric:
 
     def _replace_ids(self, orig_str: str, device_id: str, all_metrics: dict[str, Metric]) -> str:
         def replace_match(match: re.Match[str]) -> str:
-            moniker = match.group('moniker')
-            key, suffix = moniker.split(':', 1)
+            moniker = match.group("moniker")
+            key, suffix = moniker.split(":", 1)
             assert key, f"Invalid moniker format: {moniker} in topic: {orig_str}"
             assert suffix, f"Invalid moniker format: {moniker} in topic: {orig_str}"
             metric = all_metrics.get(f"{device_id}_{suffix}")
@@ -174,6 +187,11 @@ class Metric:
         return self._descriptor.precision
 
     @property
+    def main_topic(self) -> bool:
+        """Returns whether the metric is the main topic for the device."""
+        return self._descriptor.main_topic
+
+    @property
     def unique_id(self) -> str:
         """Return the unique id of the metric."""
         return self._unique_id
@@ -202,15 +220,26 @@ class Metric:
         """Reset metrics value if no updates or send last values if they got skipped"""
         if force_invalidate and self._value is not None:
             log_debug("Metric %s is being forced reset", self.unique_id)
-            self._handle_message(None, log_debug, update_last_seen=False) #Dont update the last_seen as it wasnt seen
+            self._handle_message(None, log_debug, update_last_seen=False)  # Dont update the last_seen as it wasnt seen
             return
         if self._last_seen > self._last_notified:
-            log_debug("Metric %s has been updated at %.2f but not published since %.2fs, re-publishing", self.unique_id, self._last_notified, self._last_seen)
+            log_debug(
+                "Metric %s has been updated at %.2f but not published since %.2fs, re-publishing",
+                self.unique_id,
+                self._last_notified,
+                self._last_seen,
+            )
             self._handle_message(self._value, log_debug, update_last_seen=False, force=True)
             return
         log_debug("Metric is active and up-to-date: %s", self.unique_id)
 
-    def _handle_message(self, value: str | float | int | bool | VictronEnum | None, log_debug: Callable[..., None], update_last_seen: bool = True, force: bool = False):
+    def _handle_message(
+        self,
+        value: str | float | int | bool | VictronEnum | None,
+        log_debug: Callable[..., None],
+        update_last_seen: bool = True,
+        force: bool = False,
+    ):
         """Handle a message."""
         now = time.monotonic()
         if update_last_seen:
@@ -225,8 +254,10 @@ class Metric:
         elif value != self._value:
             log_debug(
                 "Metric %s value changed: %s -> %s %s",
-                self.unique_id, self._value, value,
-                self._descriptor.unit_of_measurement or ''
+                self.unique_id,
+                self._value,
+                value,
+                self._descriptor.unit_of_measurement or "",
             )
             should_notify = True
             if self._value is None:
@@ -234,19 +265,19 @@ class Metric:
                 force = True
         else:
             log_debug(
-                "Metric %s value unchanged: %s %s",
-                self.unique_id, value,
-                self._descriptor.unit_of_measurement or ''
+                "Metric %s value unchanged: %s %s", self.unique_id, value, self._descriptor.unit_of_measurement or ""
             )
         self._value = value
 
         # In case of non-zero update frequency, respect the update frequency limit only for numerical values
-        if not force and self._hub._update_frequency_seconds is not None and isinstance(value, (float, int)):
+        if not force and self._hub._update_frequency_seconds is not None and isinstance(value, float | int):
             elapsed = now - self._last_notified
             if elapsed < self._hub._update_frequency_seconds:
                 _LOGGER.debug(
                     "Update for %s skipped due to frequency limit (%.2fs < %ds)",
-                    self.unique_id, elapsed, self._hub._update_frequency_seconds
+                    self.unique_id,
+                    elapsed,
+                    self._hub._update_frequency_seconds,
                 )
                 should_notify = False
             else:

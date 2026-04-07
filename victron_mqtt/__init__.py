@@ -3,9 +3,9 @@ A Asynchronous Python API client for the Victron Venus OS.
 """
 
 from ._victron_enums import (
-    AcActiveInputSource,
+    ACActiveInputSource,
+    ACSystemMode,
     ActiveInputEnum,
-    ACSYSTEMMode,
     BatteryState,
     ChargerMode,
     ChargeSchedule,
@@ -46,9 +46,9 @@ from .metric import Metric
 from .writable_metric import WritableMetric
 
 __all__ = [
-    "AcActiveInputSource",
+    "ACActiveInputSource",
+    "ACSystemMode",
     "ActiveInputEnum",
-    "ACSYSTEMMode",
     "AuthenticationError",
     "BatteryState",
     "CannotConnectError",
