@@ -144,6 +144,10 @@ ignore = [
 "victron_mqtt/utils/*" = [
     "T201",    # print (CLI tool output)
 ]
+".github/scripts/*" = [
+    "T201",    # print (CLI tool output)
+    "SIM108",  # ternary operator (readability)
+]
 
 [tool.pylint.format]
 max-line-length = 120
