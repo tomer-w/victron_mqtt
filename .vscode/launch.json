@@ -53,6 +53,17 @@
                 "PYTHONPATH": "${workspaceFolder}/src"  // Include src in PYTHONPATH so Python can find the module
             },
             "args": ["--host", "192.168.0.159", "--port", "1883", "--only_supported_victron"]
+        },
+        {
+            "name": "merge_topics",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/.github/scripts/merge_topics.py",
+            "args": [
+                "--topics", "${workspaceFolder}/victron_mqtt.json",
+                "--strings", "${workspaceFolder}/.github/scripts/strings_seed.json"
+            ],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
