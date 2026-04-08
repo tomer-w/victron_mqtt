@@ -421,7 +421,7 @@ class ESSState(VictronEnum):
         "SoC has been below SoC limit for more than 24 hours. Charging battery with 5 amps",
     )
     SUSTAIN = (7, "sustain", "Multi/Quattro is in sustain")
-    RECHARGE = (8, "recharge", "Recharge, SoC dropped 5% or more below MinSoC")
+    RECHARGE = (8, "recharge", "Recharge, SoC dropped 5% or more below minimum SoC")
     # Keep batteries charged mode:
     KEEP_BATTERIES_CHARGED = (9, "keep_batteries_charged", "'Keep batteries charged' mode enabled")
     # Optimized mode without BatteryLife:
@@ -438,7 +438,7 @@ class ESSState(VictronEnum):
     RECHARGE_NO_BATTERY_LIFE = (
         12,
         "recharge_no_battery_life",
-        "Recharge, SoC dropped 5% or more below MinSoC (No BatteryLife)",
+        "Recharge, SoC dropped 5% or more below minimum SoC (No BatteryLife)",
     )
 
 

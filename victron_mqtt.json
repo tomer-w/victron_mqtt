@@ -10079,7 +10079,7 @@
         },
         {
           "id": "recharge",
-          "name": "Recharge, SoC dropped 5% or more below MinSoC",
+          "name": "Recharge, SoC dropped 5% or more below minimum SoC",
           "value": 8
         },
         {
@@ -10099,7 +10099,7 @@
         },
         {
           "id": "recharge_no_battery_life",
-          "name": "Recharge, SoC dropped 5% or more below MinSoC (No BatteryLife)",
+          "name": "Recharge, SoC dropped 5% or more below minimum SoC (No BatteryLife)",
           "value": 12
         }
       ]
