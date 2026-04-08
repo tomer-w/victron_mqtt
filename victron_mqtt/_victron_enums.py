@@ -223,8 +223,8 @@ class MppOperationMode(VictronEnum):
 class ESSMode(VictronEnum):
     """ESS Mode Enum"""
 
-    SELF_CONSUMPTION_BATTERYLIFE = (0, "self_consumption_batterylife", "self consumption (batterylife)")
-    SELF_CONSUMPTION = (1, "self_consumption", "self consumption")
+    SELF_CONSUMPTION_BATTERYLIFE = (0, "self_consumption_batterylife", "Self-consumption (batterylife)")
+    SELF_CONSUMPTION = (1, "self_consumption", "Self-consumption")
     KEEP_CHARGED = (2, "keep_charged", "keep charged")
     EXTERNAL_CONTROL = (3, "external_control", "External control")
 
@@ -407,9 +407,9 @@ class ESSState(VictronEnum):
     # Optimized mode with BatteryLife:
     # 1 is Value set by the GUI when BatteryLife is enabled. Hub4Control uses it to find the right BatteryLife state (values 2-7) based on system state
     WITH_BATTERY_LIFE = (1, "with_battery_life", "Optimized mode with BatteryLife")
-    SELF_CONSUMPTION = (2, "self_consumption", "Self consumption")
-    SELF_CONSUMPTION_SOC_EXCEEDS_85 = (3, "self_consumption_soc_exceeds_85", "Self consumption, SoC exceeds 85%")
-    SELF_CONSUMPTION_SOC_AT_100 = (4, "self_consumption_soc_at_100", "Self consumption, SoC at 100%")
+    SELF_CONSUMPTION = (2, "self_consumption", "Self-consumption")
+    SELF_CONSUMPTION_SOC_EXCEEDS_85 = (3, "self_consumption_soc_exceeds_85", "Self-consumption, SoC exceeds 85%")
+    SELF_CONSUMPTION_SOC_AT_100 = (4, "self_consumption_soc_at_100", "Self-consumption, SoC at 100%")
     SOC_BELOW_BATTERY_LIFE_DYNAMIC_SOC_LIMIT = (
         5,
         "soc_below_battery_life_dynamic_soc_limit",
@@ -428,12 +428,12 @@ class ESSState(VictronEnum):
     SELF_CONSUMPTION_SOC_ABOVE_MIN = (
         10,
         "self_consumption_soc_above_min",
-        "Self consumption, SoC at or above minimum SoC",
+        "Self-consumption, SoC at or above minimum SoC",
     )
     SELF_CONSUMPTION_SOC_BELOW_MIN = (
         11,
         "self_consumption_soc_below_min",
-        "Self consumption, SoC is below minimum SoC",
+        "Self-consumption, SoC is below minimum SoC",
     )
     RECHARGE_NO_BATTERY_LIFE = (
         12,

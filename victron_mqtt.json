@@ -9999,12 +9999,12 @@
       "EnumValues": [
         {
           "id": "self_consumption_batterylife",
-          "name": "self consumption (batterylife)",
+          "name": "Self-consumption (batterylife)",
           "value": 0
         },
         {
           "id": "self_consumption",
-          "name": "self consumption",
+          "name": "Self-consumption",
           "value": 1
         },
         {
@@ -10049,17 +10049,17 @@
         },
         {
           "id": "self_consumption",
-          "name": "Self consumption",
+          "name": "Self-consumption",
           "value": 2
         },
         {
           "id": "self_consumption_soc_exceeds_85",
-          "name": "Self consumption, SoC exceeds 85%",
+          "name": "Self-consumption, SoC exceeds 85%",
           "value": 3
         },
         {
           "id": "self_consumption_soc_at_100",
-          "name": "Self consumption, SoC at 100%",
+          "name": "Self-consumption, SoC at 100%",
           "value": 4
         },
         {
@@ -10089,12 +10089,12 @@
         },
         {
           "id": "self_consumption_soc_above_min",
-          "name": "Self consumption, SoC at or above minimum SoC",
+          "name": "Self-consumption, SoC at or above minimum SoC",
           "value": 10
         },
         {
           "id": "self_consumption_soc_below_min",
-          "name": "Self consumption, SoC is below minimum SoC",
+          "name": "Self-consumption, SoC is below minimum SoC",
           "value": 11
         },
         {
