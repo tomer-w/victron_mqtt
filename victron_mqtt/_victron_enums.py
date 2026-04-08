@@ -418,7 +418,7 @@ class ESSState(VictronEnum):
     SOC_BELOW_SOC_LIMIT_24_HOURS = (
         6,
         "soc_below_soc_limit_24_hours",
-        "SoC has been below SoC limit for more than 24 hours. Charging with battery with 5amps",
+        "SoC has been below SoC limit for more than 24 hours. Charging battery with 5 amps",
     )
     SUSTAIN = (7, "sustain", "Multi/Quattro is in sustain")
     RECHARGE = (8, "recharge", "Recharge, SOC dropped 5% or more below MinSOC")

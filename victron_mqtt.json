@@ -10069,7 +10069,7 @@
         },
         {
           "id": "soc_below_soc_limit_24_hours",
-          "name": "SoC has been below SoC limit for more than 24 hours. Charging with battery with 5amps",
+          "name": "SoC has been below SoC limit for more than 24 hours. Charging battery with 5 amps",
           "value": 6
         },
         {
