@@ -4587,7 +4587,7 @@
       "topic": "N/{installation_id}/multi/{device_id}/Settings/Ess/MinimumSocLimit",
       "message_type": "MetricKind.NUMBER",
       "short_id": "multi_ess_min_soc_limit",
-      "name": "ESS minimum SOC limit",
+      "name": "ESS minimum Soc limit",
       "unit_of_measurement": "%",
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -4602,7 +4602,7 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [],
-      "generic_name": "ESS minimum SOC limit",
+      "generic_name": "ESS minimum Soc limit",
       "is_formula": false,
       "main_topic": false
     },
@@ -4978,7 +4978,7 @@
       "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/MinimumSocLimit",
       "message_type": "MetricKind.NUMBER",
       "short_id": "system_ess_min_soc_limit",
-      "name": "ESS min SOC limit",
+      "name": "ESS min SoC limit",
       "unit_of_measurement": "%",
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -4993,7 +4993,7 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [],
-      "generic_name": "ESS min SOC limit",
+      "generic_name": "ESS min SoC limit",
       "is_formula": false,
       "main_topic": false
     },
@@ -5072,7 +5072,7 @@
       "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Soc",
       "message_type": "MetricKind.NUMBER",
       "short_id": "system_ess_schedule_charge_{slot}_soc",
-      "name": "ESS BatteryLife schedule charge {slot} SOC",
+      "name": "ESS BatteryLife schedule charge {slot} SoC",
       "unit_of_measurement": "%",
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -5087,7 +5087,7 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [],
-      "generic_name": "ESS BatteryLife schedule charge {slot} SOC",
+      "generic_name": "ESS BatteryLife schedule charge {slot} SoC",
       "is_formula": false,
       "main_topic": false
     },
@@ -5652,7 +5652,7 @@
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/Enabled",
       "message_type": "MetricKind.SWITCH",
       "short_id": "generator_{gen_id}_start_on_soc_enabled",
-      "name": "Generator start on SOC enabled",
+      "name": "Generator start on SoC enabled",
       "unit_of_measurement": null,
       "metric_type": "MetricType.ENUM",
       "metric_nature": "MetricNature.NONE",
@@ -5669,7 +5669,7 @@
       "depends_on": [
         "generator_{gen_id}_generator_autorun"
       ],
-      "generic_name": "Generator start on SOC enabled",
+      "generic_name": "Generator start on SoC enabled",
       "is_formula": false,
       "main_topic": false
     },
@@ -5677,7 +5677,7 @@
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStartValue",
       "message_type": "MetricKind.NUMBER",
       "short_id": "generator_{gen_id}_qh_start_on_soc",
-      "name": "Generator QH start on SOC",
+      "name": "Generator QH start on SoC",
       "unit_of_measurement": "%",
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -5694,7 +5694,7 @@
       "depends_on": [
         "generator_{gen_id}_generator_autorun"
       ],
-      "generic_name": "Generator QH start on SOC",
+      "generic_name": "Generator QH start on SoC",
       "is_formula": false,
       "main_topic": false
     },
@@ -5702,7 +5702,7 @@
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/QuietHoursStopValue",
       "message_type": "MetricKind.NUMBER",
       "short_id": "generator_{gen_id}_qh_stop_on_soc",
-      "name": "Generator QH stop on SOC",
+      "name": "Generator QH stop on SoC",
       "unit_of_measurement": "%",
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -5719,7 +5719,7 @@
       "depends_on": [
         "generator_{gen_id}_generator_autorun"
       ],
-      "generic_name": "Generator QH stop on SOC",
+      "generic_name": "Generator QH stop on SoC",
       "is_formula": false,
       "main_topic": false
     },
@@ -5727,7 +5727,7 @@
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StartTimer",
       "message_type": "MetricKind.NUMBER",
       "short_id": "generator_{gen_id}_start_on_soc_timer",
-      "name": "Generator start on SOC timer",
+      "name": "Generator start on SoC timer",
       "unit_of_measurement": "s",
       "metric_type": "MetricType.DURATION",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -5744,7 +5744,7 @@
       "depends_on": [
         "generator_{gen_id}_generator_autorun"
       ],
-      "generic_name": "Generator start on SOC timer",
+      "generic_name": "Generator start on SoC timer",
       "is_formula": false,
       "main_topic": false
     },
@@ -5752,7 +5752,7 @@
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StartValue",
       "message_type": "MetricKind.NUMBER",
       "short_id": "generator_{gen_id}_start_on_soc",
-      "name": "Generator start on SOC",
+      "name": "Generator start on SoC",
       "unit_of_measurement": "%",
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -5769,7 +5769,7 @@
       "depends_on": [
         "generator_{gen_id}_generator_autorun"
       ],
-      "generic_name": "Generator start on SOC",
+      "generic_name": "Generator start on SoC",
       "is_formula": false,
       "main_topic": false
     },
@@ -5777,7 +5777,7 @@
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StopTimer",
       "message_type": "MetricKind.NUMBER",
       "short_id": "generator_{gen_id}_stop_on_soc_timer",
-      "name": "Generator stop on SOC timer",
+      "name": "Generator stop on SoC timer",
       "unit_of_measurement": "s",
       "metric_type": "MetricType.DURATION",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -5794,7 +5794,7 @@
       "depends_on": [
         "generator_{gen_id}_generator_autorun"
       ],
-      "generic_name": "Generator stop on SOC timer",
+      "generic_name": "Generator stop on SoC timer",
       "is_formula": false,
       "main_topic": false
     },
@@ -5802,7 +5802,7 @@
       "topic": "N/{installation_id}/settings/{device_id}/Settings/Generator{gen_id(0-1)}/Soc/StopValue",
       "message_type": "MetricKind.NUMBER",
       "short_id": "generator_{gen_id}_stop_on_soc",
-      "name": "Generator stop on SOC",
+      "name": "Generator stop on SoC",
       "unit_of_measurement": "%",
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -5819,7 +5819,7 @@
       "depends_on": [
         "generator_{gen_id}_generator_autorun"
       ],
-      "generic_name": "Generator stop on SOC",
+      "generic_name": "Generator stop on SoC",
       "is_formula": false,
       "main_topic": false
     },
@@ -7002,7 +7002,7 @@
       "topic": "N/{installation_id}/system/{device_id}/Control/ActiveSocLimit",
       "message_type": "MetricKind.SENSOR",
       "short_id": "system_control_active_soc_limit",
-      "name": "Active SOC limit",
+      "name": "Active SoC limit",
       "unit_of_measurement": "%",
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -7017,7 +7017,7 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [],
-      "generic_name": "Active SOC limit",
+      "generic_name": "Active SoC limit",
       "is_formula": false,
       "main_topic": false
     },
@@ -7025,7 +7025,7 @@
       "topic": "N/{installation_id}/system/{device_id}/Control/ScheduledSoc",
       "message_type": "MetricKind.SENSOR",
       "short_id": "system_control_scheduled_soc",
-      "name": "Scheduled SOC",
+      "name": "Scheduled SoC",
       "unit_of_measurement": "%",
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -7040,7 +7040,7 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [],
-      "generic_name": "Scheduled SOC",
+      "generic_name": "Scheduled SoC",
       "is_formula": false,
       "main_topic": false
     },
@@ -7491,7 +7491,7 @@
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/MinimumSoc",
       "message_type": "MetricKind.SENSOR",
       "short_id": "system_dynamicess_minimum_soc",
-      "name": "Dynamic ESS minimum SOC",
+      "name": "Dynamic ESS minimum SoC",
       "unit_of_measurement": "%",
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -7506,7 +7506,7 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [],
-      "generic_name": "Dynamic ESS minimum SOC",
+      "generic_name": "Dynamic ESS minimum SoC",
       "is_formula": false,
       "main_topic": false
     },
@@ -7606,7 +7606,7 @@
       "topic": "N/{installation_id}/system/{device_id}/DynamicEss/TargetSoc",
       "message_type": "MetricKind.SENSOR",
       "short_id": "system_dynamicess_target_soc",
-      "name": "Dynamic ESS target SOC",
+      "name": "Dynamic ESS target SoC",
       "unit_of_measurement": "%",
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -7621,7 +7621,7 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [],
-      "generic_name": "Dynamic ESS target SOC",
+      "generic_name": "Dynamic ESS target SoC",
       "is_formula": false,
       "main_topic": false
     },
@@ -9459,7 +9459,7 @@
         },
         {
           "id": "soc_low",
-          "name": "SOC low",
+          "name": "SoC low",
           "value": 4
         },
         {
@@ -9544,7 +9544,7 @@
         },
         {
           "id": "idle_maintain_targetsoc",
-          "name": "Idle Maintain Target SOC",
+          "name": "Idle Maintain Target SoC",
           "value": 9
         },
         {
@@ -9579,7 +9579,7 @@
         },
         {
           "id": "unscheduled_charge_catchup_targetsoc",
-          "name": "Unscheduled Charge Catch-Up Target SOC",
+          "name": "Unscheduled Charge Catch-Up Target SoC",
           "value": 16
         },
         {
@@ -9619,7 +9619,7 @@
         },
         {
           "id": "ess_low_soc",
-          "name": "ESS Low SOC",
+          "name": "ESS Low SoC",
           "value": 96
         },
         {
@@ -9669,7 +9669,7 @@
       "EnumValues": [
         {
           "id": "targetsoc",
-          "name": "Target SOC",
+          "name": "Target SoC",
           "value": 0
         },
         {
@@ -10079,7 +10079,7 @@
         },
         {
           "id": "recharge",
-          "name": "Recharge, SOC dropped 5% or more below MinSOC",
+          "name": "Recharge, SoC dropped 5% or more below MinSoC",
           "value": 8
         },
         {
@@ -10099,7 +10099,7 @@
         },
         {
           "id": "recharge_no_battery_life",
-          "name": "Recharge, SOC dropped 5% or more below MinSOC (No BatteryLife)",
+          "name": "Recharge, SoC dropped 5% or more below MinSoC (No BatteryLife)",
           "value": 12
         }
       ]
@@ -10284,7 +10284,7 @@
         },
         {
           "id": "low_soc",
-          "name": "Low SOC",
+          "name": "Low SoC",
           "value": 7
         },
         {
@@ -10459,7 +10459,7 @@
         },
         {
           "id": "soc",
-          "name": "SOC",
+          "name": "SoC",
           "value": 4
         },
         {

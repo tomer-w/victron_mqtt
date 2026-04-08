@@ -153,7 +153,7 @@ class EvChargerStatus(VictronEnum):
     WAITING_FOR_SUN = (4, "waiting_for_sun", "Waiting for sun")
     WAITING_FOR_RFID = (5, "waiting_for_rfid", "Waiting for RFID")
     WAITING_FOR_START = (6, "waiting_for_start", "Waiting for start")
-    LOW_SOC = (7, "low_soc", "Low SOC")
+    LOW_SOC = (7, "low_soc", "Low SoC")
     GROUND_TEST_ERROR = (8, "ground_test_error", "Ground test error")
     WELDED_CONTACTS_TEST_ERROR = (9, "welded_contacts_test_error", "Welded contacts test error")
     CP_INPUT_TEST_ERROR = (10, "cp_input_test_error", "CP input test error")
@@ -236,7 +236,7 @@ class GeneratorRunningByConditionCode(VictronEnum):
     MANUAL = (1, "manual", "Manual")
     TEST_RUN = (2, "test_run", "Test Run")
     LOST_COMMS = (3, "lost_comms", "Lost Comms")
-    SOC = (4, "soc", "SOC")
+    SOC = (4, "soc", "SoC")
     AC_LOAD = (5, "ac_load", "AC Load")
     BATTERY_CURRENT = (6, "battery_current", "Battery Current")
     BATTERY_VOLTS = (7, "battery_volts", "Battery Volts")
@@ -256,7 +256,7 @@ class DESSReactiveStrategy(VictronEnum):
     SCHEDULED_DISCHARGE = (6, "scheduled_discharge", "Scheduled Discharge")
     SELFCONSUME_ACCEPT_DISCHARGE = (7, "selfconsume_accept_discharge", "Self-Consume Accept Discharge")
     IDLE_MAINTAIN_SURPLUS = (8, "idle_maintain_surplus", "Idle Maintain Surplus")
-    IDLE_MAINTAIN_TARGETSOC = (9, "idle_maintain_targetsoc", "Idle Maintain Target SOC")
+    IDLE_MAINTAIN_TARGETSOC = (9, "idle_maintain_targetsoc", "Idle Maintain Target SoC")
     SCHEDULED_CHARGE_SMOOTH_TRANSITION = (
         10,
         "scheduled_charge_smooth_transition",
@@ -270,7 +270,7 @@ class DESSReactiveStrategy(VictronEnum):
     UNSCHEDULED_CHARGE_CATCHUP_TARGETSOC = (
         16,
         "unscheduled_charge_catchup_targetsoc",
-        "Unscheduled Charge Catch-Up Target SOC",
+        "Unscheduled Charge Catch-Up Target SoC",
     )
     SELFCONSUME_INCREASED_DISCHARGE = (17, "selfconsume_increased_discharge", "Self-Consume Increased Discharge")
     KEEP_BATTERY_CHARGED = (18, "keep_battery_charged", "Keep Battery Charged")
@@ -283,7 +283,7 @@ class DESSReactiveStrategy(VictronEnum):
     SELFCONSUME_UNEXPECTED_EXCEPTION = (93, "selfconsume_unexpected_exception", "Self-Consume Unexpected Exception")
     SELFCONSUME_FAULTY_CHARGERATE = (94, "selfconsume_faulty_chargerate", "Self-Consume Faulty Charge Rate")
     UNKNOWN_OPERATING_MODE = (95, "unknown_operating_mode", "Unknown Operating Mode")
-    ESS_LOW_SOC = (96, "ess_low_soc", "ESS Low SOC")
+    ESS_LOW_SOC = (96, "ess_low_soc", "ESS Low SoC")
     SELFCONSUME_UNMAPPED_STATE = (97, "selfconsume_unmapped_state", "Self-Consume Unmapped State")
     SELFCONSUME_UNPREDICTED = (98, "selfconsume_unpredicted", "Self-Consume Unpredicted")
     NO_WINDOW = (99, "no_window", "No Window")
@@ -292,7 +292,7 @@ class DESSReactiveStrategy(VictronEnum):
 class DESSStrategy(VictronEnum):
     """DESS Strategy Enum"""
 
-    TARGETSOC = (0, "targetsoc", "Target SOC")
+    TARGETSOC = (0, "targetsoc", "Target SoC")
     SELFCONSUME = (1, "selfconsume", "Self-Consume")
     PROBATTERY = (2, "probattery", "Pro Battery")
     PROGRID = (3, "progrid", "Pro Grid")
@@ -305,7 +305,7 @@ class DESSErrorCode(VictronEnum):
     NO_ESS = (1, "no_ess", "No ESS")
     ESS_MODE = (2, "ess_mode", "ESS Mode")  # ???
     NO_SCHEDULE = (3, "no_schedule", "No Matching Schedule")
-    SOC_LOW = (4, "soc_low", "SOC low")
+    SOC_LOW = (4, "soc_low", "SoC low")
     BATTRY_CAPACITY_NOT_CONFIGURED = (5, "battry_capacity_not_configured", "Battery Capacity Not Configured")
 
 
@@ -421,7 +421,7 @@ class ESSState(VictronEnum):
         "SoC has been below SoC limit for more than 24 hours. Charging battery with 5 amps",
     )
     SUSTAIN = (7, "sustain", "Multi/Quattro is in sustain")
-    RECHARGE = (8, "recharge", "Recharge, SOC dropped 5% or more below MinSOC")
+    RECHARGE = (8, "recharge", "Recharge, SoC dropped 5% or more below MinSoC")
     # Keep batteries charged mode:
     KEEP_BATTERIES_CHARGED = (9, "keep_batteries_charged", "'Keep batteries charged' mode enabled")
     # Optimized mode without BatteryLife:
@@ -438,7 +438,7 @@ class ESSState(VictronEnum):
     RECHARGE_NO_BATTERY_LIFE = (
         12,
         "recharge_no_battery_life",
-        "Recharge, SOC dropped 5% or more below MinSOC (No BatteryLife)",
+        "Recharge, SoC dropped 5% or more below MinSoC (No BatteryLife)",
     )
 
 
