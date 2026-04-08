@@ -61,7 +61,8 @@
             "program": "${workspaceFolder}/.github/scripts/merge_topics.py",
             "args": [
                 "--topics", "${workspaceFolder}/victron_mqtt.json",
-                "--strings", "${workspaceFolder}/.github/scripts/strings_seed.json"
+                "--strings", "${workspaceFolder}/.github/scripts/strings_seed.json",
+                "--common", "${workspaceFolder}/.github/scripts/strings_common.json"
             ],
             "cwd": "${workspaceFolder}"
         }

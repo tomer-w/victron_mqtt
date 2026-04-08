@@ -4,13 +4,39 @@ from pathlib import Path
 
 # Entity types to include in the output. Add more as platforms are added.
 # To publish all entity types, replace this with: INCLUDED_ENTITY_TYPES = None
-INCLUDED_ENTITY_TYPES = {"sensor", "binary_sensor"}
+INCLUDED_ENTITY_TYPES = {"sensor", "select"}
+
+
+def build_common_lookup(data, prefix=""):
+    """Build reverse lookup: value -> list of key paths from strings_common.json."""
+    lookup = {}
+    for key, value in data.items():
+        path = f"{prefix}::{key}" if prefix else key
+        if isinstance(value, dict):
+            for v, paths in build_common_lookup(value, path).items():
+                lookup.setdefault(v, []).extend(paths)
+        elif isinstance(value, str):
+            lookup.setdefault(value, []).append(path)
+    return lookup
+
+
+def resolve_common_ref(value, common_lookup, prefer_section=None):
+    """Replace a value with a [%key:...%] reference if found in common strings."""
+    if value not in common_lookup:
+        return value
+    paths = common_lookup[value]
+    if prefer_section:
+        for path in paths:
+            if prefer_section in path:
+                return f"[%key:{path}%]"
+    return f"[%key:{paths[0]}%]"
 
 
 def main():
     parser = argparse.ArgumentParser(description="Merge victron_mqtt topics into strings.json")
     parser.add_argument("--topics", help="Path to victron_mqtt.json")
     parser.add_argument("--strings", help="Path to strings.json")
+    parser.add_argument("--common", help="Path to strings_common.json")
     args = parser.parse_args()
 
     if args.topics and args.strings:
@@ -21,6 +47,15 @@ def main():
         topics_path = base / "victron_mqtt.json"
         translations_dir = base / "custom_components" / "victron_mqtt" / "translations"
         output_path = translations_dir / "strings.json"
+
+    common_path = Path(args.common) if args.common else Path(__file__).parent / "strings_common.json"
+    common_lookup = {}
+    if common_path.exists():
+        with common_path.open(encoding="utf-8") as f:
+            common_lookup = build_common_lookup(json.load(f))
+        print(f"Loaded {len(common_lookup)} common string values from {common_path}")
+    else:
+        print(f"Warning: strings_common.json not found at {common_path}, skipping common references")
 
     print(f"topics_path={topics_path}")
     print(f"output_path={output_path}")
@@ -85,7 +120,10 @@ def main():
         if topic_unit is not None and not has_device_class:
             entity_entry["unit_of_measurement"] = topic_unit
         if enum_name and enum_name in enum_lookup:
-            entity_entry["state"] = enum_lookup[enum_name]
+            entity_entry["state"] = {
+                k: resolve_common_ref(v, common_lookup, prefer_section="common::state")
+                for k, v in enum_lookup[enum_name].items()
+            }
 
         # Add to original entity type
         if entity_type not in entity:
