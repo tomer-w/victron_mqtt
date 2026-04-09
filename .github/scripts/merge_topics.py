@@ -7,7 +7,7 @@ from typing import Any, cast
 
 # Entity types to include in the output. Add more as platforms are added.
 # To publish all entity types, replace this with: INCLUDED_ENTITY_TYPES = None
-INCLUDED_ENTITY_TYPES: set[str] | None = {"sensor"}
+INCLUDED_ENTITY_TYPES: set[str] | None = {"sensor", "select"}
 
 
 def build_common_lookup(data: dict[str, Any], prefix: str = "") -> dict[str, list[str]]:
@@ -120,7 +120,7 @@ def main():
         # Main topics inherit their name from the device, so omit "name".
         entity_entry = {} if is_main_topic else {"name": topic_name}
         has_device_class = topic_metric_type in DEVICE_CLASS_METRIC_TYPES
-        if topic_unit is not None and not has_device_class:
+        if topic_unit is not None and topic_unit != "%" and not has_device_class:
             entity_entry["unit_of_measurement"] = topic_unit
         if enum_name and enum_name in enum_lookup:
             entity_entry["state"] = {
