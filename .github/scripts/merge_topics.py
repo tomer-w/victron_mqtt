@@ -4,7 +4,7 @@ from pathlib import Path
 
 # Entity types to include in the output. Add more as platforms are added.
 # To publish all entity types, replace this with: INCLUDED_ENTITY_TYPES = None
-INCLUDED_ENTITY_TYPES = {"sensor", "select"}
+INCLUDED_ENTITY_TYPES = {"sensor", "time"}
 
 
 def build_common_lookup(data, prefix=""):
@@ -147,7 +147,7 @@ def main():
             sorted_entry = {}
             if "name" in entry:
                 sorted_entry["name"] = entry["name"]
-            if "unit_of_measurement" in entry:
+            if "unit_of_measurement" in entry and entity_type != "time":
                 sorted_entry["unit_of_measurement"] = entry["unit_of_measurement"]
             if "state" in entry:
                 # For binary_sensor and switches, skip state if it only has on/off options
