@@ -1656,7 +1656,7 @@ topics: list[TopicDescriptor] = [
         topic="N/{installation_id}/multi/{device_id}/Settings/Ess/MinimumSocLimit",
         message_type=MetricKind.NUMBER,
         short_id="multi_ess_min_soc_limit",
-        name="ESS minimum Soc limit",
+        name="ESS minimum SoC limit",
         metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
     ),
     TopicDescriptor(

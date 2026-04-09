@@ -4587,7 +4587,7 @@
       "topic": "N/{installation_id}/multi/{device_id}/Settings/Ess/MinimumSocLimit",
       "message_type": "MetricKind.NUMBER",
       "short_id": "multi_ess_min_soc_limit",
-      "name": "ESS minimum Soc limit",
+      "name": "ESS minimum SoC limit",
       "unit_of_measurement": "%",
       "metric_type": "MetricType.ELECTRIC_STORAGE_PERCENTAGE",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -4602,7 +4602,7 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [],
-      "generic_name": "ESS minimum Soc limit",
+      "generic_name": "ESS minimum SoC limit",
       "is_formula": false,
       "main_topic": false
     },
@@ -10224,7 +10224,7 @@
         },
         {
           "id": "scheduled_charge",
-          "name": "Scheduled Charge",
+          "name": "Scheduled charge",
           "value": 2
         }
       ]

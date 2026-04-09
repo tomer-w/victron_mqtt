@@ -133,7 +133,7 @@ class EvChargerMode(VictronEnum):
 
     MANUAL = (0, "manual", "Manual")
     AUTO = (1, "auto", "Auto")
-    SCHEDULED_CHARGE = (2, "scheduled_charge", "Scheduled Charge")
+    SCHEDULED_CHARGE = (2, "scheduled_charge", "Scheduled charge")
 
 
 class EvChargerPosition(VictronEnum):
