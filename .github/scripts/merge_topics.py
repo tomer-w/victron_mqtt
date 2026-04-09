@@ -1,26 +1,29 @@
+from __future__ import annotations
+
 import argparse
 import json
 from pathlib import Path
+from typing import Any, cast
 
 # Entity types to include in the output. Add more as platforms are added.
 # To publish all entity types, replace this with: INCLUDED_ENTITY_TYPES = None
-INCLUDED_ENTITY_TYPES = {"sensor"}
+INCLUDED_ENTITY_TYPES: set[str] | None = {"sensor"}
 
 
-def build_common_lookup(data, prefix=""):
+def build_common_lookup(data: dict[str, Any], prefix: str = "") -> dict[str, list[str]]:
     """Build reverse lookup: value -> list of key paths from strings_common.json."""
-    lookup = {}
+    lookup: dict[str, list[str]] = {}
     for key, value in data.items():
         path = f"{prefix}::{key}" if prefix else key
         if isinstance(value, dict):
-            for v, paths in build_common_lookup(value, path).items():
+            for v, paths in build_common_lookup(cast("dict[str, Any]", value), path).items():
                 lookup.setdefault(v, []).extend(paths)
         elif isinstance(value, str):
             lookup.setdefault(value, []).append(path)
     return lookup
 
 
-def resolve_common_ref(value, common_lookup, prefer_section=None):
+def resolve_common_ref(value: str, common_lookup: dict[str, list[str]], prefer_section: str | None = None) -> str:
     """Replace a value with a [%key:...%] reference if found in common strings."""
     if value not in common_lookup:
         return value
@@ -49,7 +52,7 @@ def main():
         output_path = translations_dir / "strings.json"
 
     common_path = Path(args.common) if args.common else Path(__file__).parent / "strings_common.json"
-    common_lookup = {}
+    common_lookup: dict[str, list[str]] = {}
     if common_path.exists():
         with common_path.open(encoding="utf-8") as f:
             common_lookup = build_common_lookup(json.load(f))
@@ -66,10 +69,10 @@ def main():
         en = json.load(f)
 
     # Build enum lookup: enum_name -> {lowercase_id: human_readable_name}
-    enum_lookup = {}
+    enum_lookup: dict[str | None, dict[str, str]] = {}
     for enum_def in topics_data.get("enums", []):
         enum_name = enum_def.get("name")
-        enum_values = {}
+        enum_values: dict[str, str] = {}
         for ev in enum_def.get("EnumValues", []):
             # Use lowercase id as key, name as value
             enum_values[ev.get("id", "").lower()] = ev.get("name", "")
@@ -93,7 +96,7 @@ def main():
     }
 
     # Update topics: add or update entries in en.json under entity.sensor for each topic id
-    entity = {}
+    entity: dict[str, dict[str, dict[str, Any]]] = {}
     count = 0
     for topic in topics_data.get("topics", []):
         translation_key = topic.get("short_id").replace("{", "").replace("}", "")  # same as in common.py
@@ -137,7 +140,7 @@ def main():
                 entity["sensor"] = {}
             entity["sensor"][translation_key] = entity_entry
     # Sort the entity dictionary and its nested dictionaries
-    sorted_entity = {}
+    sorted_entity: dict[str, dict[str, dict[str, Any]]] = {}
     for entity_type in sorted(entity.keys()):
         if INCLUDED_ENTITY_TYPES is not None and entity_type not in INCLUDED_ENTITY_TYPES:
             continue
@@ -163,7 +166,7 @@ def main():
     en["entity"] = sorted_entity
 
     # Build lookup of units from generated English entity translations
-    units_lookup = {}
+    units_lookup: dict[str, dict[str, Any]] = {}
     for entity_type, entries in sorted_entity.items():
         units_lookup[entity_type] = {}
         for translation_key, entry in entries.items():
