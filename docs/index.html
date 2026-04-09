@@ -219,13 +219,13 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
     <thead>
       <tr>
         <th class="topic-col">Topic</th>
+        <th class="device-type-col">Device Type</th>
         <th class="short-id-col">Short ID</th>
         <th class="name-col">Name</th>
         <th class="unit-col">Unit</th>
         <th class="message-type-col">Message Type</th>
         <th class="metric-type-col">Metric Type</th>
         <th class="metric-nature-col">Metric Nature</th>
-        <th class="device-type-col">Device Type</th>
         <th class="value-type-col">Value Type</th>
         <th class="precision-col">Precision</th>
         <th class="enum-col">Enum</th>
@@ -234,11 +234,27 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
       </tr>
       <tr>
         <td class="topic-col"><input type="text" class="col-filter" data-col="0" placeholder="Filter Topic" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="short-id-col"><input type="text" class="col-filter" data-col="1" placeholder="Short ID" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="name-col"><input type="text" class="col-filter" data-col="2" placeholder="Name" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="unit-col"><input type="text" class="col-filter" data-col="3" placeholder="Unit" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="device-type-col">
+          <select class="col-filter" data-col="1" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+            <option value="">&lt;ALL&gt;</option>
+            {% assign device_types = "" %}
+            {% for t in site.data.victron_mqtt.topics %}
+              {% assign dt = t.short_id | split: '_' | first %}
+              {% unless device_types contains dt %}
+                {% if device_types == "" %}{% assign device_types = dt %}{% else %}{% assign device_types = device_types | append: ',' | append: dt %}{% endif %}
+              {% endunless %}
+            {% endfor %}
+            {% assign device_type_list = device_types | split: ',' | sort %}
+            {% for val in device_type_list %}
+              <option value="{{ val }}">{{ val }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td class="short-id-col"><input type="text" class="col-filter" data-col="2" placeholder="Short ID" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="name-col"><input type="text" class="col-filter" data-col="3" placeholder="Name" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="unit-col"><input type="text" class="col-filter" data-col="4" placeholder="Unit" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
         <td class="message-type-col">
-          <select class="col-filter" data-col="4" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+          <select class="col-filter" data-col="5" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
             <option value="">&lt;ALL&gt;</option>
             {% assign message_type_values = site.data.victron_mqtt.topics | map: 'message_type' | compact | uniq | sort %}
             {% for val in message_type_values %}
@@ -248,7 +264,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
           </select>
         </td>
         <td class="metric-type-col">
-          <select class="col-filter" data-col="5" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+          <select class="col-filter" data-col="6" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
             <option value="">&lt;ALL&gt;</option>
             {% assign metric_type_values = site.data.victron_mqtt.topics | map: 'metric_type' | compact | uniq | sort %}
             {% for val in metric_type_values %}
@@ -258,20 +274,10 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
           </select>
         </td>
         <td class="metric-nature-col">
-          <select class="col-filter" data-col="6" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+          <select class="col-filter" data-col="7" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
             <option value="">&lt;ALL&gt;</option>
             {% assign metric_nature_values = site.data.victron_mqtt.topics | map: 'metric_nature' | compact | uniq | sort %}
             {% for val in metric_nature_values %}
-              {% assign val_last = val | split: '.' | last %}
-              <option value="{{ val_last }}">{{ val_last }}</option>
-            {% endfor %}
-          </select>
-        </td>
-        <td class="device-type-col">
-          <select class="col-filter" data-col="7" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">&lt;ALL&gt;</option>
-            {% assign device_type_values = site.data.victron_mqtt.topics | map: 'device_type' | compact | uniq | sort %}
-            {% for val in device_type_values %}
               {% assign val_last = val | split: '.' | last %}
               <option value="{{ val_last }}">{{ val_last }}</option>
             {% endfor %}
@@ -306,13 +312,13 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
   {% for topic in site.data.victron_mqtt.topics %}
     <tr>
       <td class="topic-col"><strong>{{ topic.topic }}</strong></td>
+      <td class="device-type-col">{{ topic.short_id | split: '_' | first }}</td>
       <td class="short-id-col">{{ topic.short_id }}</td>
       <td class="name-col">{{ topic.name }}</td>
       <td class="unit-col">{{ topic.unit_of_measurement }}</td>
       <td class="message-type-col">{% if topic.message_type %}{{ topic.message_type | split: '.' | last }}{% endif %}</td>
       <td class="metric-type-col">{% if topic.metric_type %}{{ topic.metric_type | split: '.' | last }}{% endif %}</td>
       <td class="metric-nature-col">{% if topic.metric_nature %}{{ topic.metric_nature | split: '.' | last }}{% endif %}</td>
-      <td class="device-type-col">{% if topic.device_type %}{{ topic.device_type | split: '.' | last }}{% endif %}</td>
       <td class="value-type-col">{% if topic.value_type %}{{ topic.value_type | split: '.' | last }}{% endif %}</td>
       <td class="precision-col">{{ topic.precision }}</td>
       <td class="enum-col">{% if topic.enum %}{{ topic.enum | split: '.' | last }}{% endif %}</td>
