@@ -2425,7 +2425,7 @@
       "topic": "N/{installation_id}/evcharger/{device_id}/SetCurrent",
       "message_type": "MetricKind.NUMBER",
       "short_id": "evcharger_set_current",
-      "name": "Set current",
+      "name": "Charge current setpoint",
       "unit_of_measurement": "A",
       "metric_type": "MetricType.CURRENT",
       "metric_nature": "MetricNature.MEASUREMENT",
@@ -2440,7 +2440,7 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [],
-      "generic_name": "Set current",
+      "generic_name": "Charge current setpoint",
       "is_formula": false,
       "main_topic": false
     },
