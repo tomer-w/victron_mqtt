@@ -1697,6 +1697,7 @@ topics: list[TopicDescriptor] = [
         name="Device reboot",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        metric_type=MetricType.RESTART,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/platform/{device_id}/Firmware/Installed/Version",

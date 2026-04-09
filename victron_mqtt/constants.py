@@ -55,6 +55,7 @@ class MetricType(Enum):
     COST = "cost"
     PROBLEM = "problem"
     CONNECTIVITY = "connectivity"
+    RESTART = "restart"
 
 
 class ValueType(Enum):
@@ -71,28 +72,36 @@ class ValueType(Enum):
     INT_SECONDS_TO_MINUTES = "int_seconds_to_minutes"
     FLOAT_M3_TO_LITERS = "float_m3_to_liters"
 
+
 class RangeType(Enum):
     """Range types for numeric values."""
+
     STATIC = "static"  # Static range, e.g., fixed values
     DYNAMIC = "dynamic"  # Dynamic range, e.g., depends on device model
 
+
 class OperationMode(Enum):
     """Enum for operation modes."""
+
     READ_ONLY = "read_only"
     FULL = "full"
     EXPERIMENTAL = "experimental"
 
+
 @dataclass
 class FormulaTransientState:
     """Transient state for formula metrics."""
+
 
 PLACEHOLDER_PHASE = "{phase}"
 PLACEHOLDER_NEXT_PHASE = "{next_phase}"
 
 BITMASK_SEPARATOR = ","
 
+
 class VictronEnum(Enum):
     """Base class for Victron Enums with code and string representation."""
+
     def __init__(self, code: int | str, enum_id: str, string: str):
         self._value_ = (code, string)
         self.code = code
@@ -107,7 +116,7 @@ class VictronEnum(Enum):
 
     @classmethod
     def _build_code_lookup(cls):
-        if not hasattr(cls, '_lookup_by_code'):
+        if not hasattr(cls, "_lookup_by_code"):
             cls._lookup_by_code = {member.code: member for member in cls}
         return cls._lookup_by_code
 
@@ -120,7 +129,7 @@ class VictronEnum(Enum):
 
     @classmethod
     def _build_string_lookup(cls):
-        if not hasattr(cls, '_lookup_by_string'):
+        if not hasattr(cls, "_lookup_by_string"):
             cls._lookup_by_string = {member.string: member for member in cls}
         return cls._lookup_by_string
 
@@ -135,7 +144,7 @@ class VictronEnum(Enum):
 
     @classmethod
     def _build_id_lookup(cls):
-        if not hasattr(cls, '_lookup_by_id'):
+        if not hasattr(cls, "_lookup_by_id"):
             cls._lookup_by_id = {member.id: member for member in cls}
         return cls._lookup_by_id
 
@@ -161,8 +170,10 @@ class VictronEnum(Enum):
             return result
         raise ValueError(f"No enum member found with id or string={value}")
 
+
 class VictronDeviceEnum(VictronEnum):
     """Base class for Victron Enums that may map to other enum values."""
+
     def __init__(self, code: str, enum_id: str, string: str, mapped_to: str | None = None):
         super().__init__(code, enum_id, string)
         self.mapped_to = mapped_to
