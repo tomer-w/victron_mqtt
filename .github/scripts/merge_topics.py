@@ -136,15 +136,6 @@ def main():
             if "sensor" not in entity:
                 entity["sensor"] = {}
             entity["sensor"][translation_key] = entity_entry
-        # to support READ_ONLY we need everything in sensor and in binary_sensor
-        if entity_type == "switch":
-            if "binary_sensor" not in entity:
-                entity["binary_sensor"] = {}
-            entity["binary_sensor"][translation_key] = entity_entry
-        if entity_type in ["number", "select"]:
-            if "sensor" not in entity:
-                entity["sensor"] = {}
-            entity["sensor"][translation_key] = entity_entry
     # Sort the entity dictionary and its nested dictionaries
     sorted_entity = {}
     for entity_type in sorted(entity.keys()):
