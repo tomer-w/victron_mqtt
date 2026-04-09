@@ -9999,7 +9999,7 @@
       "EnumValues": [
         {
           "id": "self_consumption_batterylife",
-          "name": "Self-consumption (batterylife)",
+          "name": "Self-consumption (BatteryLife)",
           "value": 0
         },
         {
@@ -10479,12 +10479,12 @@
         },
         {
           "id": "inv_temp",
-          "name": "Inv temp",
+          "name": "Inverter temperature",
           "value": 8
         },
         {
           "id": "inv_overload",
-          "name": "Inv overload",
+          "name": "Inverter overload",
           "value": 9
         },
         {

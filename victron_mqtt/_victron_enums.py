@@ -223,7 +223,7 @@ class MppOperationMode(VictronEnum):
 class ESSMode(VictronEnum):
     """ESS Mode Enum"""
 
-    SELF_CONSUMPTION_BATTERYLIFE = (0, "self_consumption_batterylife", "Self-consumption (batterylife)")
+    SELF_CONSUMPTION_BATTERYLIFE = (0, "self_consumption_batterylife", "Self-consumption (BatteryLife)")
     SELF_CONSUMPTION = (1, "self_consumption", "Self-consumption")
     KEEP_CHARGED = (2, "keep_charged", "Keep charged")
     EXTERNAL_CONTROL = (3, "external_control", "External control")
@@ -240,8 +240,8 @@ class GeneratorRunningByConditionCode(VictronEnum):
     AC_LOAD = (5, "ac_load", "AC load")
     BATTERY_CURRENT = (6, "battery_current", "Battery current")
     BATTERY_VOLTS = (7, "battery_volts", "Battery volts")
-    INV_TEMP = (8, "inv_temp", "Inv temp")
-    INV_OVERLOAD = (9, "inv_overload", "Inv overload")
+    INV_TEMP = (8, "inv_temp", "Inverter temperature")
+    INV_OVERLOAD = (9, "inv_overload", "Inverter overload")
     STOP_ON_AC1 = (10, "stop_on_ac1", "Stop on AC1")
 
 
