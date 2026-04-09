@@ -10729,7 +10729,7 @@
         },
         {
           "id": "power_assist",
-          "name": "Power assist",
+          "name": "Power Assist",
           "value": 10
         },
         {
@@ -10759,7 +10759,7 @@
         },
         {
           "id": "battery_safe",
-          "name": "Battery safe",
+          "name": "Battery Safe",
           "value": 248
         },
         {

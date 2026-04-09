@@ -642,6 +642,8 @@ _ALLOWED_CAPITALIZED = frozenset(
         "Multi",
         "Eco",
         "PowerAssist",
+        "Assist",  # "Power Assist" is a product name
+        "Safe",  # "Battery Safe" is a product name
         "GridLost",
         "Venus",
         "Victron",
