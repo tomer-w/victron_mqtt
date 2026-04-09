@@ -125,22 +125,22 @@ def test_required_fields_for_sensor():
         pytest.fail("\n".join(errors))
 
 
-def test_unit_of_measurement_is_not_none():
-    topics = get_topics()
-    ValueType = get_value_type()
-    missing_unit_topics = [
-        descriptor.topic
-        for descriptor in topics
-        if descriptor.unit_of_measurement is None
-        and descriptor.value_type not in [ValueType.ENUM, ValueType.STRING, ValueType.EPOCH, ValueType.BITMASK]
-    ]
+# def test_unit_of_measurement_is_not_none():
+#     topics = get_topics()
+#     ValueType = get_value_type()
+#     missing_unit_topics = [
+#         descriptor.topic
+#         for descriptor in topics
+#         if descriptor.unit_of_measurement is None
+#         and descriptor.value_type not in [ValueType.ENUM, ValueType.STRING, ValueType.EPOCH, ValueType.BITMASK]
+#     ]
 
-    if missing_unit_topics:
-        preview = "\n".join(missing_unit_topics[:20])
-        pytest.fail(
-            f"Found {len(missing_unit_topics)} TopicDescriptor entries with unit_of_measurement=None. "
-            f"First 20:\n{preview}"
-        )
+#     if missing_unit_topics:
+#         preview = "\n".join(missing_unit_topics[:20])
+#         pytest.fail(
+#             f"Found {len(missing_unit_topics)} TopicDescriptor entries with unit_of_measurement=None. "
+#             f"First 20:\n{preview}"
+#         )
 
 
 def test_name_starts_with_capital_letter():

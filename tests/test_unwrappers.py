@@ -1,6 +1,9 @@
 """Unit tests for the Victron MQTT unwrappers."""
+
 import json
 from datetime import UTC, datetime
+
+import pytest
 
 from victron_mqtt._unwrappers import (
     VALUE_TYPE_UNWRAPPER,
@@ -37,7 +40,7 @@ def test_unwrap_bool_true_false_null_and_malformed():
     assert unwrap_bool('{"value": 1}') is True
     assert unwrap_bool('{"value": 0}') is False
     assert unwrap_bool('{"value": null}') is None
-    assert unwrap_bool('not json') is None
+    assert unwrap_bool("not json") is None
 
 
 def test_unwrap_int_and_default():
@@ -45,11 +48,11 @@ def test_unwrap_int_and_default():
     assert unwrap_int('{"value": 5}') == 5
     assert unwrap_int('{"value": "7"}') == 7
     assert unwrap_int('{"value": null}') is None
-    assert unwrap_int('bad') is None
+    assert unwrap_int("bad") is None
 
     assert unwrap_int_default_0('{"value": 3}') == 3
     assert unwrap_int_default_0('{"value": null}') == 0
-    assert unwrap_int_default_0('bad') == 0
+    assert unwrap_int_default_0("bad") == 0
 
 
 def test_unwrap_float_variants():
@@ -66,7 +69,7 @@ def test_unwrap_float_variants():
     # None value
     assert unwrap_float('{"value": null}', None) is None
     # malformed
-    assert unwrap_float('not json', None) is None
+    assert unwrap_float("not json", None) is None
 
 
 def test_unwrap_string():
@@ -74,7 +77,7 @@ def test_unwrap_string():
     assert unwrap_string('{"value": "abc"}') == "abc"
     assert unwrap_string('{"value": 1}') == "1"
     assert unwrap_string('{"value": null}') is None
-    assert unwrap_string('bad') is None
+    assert unwrap_string("bad") is None
 
 
 def test_unwrap_enum_and_epoch():
@@ -83,7 +86,7 @@ def test_unwrap_enum_and_epoch():
     res = unwrap_enum('{"value": 1}', GenericOnOff)
     assert res is GenericOnOff.ON
     assert unwrap_enum('{"value": null}', GenericOnOff) is None
-    assert unwrap_enum('bad', GenericOnOff) is None
+    assert unwrap_enum("bad", GenericOnOff) is None
 
     # epoch
     ts = 1609459200  # 2021-01-01 00:00:00 UTC
@@ -91,6 +94,7 @@ def test_unwrap_enum_and_epoch():
     res_dt = unwrap_epoch(json.dumps({"value": ts}))
     assert isinstance(res_dt, datetime)
     assert res_dt == dt
+
 
 def test_unwrap_bitmask():
     """Test the unwrap_bitmask function with various inputs."""
@@ -107,7 +111,8 @@ def test_unwrap_bitmask():
     assert SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.string in res
 
     assert unwrap_enum('{"value": null}', SolarChargerDeviceOffReason) is None
-    assert unwrap_enum('bad', SolarChargerDeviceOffReason) is None
+    assert unwrap_enum("bad", SolarChargerDeviceOffReason) is None
+
 
 def test_unwrap_int_seconds_to_hours():
     """Test the unwrap_int_seconds_to_hours function with various inputs and precisions."""
@@ -127,11 +132,12 @@ def test_unwrap_int_seconds_to_hours():
     assert unwrap_int_seconds_to_hours('{"value": null}', 2) is None
 
     # Test malformed JSON
-    assert unwrap_int_seconds_to_hours('bad json', None) is None
-    assert unwrap_int_seconds_to_hours('bad json', 2) is None
+    assert unwrap_int_seconds_to_hours("bad json", None) is None
+    assert unwrap_int_seconds_to_hours("bad json", 2) is None
 
     # Test zero seconds
     assert unwrap_int_seconds_to_hours('{"value": 0}', None) == 0.0
+
 
 def test_unwrap_int_seconds_to_minutes():
     """Test the unwrap_int_seconds_to_minutes function with various inputs and precisions."""
@@ -151,8 +157,8 @@ def test_unwrap_int_seconds_to_minutes():
     assert unwrap_int_seconds_to_minutes('{"value": null}', 2) is None
 
     # Test malformed JSON
-    assert unwrap_int_seconds_to_minutes('bad json', None) is None
-    assert unwrap_int_seconds_to_minutes('bad json', 2) is None
+    assert unwrap_int_seconds_to_minutes("bad json", None) is None
+    assert unwrap_int_seconds_to_minutes("bad json", 2) is None
 
     # Test zero seconds
     assert unwrap_int_seconds_to_minutes('{"value": 0}', None) == 0.0
@@ -208,12 +214,32 @@ def test_wrap_functions_and_mappings():
     assert json.loads(wrap_enum("On", GenericOnOff)) == {"value": GenericOnOff.ON.code}
 
     # wrap_bitmask with enum instance(s)
-    assert json.loads(wrap_bitmask(SolarChargerDeviceOffReason.NO_INPUT_POWER, SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code}
-    assert json.loads(wrap_bitmask([SolarChargerDeviceOffReason.NO_INPUT_POWER, SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH], SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code + SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.code}
+    assert json.loads(wrap_bitmask(SolarChargerDeviceOffReason.NO_INPUT_POWER, SolarChargerDeviceOffReason)) == {
+        "value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code
+    }
+    assert json.loads(
+        wrap_bitmask(
+            [SolarChargerDeviceOffReason.NO_INPUT_POWER, SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH],
+            SolarChargerDeviceOffReason,
+        )
+    ) == {
+        "value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code
+        + SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.code
+    }
     # wrap_bitmask with string name(s)
-    assert json.loads(wrap_bitmask("No/Low input power", SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code}
-    assert json.loads(wrap_bitmask("No/Low input power,Switched off (power switch)", SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code + SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.code}
-    assert json.loads(wrap_bitmask(["No/Low input power", "Switched off (power switch)"], SolarChargerDeviceOffReason)) == {"value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code + SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.code}
+    assert json.loads(wrap_bitmask("No/low input power", SolarChargerDeviceOffReason)) == {
+        "value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code
+    }
+    assert json.loads(wrap_bitmask("No/low input power,Switched off (power switch)", SolarChargerDeviceOffReason)) == {
+        "value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code
+        + SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.code
+    }
+    assert json.loads(
+        wrap_bitmask(["No/low input power", "Switched off (power switch)"], SolarChargerDeviceOffReason)
+    ) == {
+        "value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code
+        + SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.code
+    }
 
     # wrap_epoch
     dt = datetime(2020, 1, 2, 3, 4, 5)
@@ -253,7 +279,7 @@ class TestUnwrapFloatM3ToLiters:
         assert result is None
 
     def test_invalid_json(self):
-        result = unwrap_float_m3_to_liters('bad json', 1)
+        result = unwrap_float_m3_to_liters("bad json", 1)
         assert result is None
 
 
@@ -346,11 +372,8 @@ class TestVictronEnumFunctions:
 
     def test_from_string_found_and_not_found(self):
         assert GenericOnOff.from_string("On") is GenericOnOff.ON
-        try:
+        with pytest.raises(ValueError, match="No enum member found with string=does-not-exist"):
             GenericOnOff.from_string("does-not-exist")
-            assert False, "Expected ValueError"
-        except ValueError as exc:
-            assert "No enum member found with string=does-not-exist" in str(exc)
 
     def test_build_id_lookup(self):
         lookup = GenericOnOff._build_id_lookup()
@@ -361,17 +384,11 @@ class TestVictronEnumFunctions:
 
     def test_from_id_found_and_not_found(self):
         assert GenericOnOff.from_id("on") is GenericOnOff.ON
-        try:
+        with pytest.raises(ValueError, match="No enum member found with id=does-not-exist"):
             GenericOnOff.from_id("does-not-exist")
-            assert False, "Expected ValueError"
-        except ValueError as exc:
-            assert "No enum member found with id=does-not-exist" in str(exc)
 
     def test_from_id_or_string_by_id_by_string_and_missing(self):
         assert GenericOnOff.from_id_or_string("on") is GenericOnOff.ON
         assert GenericOnOff.from_id_or_string("On") is GenericOnOff.ON
-        try:
+        with pytest.raises(ValueError, match="No enum member found with id or string=does-not-exist"):
             GenericOnOff.from_id_or_string("does-not-exist")
-            assert False, "Expected ValueError"
-        except ValueError as exc:
-            assert "No enum member found with id or string=does-not-exist" in str(exc)

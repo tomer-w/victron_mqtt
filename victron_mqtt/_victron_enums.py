@@ -10,32 +10,32 @@ class DeviceType(VictronDeviceEnum):
     # BEWARE!!! The code is used for mapping from the victron topic, IT IS NOT RANDOM FREE TEXT. The string is used for display purposes.
     # For settings this will be used to identify the device type in the settings.
     SYSTEM = ("system", "system", "Victron Venus")
-    SOLAR_CHARGER = ("solarcharger", "solar_charger", "Solar Charger")
+    SOLAR_CHARGER = ("solarcharger", "solar_charger", "Solar charger")
     INVERTER = ("inverter", "inverter", "Inverter")
     BATTERY = ("battery", "battery", "Battery")
     GRID = ("grid", "grid", "Grid")
     VEBUS = ("vebus", "vebus", "VE.Bus")
-    EVCHARGER = ("evcharger", "evcharger", "EV Charging Station")
-    PVINVERTER = ("pvinverter", "pvinverter", "PV Inverter")
+    EVCHARGER = ("evcharger", "evcharger", "EV charging station")
+    PVINVERTER = ("pvinverter", "pvinverter", "PV inverter")
     TEMPERATURE = ("temperature", "temperature", "Temperature")
     GENERATOR = ("generator", "generator", "Generator")
-    GENERATOR0 = ("Generator0", "generator0", "Generator 0 Settings")
-    GENERATOR1 = ("Generator1", "generator1", "Generator 1 Settings")
-    TANK = ("tank", "tank", "Liquid Tank")
-    MULTI_RS_SOLAR = ("multi", "multi_rs_solar", "Multi RS Solar")
+    GENERATOR0 = ("Generator0", "generator0", "Generator 0 settings")
+    GENERATOR1 = ("Generator1", "generator1", "Generator 1 settings")
+    TANK = ("tank", "tank", "Liquid tank")
+    MULTI_RS_SOLAR = ("multi", "multi_rs_solar", "Multi RS solar")
     CGWACS = ("CGwacs", "cgwacs", "<Not used>", "system")  # Should be mapped to SYSTEM
-    DC_LOAD = ("dcload", "dc_load", "DC Load")
+    DC_LOAD = ("dcload", "dc_load", "DC load")
     ALTERNATOR = (
         "alternator",
         "alternator",
-        "Alternator Charger",
+        "Alternator charger",
     )  # Orion XS 1400 in alternator to battery charging mode.
     SWITCH = ("switch", "switch", "Switch")
-    GPS = ("gps", "gps", "Gps")
-    SYSTEM_SETUP = ("SystemSetup", "system_setup", "System Setup", "system")  # Should be mapped to SYSTEM
-    TRANSFER_SWITCH = ("TransferSwitch", "transfer_switch", "Transfer Switch")
-    DIGITAL_INPUT = ("digitalinput", "digital_input", "Digital Input")
-    DC_SYSTEM = ("dcsystem", "dc_system", "DC System")
+    GPS = ("gps", "gps", "GPS")
+    SYSTEM_SETUP = ("SystemSetup", "system_setup", "System setup", "system")  # Should be mapped to SYSTEM
+    TRANSFER_SWITCH = ("TransferSwitch", "transfer_switch", "Transfer switch")
+    DIGITAL_INPUT = ("digitalinput", "digital_input", "Digital input")
+    DC_SYSTEM = ("dcsystem", "dc_system", "DC system")
     RELAY = ("Relay", "relay", "<Not used>", "system")  # Should be mapped to SYSTEM
     PLATFORM = (
         "platform",
@@ -43,13 +43,13 @@ class DeviceType(VictronDeviceEnum):
         "Platform",
         "system",
     )  # For whatever reason some system topics are under platform
-    HEATPUMP = ("heatpump", "heatpump", "Heat Pump")
+    HEATPUMP = ("heatpump", "heatpump", "Heat pump")
     DYNAMIC_ESS = ("DynamicEss", "dynamic_ess", "Dynamic ESS", "system")  # Dynamic ESS settings are under system
-    ACLOAD = ("acload", "acload", "AC Load")
+    ACLOAD = ("acload", "acload", "AC load")
     CHARGER = ("charger", "charger", "Charger")
     HUB4 = ("hub4", "hub4", "Hub4")
-    ACSYSTEM = ("acsystem", "acsystem", "AC System", "system")  # Should be mapped to SYSTEM
-    DCDC = ("dcdc", "dcdc", "DC/DC Charger")  # Orion XS 1400 in battery to battery charging mode.
+    ACSYSTEM = ("acsystem", "acsystem", "AC system", "system")  # Should be mapped to SYSTEM
+    DCDC = ("dcdc", "dcdc", "DC/DC charger")  # Orion XS 1400 in battery to battery charging mode.
 
 
 class GenericOnOff(VictronEnum):
@@ -79,8 +79,8 @@ class ChargerMode(VictronEnum):
 class InverterMode(VictronEnum):
     """Inverter Mode Enum"""
 
-    CHARGER_ONLY = (1, "charger_only", "Charger Only")
-    INVERTER_ONLY = (2, "inverter_only", "Inverter Only")
+    CHARGER_ONLY = (1, "charger_only", "Charger only")
+    INVERTER_ONLY = (2, "inverter_only", "Inverter only")
     ON = (3, "on", "On")
     OFF = (4, "off", "Off")
 
@@ -97,7 +97,7 @@ class State(VictronEnum):
     """State Enum"""
 
     OFF = (0, "off", "Off")
-    LOW_POWER = (1, "low_power", "Low Power")
+    LOW_POWER = (1, "low_power", "Low power")
     FAULT = (2, "fault", "Fault")
     BULK = (3, "bulk", "Bulk")
     ABSORPTION = (4, "absorption", "Absorption")
@@ -106,24 +106,24 @@ class State(VictronEnum):
     EQUALIZE = (7, "equalize", "Equalize")
     PASSTHROUGH = (8, "passthrough", "Passthrough")
     INVERTING = (9, "inverting", "Inverting")
-    POWER_ASSIST = (10, "power_assist", "Power Assist")
-    POWER_SUPPLY = (11, "power_supply", "Power Supply")
+    POWER_ASSIST = (10, "power_assist", "Power assist")
+    POWER_SUPPLY = (11, "power_supply", "Power supply")
     SUSTAIN = (244, "sustain", "Sustain")
-    STARTING_UP = (245, "starting_up", "Starting Up")
-    REPEATED_ABSORPTION = (246, "repeated_absorption", "Repeated Absorption")
-    AUTO_EQUALIZE = (247, "auto_equalize", "Auto Equalize / Recondition")
-    BATTERY_SAFE = (248, "battery_safe", "Battery Safe")
-    EXTERNAL_CONTROL = (252, "external_control", "External Control")
+    STARTING_UP = (245, "starting_up", "Starting up")
+    REPEATED_ABSORPTION = (246, "repeated_absorption", "Repeated absorption")
+    AUTO_EQUALIZE = (247, "auto_equalize", "Auto equalize / recondition")
+    BATTERY_SAFE = (248, "battery_safe", "Battery safe")
+    EXTERNAL_CONTROL = (252, "external_control", "External control")
     DISCHARGING = (256, "discharging", "Discharging")
-    SUSTAIN_ALT = (257, "sustain_alt", "Sustain Alt")
+    SUSTAIN_ALT = (257, "sustain_alt", "Sustain alt")
     RECHARGING = (258, "recharging", "Recharging")
-    SCHEDULED_RECHARGING = (259, "scheduled_recharging", "Scheduled Recharging")
+    SCHEDULED_RECHARGING = (259, "scheduled_recharging", "Scheduled recharging")
 
 
 class GenericAlarmEnum(VictronEnum):
     """Generic Alarm Enum"""
 
-    NO_ALARM = (0, "no_alarm", "No Alarm")
+    NO_ALARM = (0, "no_alarm", "No alarm")
     WARNING = (1, "warning", "Warning")
     ALARM = (2, "alarm", "Alarm")
 
@@ -139,8 +139,8 @@ class EvChargerMode(VictronEnum):
 class EvChargerPosition(VictronEnum):
     """EVCharger Position Enum"""
 
-    AC_OUT = (0, "ac_out", "AC Out")
-    AC_INPUT = (1, "ac_input", "AC Input")
+    AC_OUT = (0, "ac_out", "AC out")
+    AC_INPUT = (1, "ac_input", "AC input")
 
 
 class EvChargerStatus(VictronEnum):
@@ -165,7 +165,7 @@ class EvChargerStatus(VictronEnum):
     RESERVED16 = (16, "reserved16", "Reserved")
     RESERVED17 = (17, "reserved17", "Reserved")
     RESERVED18 = (18, "reserved18", "Reserved")
-    RESERVED19 = (19, "reserved19", "reserved")
+    RESERVED19 = (19, "reserved19", "Reserved")
     CHARGING_LIMIT = (20, "charging_limit", "Charging limit")
     START_CHARGING = (21, "start_charging", "Start charging")
     SWITCHING_TO_3_PHASE = (22, "switching_to_3_phase", "Switching to 3 phase")
@@ -190,7 +190,7 @@ class TemperatureType(VictronEnum):
     GENERIC = (2, "generic", "Generic")
     ROOM = (3, "room", "Room")
     OUTDOOR = (4, "outdoor", "Outdoor")
-    WATER_HEATER = (5, "water_heater", "Water Heater")
+    WATER_HEATER = (5, "water_heater", "Water heater")
     FREEZER = (6, "freezer", "Freezer")
 
 
@@ -198,15 +198,15 @@ class FluidType(VictronEnum):
     """Fluid type enum"""
 
     FUEL = (0, "fuel", "Fuel")
-    FRESH_WATER = (1, "fresh_water", "Fresh Water")
-    WASTE_WATER = (2, "waste_water", "Waste Water")
-    LIVE_WELL = (3, "live_well", "Live Well")
+    FRESH_WATER = (1, "fresh_water", "Fresh water")
+    WASTE_WATER = (2, "waste_water", "Waste water")
+    LIVE_WELL = (3, "live_well", "Live well")
     OIL = (4, "oil", "Oil")
     BLACK_WATER = (5, "black_water", "Black water (sewage)")
     GASOLINE = (6, "gasoline", "Gasoline")
     DIESEL = (7, "diesel", "Diesel")
-    LPG = (8, "lpg", "Liquid  Petroleum Gas (LPG)")
-    LNG = (9, "lng", "Liquid Natural Gas (LNG)")
+    LPG = (8, "lpg", "Liquid petroleum gas (LPG)")
+    LNG = (9, "lng", "Liquid natural gas (LNG)")
     HYDRAULIC_OIL = (10, "hydraulic_oil", "Hydraulic oil")
     RAW_WATER = (11, "raw_water", "Raw water")
 
@@ -225,7 +225,7 @@ class ESSMode(VictronEnum):
 
     SELF_CONSUMPTION_BATTERYLIFE = (0, "self_consumption_batterylife", "Self-consumption (batterylife)")
     SELF_CONSUMPTION = (1, "self_consumption", "Self-consumption")
-    KEEP_CHARGED = (2, "keep_charged", "keep charged")
+    KEEP_CHARGED = (2, "keep_charged", "Keep charged")
     EXTERNAL_CONTROL = (3, "external_control", "External control")
 
 
@@ -234,79 +234,79 @@ class GeneratorRunningByConditionCode(VictronEnum):
 
     STOPPED = (0, "stopped", "Stopped")
     MANUAL = (1, "manual", "Manual")
-    TEST_RUN = (2, "test_run", "Test Run")
-    LOST_COMMS = (3, "lost_comms", "Lost Comms")
+    TEST_RUN = (2, "test_run", "Test run")
+    LOST_COMMS = (3, "lost_comms", "Lost comms")
     SOC = (4, "soc", "SoC")
-    AC_LOAD = (5, "ac_load", "AC Load")
-    BATTERY_CURRENT = (6, "battery_current", "Battery Current")
-    BATTERY_VOLTS = (7, "battery_volts", "Battery Volts")
-    INV_TEMP = (8, "inv_temp", "Inv Temp")
-    INV_OVERLOAD = (9, "inv_overload", "Inv Overload")
-    STOP_ON_AC1 = (10, "stop_on_ac1", "Stop On AC1")
+    AC_LOAD = (5, "ac_load", "AC load")
+    BATTERY_CURRENT = (6, "battery_current", "Battery current")
+    BATTERY_VOLTS = (7, "battery_volts", "Battery volts")
+    INV_TEMP = (8, "inv_temp", "Inv temp")
+    INV_OVERLOAD = (9, "inv_overload", "Inv overload")
+    STOP_ON_AC1 = (10, "stop_on_ac1", "Stop on AC1")
 
 
 class DESSReactiveStrategy(VictronEnum):
     """DESS Reactive Strategy Enum"""
 
-    SCHEDULED_SELFCONSUME = (1, "scheduled_selfconsume", "Scheduled Self-Consume")
-    SCHEDULED_CHARGE_ALLOW_GRID = (2, "scheduled_charge_allow_grid", "Scheduled Charge Allow Grid")
-    SCHEDULED_CHARGE_ENHANCED = (3, "scheduled_charge_enhanced", "Scheduled Charge Enhanced")
-    SELFCONSUME_ACCEPT_CHARGE = (4, "selfconsume_accept_charge", "Self-Consume Accept Charge")
-    IDLE_SCHEDULED_FEEDIN = (5, "idle_scheduled_feedin", "Idle Scheduled Feed-In")
-    SCHEDULED_DISCHARGE = (6, "scheduled_discharge", "Scheduled Discharge")
-    SELFCONSUME_ACCEPT_DISCHARGE = (7, "selfconsume_accept_discharge", "Self-Consume Accept Discharge")
-    IDLE_MAINTAIN_SURPLUS = (8, "idle_maintain_surplus", "Idle Maintain Surplus")
-    IDLE_MAINTAIN_TARGETSOC = (9, "idle_maintain_targetsoc", "Idle Maintain Target SoC")
+    SCHEDULED_SELFCONSUME = (1, "scheduled_selfconsume", "Scheduled self-consume")
+    SCHEDULED_CHARGE_ALLOW_GRID = (2, "scheduled_charge_allow_grid", "Scheduled charge allow grid")
+    SCHEDULED_CHARGE_ENHANCED = (3, "scheduled_charge_enhanced", "Scheduled charge enhanced")
+    SELFCONSUME_ACCEPT_CHARGE = (4, "selfconsume_accept_charge", "Self-consume accept charge")
+    IDLE_SCHEDULED_FEEDIN = (5, "idle_scheduled_feedin", "Idle scheduled feed-in")
+    SCHEDULED_DISCHARGE = (6, "scheduled_discharge", "Scheduled discharge")
+    SELFCONSUME_ACCEPT_DISCHARGE = (7, "selfconsume_accept_discharge", "Self-consume accept discharge")
+    IDLE_MAINTAIN_SURPLUS = (8, "idle_maintain_surplus", "Idle maintain surplus")
+    IDLE_MAINTAIN_TARGETSOC = (9, "idle_maintain_targetsoc", "Idle maintain target SoC")
     SCHEDULED_CHARGE_SMOOTH_TRANSITION = (
         10,
         "scheduled_charge_smooth_transition",
-        "Scheduled Charge Smooth Transition",
+        "Scheduled charge smooth transition",
     )
-    SCHEDULED_CHARGE_FEEDIN = (11, "scheduled_charge_feedin", "Scheduled Charge Feed-In")
-    SCHEDULED_CHARGE_NO_GRID = (12, "scheduled_charge_no_grid", "Scheduled Charge No Grid")
-    SCHEDULED_MINIMUM_DISCHARGE = (13, "scheduled_minimum_discharge", "Scheduled Minimum Discharge")
-    SELFCONSUME_NO_GRID = (14, "selfconsume_no_grid", "Self-Consume No Grid")
-    IDLE_NO_OPPORTUNITY = (15, "idle_no_opportunity", "Idle No Opportunity")
+    SCHEDULED_CHARGE_FEEDIN = (11, "scheduled_charge_feedin", "Scheduled charge feed-in")
+    SCHEDULED_CHARGE_NO_GRID = (12, "scheduled_charge_no_grid", "Scheduled charge no grid")
+    SCHEDULED_MINIMUM_DISCHARGE = (13, "scheduled_minimum_discharge", "Scheduled minimum discharge")
+    SELFCONSUME_NO_GRID = (14, "selfconsume_no_grid", "Self-consume no grid")
+    IDLE_NO_OPPORTUNITY = (15, "idle_no_opportunity", "Idle no opportunity")
     UNSCHEDULED_CHARGE_CATCHUP_TARGETSOC = (
         16,
         "unscheduled_charge_catchup_targetsoc",
-        "Unscheduled Charge Catch-Up Target SoC",
+        "Unscheduled charge catch-up target SoC",
     )
-    SELFCONSUME_INCREASED_DISCHARGE = (17, "selfconsume_increased_discharge", "Self-Consume Increased Discharge")
-    KEEP_BATTERY_CHARGED = (18, "keep_battery_charged", "Keep Battery Charged")
+    SELFCONSUME_INCREASED_DISCHARGE = (17, "selfconsume_increased_discharge", "Self-consume increased discharge")
+    KEEP_BATTERY_CHARGED = (18, "keep_battery_charged", "Keep battery charged")
     SCHEDULED_DISCHARGE_SMOOTH_TRANSITION = (
         19,
         "scheduled_discharge_smooth_transition",
-        "Scheduled Discharge Smooth Transition",
+        "Scheduled discharge smooth transition",
     )
-    DESS_DISABLED = (92, "dess_disabled", "DESS Disabled")
-    SELFCONSUME_UNEXPECTED_EXCEPTION = (93, "selfconsume_unexpected_exception", "Self-Consume Unexpected Exception")
-    SELFCONSUME_FAULTY_CHARGERATE = (94, "selfconsume_faulty_chargerate", "Self-Consume Faulty Charge Rate")
-    UNKNOWN_OPERATING_MODE = (95, "unknown_operating_mode", "Unknown Operating Mode")
-    ESS_LOW_SOC = (96, "ess_low_soc", "ESS Low SoC")
-    SELFCONSUME_UNMAPPED_STATE = (97, "selfconsume_unmapped_state", "Self-Consume Unmapped State")
-    SELFCONSUME_UNPREDICTED = (98, "selfconsume_unpredicted", "Self-Consume Unpredicted")
-    NO_WINDOW = (99, "no_window", "No Window")
+    DESS_DISABLED = (92, "dess_disabled", "DESS disabled")
+    SELFCONSUME_UNEXPECTED_EXCEPTION = (93, "selfconsume_unexpected_exception", "Self-consume unexpected exception")
+    SELFCONSUME_FAULTY_CHARGERATE = (94, "selfconsume_faulty_chargerate", "Self-consume faulty charge rate")
+    UNKNOWN_OPERATING_MODE = (95, "unknown_operating_mode", "Unknown operating mode")
+    ESS_LOW_SOC = (96, "ess_low_soc", "ESS low SoC")
+    SELFCONSUME_UNMAPPED_STATE = (97, "selfconsume_unmapped_state", "Self-consume unmapped state")
+    SELFCONSUME_UNPREDICTED = (98, "selfconsume_unpredicted", "Self-consume unpredicted")
+    NO_WINDOW = (99, "no_window", "No window")
 
 
 class DESSStrategy(VictronEnum):
     """DESS Strategy Enum"""
 
     TARGETSOC = (0, "targetsoc", "Target SoC")
-    SELFCONSUME = (1, "selfconsume", "Self-Consume")
-    PROBATTERY = (2, "probattery", "Pro Battery")
-    PROGRID = (3, "progrid", "Pro Grid")
+    SELFCONSUME = (1, "selfconsume", "Self-consume")
+    PROBATTERY = (2, "probattery", "Pro battery")
+    PROGRID = (3, "progrid", "Pro grid")
 
 
 class DESSErrorCode(VictronEnum):
     """DESS Error Code Enum"""
 
-    NO_ERROR = (0, "no_error", "No Error")
+    NO_ERROR = (0, "no_error", "No error")
     NO_ESS = (1, "no_ess", "No ESS")
-    ESS_MODE = (2, "ess_mode", "ESS Mode")  # ???
-    NO_SCHEDULE = (3, "no_schedule", "No Matching Schedule")
+    ESS_MODE = (2, "ess_mode", "ESS mode")  # ???
+    NO_SCHEDULE = (3, "no_schedule", "No matching schedule")
     SOC_LOW = (4, "soc_low", "SoC low")
-    BATTRY_CAPACITY_NOT_CONFIGURED = (5, "battry_capacity_not_configured", "Battery Capacity Not Configured")
+    BATTRY_CAPACITY_NOT_CONFIGURED = (5, "battry_capacity_not_configured", "Battery capacity not configured")
 
 
 class DESSMode(VictronEnum):
@@ -322,7 +322,7 @@ class DESSMode(VictronEnum):
 class DESSRestrictions(VictronEnum):
     """DESS Restrictions Enum"""
 
-    NO_RESTRICTIONS = (0, "no_restrictions", "No Restrictions between battery and the grid")
+    NO_RESTRICTIONS = (0, "no_restrictions", "No restrictions between battery and the grid")
     BATTERY_TO_GRID_RESTRICTED = (1, "battery_to_grid_restricted", "Battery to grid energy flow restricted")
     GRID_TO_BATTERY_RESTRICTED = (2, "grid_to_battery_restricted", "Grid to battery energy flow restricted")
     NO_FLOW = (3, "no_flow", "No energy flow between battery and grid")
@@ -364,8 +364,8 @@ class ErrorCode(VictronEnum):
 class DigitalInputInputState(VictronEnum):
     """Raw input state: High/Open (0) or Low/Closed (1)."""
 
-    HIGH_OPEN = (0, "high_open", "High/Open")
-    LOW_CLOSED = (1, "low_closed", "Low/Closed")
+    HIGH_OPEN = (0, "high_open", "High/open")
+    LOW_CLOSED = (1, "low_closed", "Low/closed")
 
 
 class DigitalInputType(VictronEnum):
@@ -496,8 +496,8 @@ class ChargeSchedule(VictronEnum):
 class ActiveInputEnum(VictronEnum):
     """Active Input Enum"""
 
-    AC_INPUT_1 = (0, "ac_input_1", "AC Input 1")
-    AC_INPUT_2 = (1, "ac_input_2", "AC Input 2")
+    AC_INPUT_1 = (0, "ac_input_1", "AC input 1")
+    AC_INPUT_2 = (1, "ac_input_2", "AC input 2")
     DISCONNECTED = (240, "disconnected", "Disconnected")
 
 
@@ -505,7 +505,7 @@ class SolarChargerDeviceOffReason(VictronEnum):
     """Solar Charger Device Off Reason Enum"""
 
     NONE = (0x00, "none", "-")
-    NO_INPUT_POWER = (0x01, "no_input_power", "No/Low input power")
+    NO_INPUT_POWER = (0x01, "no_input_power", "No/low input power")
     SWITCHED_OFF_POWER_SWITCH = (0x02, "switched_off_power_switch", "Switched off (power switch)")
     SWITCHED_OFF_DEVICE_MODE_REGISTER = (
         0x04,
@@ -519,8 +519,8 @@ class SolarChargerDeviceOffReason(VictronEnum):
     ENGINE_SHUTDOWN = (0x80, "engine_shutdown", "Engine shutdown on low input voltage")
     ANALYSING_INPUT_VOLTAGE = (0x100, "analysing_input_voltage", "Analysing input voltage")
     LOW_TEMPERATURE = (0x200, "low_temperature", "Low temperature")
-    NO_PANEL_POWER = (0x400, "no_panel_power", "No/Low panel power")
-    NO_BATTERY_POWER = (0x800, "no_battery_power", "No/Low battery power")
+    NO_PANEL_POWER = (0x400, "no_panel_power", "No/low panel power")
+    NO_BATTERY_POWER = (0x800, "no_battery_power", "No/low battery power")
     ACTIVE_ALARM = (0x8000, "active_alarm", "Active alarm")
 
 

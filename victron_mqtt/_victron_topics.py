@@ -1123,7 +1123,6 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         metric_nature=MetricNature.MEASUREMENT,
         precision=3,
-        unit_of_measurement="factor",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/grid/{device_id}/Ac/Voltage",
@@ -1168,7 +1167,6 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         metric_nature=MetricNature.MEASUREMENT,
         precision=3,
-        unit_of_measurement="factor",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/grid/{device_id}/Ac/{phase}/Voltage",
@@ -3264,7 +3262,6 @@ topics: list[TopicDescriptor] = [
         max=3.5,
         step=0.125,
         precision=3,
-        unit_of_measurement="factor",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/State",
