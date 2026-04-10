@@ -9,9 +9,15 @@ from typing import Any, cast
 # Target component name used in translation key references.
 COMPONENT_NAME = "victron_gx"
 
+# When True, detect duplicate strings across entities and store them in a local
+# "common" section with cross-references.  When False, only global common
+# strings (from strings_common.json) are used.
+DEDUPE_STRINGS = False
+
 # Entity types to include in the output. Add more as platforms are added.
 # To publish all entity types, replace this with: INCLUDED_ENTITY_TYPES = None
-INCLUDED_ENTITY_TYPES: set[str] | None = {"sensor", "select"}
+# INCLUDED_ENTITY_TYPES: set[str] | None = None
+INCLUDED_ENTITY_TYPES: set[str] | None = {"sensor", "binary_sensor", "select", "switch"}
 
 
 def build_common_lookup(data: dict[str, Any], prefix: str = "") -> dict[str, list[str]]:
@@ -142,37 +148,38 @@ def main():
             entity["sensor"][translation_key] = entity_entry
 
     # Detect duplicate string values and store as integration-local common strings
-    value_counts: dict[str, int] = {}
-    for entity_type_entries in entity.values():
-        for entry in entity_type_entries.values():
-            if "name" in entry:
-                value_counts[entry["name"]] = value_counts.get(entry["name"], 0) + 1
-            if "state" in entry:
-                for v in entry["state"].values():
-                    value_counts[v] = value_counts.get(v, 0) + 1
-
-    # Build local common section for values that appear 2+ times and aren't
-    # already covered by the global strings_common.json
     local_common: dict[str, str] = {}
-    local_common_keys: set[str] = set()
-    for value, cnt in sorted(value_counts.items()):
-        if cnt < 2 or value in common_lookup:
-            continue
-        key = re.sub(r"[^a-z]+", "_", value.lower()).strip("_")
-        if key in local_common_keys:
-            i = 2
-            while f"{key}_{i}" in local_common_keys:
-                i += 1
-            key = f"{key}_{i}"
-        local_common[key] = value
-        local_common_keys.add(key)
+    if DEDUPE_STRINGS:
+        value_counts: dict[str, int] = {}
+        for entity_type_entries in entity.values():
+            for entry in entity_type_entries.values():
+                if "name" in entry:
+                    value_counts[entry["name"]] = value_counts.get(entry["name"], 0) + 1
+                if "state" in entry:
+                    for v in entry["state"].values():
+                        value_counts[v] = value_counts.get(v, 0) + 1
 
-    if local_common:
-        # Add local common values to the lookup so resolve_common_ref can find them
-        for key, value in local_common.items():
-            path = f"component::{COMPONENT_NAME}::common::{key}"
-            common_lookup.setdefault(value, []).insert(0, path)
-        print(f"Added {len(local_common)} local common strings")
+        # Build local common section for values that appear 2+ times and aren't
+        # already covered by the global strings_common.json
+        local_common_keys: set[str] = set()
+        for value, cnt in sorted(value_counts.items()):
+            if cnt < 2 or value in common_lookup:
+                continue
+            key = re.sub(r"[^a-z]+", "_", value.lower()).strip("_")
+            if key in local_common_keys:
+                i = 2
+                while f"{key}_{i}" in local_common_keys:
+                    i += 1
+                key = f"{key}_{i}"
+            local_common[key] = value
+            local_common_keys.add(key)
+
+        if local_common:
+            # Add local common values to the lookup so resolve_common_ref can find them
+            for key, value in local_common.items():
+                path = f"component::{COMPONENT_NAME}::common::{key}"
+                common_lookup.setdefault(value, []).insert(0, path)
+            print(f"Added {len(local_common)} local common strings")
 
     # Resolve common references in all entries
     for entity_type_entries in entity.values():
