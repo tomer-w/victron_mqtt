@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout victron_mqtt
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: victron_mqtt
 
@@ -24,7 +24,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Checkout Home Assistant Core
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: home-assistant/core
           ref: dev
