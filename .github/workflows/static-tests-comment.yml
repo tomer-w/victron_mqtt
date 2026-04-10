@@ -18,7 +18,7 @@ jobs:
       github.event.workflow_run.conclusion != 'cancelled'
     steps:
       - name: Download test results
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
@@ -44,7 +44,7 @@ jobs:
           mkdir -p test-results
           unzip -o test-results.zip -d test-results
       - name: Post test summary to PR
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
