@@ -117,6 +117,10 @@ def main():
         is_adjustable_suffix = topic.get("is_adjustable_suffix")
         enum_name = topic.get("enum")
         is_main_topic = topic.get("main_topic", False)
+        is_hidden = topic.get("hidden", False)
+
+        if is_hidden:
+            continue
 
         # Extract the part after the dot and make it lower case
         entity_type = message_type.split(".", 1)[1].lower() if "." in message_type else message_type.lower()
