@@ -3,6 +3,9 @@ name: Update Home Assistant Core Integration
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   update-ha-core:
     runs-on: ubuntu-latest
