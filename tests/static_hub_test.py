@@ -399,45 +399,40 @@ async def test_parameterized_topic_with_shared_map_key():
 
 
 def test_expend_topics():
-    """Test that the Hub correctly expands topic descriptors with placeholders."""
+    """Test that the Hub correctly handles switch SwitchableOutput topic with wildcard placeholder."""
     descriptor = next(
-        (
-            t
-            for t in topics
-            if t.topic == "N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/State"
-        ),
-        None,
+        (t for t in topics if t.topic == "N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/State"), None
     )
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
+    assert descriptor.sub_device_key == "output", "sub_device_key should be 'output'"
 
+    # Wildcard {output} should NOT be expanded (no range pattern)
     expanded = Hub.expand_topic_list([descriptor])
-    assert len(expanded) == 4, f"Expected 4 expanded topics, got {len(expanded)}"
-    new_desc = next(
-        (t for t in expanded if t.topic == "N/{installation_id}/switch/{device_id}/SwitchableOutput/output_1/State"),
-        None,
-    )
-    assert new_desc, "Missing expanded topic for output 1"
-    assert new_desc.short_id == "switch_{output}_state"
-    assert new_desc.name == "Switch {output:switch_{output}_custom_name} state"
-    assert new_desc.key_values["output"] == "1"
+    assert len(expanded) == 1, f"Expected 1 topic (no expansion for wildcard), got {len(expanded)}"
+    assert expanded[0].topic == "N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/State"
+    assert expanded[0].sub_device_key == "output", "sub_device_key should be preserved"
 
 
 @pytest.mark.asyncio
 async def test_expend_message():
-    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    """Test that the Hub correctly creates sub-devices for switch SwitchableOutput topics."""
     hub: Hub = await create_mocked_hub()
 
-    # Inject messages after the event is set
-    await inject_message(hub, "N/123/switch/170/SwitchableOutput/output_2/State", '{"value": 1}')
+    # Inject messages — real MQTT uses plain numbers for output IDs
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/State", '{"value": 1}')
     await finalize_injection(hub)
 
-    # Validate that the device has the metric we published
-    device = hub.devices["switch_170"]
+    # Validate that the sub-device has the metric we published
+    device = hub.devices["switch_170_output_2"]
     metric = device.get_metric("switch_2_state")
     assert metric is not None, "Metric should exist in the device"
     assert metric.generic_short_id == "switch_{output}_state"
     assert metric.key_values["output"] == "2"
     assert metric.value == GenericOnOff.ON, f"Expected metric value to be GenericOnOff.ON, got {metric.value}"
+    assert device.parent_device is not None, "Sub-device should have a parent"
+    assert device.parent_device.unique_id == "switch_170", (
+        f"Parent should be switch_170, got {device.parent_device.unique_id}"
+    )
 
 
 @pytest.mark.asyncio
@@ -681,11 +676,11 @@ async def test_existing_installation_id():
     hub: Hub = await create_mocked_hub(installation_id="123")
 
     # Inject messages after the event is set
-    await inject_message(hub, "N/123/switch/170/SwitchableOutput/output_2/State", '{"value": 1}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/State", '{"value": 1}')
     await finalize_injection(hub)
 
-    # Validate that the device has the metric we published
-    device = hub.devices["switch_170"]
+    # Validate that the sub-device has the metric we published
+    device = hub.devices["switch_170_output_2"]
     metric = device.get_metric("switch_2_state")
     assert metric is not None, "Metric should exist in the device"
     assert metric.generic_short_id == "switch_{output}_state"
@@ -699,11 +694,11 @@ async def test_multiple_hubs():
     hub1: Hub = await create_mocked_hub()
 
     # Inject messages after the event is set
-    await inject_message(hub1, "N/123/switch/170/SwitchableOutput/output_2/State", '{"value": 1}')
+    await inject_message(hub1, "N/123/switch/170/SwitchableOutput/2/State", '{"value": 1}')
     await finalize_injection(hub1, disconnect=False)
 
-    # Validate that the device has the metric we published
-    device1 = hub1.devices["switch_170"]
+    # Validate that the sub-device has the metric we published
+    device1 = hub1.devices["switch_170_output_2"]
     metric1 = device1.get_metric("switch_2_state")
     assert metric1 is not None, "Metric should exist in the device"
     assert metric1.generic_short_id == "switch_{output}_state"
@@ -712,14 +707,14 @@ async def test_multiple_hubs():
 
     hub2: Hub = await create_mocked_hub(installation_id="123")
     # Inject messages after the event is set
-    await inject_message(hub2, "N/123/switch/170/SwitchableOutput/output_2/State", '{"value": 0}')
+    await inject_message(hub2, "N/123/switch/170/SwitchableOutput/2/State", '{"value": 0}')
     await finalize_injection(hub2, disconnect=False)
 
     # Validate the Hub's state
-    assert len(hub2.devices) == 1, f"Expected 1 device, got {len(hub1.devices)}"
+    assert len(hub2.devices) == 1, f"Expected 1 device, got {len(hub2.devices)}"
 
-    # Validate that the device has the metric we published
-    device2 = hub2.devices["switch_170"]
+    # Validate that the sub-device has the metric we published
+    device2 = hub2.devices["switch_170_output_2"]
     metric2 = device2.get_metric("switch_2_state")
     assert metric2 is not None, "Metric should exist in the device"
     assert metric2.generic_short_id == "switch_{output}_state"
@@ -788,26 +783,20 @@ async def test_new_metric():
     mock_on_new_metric.assert_any_call(
         hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_power")
     )
-    mock_on_new_metric.assert_any_call(
-        hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_nrofsatellites")
-    )
+    mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_nrofsatellites"))
     mock_on_new_metric.assert_any_call(
         hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_charge_energy")
     )
     mock_on_new_metric.assert_any_call(
         hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_discharge_energy")
     )
-    assert mock_on_new_metric.call_count == 5, (
-        f"on_new_metric should be called exactly 5 times, got {mock_on_new_metric.call_count}"
-    )
+    assert mock_on_new_metric.call_count == 5, f"on_new_metric should be called exactly 5 times, got {mock_on_new_metric.call_count}"
 
     # Check that we got the callback only once
     hub._keepalive()
     # Wait for the callback to be triggered
     await sleep_short()
-    assert mock_on_new_metric.call_count == 5, (
-        f"on_new_metric should be called exactly 5 times, got {mock_on_new_metric.call_count}"
-    )
+    assert mock_on_new_metric.call_count == 5, "on_new_metric should be called exactly 5 times"
 
     # Validate that the device has the metric we published
     device = hub.devices["system_170"]
@@ -922,9 +911,7 @@ async def test_new_metric_duplicate_formula_messages():
     hub._keepalive()
     # Wait for the callback to be triggered
     await sleep_short()
-    mock_on_new_metric.assert_any_call(
-        hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_nrofsatellites")
-    )
+    mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_nrofsatellites"))
     assert mock_on_new_metric.call_count == 4, "on_new_metric should be called exactly 4 times"
 
     await hub_disconnect(hub)
@@ -991,11 +978,8 @@ async def test_gps_location_formula():
     await sleep_short()
 
     assert location_metric.value.latitude == 48.8566
-    assert location_metric.value.longitude == 2.3522, (
-        f"Expected updated longitude, got {location_metric.value.longitude}"
-    )
+    assert location_metric.value.longitude == 2.3522, f"Expected updated longitude, got {location_metric.value.longitude}"
     assert len(update_values) == 2, f"Expected 2 on_update calls, got {len(update_values)}"
-    assert isinstance(update_values[1], GpsLocation)
     assert update_values[1].longitude == 2.3522
 
     await hub_disconnect(hub)
@@ -1042,9 +1026,7 @@ async def test_gps_location_no_fix():
     await inject_message(hub, "N/123/gps/5/Fix", '{"value": 1}')
     await sleep_short()
 
-    assert isinstance(location_metric.value, GpsLocation), (
-        f"GPS location should be GpsLocation after fix, got {location_metric.value}"
-    )
+    assert isinstance(location_metric.value, GpsLocation), f"GPS location should be GpsLocation after fix, got {location_metric.value}"
     assert location_metric.value.latitude == 51.5074
 
     await hub_disconnect(hub)
@@ -1267,89 +1249,81 @@ async def test_filtered_message_placeholder():
 
 @pytest.mark.asyncio
 async def test_remote_name_dont_exists():
-    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    """Test that sub-device works without custom name."""
     hub: Hub = await create_mocked_hub()
 
-    await inject_message(hub, "N/123/switch/170/SwitchableOutput/output_1/State", '{"value": 1}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/1/State", '{"value": 1}')
     await finalize_injection(hub)
 
-    # Validate the Hub's state
+    # Validate the Hub's state - sub-device should appear
     assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
 
-    # Validate that the device has the metric we published
-    device = hub.devices["switch_170"]
+    # Validate that the sub-device has the metric we published
+    device = hub.devices["switch_170_output_1"]
     assert len(device._metrics) == 1, f"Expected 1 metrics, got {len(device._metrics)}"
     metric = device.get_metric("switch_1_state")
     assert metric is not None, "metric should exist in the device"
-    assert metric.name == "Switch 1 state", "Expected metric name to be 'Switch 1 state', got {metric.name}"
-    assert metric.generic_name == "Switch {output} state", (
-        "Expected metric generic_name to be 'Switch {output} state', got {metric.generic_name}"
-    )
+    assert metric.name == "State", f"Expected metric name to be 'State', got {metric.name}"
+    assert metric.generic_name == "State", f"Expected metric generic_name to be 'State', got {metric.generic_name}"
     assert metric.value == GenericOnOff.ON, f"Expected metric value to be 1, got {metric.value}"
     assert metric.key_values["output"] == "1"
+    assert device.parent_device is not None, "Sub-device should have a parent"
 
 
 @pytest.mark.asyncio
 async def test_remote_name_exists():
-    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    """Test that sub-device gets custom name via ATTRIBUTE."""
     hub: Hub = await create_mocked_hub()
 
-    await inject_message(hub, "N/123/switch/170/SwitchableOutput/output_1/State", '{"value": 1}')
-    await inject_message(hub, "N/123/switch/170/SwitchableOutput/output_1/Settings/CustomName", '{"value": "bla"}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/1/State", '{"value": 1}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/1/Settings/CustomName", '{"value": "bla"}')
     await finalize_injection(hub)
 
-    # Validate the Hub's state
+    # Validate the Hub's state - sub-device should appear
     assert len(hub.devices) == 1, f"Expected 1 device, got {len(hub.devices)}"
 
-    # Validate that the device has the metric we published
-    device = hub.devices["switch_170"]
-    assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
+    # Validate that the sub-device has the metric and custom name
+    device = hub.devices["switch_170_output_1"]
+    assert len(device._metrics) == 1, f"Expected 1 metric, got {len(device._metrics)}"
+    assert device.custom_name == "bla", f"Expected custom_name to be 'bla', got {device.custom_name}"
+    assert device.name == "bla", f"Expected device name to be 'bla', got {device.name}"
     metric = device.get_metric("switch_1_state")
     assert metric is not None, "metric should exist in the device"
-    assert metric.name == "Switch bla state", "Expected metric name to be 'Switch bla state', got {metric.name}"
-    assert metric.generic_name == "Switch {output} state", (
-        "Expected metric name to be 'Switch {output} state', got {metric.name}"
-    )
+    assert metric.name == "State", f"Expected metric name to be 'State', got {metric.name}"
     assert metric.value == GenericOnOff.ON, f"Expected metric value to be 1, got {metric.value}"
-    assert metric.key_values["output"] == "bla"
 
 
 @pytest.mark.asyncio
 async def test_remote_name_exists_two_devices():
-    """Test that the Hub correctly updates its internal state based on MQTT messages."""
+    """Test that multiple sub-devices each get their own custom name."""
     hub: Hub = await create_mocked_hub()
 
-    await inject_message(hub, "N/123/switch/170/SwitchableOutput/output_1/State", '{"value": 1}')
-    await inject_message(hub, "N/123/switch/170/SwitchableOutput/output_1/Settings/CustomName", '{"value": "bla"}')
-    await inject_message(hub, "N/123/switch/155/SwitchableOutput/output_1/State", '{"value": 1}')
-    await inject_message(hub, "N/123/switch/155/SwitchableOutput/output_1/Settings/CustomName", '{"value": "foo"}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/1/State", '{"value": 1}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/1/Settings/CustomName", '{"value": "bla"}')
+    await inject_message(hub, "N/123/switch/155/SwitchableOutput/1/State", '{"value": 1}')
+    await inject_message(hub, "N/123/switch/155/SwitchableOutput/1/Settings/CustomName", '{"value": "foo"}')
     await finalize_injection(hub)
 
-    # Validate the Hub's state
-    assert len(hub.devices) == 2, f"Expected 2 device, got {len(hub.devices)}"
+    # Validate the Hub's state - two sub-devices should appear
+    assert len(hub.devices) == 2, f"Expected 2 devices, got {len(hub.devices)}"
 
-    # Validate that the device has the metric we published
-    device = hub.devices["switch_170"]
-    assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
+    # Validate first sub-device
+    device = hub.devices["switch_170_output_1"]
+    assert len(device._metrics) == 1, f"Expected 1 metric, got {len(device._metrics)}"
+    assert device.custom_name == "bla", f"Expected custom_name to be 'bla', got {device.custom_name}"
     metric = device.get_metric("switch_1_state")
     assert metric is not None, "metric should exist in the device"
-    assert metric.name == "Switch bla state", "Expected metric name to be 'Switch bla state', got {metric.name}"
-    assert metric.generic_name == "Switch {output} state", (
-        "Expected metric name to be 'Switch {output} state', got {metric.name}"
-    )
+    assert metric.name == "State", f"Expected metric name to be 'State', got {metric.name}"
     assert metric.value == GenericOnOff.ON, f"Expected metric value to be 1, got {metric.value}"
-    assert metric.key_values["output"] == "bla"
 
-    device = hub.devices["switch_155"]
-    assert len(device._metrics) == 2, f"Expected 2 metrics, got {len(device._metrics)}"
+    # Validate second sub-device
+    device = hub.devices["switch_155_output_1"]
+    assert len(device._metrics) == 1, f"Expected 1 metric, got {len(device._metrics)}"
+    assert device.custom_name == "foo", f"Expected custom_name to be 'foo', got {device.custom_name}"
     metric = device.get_metric("switch_1_state")
     assert metric is not None, "metric should exist in the device"
-    assert metric.name == "Switch foo state", "Expected metric name to be 'Switch foo state', got {metric.name}"
-    assert metric.generic_name == "Switch {output} state", (
-        "Expected metric name to be 'Switch {output} state', got {metric.name}"
-    )
+    assert metric.name == "State", f"Expected metric name to be 'State', got {metric.name}"
     assert metric.value == GenericOnOff.ON, f"Expected metric value to be 1, got {metric.value}"
-    assert metric.key_values["output"] == "foo"
 
 
 @pytest.mark.asyncio

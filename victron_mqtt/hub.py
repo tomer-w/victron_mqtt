@@ -940,7 +940,36 @@ class Hub:
             raise CannotConnectError("Timeout waiting for first full refresh") from exc
 
     def _get_or_create_device(self, parsed_topic: ParsedTopic, desc: TopicDescriptor) -> Device:
-        """Get or create a device based on topic."""
+        """Get or create a device based on topic. When the descriptor has sub_device_key,
+        creates a sub-device linked to its parent device."""
+        if desc.sub_device_key:
+            # Try expanded key_values first (from range expansion), then extract from topic
+            sub_key_value = desc.key_values.get(desc.sub_device_key)
+            if sub_key_value is None:
+                runtime_key_values = parsed_topic.get_key_values(desc)
+                sub_key_value = runtime_key_values.get(desc.sub_device_key)
+            if sub_key_value is not None:
+                parent_unique_id = parsed_topic.get_device_unique_id()
+                parent_device = self._devices.get(parent_unique_id)
+                if parent_device is None:
+                    _LOGGER.info(
+                        "Creating parent device: unique_id=%s, parsed_topic=%s", parent_unique_id, parsed_topic
+                    )
+                    parent_device = Device(parent_unique_id, parsed_topic, desc)
+                    self._devices[parent_unique_id] = parent_device
+                sub_device_unique_id = f"{parent_unique_id}_{desc.sub_device_key}_{sub_key_value}".lower()
+                device = self._devices.get(sub_device_unique_id)
+                if device is None:
+                    _LOGGER.info(
+                        "Creating sub-device: unique_id=%s, parent=%s, parsed_topic=%s",
+                        sub_device_unique_id,
+                        parent_unique_id,
+                        parsed_topic,
+                    )
+                    device = Device(sub_device_unique_id, parsed_topic, desc, parent_device=parent_device)
+                    self._devices[sub_device_unique_id] = device
+                return device
+
         device_unique_id = parsed_topic.get_device_unique_id()
         device = self._devices.get(device_unique_id)
         if device is None:

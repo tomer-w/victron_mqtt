@@ -47,6 +47,34 @@ from .data_classes import TopicDescriptor
 topics: list[TopicDescriptor] = [
     # generic device attributes
     TopicDescriptor(
+        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/Name",
+        message_type=MetricKind.ATTRIBUTE,
+        short_id="model",
+        value_type=ValueType.STRING,
+        sub_device_key="output",
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/Settings/CustomName",
+        message_type=MetricKind.ATTRIBUTE,
+        short_id="custom_name",
+        value_type=ValueType.STRING,
+        sub_device_key="output",
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/system/{device_id}/SwitchableOutput/{output}/Name",
+        message_type=MetricKind.ATTRIBUTE,
+        short_id="model",
+        value_type=ValueType.STRING,
+        sub_device_key="output",
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/system/{device_id}/SwitchableOutput/{output}/Settings/CustomName",
+        message_type=MetricKind.ATTRIBUTE,
+        short_id="custom_name",
+        value_type=ValueType.STRING,
+        sub_device_key="output",
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Devices/0/SerialNumber",
         message_type=MetricKind.ATTRIBUTE,
         short_id="serial_number",
@@ -2411,30 +2439,25 @@ topics: list[TopicDescriptor] = [
     ),
     # Switch topics
     TopicDescriptor(
-        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/Dimming",
+        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/Dimming",
         message_type=MetricKind.NUMBER,
         short_id="switch_{output}_dimming",
-        name="{output:switch_{output}_custom_name} dimming",
+        name="Dimming",
         value_type=ValueType.INT,
         metric_type=MetricType.PERCENTAGE,
         min=0,
         max=100,
         unit_of_measurement="%",
+        sub_device_key="output",
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/Settings/CustomName",
-        message_type=MetricKind.SENSOR,
-        short_id="switch_{output}_custom_name",
-        name="{output} custom name",
-        value_type=ValueType.STRING,
-    ),
-    TopicDescriptor(
-        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/output_{output(1-4)}/State",
+        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/State",
         message_type=MetricKind.SWITCH,
         short_id="switch_{output}_state",
-        name="Switch {output:switch_{output}_custom_name} state",
+        name="State",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        sub_device_key="output",
     ),
     # System topics
     TopicDescriptor(
@@ -2764,19 +2787,13 @@ topics: list[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/system/{device_id}/SwitchableOutput/{output}/Settings/CustomName",
-        message_type=MetricKind.SENSOR,
-        short_id="switchable_output_{output}_custom_name",
-        name="Switchable output {output} custom name",
-        value_type=ValueType.STRING,
-    ),
-    TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/SwitchableOutput/{output}/State",
         message_type=MetricKind.SWITCH,
         short_id="switchable_output_{output}_state",
-        name="Switchable output {output:switchable_output_{output}_custom_name} state",
+        name="State",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        sub_device_key="output",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/SystemState/State",
