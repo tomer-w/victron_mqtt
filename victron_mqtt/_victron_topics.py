@@ -614,19 +614,26 @@ topics: list[TopicDescriptor] = [
         name="Cell voltage deviation",
         metric_type=MetricType.VOLTAGE,
     ),
-    # Charger topics (AC chargers such as Blue Smart IP22)
+    # Charger topics (AC chargers such as Blue Smart IP22 and IP43)
     TopicDescriptor(
-        topic="N/{installation_id}/charger/{device_id}/Dc/0/Current",
+        topic="N/{installation_id}/charger/{device_id}/Ac/In/{phase}/I",
         message_type=MetricKind.SENSOR,
-        short_id="charger_dc_current",
-        name="DC output current",
+        short_id="charger_ac_in_current_{phase}",
+        name="AC input current {phase}",
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/charger/{device_id}/Dc/0/Voltage",
+        topic="N/{installation_id}/charger/{device_id}/Dc/{output}/Current",
         message_type=MetricKind.SENSOR,
-        short_id="charger_dc_voltage",
-        name="DC output voltage",
+        short_id="charger_dc_current_{output}",
+        name="DC output {output} current",
+        metric_type=MetricType.CURRENT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/charger/{device_id}/Dc/{output}/Voltage",
+        message_type=MetricKind.SENSOR,
+        short_id="charger_dc_voltage_{output}",
+        name="DC output {output} voltage",
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
