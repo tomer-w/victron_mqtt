@@ -194,3 +194,4 @@ cython_debug/
 .cursorindexingignore
 docs/_data/*
 docs/_site/*
+victron_snapshot.json

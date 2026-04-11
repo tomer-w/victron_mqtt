@@ -22,7 +22,7 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/src"  // Include src in PYTHONPATH so Python can find the module
             },
-            "args": ["--host", "192.168.0.159", "--port", "1884", "--verbose"]
+            "args": ["--host", "127.0.0.1", "--port", "1884", "--verbose", "--output-file", "victron_snapshot.json"]
         },
         {
             "name": "view_metrics",
