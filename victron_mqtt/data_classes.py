@@ -13,6 +13,17 @@ from .id_utils import replace_complex_id_to_simple
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class GpsLocation:
+    """Represents a GPS location with latitude and longitude."""
+
+    latitude: float
+    longitude: float
+
+    def __str__(self) -> str:
+        return f"({self.latitude}, {self.longitude})"
+
+
 def topic_to_device_type(topic_parts: list[str]) -> DeviceType | None:
     """Extract the device type from the topic."""
     if topic_parts[0] == "$$func":
@@ -58,6 +69,7 @@ class TopicDescriptor:
     generic_name: str | None = None
     is_formula: bool = False  # True if this topic is calculated from other topics
     main_topic: bool = False  # True if this topic is the main topic for the dvice. Not all devices has to have main entity, but if it has, it should be the one with main_topic = True.
+    hidden: bool = False  # When True, the metric is excluded from on_new_metric callbacks
 
     def __repr__(self) -> str:
         """Return a string representation of the topic."""

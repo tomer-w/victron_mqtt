@@ -17,7 +17,6 @@ from ._unwrappers import (
     unwrap_int_seconds_to_hours,
     unwrap_int_seconds_to_minutes,
 )
-from ._victron_enums import DeviceType
 from .constants import MetricKind, RangeType, VictronEnum
 from .data_classes import ParsedTopic, TopicDescriptor
 from .formula_metric import FormulaMetric
@@ -28,9 +27,11 @@ from .writable_metric import WritableMetric
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from ._victron_enums import DeviceType
     from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class Device:
     """Class to represent a Victron device."""
@@ -97,8 +98,15 @@ class Device:
         else:
             _LOGGER.warning("Unhandled device property %s for %s", short_id, self.unique_id)
 
-
-    def handle_message(self, fallback_to_metric_topic: bool, topic: str, parsed_topic: ParsedTopic, topic_desc: TopicDescriptor, payload: str, log_debug: Callable[..., None]) -> MetricPlaceholder | FallbackPlaceholder | None:
+    def handle_message(
+        self,
+        fallback_to_metric_topic: bool,
+        topic: str,
+        parsed_topic: ParsedTopic,
+        topic_desc: TopicDescriptor,
+        payload: str,
+        log_debug: Callable[..., None],
+    ) -> MetricPlaceholder | FallbackPlaceholder | None:
         """Handle a message."""
         log_debug("Handling message for device %s: topic=%s", self.unique_id, parsed_topic)
 
@@ -112,16 +120,14 @@ class Device:
             if value is None:
                 log_debug(
                     "Ignoring null fallback_to_metric_topic value for device %s metric %s",
-                    self.unique_id, topic_desc.short_id
+                    self.unique_id,
+                    topic_desc.short_id,
                 )
                 return None
             return FallbackPlaceholder(device=self, parsed_topic=parsed_topic, topic_descriptor=topic_desc, value=value)
         value = Device._unwrap_payload(topic_desc, payload)
         if value is None:
-            log_debug(
-                "Ignoring null topic value for device %s metric %s",
-                self.unique_id, topic_desc.short_id
-            )
+            log_debug("Ignoring null topic value for device %s metric %s", self.unique_id, topic_desc.short_id)
             return None
 
         metric = self._metrics.get(parsed_topic.short_id)
@@ -137,16 +143,23 @@ class Device:
         unwrapper = VALUE_TYPE_UNWRAPPER[topic_desc.value_type]
         if unwrapper in [unwrap_enum, unwrap_bitmask]:
             return unwrapper(payload, topic_desc.enum)
-        if unwrapper in [unwrap_float, unwrap_int_seconds_to_hours, unwrap_int_seconds_to_minutes, unwrap_float_m3_to_liters]:
+        if unwrapper in [
+            unwrap_float,
+            unwrap_int_seconds_to_hours,
+            unwrap_int_seconds_to_minutes,
+            unwrap_float_m3_to_liters,
+        ]:
             return unwrapper(payload, topic_desc.precision)
         return unwrapper(payload)
 
     @staticmethod
     def _is_same_adjustable_topics(topic: str, adjustable_topic: str) -> bool:
         """Check if two topics are the same, considering adjustable suffixes."""
-        return topic.rsplit('/', 1)[0] == adjustable_topic.rsplit('/', 1)[0]
+        return topic.rsplit("/", 1)[0] == adjustable_topic.rsplit("/", 1)[0]
 
-    def _create_metric_from_placeholder(self, metric_placeholder: MetricPlaceholder, fallback_placeholders: list[FallbackPlaceholder], hub: Hub) -> Metric:
+    def _create_metric_from_placeholder(
+        self, metric_placeholder: MetricPlaceholder, fallback_placeholders: list[FallbackPlaceholder], hub: Hub
+    ) -> Metric:
         _LOGGER.info("Creating new metric on device: %s", metric_placeholder)
 
         new_topic_desc = metric_placeholder.topic_descriptor
@@ -156,7 +169,16 @@ class Device:
             # If there is a fallback placeholder for the same adjustable topic, and its value is False,
             # then we switch the topic to read-only (sensor).
             _LOGGER.info("Topic %s is adjustable", new_topic_desc.topic)
-            fallback_placeholder = next((fp for fp in fallback_placeholders if Device._is_same_adjustable_topics(fp.parsed_topic.full_topic, metric_placeholder.parsed_topic.full_topic)), None)
+            fallback_placeholder = next(
+                (
+                    fp
+                    for fp in fallback_placeholders
+                    if Device._is_same_adjustable_topics(
+                        fp.parsed_topic.full_topic, metric_placeholder.parsed_topic.full_topic
+                    )
+                ),
+                None,
+            )
             if fallback_placeholder and not fallback_placeholder.value:
                 _LOGGER.info("Switching topic from writable to read-only. topic=%s", new_topic_desc.topic)
                 new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
@@ -177,13 +199,38 @@ class Device:
                 new_topic_desc.min = int(min_value)
 
         assert metric_placeholder.topic_descriptor.name is not None
-        name = ParsedTopic.replace_ids(metric_placeholder.topic_descriptor.name, metric_placeholder.parsed_topic.key_values)
+        name = ParsedTopic.replace_ids(
+            metric_placeholder.topic_descriptor.name, metric_placeholder.parsed_topic.key_values
+        )
         assert metric_placeholder.parsed_topic.device_type is not None, "device_type must be set for metric"
 
-        if new_topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT, MetricKind.BUTTON, MetricKind.TIME]:
-            metric = WritableMetric(device = self, name = name, descriptor = new_topic_desc, unique_id = metric_placeholder.parsed_topic.unique_id, short_id = metric_placeholder.parsed_topic.short_id, key_values = metric_placeholder.parsed_topic.key_values, topic = metric_placeholder.parsed_topic.full_topic, hub = hub)
+        if new_topic_desc.message_type in [
+            MetricKind.SWITCH,
+            MetricKind.NUMBER,
+            MetricKind.SELECT,
+            MetricKind.BUTTON,
+            MetricKind.TIME,
+        ]:
+            metric = WritableMetric(
+                device=self,
+                name=name,
+                descriptor=new_topic_desc,
+                unique_id=metric_placeholder.parsed_topic.unique_id,
+                short_id=metric_placeholder.parsed_topic.short_id,
+                key_values=metric_placeholder.parsed_topic.key_values,
+                topic=metric_placeholder.parsed_topic.full_topic,
+                hub=hub,
+            )
         else:
-            metric = Metric(device = self, name = name, descriptor = new_topic_desc, unique_id = metric_placeholder.parsed_topic.unique_id, short_id = metric_placeholder.parsed_topic.short_id, key_values = metric_placeholder.parsed_topic.key_values,hub = hub)
+            metric = Metric(
+                device=self,
+                name=name,
+                descriptor=new_topic_desc,
+                unique_id=metric_placeholder.parsed_topic.unique_id,
+                short_id=metric_placeholder.parsed_topic.short_id,
+                key_values=metric_placeholder.parsed_topic.key_values,
+                hub=hub,
+            )
         metric._handle_message(metric_placeholder.value, _LOGGER.debug)
         self._metrics[metric.short_id] = metric
         return metric
@@ -193,21 +240,46 @@ class Device:
         name = ParsedTopic.replace_ids(topic_desc.name, key_values)
         short_id = ParsedTopic.replace_ids(topic_desc.short_id, key_values)
         unique_id = ParsedTopic.make_unique_id(self.unique_id, short_id)
-        if topic_desc.message_type in [MetricKind.SWITCH, MetricKind.NUMBER, MetricKind.SELECT, MetricKind.BUTTON, MetricKind.TIME]:
-            metric = WritableFormulaMetric(device = self, name = name, descriptor = topic_desc, unique_id = unique_id, short_id = short_id, hub = hub, key_values = key_values)
+        if topic_desc.message_type in [
+            MetricKind.SWITCH,
+            MetricKind.NUMBER,
+            MetricKind.SELECT,
+            MetricKind.BUTTON,
+            MetricKind.TIME,
+        ]:
+            metric = WritableFormulaMetric(
+                device=self,
+                name=name,
+                descriptor=topic_desc,
+                unique_id=unique_id,
+                short_id=short_id,
+                hub=hub,
+                key_values=key_values,
+            )
         else:
-            metric = FormulaMetric(device = self, name = name, descriptor = topic_desc, unique_id = unique_id, short_id = short_id, hub = hub, key_values = key_values)
+            metric = FormulaMetric(
+                device=self,
+                name=name,
+                descriptor=topic_desc,
+                unique_id=unique_id,
+                short_id=short_id,
+                hub=hub,
+                key_values=key_values,
+            )
         self._metrics[metric.short_id] = metric
         return metric
 
     def get_metric(self, short_id: str) -> Metric | WritableMetric | None:
-        """Get a metric from a unique id."""
-        return self._metrics.get(short_id)
+        """Get a metric from a short id. Returns None for hidden metrics."""
+        metric = self._metrics.get(short_id)
+        if metric is not None and metric._descriptor.hidden:
+            return None
+        return metric
 
     @property
     def metrics(self) -> list[Metric | WritableMetric]:
-        """Returns the list of metrics on this device."""
-        return list(self._metrics.values())
+        """Returns the list of visible metrics on this device."""
+        return [m for m in self._metrics.values() if not m._descriptor.hidden]
 
     @property
     def unique_id(self) -> str:
@@ -264,6 +336,7 @@ class Device:
 @dataclass
 class MetricPlaceholder:
     """Placeholder for a metric that needs to be created."""
+
     device: Device
     parsed_topic: ParsedTopic
     topic_descriptor: TopicDescriptor
@@ -273,9 +346,11 @@ class MetricPlaceholder:
     def __repr__(self) -> str:
         return f"MetricPlaceholder(device={self.device}, parsed_topic={self.parsed_topic}, topic_descriptor={self.topic_descriptor}, payload={self.payload}, value={self.value})"
 
+
 @dataclass
 class FallbackPlaceholder:
     """Placeholder for a fallback metric that needs to be created."""
+
     device: Device
     parsed_topic: ParsedTopic
     topic_descriptor: TopicDescriptor

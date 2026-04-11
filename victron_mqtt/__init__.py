@@ -39,6 +39,7 @@ from ._victron_enums import (
     VictronDeviceEnum,
 )
 from .constants import MetricKind, MetricNature, MetricType, OperationMode, RangeType, VictronEnum
+from .data_classes import GpsLocation
 from .device import Device
 from .formula_metric import FormulaMetric
 from .hub import AuthenticationError, CannotConnectError, Hub, NotConnectedError, ProgrammingError, TopicNotFoundError
@@ -76,6 +77,7 @@ __all__ = [
     "GeneratorRunningByConditionCode",
     "GenericAlarmEnum",
     "GenericOnOff",
+    "GpsLocation",
     "Hub",
     "InverterMode",
     "Metric",

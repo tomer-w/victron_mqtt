@@ -1042,6 +1042,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         precision=None,  # Use full precision of GPS device
         unit_of_measurement="lat",
+        hidden=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Position/Longitude",
@@ -1053,6 +1054,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         precision=None,  # Use full precision of GPS device
         unit_of_measurement="long",
+        hidden=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Speed",
@@ -1064,6 +1066,15 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.SPEED,
         value_type=ValueType.FLOAT,
         precision=2,
+    ),
+    TopicDescriptor(
+        topic="$$func/gps/gps_location",
+        depends_on=["gps_latitude", "gps_longitude"],
+        message_type=MetricKind.DEVICE_TRACKER,
+        short_id="gps_location",
+        name="Location",
+        metric_type=MetricType.LOCATION,
+        value_type=ValueType.GPS_LOCATION,
     ),
     # Grid topics
     TopicDescriptor(

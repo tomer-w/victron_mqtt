@@ -600,6 +600,9 @@ class Hub:
         ]
         for device, metric in ordered_new_metrics:
             metric.phase2_init(device.unique_id, self._all_metrics)
+            if metric._descriptor.hidden:
+                _LOGGER.debug("Skipping on_new_metric for hidden metric: %s", metric.unique_id)
+                continue
             try:
                 if callable(self._on_new_metric):
                     self._schedule_threadsafe(self._on_new_metric, self, device, metric)
@@ -951,8 +954,10 @@ class Hub:
         return device
 
     def get_metric(self, unique_id: str) -> Metric | None:
-        """Get a metric from a unique id."""
+        """Get a metric from a unique id. Returns None for hidden metrics."""
         metric = self._all_metrics.get(unique_id)
+        if metric is not None and metric._descriptor.hidden:
+            return None
         return metric
 
     @property
