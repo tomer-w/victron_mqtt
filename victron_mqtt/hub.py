@@ -68,6 +68,7 @@ _running_client_id = 0
 
 CallbackOnNewMetric = Callable[["Hub", Device, Metric], None]
 
+
 class Hub:
     """Class to communicate with the Venus OS hub."""
 
@@ -159,7 +160,18 @@ class Hub:
             raise ValueError("port must be an integer between 1 and 65535")
         _LOGGER.info(
             "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, topic_log_info=%s)",
-            self._instance_id, host, port, username, use_ssl, installation_id, model_name, topic_prefix, operation_mode, device_type_exclude_filter, update_frequency_seconds, topic_log_info,
+            self._instance_id,
+            host,
+            port,
+            username,
+            use_ssl,
+            installation_id,
+            model_name,
+            topic_prefix,
+            operation_mode,
+            device_type_exclude_filter,
+            update_frequency_seconds,
+            topic_log_info,
         )
         self._model_name = model_name
         self.host = host
@@ -182,7 +194,7 @@ class Hub:
         self._device_type_exclude_filter = device_type_exclude_filter
         self._update_frequency_seconds = update_frequency_seconds
         # The client ID is generated using a random string and the instance ID. It has to be unique between all clients connected to the same mqtt server. If not, they may reset each other connection.
-        random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+        random_string = "".join(random.choices(string.ascii_letters + string.digits, k=8))
         self._client_id = f"victron_mqtt-{random_string}-{self._instance_id}"
         self._keepalive_counter = 0
         self._metrics_placeholders: dict[str, MetricPlaceholder] = {}
@@ -207,13 +219,19 @@ class Hub:
                 continue
             if topic.message_type == MetricKind.SERVICE:
                 self._service_active_topics[topic.short_id] = topic
-            #if operation_mode is READ_ONLY we should change all TopicDescriptor to SENSOR and BINARY_SENSOR
-            elif operation_mode != OperationMode.READ_ONLY or topic.message_type in [MetricKind.ATTRIBUTE, MetricKind.SENSOR, MetricKind.BINARY_SENSOR]:
+            # if operation_mode is READ_ONLY we should change all TopicDescriptor to SENSOR and BINARY_SENSOR
+            elif operation_mode != OperationMode.READ_ONLY or topic.message_type in [
+                MetricKind.ATTRIBUTE,
+                MetricKind.SENSOR,
+                MetricKind.BINARY_SENSOR,
+            ]:
                 metrics_active_topics.append(topic)
-            else: # READ ONLY and writable topic
-                #deep copy the topic
+            else:  # READ ONLY and writable topic
+                # deep copy the topic
                 new_topic = copy.deepcopy(topic)
-                new_topic.message_type = MetricKind.BINARY_SENSOR if topic.message_type == MetricKind.SWITCH else MetricKind.SENSOR
+                new_topic.message_type = (
+                    MetricKind.BINARY_SENSOR if topic.message_type == MetricKind.SWITCH else MetricKind.SENSOR
+                )
                 metrics_active_topics.append(new_topic)
 
         # Replace all {placeholder} patterns with + for MQTT wildcards
@@ -236,10 +254,12 @@ class Hub:
         def merge_is_adjustable_suffix(desc: TopicDescriptor) -> str:
             """Merge the topic with its adjustable suffix."""
             assert desc.is_adjustable_suffix is not None
-            return desc.topic.rsplit('/', 1)[0] + '/' + desc.is_adjustable_suffix
+            return desc.topic.rsplit("/", 1)[0] + "/" + desc.is_adjustable_suffix
 
         # Helper to build a map where duplicate keys accumulate values in a list
-        def build_multi_map(items: list[TopicDescriptor], key_func: Callable[[TopicDescriptor], str]) -> dict[str, list[TopicDescriptor]]:
+        def build_multi_map(
+            items: list[TopicDescriptor], key_func: Callable[[TopicDescriptor], str]
+        ) -> dict[str, list[TopicDescriptor]]:
             result: dict[str, list[TopicDescriptor]] = {}
             for item in items:
                 # No need to index formula topics, they are discovered by _pending_formula_topics
@@ -256,10 +276,16 @@ class Hub:
         self.topic_map = build_multi_map(expanded_topics, lambda desc: Hub._remove_placeholders_map(desc.topic))
         self.fallback_map = build_multi_map(
             [desc for desc in expanded_topics if desc.is_adjustable_suffix],
-            lambda desc: Hub._remove_placeholders_map(merge_is_adjustable_suffix(desc))
+            lambda desc: Hub._remove_placeholders_map(merge_is_adjustable_suffix(desc)),
         )
-        subscription_list1 = [Hub._remove_placeholders(topic.topic) for topic in expanded_topics if not topic.is_formula]
-        subscription_list2 = [Hub._remove_placeholders(merge_is_adjustable_suffix(topic)) for topic in expanded_topics if topic.is_adjustable_suffix and not topic.is_formula]
+        subscription_list1 = [
+            Hub._remove_placeholders(topic.topic) for topic in expanded_topics if not topic.is_formula
+        ]
+        subscription_list2 = [
+            Hub._remove_placeholders(merge_is_adjustable_suffix(topic))
+            for topic in expanded_topics
+            if topic.is_adjustable_suffix and not topic.is_formula
+        ]
         self._subscription_list = subscription_list1 + subscription_list2
         self._pending_formula_topics: list[TopicDescriptor] = [topic for topic in expanded_topics if topic.is_formula]
         for topic in self._pending_formula_topics:
@@ -295,20 +321,19 @@ class Hub:
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.VerifyMode.CERT_NONE
-            self._client.tls_set_context(ssl_context) # type: ignore[arg-type]
+            self._client.tls_set_context(ssl_context)  # type: ignore[arg-type]
 
         self._client.on_connect = self._on_connect
         self._client.on_disconnect = self._on_disconnect
         self._client.on_message = self._on_message
         self._client.on_connect_fail = self._on_connect_fail
-        #self._client.on_log = self._on_log
+        # self._client.on_log = self._on_log
         self._connect_failed_attempts = 0
         self._connect_failed_since = 0.0
         self._connect_failed_reason = None
-        #self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop, name=name))
-        self._last_full_publish_called = time.monotonic() # Initialize last full publish time
+        # self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop, name=name))
+        self._last_full_publish_called = time.monotonic()  # Initialize last full publish time
         self._periodic_full_publish_triggered_once = False
-
 
         _LOGGER.info("Starting paho mqtt")
         self._client.loop_start()
@@ -336,7 +361,9 @@ class Hub:
 
     def publish(self, topic_short_id: str, device_id: str, value: str | float | int | None) -> None:
         """Publish a message to the MQTT broker."""
-        _LOGGER.info("Publishing message to topic_short_id: %s, device_id: %s, value: %s", topic_short_id, device_id, value)
+        _LOGGER.info(
+            "Publishing message to topic_short_id: %s, device_id: %s, value: %s", topic_short_id, device_id, value
+        )
         topic_desc = self._service_active_topics.get(topic_short_id)
         if topic_desc is None:
             _LOGGER.error("No active topic found for topic_short_id: %s", topic_short_id)
@@ -347,10 +374,17 @@ class Hub:
         payload = WritableMetric._wrap_payload(topic_desc, value) if value is not None else ""
         self._publish(topic, payload)
 
-    def _on_log(self, _client: MQTTClient, _userdata: Any, level:int, buf:str) -> None:
+    def _on_log(self, _client: MQTTClient, _userdata: Any, level: int, buf: str) -> None:
         _LOGGER.log(level, buf)
 
-    def _on_connect(self, client: MQTTClient, userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, properties: Properties | None = None) -> None:
+    def _on_connect(
+        self,
+        client: MQTTClient,
+        userdata: Any,
+        flags: ConnectFlags,
+        reason_code: ReasonCode,
+        properties: Properties | None = None,
+    ) -> None:
         try:
             self._on_connect_internal(client, userdata, flags, reason_code, properties)
         except Exception as exc:
@@ -363,7 +397,14 @@ class Hub:
         except Exception as exc:
             _LOGGER.exception("Exception in _on_connect while setting connected event: %s", exc)
 
-    def _on_connect_internal(self, _client: MQTTClient, _userdata: Any, flags: ConnectFlags, reason_code: ReasonCode, _properties: Properties | None = None) -> None:
+    def _on_connect_internal(
+        self,
+        _client: MQTTClient,
+        _userdata: Any,
+        flags: ConnectFlags,
+        reason_code: ReasonCode,
+        _properties: Properties | None = None,
+    ) -> None:
         """Handle connection callback."""
         self._connect_failed_since = 0
         self._connect_failed_attempts = 0
@@ -377,15 +418,28 @@ class Hub:
             _LOGGER.warning("Failed to connect with error code: %s. flags: %s", reason_code, flags)
             if reason_code.value in (134, 135, 4, 5):
                 raise AuthenticationError(f"Authentication failed: {connack_string(reason_code)}")
-            raise CannotConnectError(f"Failed to connect to MQTT broker: {self.host}:{self.port}. Error: {connack_string(reason_code)}")
+            raise CannotConnectError(
+                f"Failed to connect to MQTT broker: {self.host}:{self.port}. Error: {connack_string(reason_code)}"
+            )
 
         _LOGGER.info("Connected to MQTT broker successfully")
         self._setup_subscriptions()
 
-    def _on_disconnect(self, _client: MQTTClient, _userdata: Any, disconnect_flags: mqtt.DisconnectFlags, reason_code: ReasonCode, _properties: Properties | None = None) -> None:
+    def _on_disconnect(
+        self,
+        _client: MQTTClient,
+        _userdata: Any,
+        disconnect_flags: mqtt.DisconnectFlags,
+        reason_code: ReasonCode,
+        _properties: Properties | None = None,
+    ) -> None:
         """Handle disconnection callback."""
         if reason_code != 0:
-            _LOGGER.warning("Unexpected disconnection from MQTT broker. Error: %s. flags: %s, Reconnecting...", reason_code, disconnect_flags)
+            _LOGGER.warning(
+                "Unexpected disconnection from MQTT broker. Error: %s. flags: %s, Reconnecting...",
+                reason_code,
+                disconnect_flags,
+            )
         else:
             _LOGGER.info("Disconnected from MQTT broker.")
 
@@ -410,7 +464,7 @@ class Hub:
         topic = self._remove_topic_prefix(topic)
 
         if topic.endswith("full_publish_completed"):
-            self._handle_full_publish_message(payload = payload)
+            self._handle_full_publish_message(payload=payload)
             return
 
         if self._installation_id is None and not self._installation_id_event.is_set():
@@ -422,16 +476,26 @@ class Hub:
         # This is to handle old cerbo versions that do not send full publish completed messages.
         # Issue #139 and #205
         now = time.monotonic()
-        min_interval = FIRST_FULL_PUBLISH_MIN_INTERVAL_SECONDS if not self._periodic_full_publish_triggered_once else FULL_PUBLISH_MIN_INTERVAL_SECONDS
+        min_interval = (
+            FIRST_FULL_PUBLISH_MIN_INTERVAL_SECONDS
+            if not self._periodic_full_publish_triggered_once
+            else FULL_PUBLISH_MIN_INTERVAL_SECONDS
+        )
         # If we've never called it or it's been longer than the configured interval,
         # call _handle_full_publish_message with an empty payload to trigger periodic handling.
         if now - self._last_full_publish_called >= min_interval:
-            _LOGGER.debug("Periodic trigger: calling _handle_full_publish_message (last %.1fs ago, interval %.1fs)", now - self._last_full_publish_called, min_interval)
+            _LOGGER.debug(
+                "Periodic trigger: calling _handle_full_publish_message (last %.1fs ago, interval %.1fs)",
+                now - self._last_full_publish_called,
+                min_interval,
+            )
             self._handle_full_publish_message(skip_validation=True)
             self._last_full_publish_called = time.monotonic()
             self._periodic_full_publish_triggered_once = True
 
-    def _is_formula_dependency_met(self, topic: TopicDescriptor, relevant_device: Device, key_values: dict[str, str]) -> tuple[bool, list[Metric]]:
+    def _is_formula_dependency_met(
+        self, topic: TopicDescriptor, relevant_device: Device, key_values: dict[str, str]
+    ) -> tuple[bool, list[Metric]]:
         if not topic.depends_on:
             return True, []
         dependencies: list[Metric] = []
@@ -453,7 +517,11 @@ class Hub:
             dependency_metric = self._all_metrics.get(metric_id)
             dependency_placeholder = self._metrics_placeholders.get(metric_id)
             if dependency_metric is None and dependency_placeholder is None:
-                _LOGGER.debug("Regular topic %s is missing dependency metric: %s", metric_placeholder.parsed_topic.full_topic, metric_id)
+                _LOGGER.debug(
+                    "Regular topic %s is missing dependency metric: %s",
+                    metric_placeholder.parsed_topic.full_topic,
+                    metric_id,
+                )
                 return False
         return True
 
@@ -482,7 +550,9 @@ class Hub:
                 # Check if depedency met, if not, the topic will get ignored
                 if not self._is_regular_dependency_met(metric_placeholder):
                     continue
-                metric = metric_placeholder.device._create_metric_from_placeholder(metric_placeholder, fallback_placeholders_list, self)
+                metric = metric_placeholder.device._create_metric_from_placeholder(
+                    metric_placeholder, fallback_placeholders_list, self
+                )
                 self._all_metrics[metric.unique_id] = metric
                 new_metrics.append((metric_placeholder.device, metric))
         self._metrics_placeholders.clear()
@@ -491,16 +561,24 @@ class Hub:
         if len(new_metrics) > 0:
             for topic in self._pending_formula_topics:
                 _LOGGER.debug("Trying to resolve formula topic: %s", topic)
-                relevant_devices: list[Device] = [device for device in self._devices.values() if device.device_type.code == topic.topic.split("/")[1]]
+                relevant_devices: list[Device] = [
+                    device for device in self._devices.values() if device.device_type.code == topic.topic.split("/")[1]
+                ]
                 for device in relevant_devices:
                     # We need all depends_on metric to get the key_values associated with it to be able to generate new metrics per moniker.
-                    all_new_metrics_with_same_depends_on_generic_id = [t[1] for t in new_metrics if t[1]._device == device and t[1].generic_short_id == topic.depends_on[0]]
+                    all_new_metrics_with_same_depends_on_generic_id = [
+                        t[1]
+                        for t in new_metrics
+                        if t[1]._device == device and t[1].generic_short_id == topic.depends_on[0]
+                    ]
                     for depends_on_metric in all_new_metrics_with_same_depends_on_generic_id:
                         metric_unique_id = ParsedTopic.make_unique_id(device.unique_id, topic.short_id)
                         metric_unique_id = ParsedTopic.replace_ids(metric_unique_id, depends_on_metric.key_values)
                         if self._all_metrics.get(metric_unique_id) is not None:
                             continue
-                        is_met, dependencies = self._is_formula_dependency_met(topic, device, depends_on_metric.key_values)
+                        is_met, dependencies = self._is_formula_dependency_met(
+                            topic, device, depends_on_metric.key_values
+                        )
                         if not is_met:
                             continue
                         _LOGGER.info("Formula topic resolved: %s", topic)
@@ -540,7 +618,10 @@ class Hub:
                             ver_str = ver_str.split("~", 1)[0]
                         self._firmware_version = float(ver_str)
                         if self._firmware_version < MINIMUM_FULLY_SUPPORTED_VERSION:
-                            _LOGGER.warning("Firmware version is below v3.5: %s. Reduced functionality may occur.", version_metric.value)
+                            _LOGGER.warning(
+                                "Firmware version is below v3.5: %s. Reduced functionality may occur.",
+                                version_metric.value,
+                            )
                         else:
                             _LOGGER.info("Firmware version is good enough: %s", version_metric.value)
                     except (ValueError, TypeError):
@@ -610,7 +691,7 @@ class Hub:
         _LOGGER.info("Disconnecting from MQTT broker")
         self._stop_keepalive_loop()
         await asyncio.sleep(0.1)
-        self._client.disconnect() # need to call disconnect so the paho thread will terminate
+        self._client.disconnect()  # need to call disconnect so the paho thread will terminate
         _LOGGER.info("Disconnected from MQTT broker")
         # Give a small delay to allow any pending MQTT messages to be processed
         await asyncio.sleep(0.1)
@@ -684,7 +765,6 @@ class Hub:
             self._keepalive_task.cancel()
             self._keepalive_task = None
 
-
     async def create_full_raw_snapshot(self) -> dict[str, Any]:
         """Create a full raw snapshot of the current state of the Venus OS device.
         Should not be used in conjunction with initialize_devices_and_metrics()."""
@@ -698,7 +778,8 @@ class Hub:
         self._client.on_message = self._on_snapshot_message
         self._subscribe("#")
         _LOGGER.info("Subscribed to all topics for snapshot")
-        self._keepalive()
+        # Snapshot collection needs a full republish, not suppress-republish mode.
+        self._keepalive(True)
         await self.wait_for_first_refresh()
         _LOGGER.info("Snapshot complete with %d top-level entries", len(self._snapshot))
         return self._snapshot
@@ -767,7 +848,7 @@ class Hub:
 
     @staticmethod
     def _remove_placeholders(topic: str) -> str:
-        return re.sub(r'\{(?!installation_id\})[^}]+\}', '+', topic)
+        return re.sub(r"\{(?!installation_id\})[^}]+\}", "+", topic)
 
     @staticmethod
     def _remove_placeholders_map(topic: str) -> str:
@@ -796,7 +877,7 @@ class Hub:
         if self._topic_prefix is None:
             return topic
         if topic.startswith(f"{self._topic_prefix}/"):
-            return topic[len(self._topic_prefix) + 1:]
+            return topic[len(self._topic_prefix) + 1 :]
         return topic
 
     def _subscribe(self, topic: str) -> None:
@@ -827,7 +908,7 @@ class Hub:
         assert self._client is not None
         if not self._client.is_connected():
             raise NotConnectedError
-        #topic_list = [(topic, 0) for topic in topic_map]
+        # topic_list = [(topic, 0) for topic in topic_map]
         for topic in self._subscription_list:
             self._subscribe(topic)
         assert self.installation_id is not None
@@ -911,7 +992,9 @@ class Hub:
             # After the first successful connection, we keep retrying forever
             if self._first_connect:
                 if self._connect_failed_attempts >= CONNECT_MAX_FAILED_ATTEMPTS:
-                    raise CannotConnectError(f"Failed to connect to MQTT broker: {self.host}:{self.port} after {self._connect_failed_attempts} attempts")
+                    raise CannotConnectError(
+                        f"Failed to connect to MQTT broker: {self.host}:{self.port} after {self._connect_failed_attempts} attempts"
+                    )
                 return
             # This code is needed as metrics will not get invalidated individually when there is mqtt disconnect
             disconnected_for = time.monotonic() - self._connect_failed_since
@@ -939,11 +1022,10 @@ class Hub:
                 # Only support one placeholder per field for now
                 match = matches[0]
                 key, start, end = match.group(1), int(match.group(2)), int(match.group(3))
-                expanded.extend(replace(
-                    td,
-                    topic=pattern.sub(str(i), td.topic),
-                    key_values={key: str(i)}
-                ) for i in range(start, end+1))
+                expanded.extend(
+                    replace(td, topic=pattern.sub(str(i), td.topic), key_values={key: str(i)})
+                    for i in range(start, end + 1)
+                )
             else:
                 # Use replace to trigger __post_init__ even for unchanged items
                 expanded.append(replace(td))
