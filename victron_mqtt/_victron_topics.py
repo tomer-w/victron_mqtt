@@ -1494,6 +1494,13 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.VOLTAGE,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/multi/{device_id}/Dc/0/Temperature",
+        message_type=MetricKind.SENSOR,
+        short_id="multi_dc_temperature",
+        name="DC temperature",
+        metric_type=MetricType.TEMPERATURE,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Energy/AcIn1ToAcOut",
         message_type=MetricKind.SENSOR,
         short_id="multi_acin1_to_acout",
