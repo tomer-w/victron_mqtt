@@ -2872,7 +2872,6 @@ topics: list[TopicDescriptor] = [
         metric_nature=MetricNature.MEASUREMENT,
         value_type=ValueType.FLOAT,
         precision=2,
-        unit_of_measurement="factor",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/temperature/{device_id}/Status",
