@@ -783,14 +783,18 @@ async def test_new_metric():
     mock_on_new_metric.assert_any_call(
         hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_power")
     )
-    mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_nrofsatellites"))
+    mock_on_new_metric.assert_any_call(
+        hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_nrofsatellites")
+    )
     mock_on_new_metric.assert_any_call(
         hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_charge_energy")
     )
     mock_on_new_metric.assert_any_call(
         hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_discharge_energy")
     )
-    assert mock_on_new_metric.call_count == 5, f"on_new_metric should be called exactly 5 times, got {mock_on_new_metric.call_count}"
+    assert mock_on_new_metric.call_count == 5, (
+        f"on_new_metric should be called exactly 5 times, got {mock_on_new_metric.call_count}"
+    )
 
     # Check that we got the callback only once
     hub._keepalive()
@@ -911,7 +915,9 @@ async def test_new_metric_duplicate_formula_messages():
     hub._keepalive()
     # Wait for the callback to be triggered
     await sleep_short()
-    mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_nrofsatellites"))
+    mock_on_new_metric.assert_any_call(
+        hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_nrofsatellites")
+    )
     assert mock_on_new_metric.call_count == 4, "on_new_metric should be called exactly 4 times"
 
     await hub_disconnect(hub)
@@ -978,7 +984,9 @@ async def test_gps_location_formula():
     await sleep_short()
 
     assert location_metric.value.latitude == 48.8566
-    assert location_metric.value.longitude == 2.3522, f"Expected updated longitude, got {location_metric.value.longitude}"
+    assert location_metric.value.longitude == 2.3522, (
+        f"Expected updated longitude, got {location_metric.value.longitude}"
+    )
     assert len(update_values) == 2, f"Expected 2 on_update calls, got {len(update_values)}"
     assert update_values[1].longitude == 2.3522
 
@@ -1026,7 +1034,9 @@ async def test_gps_location_no_fix():
     await inject_message(hub, "N/123/gps/5/Fix", '{"value": 1}')
     await sleep_short()
 
-    assert isinstance(location_metric.value, GpsLocation), f"GPS location should be GpsLocation after fix, got {location_metric.value}"
+    assert isinstance(location_metric.value, GpsLocation), (
+        f"GPS location should be GpsLocation after fix, got {location_metric.value}"
+    )
     assert location_metric.value.latitude == 51.5074
 
     await hub_disconnect(hub)
@@ -1100,6 +1110,60 @@ async def test_hidden_metrics_not_in_callback():
     assert "gps_speed" not in callback_metrics, "Hidden metric should not trigger callback"
     assert "gps_nrofsatellites" in callback_metrics, "Non-hidden metric should trigger callback"
     assert "gps_location" in callback_metrics, "Formula metric should trigger callback"
+
+
+@pytest.mark.asyncio
+async def test_empty_devices_not_notified():
+    """Test that devices with no visible metrics and no children are not sent via on_new_device."""
+    hub: Hub = await create_mocked_hub()
+
+    notified_device_ids: list[str] = []
+
+    def on_new_device_mock(_hub: Hub, device: object) -> None:
+        notified_device_ids.append(str(device.unique_id))
+
+    hub.on_new_device = MagicMock(side_effect=on_new_device_mock)
+
+    # Inject only hidden GPS metrics (lat+lon) — no visible metrics on the device
+    await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 51.5074}')
+    await finalize_injection(hub)
+
+    # gps_5 has only hidden metrics and no children — should NOT be notified
+    assert "gps_5" not in notified_device_ids, "Device with only hidden metrics and no children should not be notified"
+
+    # Now inject a visible metric — device should appear
+    await inject_message(hub, "N/123/gps/5/NrOfSatellites", '{"value": 8}')
+    await finalize_injection(hub, disconnect=False)
+
+    assert "gps_5" in notified_device_ids, "Device should be notified once it has visible metrics"
+
+    await hub_disconnect(hub)
+
+
+@pytest.mark.asyncio
+async def test_parent_device_with_children_notified():
+    """Test that a parent device with no metrics but with children is still notified."""
+    hub: Hub = await create_mocked_hub()
+
+    notified_device_ids: list[str] = []
+
+    def on_new_device_mock(_hub: Hub, device: object) -> None:
+        notified_device_ids.append(str(device.unique_id))
+
+    hub.on_new_device = MagicMock(side_effect=on_new_device_mock)
+
+    # Inject a sub-device metric — parent switch_10 has no metrics itself
+    await inject_message(hub, "N/123/switch/10/SwitchableOutput/3/State", '{"value": 1}')
+    await finalize_injection(hub)
+
+    # Parent should be notified (it has a child with metrics)
+    assert "switch_10" in notified_device_ids, "Parent with children should be notified"
+    # Child should be notified
+    assert "switch_10_output_3" in notified_device_ids, "Child device should be notified"
+    # Parent should come before child
+    assert notified_device_ids.index("switch_10") < notified_device_ids.index("switch_10_output_3"), (
+        "Parent should be notified before child"
+    )
 
 
 @pytest.mark.asyncio
