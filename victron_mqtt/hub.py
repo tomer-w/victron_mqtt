@@ -67,6 +67,7 @@ MINIMUM_FULLY_SUPPORTED_VERSION = 3.5
 _running_client_id = 0
 
 CallbackOnNewMetric = Callable[["Hub", Device, Metric], None]
+CallbackOnNewDevice = Callable[["Hub", Device], None]
 
 
 class Hub:
@@ -189,6 +190,7 @@ class Hub:
         self._keepalive_task = None
         self._connected_event = asyncio.Event()
         self._on_new_metric: CallbackOnNewMetric | None = None
+        self._on_new_device: CallbackOnNewDevice | None = None
         self._topic_log_info = topic_log_info
         self._operation_mode = operation_mode
         self._device_type_exclude_filter = device_type_exclude_filter
@@ -202,6 +204,7 @@ class Hub:
         self._all_metrics: dict[str, Metric] = {}
         self._first_connect = True
         self._first_full_publish = True
+        self._notified_device_ids: set[str] = set()
         self._connect_failed_attempts = 0
         self._connect_failed_reason: Exception | None = None
         # Track when _handle_full_publish_message was last invoked for our client
@@ -592,12 +595,57 @@ class Hub:
                         self._all_metrics[metric.unique_id] = metric
                         new_metrics.append((device, metric))
         # We are sending the new metrics now as we can be sure that the metric handled all the attribute topics and now ready.
-        # Prioritize callbacks for system metrics first, while preserving the original relative order.
-        # This is to ensure that HA via device works (other devices are marked depended on the system)
-        ordered_new_metrics = [
-            *[item for item in new_metrics if item[0].device_type == DeviceType.SYSTEM],
-            *[item for item in new_metrics if item[0].device_type != DeviceType.SYSTEM],
-        ]
+        # Assign parent_device to top-level devices that don't already have one
+        system_device = self._devices.get("system_0")
+        if system_device is not None:
+            for device in self._devices.values():
+                if device.parent_device is None and device is not system_device:
+                    device._parent_device = system_device
+
+        # Topologically sort: parent devices before their children.
+        # Collect devices that have new metrics in this batch.
+        new_device_set: dict[str, Device] = {}
+        for device, _metric in new_metrics:
+            if device.unique_id not in new_device_set:
+                new_device_set[device.unique_id] = device
+                # Also include parent if not already notified
+                parent = device.parent_device
+                while parent is not None and parent.unique_id not in new_device_set:
+                    new_device_set[parent.unique_id] = parent
+                    parent = parent.parent_device
+
+        # Sort: devices without parents first, then by depth
+        def _device_depth(dev: Device) -> tuple[int, int]:
+            depth = 0
+            current = dev.parent_device
+            while current is not None:
+                depth += 1
+                current = current.parent_device
+            # At same depth, system devices come first
+            is_system = 0 if dev.device_type == DeviceType.SYSTEM else 1
+            return (depth, is_system)
+
+        ordered_devices = sorted(new_device_set.values(), key=_device_depth)
+
+        # Fire on_new_device for devices not yet notified
+        notified_devices: set[str] = set()
+        for device in ordered_devices:
+            if device.unique_id not in self._notified_device_ids:
+                self._notified_device_ids.add(device.unique_id)
+                notified_devices.add(device.unique_id)
+                try:
+                    if callable(self._on_new_device):
+                        self._schedule_threadsafe(self._on_new_device, self, device)
+                except Exception as exc:
+                    _LOGGER.exception("Error calling _on_new_device callback %s", exc)
+
+        # Fire on_new_metric in topological order (parent devices' metrics before children)
+        ordered_new_metrics: list[tuple[Device, Metric]] = []
+        for device in ordered_devices:
+            ordered_new_metrics.extend(
+                (dev, metric) for dev, metric in new_metrics if dev.unique_id == device.unique_id
+            )
+
         for device, metric in ordered_new_metrics:
             metric.phase2_init(device.unique_id, self._all_metrics)
             if metric._descriptor.hidden:
@@ -1074,6 +1122,16 @@ class Hub:
     def on_new_metric(self, value: CallbackOnNewMetric | None):
         """Sets the on_new_metric callback."""
         self._on_new_metric = value
+
+    @property
+    def on_new_device(self) -> CallbackOnNewDevice | None:
+        """Returns the on_new_device callback."""
+        return self._on_new_device
+
+    @on_new_device.setter
+    def on_new_device(self, value: CallbackOnNewDevice | None):
+        """Sets the on_new_device callback."""
+        self._on_new_device = value
 
     def generate_keepalive_options(self, force: bool) -> str:
         """Generate a string for keepalive options with a configurable echo value."""
