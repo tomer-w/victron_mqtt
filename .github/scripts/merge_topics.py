@@ -12,12 +12,13 @@ COMPONENT_NAME = "victron_gx"
 # When True, detect duplicate strings across entities and store them in a local
 # "common" section with cross-references.  When False, only global common
 # strings (from strings_common.json) are used.
-DEDUPE_STRINGS = False
+DEDUPE_STRINGS = True
 
 # Entity types to include in the output. Add more as platforms are added.
 # To publish all entity types, replace this with: INCLUDED_ENTITY_TYPES = None
 # INCLUDED_ENTITY_TYPES: set[str] | None = None
-INCLUDED_ENTITY_TYPES: set[str] | None = {"sensor", "binary_sensor", "select", "switch"}
+# INCLUDED_ENTITY_TYPES: set[str] | None = {"sensor", "binary_sensor", "select", "switch"}
+INCLUDED_ENTITY_TYPES: set[str] | None = None
 
 
 def build_common_lookup(data: dict[str, Any], prefix: str = "") -> dict[str, list[str]]:
