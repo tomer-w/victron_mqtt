@@ -135,6 +135,8 @@ class AttributeViewerDialog(simpledialog.Dialog):
                     continue
                 if callable(prop_value):
                     continue
+                if prop_value is None:
+                    continue
                 ttk.Label(props_frame, text=f"{name}:", font=("", 9, "bold")).grid(
                     row=row, column=0, sticky=tk.W, padx=5, pady=2
                 )
@@ -213,20 +215,35 @@ class AttributeViewerDialog(simpledialog.Dialog):
         self._apply_value(value)
 
     def _build_select_control(self, parent, metric: WritableMetric):
-        """Build a dropdown for select metrics."""
+        """Build a dropdown for select metrics. Shows display strings, sends enum ids."""
         assert metric.enum_values is not None
-        self._writable_var = tk.StringVar(value=str(metric.value))
+        assert metric._descriptor.enum is not None
+
+        # Build string→id mapping
+        enum_cls = metric._descriptor.enum
+        self._select_string_to_id = {member.string: member.id for member in enum_cls}
+        display_values = list(self._select_string_to_id.keys())
+
+        # Show current value as display string
+        current_display = str(metric.value)  # VictronEnum.__str__ returns .string
+        self._writable_var = tk.StringVar(value=current_display)
 
         ttk.Label(parent, text="Select:", font=("", 9, "bold")).grid(row=0, column=0, sticky=tk.W, padx=5, pady=3)
         dropdown = ttk.Combobox(
             parent,
             textvariable=self._writable_var,
-            values=metric.enum_values,
+            values=display_values,
             state="readonly",
             width=25,
         )
         dropdown.grid(row=0, column=1, sticky=tk.W, padx=5, pady=3)
-        dropdown.bind("<<ComboboxSelected>>", lambda _: self._apply_value(self._writable_var.get()))
+        dropdown.bind("<<ComboboxSelected>>", self._on_select_change)
+
+    def _on_select_change(self, _event):
+        """Send the enum id when a display string is selected."""
+        display = self._writable_var.get()
+        enum_id = self._select_string_to_id.get(display, display)
+        self._apply_value(enum_id)
 
     def _build_number_control(self, parent, metric: WritableMetric, descriptor):
         """Build a slider + entry for number metrics with min/max/step."""
@@ -439,16 +456,19 @@ class App:
             self.info_button.config(state=tk.NORMAL)
 
     def _on_double_click(self, event):
-        """Handle double-click to edit writable metrics."""
+        """Handle double-click to view/edit any metric or device."""
         item = self.tree.identify_row(event.y)
-        if not item or not item.startswith("M"):
+        if not item or self._client is None:
             return
         unique_id = item[1:]
-        if self._client is None:
-            return
-        metric = self._client.get_metric(unique_id)
-        if metric is not None and isinstance(metric, WritableMetric):
-            AttributeViewerDialog(self.root, metric)
+        if item.startswith("M"):
+            metric = self._client._all_metrics.get(unique_id)
+            if metric is not None:
+                AttributeViewerDialog(self.root, metric)
+        elif item.startswith("D"):
+            device = self._client._devices.get(unique_id)
+            if device is not None:
+                AttributeViewerDialog(self.root, device)
 
     def _expand_all(self):
         self._expand_all_recursive()
