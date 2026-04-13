@@ -1001,6 +1001,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         precision=2,
         unit_of_measurement="m",
+        hidden=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Connected",
@@ -1021,6 +1022,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         precision=2,
         unit_of_measurement="°",
+        hidden=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/Fix",
@@ -1029,6 +1031,7 @@ topics: list[TopicDescriptor] = [
         name="Fix",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        hidden=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/gps/{device_id}/NrOfSatellites",
@@ -1073,10 +1076,11 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.SPEED,
         value_type=ValueType.FLOAT,
         precision=2,
+        hidden=True,
     ),
     TopicDescriptor(
         topic="$$func/gps/gps_location",
-        depends_on=["gps_latitude", "gps_longitude"],
+        depends_on=["gps_latitude", "gps_longitude", "gps_fix", "gps_altitude", "gps_course", "gps_speed"],
         message_type=MetricKind.DEVICE_TRACKER,
         short_id="gps_location",
         name="Location",

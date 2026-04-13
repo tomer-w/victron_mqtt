@@ -2788,7 +2788,7 @@
       "generic_name": "Altitude",
       "is_formula": false,
       "main_topic": false,
-      "hidden": false
+      "hidden": true
     },
     {
       "topic": "N/{installation_id}/gps/{device_id}/Connected",
@@ -2836,7 +2836,7 @@
       "generic_name": "Course",
       "is_formula": false,
       "main_topic": false,
-      "hidden": false
+      "hidden": true
     },
     {
       "topic": "N/{installation_id}/gps/{device_id}/Fix",
@@ -2860,7 +2860,7 @@
       "generic_name": "Fix",
       "is_formula": false,
       "main_topic": false,
-      "hidden": false
+      "hidden": true
     },
     {
       "topic": "N/{installation_id}/gps/{device_id}/NrOfSatellites",
@@ -2956,7 +2956,7 @@
       "generic_name": "Speed",
       "is_formula": false,
       "main_topic": false,
-      "hidden": false
+      "hidden": true
     },
     {
       "topic": "$$func/gps/gps_location",
@@ -2978,7 +2978,11 @@
       "experimental": false,
       "depends_on": [
         "gps_latitude",
-        "gps_longitude"
+        "gps_longitude",
+        "gps_fix",
+        "gps_altitude",
+        "gps_course",
+        "gps_speed"
       ],
       "generic_name": "Location",
       "is_formula": true,

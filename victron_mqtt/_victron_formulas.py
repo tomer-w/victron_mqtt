@@ -96,18 +96,40 @@ def gps_location(
     depends_on: dict[str, Metric],
     _transient_state: FormulaTransientState | None,
 ) -> tuple[GpsLocation | None, None]:
-    """Combine GPS latitude and longitude into a single GpsLocation."""
+    """Combine GPS metrics into a single GpsLocation. Returns None when there is no GPS fix."""
     lat_metric = None
     lon_metric = None
+    fix_metric = None
+    alt_metric = None
+    course_metric = None
+    speed_metric = None
     for metric in depends_on.values():
         if metric.generic_short_id == "gps_latitude":
             lat_metric = metric
         elif metric.generic_short_id == "gps_longitude":
             lon_metric = metric
+        elif metric.generic_short_id == "gps_fix":
+            fix_metric = metric
+        elif metric.generic_short_id == "gps_altitude":
+            alt_metric = metric
+        elif metric.generic_short_id == "gps_course":
+            course_metric = metric
+        elif metric.generic_short_id == "gps_speed":
+            speed_metric = metric
 
     if lat_metric is None or lon_metric is None:
         return None, None
     if lat_metric.value is None or lon_metric.value is None:
         return None, None
 
-    return GpsLocation(latitude=lat_metric.value, longitude=lon_metric.value), None
+    # No fix means position is unreliable
+    if fix_metric is not None and fix_metric.value == GenericOnOff.OFF:
+        return None, None
+
+    return GpsLocation(
+        latitude=lat_metric.value,
+        longitude=lon_metric.value,
+        altitude=alt_metric.value if alt_metric else None,
+        course=course_metric.value if course_metric else None,
+        speed=speed_metric.value if speed_metric else None,
+    ), None

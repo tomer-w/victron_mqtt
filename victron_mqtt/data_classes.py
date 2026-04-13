@@ -15,10 +15,13 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class GpsLocation:
-    """Represents a GPS location with latitude and longitude."""
+    """Represents a GPS location with latitude, longitude, and optional navigation data."""
 
     latitude: float
     longitude: float
+    altitude: float | None = None
+    course: float | None = None
+    speed: float | None = None
 
     def __str__(self) -> str:
         return f"({self.latitude}, {self.longitude})"

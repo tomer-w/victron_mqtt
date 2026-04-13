@@ -778,7 +778,7 @@ async def test_new_metric():
     await inject_message(
         hub, "N/123/system/170/Dc/Battery/Power", '{"value": 120}'
     )  # Will generate also formula metrics.
-    await inject_message(hub, "N/123/gps/170/Course", '{"value": 180.5}')
+    await inject_message(hub, "N/123/gps/170/NrOfSatellites", '{"value": 8}')
     await finalize_injection(hub, disconnect=False)
 
     # Validate that the on_new_metric callback was called
@@ -788,7 +788,9 @@ async def test_new_metric():
     mock_on_new_metric.assert_any_call(
         hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_power")
     )
-    mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_course"))
+    mock_on_new_metric.assert_any_call(
+        hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_nrofsatellites")
+    )
     mock_on_new_metric.assert_any_call(
         hub, hub.devices["system_170"], hub.devices["system_170"].get_metric("system_dc_battery_charge_energy")
     )
@@ -828,8 +830,7 @@ async def test_new_metric_system_callbacks_first():
     hub.on_new_metric = MagicMock(side_effect=on_new_metric_mock)
 
     # Inject a non-system metric first, then a system metric.
-    # gps_latitude is hidden, use gps_course instead
-    await inject_message(hub, "N/123/gps/170/Course", '{"value": 180.5}')
+    await inject_message(hub, "N/123/gps/170/NrOfSatellites", '{"value": 8}')
     await inject_message(hub, "N/123/system/170/Dc/System/Power", '{"value": 1.1234}')
     await finalize_injection(hub, disconnect=False)
 
@@ -914,14 +915,16 @@ async def test_new_metric_duplicate_formula_messages():
     assert mock_on_new_metric.call_count == 3, "on_new_metric should be called exactly 3 times"
 
     # Inject another message. Should generate this but not the formula metrics again
-    await inject_message(hub, "N/123/gps/170/Course", '{"value": 180.5}')
+    await inject_message(hub, "N/123/gps/170/NrOfSatellites", '{"value": 8}')
     await finalize_injection(hub, disconnect=False)
 
     # Check that we got the callback only once
     hub._keepalive()
     # Wait for the callback to be triggered
     await sleep_short()
-    mock_on_new_metric.assert_any_call(hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_course"))
+    mock_on_new_metric.assert_any_call(
+        hub, hub.devices["gps_170"], hub.devices["gps_170"].get_metric("gps_nrofsatellites")
+    )
     assert mock_on_new_metric.call_count == 4, "on_new_metric should be called exactly 4 times"
 
     await hub_disconnect(hub)
@@ -942,9 +945,13 @@ async def test_gps_location_formula():
 
     hub.on_new_metric = MagicMock(side_effect=on_new_metric_mock)
 
-    # Initial location
+    # Initial location with all GPS fields
     await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 51.5074}')
     await inject_message(hub, "N/123/gps/5/Position/Longitude", '{"value": -0.1278}')
+    await inject_message(hub, "N/123/gps/5/Fix", '{"value": 1}')
+    await inject_message(hub, "N/123/gps/5/Altitude", '{"value": 260.5}')
+    await inject_message(hub, "N/123/gps/5/Course", '{"value": 45.0}')
+    await inject_message(hub, "N/123/gps/5/Speed", '{"value": 12.5}')
     await finalize_injection(hub, disconnect=False)
 
     # The formula metric should be created on the GPS device
@@ -956,6 +963,9 @@ async def test_gps_location_formula():
     assert isinstance(location_metric.value, GpsLocation)
     assert location_metric.value.latitude == 51.5074
     assert location_metric.value.longitude == -0.1278
+    assert location_metric.value.altitude == 260.5
+    assert location_metric.value.course == 45.0
+    assert location_metric.value.speed == 12.5
 
     # Verify the formula metric triggered the callback
     gps_callbacks = [v for v in callback_values if isinstance(v, GpsLocation)]
@@ -1008,13 +1018,50 @@ async def test_gps_location_formula_partial():
 
 
 @pytest.mark.asyncio
+async def test_gps_location_no_fix():
+    """Test that the GPS location formula returns None when Fix=0 (no GPS fix)."""
+    from victron_mqtt.data_classes import GpsLocation
+
+    hub: Hub = await create_mocked_hub()
+
+    # Inject all GPS fields but with Fix=0 (no fix)
+    await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 51.5074}')
+    await inject_message(hub, "N/123/gps/5/Position/Longitude", '{"value": -0.1278}')
+    await inject_message(hub, "N/123/gps/5/Fix", '{"value": 0}')
+    await inject_message(hub, "N/123/gps/5/Altitude", '{"value": 260.5}')
+    await inject_message(hub, "N/123/gps/5/Course", '{"value": 45.0}')
+    await inject_message(hub, "N/123/gps/5/Speed", '{"value": 12.5}')
+    await finalize_injection(hub, disconnect=False)
+
+    # Formula should return None because there's no fix
+    location_metric = hub._all_metrics.get("gps_5_gps_location")
+    assert location_metric is not None, "Formula metric should exist internally"
+    assert location_metric.value is None, f"GPS location should be None when no fix, got {location_metric.value}"
+
+    # Now restore fix
+    await inject_message(hub, "N/123/gps/5/Fix", '{"value": 1}')
+    await sleep_short()
+
+    assert isinstance(location_metric.value, GpsLocation), (
+        f"GPS location should be GpsLocation after fix, got {location_metric.value}"
+    )
+    assert location_metric.value.latitude == 51.5074
+
+    await hub_disconnect(hub)
+
+
+@pytest.mark.asyncio
 async def test_hidden_metrics_not_in_public_api():
     """Test that hidden metrics are excluded from all public access points."""
     hub: Hub = await create_mocked_hub()
 
     await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 51.5074}')
     await inject_message(hub, "N/123/gps/5/Position/Longitude", '{"value": -0.1278}')
-    await inject_message(hub, "N/123/gps/5/Course", '{"value": 180.5}')
+    await inject_message(hub, "N/123/gps/5/Fix", '{"value": 1}')
+    await inject_message(hub, "N/123/gps/5/Altitude", '{"value": 260.5}')
+    await inject_message(hub, "N/123/gps/5/Course", '{"value": 45.0}')
+    await inject_message(hub, "N/123/gps/5/Speed", '{"value": 12.5}')
+    await inject_message(hub, "N/123/gps/5/NrOfSatellites", '{"value": 8}')
     await finalize_injection(hub)
 
     device = hub.devices["gps_5"]
@@ -1023,7 +1070,11 @@ async def test_hidden_metrics_not_in_public_api():
     visible_short_ids = [m.short_id for m in device.metrics]
     assert "gps_latitude" not in visible_short_ids, "Hidden metric should not be in device.metrics"
     assert "gps_longitude" not in visible_short_ids, "Hidden metric should not be in device.metrics"
-    assert "gps_course" in visible_short_ids, "Non-hidden metric should be in device.metrics"
+    assert "gps_fix" not in visible_short_ids, "Hidden metric should not be in device.metrics"
+    assert "gps_altitude" not in visible_short_ids, "Hidden metric should not be in device.metrics"
+    assert "gps_course" not in visible_short_ids, "Hidden metric should not be in device.metrics"
+    assert "gps_speed" not in visible_short_ids, "Hidden metric should not be in device.metrics"
+    assert "gps_nrofsatellites" in visible_short_ids, "Non-hidden metric should be in device.metrics"
     assert "gps_location" in visible_short_ids, "Formula metric should be in device.metrics"
 
     # Hidden metrics should not be returned by device.get_metric
@@ -1052,12 +1103,20 @@ async def test_hidden_metrics_not_in_callback():
 
     await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 51.5074}')
     await inject_message(hub, "N/123/gps/5/Position/Longitude", '{"value": -0.1278}')
-    await inject_message(hub, "N/123/gps/5/Course", '{"value": 180.5}')
+    await inject_message(hub, "N/123/gps/5/Fix", '{"value": 1}')
+    await inject_message(hub, "N/123/gps/5/Altitude", '{"value": 260.5}')
+    await inject_message(hub, "N/123/gps/5/Course", '{"value": 45.0}')
+    await inject_message(hub, "N/123/gps/5/Speed", '{"value": 12.5}')
+    await inject_message(hub, "N/123/gps/5/NrOfSatellites", '{"value": 8}')
     await finalize_injection(hub)
 
     assert "gps_latitude" not in callback_metrics, "Hidden metric should not trigger callback"
     assert "gps_longitude" not in callback_metrics, "Hidden metric should not trigger callback"
-    assert "gps_course" in callback_metrics, "Non-hidden metric should trigger callback"
+    assert "gps_fix" not in callback_metrics, "Hidden metric should not trigger callback"
+    assert "gps_altitude" not in callback_metrics, "Hidden metric should not trigger callback"
+    assert "gps_course" not in callback_metrics, "Hidden metric should not trigger callback"
+    assert "gps_speed" not in callback_metrics, "Hidden metric should not trigger callback"
+    assert "gps_nrofsatellites" in callback_metrics, "Non-hidden metric should trigger callback"
     assert "gps_location" in callback_metrics, "Formula metric should trigger callback"
 
 
