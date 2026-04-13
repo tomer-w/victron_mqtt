@@ -1509,6 +1509,7 @@ topics: list[TopicDescriptor] = [
         name="Phases",
         metric_nature=MetricNature.MEASUREMENT,
         value_type=ValueType.INT,
+        unit_of_measurement="phases",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ac/Out/{output}/{phase}/I",
@@ -2475,6 +2476,7 @@ topics: list[TopicDescriptor] = [
         name="Consumption phases",
         metric_nature=MetricNature.MEASUREMENT,
         value_type=ValueType.INT,
+        unit_of_measurement="phases",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Ac/Consumption/{phase}/Current",
@@ -2504,6 +2506,7 @@ topics: list[TopicDescriptor] = [
         name="Consumption on output phases",
         metric_nature=MetricNature.MEASUREMENT,
         value_type=ValueType.INT,
+        unit_of_measurement="phases",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Ac/ConsumptionOnOutput/{phase}/Power",
@@ -2522,10 +2525,11 @@ topics: list[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Ac/Grid/NumberOfPhases",
         message_type=MetricKind.SENSOR,
-        short_id="system_grid_phases",  # system attribute
+        short_id="system_grid_phases",
         name="Grid phases",
         metric_nature=MetricNature.MEASUREMENT,
         value_type=ValueType.INT_DEFAULT_0,
+        unit_of_measurement="phases",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Ac/Grid/{phase}/Current",
@@ -2548,6 +2552,7 @@ topics: list[TopicDescriptor] = [
         name="PV on output phases",
         metric_nature=MetricNature.MEASUREMENT,
         value_type=ValueType.INT,
+        unit_of_measurement="phases",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Ac/PvOnOutput/{phase}/Current",
