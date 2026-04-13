@@ -1,5 +1,12 @@
-"""A simple utility to illustrate how to use the Victron Venus Client library
-to connect to a Venus OS device and display the metrics."""
+"""A utility to visualize and interact with Victron Venus OS devices and metrics.
+
+Features:
+- Hierarchical tree view showing parent/child device relationships
+- Live-updating metric values with color-coded metric kinds
+- Search/filter for devices and metrics
+- Double-click writable metrics to edit values inline
+- Status bar with connection info, device count, installation ID
+"""
 
 import argparse
 import asyncio
@@ -21,45 +28,71 @@ DEFAULT_PASSWORD = ""
 
 LOGGER = getLogger(__name__)
 
-"""Dialog to prompt for connection information"""
-
 asyncio_loop: asyncio.AbstractEventLoop | None = None
+
+# Color scheme for metric kinds
+METRIC_KIND_COLORS = {
+    MetricKind.SENSOR: "#2196F3",
+    MetricKind.BINARY_SENSOR: "#9C27B0",
+    MetricKind.SWITCH: "#FF9800",
+    MetricKind.SELECT: "#FF5722",
+    MetricKind.NUMBER: "#4CAF50",
+    MetricKind.BUTTON: "#795548",
+    MetricKind.TIME: "#607D8B",
+    MetricKind.DEVICE_TRACKER: "#E91E63",
+}
+
+DEVICE_TYPE_ICONS = {
+    "system": "🖥️",
+    "battery": "🔋",
+    "solar_charger": "☀️",
+    "grid": "⚡",
+    "inverter": "🔌",
+    "generator": "⛽",
+    "gps": "📍",
+    "switch": "💡",
+    "tank": "🪣",
+    "temperature": "🌡️",
+    "evcharger": "🚗",
+}
+
+
 class ConnectionDialog(simpledialog.Dialog):
     """Dialog to prompt for connection information."""
 
     def body(self, master):
-        tk.Label(master, text="Server:").grid(row=0)
-        tk.Label(master, text="Port:").grid(row=1)
-        tk.Label(master, text="Username:").grid(row=2)
-        tk.Label(master, text="Password:").grid(row=3)
-        tk.Label(master, text="Use SSL:").grid(row=4)
+        tk.Label(master, text="Server:").grid(row=0, sticky=tk.W, padx=5, pady=3)
+        tk.Label(master, text="Port:").grid(row=1, sticky=tk.W, padx=5, pady=3)
+        tk.Label(master, text="Username:").grid(row=2, sticky=tk.W, padx=5, pady=3)
+        tk.Label(master, text="Password:").grid(row=3, sticky=tk.W, padx=5, pady=3)
+        tk.Label(master, text="Use SSL:").grid(row=4, sticky=tk.W, padx=5, pady=3)
         host = os.environ.get("VICTRON_MQTT_SERVER", DEFAULT_HOST)
         port = os.environ.get("VICTRON_MQTT_PORT", DEFAULT_PORT)
         user = os.environ.get("VICTRON_MQTT_USER", DEFAULT_USER)
         password = os.environ.get("VICTRON_MQTT_PASSWORD", DEFAULT_PASSWORD)
         ssl = os.environ.get("VICTRON_MQTT_SSL", "") not in ["", "0", "False", "false", "F", "f", "No", "no", "N", "n"]
 
-        self.server_entry = tk.Entry(master)
+        self.server_entry = tk.Entry(master, width=30)
         self.server_entry.insert(0, host)
 
-        self.port_entry = tk.Entry(master)
+        self.port_entry = tk.Entry(master, width=30)
         self.port_entry.insert(0, str(port))
 
-        self.username_entry = tk.Entry(master)
+        self.username_entry = tk.Entry(master, width=30)
         self.username_entry.insert(0, user)
 
-        self.password_entry = tk.Entry(master, show="*")
+        self.password_entry = tk.Entry(master, show="*", width=30)
         self.password_entry.insert(0, password)
 
         self.use_ssl_var = tk.BooleanVar()
         self.use_ssl_check = tk.Checkbutton(master, variable=self.use_ssl_var)
         self.use_ssl_var.set(ssl)
 
-        self.server_entry.grid(row=0, column=1)
-        self.port_entry.grid(row=1, column=1)
-        self.username_entry.grid(row=2, column=1)
-        self.password_entry.grid(row=3, column=1)
-        self.use_ssl_check.grid(row=4, column=1)
+        self.server_entry.grid(row=0, column=1, padx=5, pady=3)
+        self.port_entry.grid(row=1, column=1, padx=5, pady=3)
+        self.username_entry.grid(row=2, column=1, padx=5, pady=3)
+        self.password_entry.grid(row=3, column=1, padx=5, pady=3)
+        self.use_ssl_check.grid(row=4, column=1, sticky=tk.W, padx=5, pady=3)
 
         return self.server_entry
 
@@ -73,51 +106,204 @@ class ConnectionDialog(simpledialog.Dialog):
 
 
 class AttributeViewerDialog(simpledialog.Dialog):
-    """Dialog to display the attributes of an object."""
+    """Dialog to display properties and edit writable metrics with appropriate controls.
+    Changes are applied immediately without needing to press OK."""
 
     def __init__(self, parent, instance):
         self.instance = instance
-        super().__init__(parent, title="Attribute Viewer")
+        self._writable_var = None
+        self._applying = False
+        title = f"Properties: {getattr(instance, 'name', str(instance))}"
+        super().__init__(parent, title=title)
+
+    def buttonbox(self):
+        """Override to show only a Close button instead of OK/Cancel."""
+        box = ttk.Frame(self)
+        ttk.Button(box, text="Close", command=self.cancel, width=10).pack(padx=5, pady=5)
+        box.pack()
 
     def body(self, master):
+        # Properties section
+        props_frame = ttk.LabelFrame(master, text="Properties", padding=5)
+        props_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+
         row = 0
         for name, _value in inspect.getmembers(type(self.instance), lambda v: isinstance(v, property)):
             try:
                 prop_value = getattr(self.instance, name)
-                if isinstance(prop_value, (Device, Metric, list, dict)):
+                if isinstance(prop_value, Device | Metric | list | dict):
                     continue
                 if callable(prop_value):
                     continue
-                ttk.Label(master, text=f"{name}:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
-                ttk.Label(master, text=str(prop_value)).grid(row=row, column=1, sticky=tk.W, padx=5, pady=5)
+                ttk.Label(props_frame, text=f"{name}:", font=("", 9, "bold")).grid(
+                    row=row, column=0, sticky=tk.W, padx=5, pady=2
+                )
+                value_label = ttk.Label(props_frame, text=str(prop_value))
+                value_label.grid(row=row, column=1, sticky=tk.W, padx=5, pady=2)
                 row += 1
             except AttributeError:
                 continue
 
-        if isinstance(self.instance, WritableMetric) and self.instance.metric_kind == MetricKind.SELECT:
-            assert self.instance.enum_values is not None
-            ttk.Label(master, text="Select:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
-            self.switch_var = tk.StringVar(value=self.instance.value)
-            self.switch_dropdown = ttk.Combobox(master, textvariable=self.switch_var, values=self.instance.enum_values)
-            self.switch_dropdown.grid(row=row, column=1, sticky=tk.W, padx=5, pady=5)
-            row += 1
+        if not isinstance(self.instance, WritableMetric):
+            return master
 
-        if isinstance(self.instance, WritableMetric) and self.instance.metric_kind == MetricKind.SWITCH:
-            assert self.instance.enum_values is not None
-            ttk.Label(master, text="Switch:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=5)
-            self.switch_var = tk.StringVar(value=self.instance.value)
-            self.switch_dropdown = ttk.Combobox(master, textvariable=self.switch_var, values=self.instance.enum_values)
-            self.switch_dropdown.grid(row=row, column=1, sticky=tk.W, padx=5, pady=5)
-            row += 1
+        # Control section for writable metrics
+        control_frame = ttk.LabelFrame(master, text="Control (changes apply immediately)", padding=5)
+        control_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+
+        descriptor = self.instance._descriptor
+        kind = self.instance.metric_kind
+
+        if kind == MetricKind.SWITCH:
+            self._build_switch_control(control_frame, self.instance)
+        elif kind == MetricKind.SELECT:
+            self._build_select_control(control_frame, self.instance)
+        elif kind in (MetricKind.NUMBER, MetricKind.TIME):
+            self._build_number_control(control_frame, self.instance, descriptor)
 
         return master
 
-    def apply(self):
-        if isinstance(self.instance, WritableMetric):
-            self.instance.set(self.switch_var.get())
+    def _apply_value(self, value):
+        """Apply a value change immediately to the writable metric."""
+        if self._applying:
+            return
+        self._applying = True
+        try:
+            if isinstance(self.instance, WritableMetric):
+                if self.instance.metric_kind in (MetricKind.NUMBER, MetricKind.TIME):
+                    try:
+                        self.instance.set(float(value))
+                    except ValueError:
+                        self.instance.set(value)
+                else:
+                    self.instance.set(value)
+        finally:
+            self._applying = False
+
+    def _build_switch_control(self, parent, metric: WritableMetric):
+        """Build an on/off toggle for switch metrics."""
+        assert metric.enum_values is not None
+
+        is_on = str(metric.value).lower() in ["on", "1", "true"]
+        btn_frame = ttk.Frame(parent)
+        btn_frame.grid(row=0, column=0, columnspan=2, pady=5)
+
+        self._on_btn = ttk.Button(
+            btn_frame,
+            text="🟢 ON",
+            width=10,
+            command=lambda: self._set_switch("on"),
+            state=tk.DISABLED if is_on else tk.NORMAL,
+        )
+        self._on_btn.pack(side=tk.LEFT, padx=5)
+
+        self._off_btn = ttk.Button(
+            btn_frame,
+            text="🔴 OFF",
+            width=10,
+            command=lambda: self._set_switch("off"),
+            state=tk.DISABLED if not is_on else tk.NORMAL,
+        )
+        self._off_btn.pack(side=tk.LEFT, padx=5)
+
+    def _set_switch(self, value: str):
+        is_on = value == "on"
+        self._on_btn.config(state=tk.DISABLED if is_on else tk.NORMAL)
+        self._off_btn.config(state=tk.DISABLED if not is_on else tk.NORMAL)
+        self._apply_value(value)
+
+    def _build_select_control(self, parent, metric: WritableMetric):
+        """Build a dropdown for select metrics."""
+        assert metric.enum_values is not None
+        self._writable_var = tk.StringVar(value=str(metric.value))
+
+        ttk.Label(parent, text="Select:", font=("", 9, "bold")).grid(row=0, column=0, sticky=tk.W, padx=5, pady=3)
+        dropdown = ttk.Combobox(
+            parent,
+            textvariable=self._writable_var,
+            values=metric.enum_values,
+            state="readonly",
+            width=25,
+        )
+        dropdown.grid(row=0, column=1, sticky=tk.W, padx=5, pady=3)
+        dropdown.bind("<<ComboboxSelected>>", lambda _: self._apply_value(self._writable_var.get()))
+
+    def _build_number_control(self, parent, metric: WritableMetric, descriptor):
+        """Build a slider + entry for number metrics with min/max/step."""
+        current_value = float(metric.value) if metric.value is not None else 0.0
+        min_val = float(descriptor.min) if descriptor.min is not None else 0.0
+        max_val = float(descriptor.max) if descriptor.max is not None else 100.0
+        step = float(descriptor.step) if descriptor.step is not None else 1.0
+        precision = descriptor.precision or 0
+        unit = metric.unit_of_measurement or ""
+
+        self._writable_var = tk.StringVar(value=str(current_value))
+
+        # Current value display
+        ttk.Label(parent, text="Current:", font=("", 9, "bold")).grid(row=0, column=0, sticky=tk.W, padx=5, pady=3)
+        self._value_display = ttk.Label(parent, text=f"{current_value} {unit}", font=("", 11))
+        self._value_display.grid(row=0, column=1, sticky=tk.W, padx=5, pady=3)
+
+        # Range info
+        ttk.Label(parent, text="Range:", font=("", 9, "bold")).grid(row=1, column=0, sticky=tk.W, padx=5, pady=3)
+        ttk.Label(parent, text=f"{min_val} - {max_val} {unit} (step: {step})").grid(
+            row=1, column=1, sticky=tk.W, padx=5, pady=3
+        )
+
+        # Slider
+        ttk.Label(parent, text="Set:", font=("", 9, "bold")).grid(row=2, column=0, sticky=tk.W, padx=5, pady=3)
+
+        slider_frame = ttk.Frame(parent)
+        slider_frame.grid(row=2, column=1, sticky="ew", padx=5, pady=3)
+
+        ttk.Label(slider_frame, text=str(min_val), font=("", 8)).pack(side=tk.LEFT)
+
+        self._slider = tk.Scale(
+            slider_frame,
+            from_=min_val,
+            to=max_val,
+            resolution=step,
+            orient=tk.HORIZONTAL,
+            length=250,
+            showvalue=False,
+            command=lambda v: self._on_slider_change(v, precision, unit),
+        )
+        self._slider.set(current_value)
+        self._slider.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+
+        ttk.Label(slider_frame, text=str(max_val), font=("", 8)).pack(side=tk.LEFT)
+
+        # Entry for precise input with Apply button
+        entry_frame = ttk.Frame(parent)
+        entry_frame.grid(row=3, column=1, sticky=tk.W, padx=5, pady=3)
+
+        self._number_entry = ttk.Entry(entry_frame, textvariable=self._writable_var, width=12)
+        self._number_entry.pack(side=tk.LEFT)
+        ttk.Label(entry_frame, text=f" {unit}  ").pack(side=tk.LEFT)
+        ttk.Button(
+            entry_frame, text="Apply", width=6, command=lambda: self._apply_value(self._writable_var.get())
+        ).pack(side=tk.LEFT)
+
+        # Sync entry → slider (visual only, no apply)
+        self._writable_var.trace_add("write", lambda *_: self._sync_entry_to_slider(min_val, max_val))
+
+    def _on_slider_change(self, value, precision, unit):
+        val = round(float(value), precision)
+        self._writable_var.set(str(val))
+        self._value_display.config(text=f"{val} {unit}")
+        self._apply_value(val)
+
+    def _sync_entry_to_slider(self, min_val, max_val):
+        try:
+            val = float(self._writable_var.get())
+            if min_val <= val <= max_val:
+                self._slider.set(val)
+        except (ValueError, tk.TclError):
+            pass
+
 
 class MetricContainer:
-    """A UI orientated container for a metric. Updates the item in the tree view when the metric changes."""
+    """A UI container for a metric. Updates the tree view item when the metric changes."""
 
     def __init__(self, metric: Metric, tree_view: ttk.Treeview, parent_item: str):
         self._metric = metric
@@ -128,47 +314,111 @@ class MetricContainer:
     def _update(self, metric: Metric, value):
         formatted = self._metric.format_value(value)
         if self._tree_view.exists(self._parent_item):
-            self._tree_view.item(self._parent_item, values=(formatted,))
+            self._tree_view.item(
+                self._parent_item,
+                values=(
+                    formatted,
+                    self._metric.metric_kind.value,
+                    self._metric.unit_of_measurement or "",
+                ),
+            )
 
 
 class App:
     def __init__(self, log_topic: str | None):
         self._log_topic = log_topic
         self.root = tk.Tk()
-
         self.root.resizable(True, True)
-        self.root.geometry("1024x768")
+        self.root.geometry("1200x800")
+        self.root.title("Victron Venus Metric Viewer")
 
-        self.root = self.root
-        self.root.title("Victron Venus Client")
-
+        # --- Toolbar ---
         self.toolbar = ttk.Frame(self.root)
-        self.toolbar.pack(side=tk.TOP, fill=tk.X)
+        self.toolbar.pack(side=tk.TOP, fill=tk.X, padx=5, pady=3)
 
-        self.connect_button = ttk.Button(self.toolbar, text="Connect", command=self._connect)
+        self.connect_button = ttk.Button(self.toolbar, text="🔌 Connect", command=self._connect)
         self.connect_button.pack(side=tk.LEFT, padx=2, pady=2)
 
         self.disconnect_button = ttk.Button(
-            self.toolbar, text="Disconnect", command=self._disconnect, state=tk.DISABLED
+            self.toolbar, text="⛔ Disconnect", command=self._disconnect, state=tk.DISABLED
         )
         self.disconnect_button.pack(side=tk.LEFT, padx=2, pady=2)
 
         self.info_button = ttk.Button(self.toolbar, text="Info", command=self._info, state=tk.DISABLED)
         self.info_button.pack(side=tk.LEFT, padx=10, pady=2)
 
-        self.tree = ttk.Treeview(self.root, selectmode="browse")
-        self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
-        self.tree.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.expand_button = ttk.Button(self.toolbar, text="📂 Expand All", command=self._expand_all, state=tk.DISABLED)
+        self.expand_button.pack(side=tk.LEFT, padx=2, pady=2)
 
-        self.tree["columns"] = "value"
-        self.tree.heading("#0", text="Item")
-        self.tree.heading("value", text="Value")
+        self.collapse_button = ttk.Button(
+            self.toolbar, text="📁 Collapse All", command=self._collapse_all, state=tk.DISABLED
+        )
+        self.collapse_button.pack(side=tk.LEFT, padx=2, pady=2)
+
+        # --- Search bar ---
+        ttk.Label(self.toolbar, text="🔍").pack(side=tk.LEFT, padx=(20, 2))
+        self._search_var = tk.StringVar()
+        self._search_var.trace_add("write", self._on_search)
+        self.search_entry = ttk.Entry(self.toolbar, textvariable=self._search_var, width=25)
+        self.search_entry.pack(side=tk.LEFT, padx=2, pady=2)
+
+        self.clear_search_button = ttk.Button(self.toolbar, text="✕", width=3, command=self._clear_search)
+        self.clear_search_button.pack(side=tk.LEFT, padx=2, pady=2)
+
+        # --- Tree view ---
+        tree_frame = ttk.Frame(self.root)
+        tree_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=3)
+
+        self.tree = ttk.Treeview(tree_frame, selectmode="browse", columns=("value", "kind", "unit"))
+        self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
+        self.tree.bind("<Double-1>", self._on_double_click)
+
+        # Column configuration
+        self.tree.heading("#0", text="Name", anchor=tk.W)
+        self.tree.heading("value", text="Value", anchor=tk.W)
+        self.tree.heading("kind", text="Kind", anchor=tk.W)
+        self.tree.heading("unit", text="Unit", anchor=tk.W)
+
+        self.tree.column("#0", width=400, minwidth=200)
+        self.tree.column("value", width=250, minwidth=100)
+        self.tree.column("kind", width=120, minwidth=80)
+        self.tree.column("unit", width=80, minwidth=50)
+
+        # Scrollbars
+        vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
+        hsb = ttk.Scrollbar(tree_frame, orient="horizontal", command=self.tree.xview)
+        self.tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="ns")
+        hsb.grid(row=1, column=0, sticky="ew")
+        tree_frame.grid_rowconfigure(0, weight=1)
+        tree_frame.grid_columnconfigure(0, weight=1)
+
+        # Tag colors for metric kinds
+        for kind, color in METRIC_KIND_COLORS.items():
+            self.tree.tag_configure(f"kind_{kind.value}", foreground=color)
+        self.tree.tag_configure("device", font=("", 10, "bold"))
+        self.tree.tag_configure("writable", foreground="#FF6F00")
+
+        # --- Status bar ---
+        self.status_frame = ttk.Frame(self.root, relief=tk.SUNKEN)
+        self.status_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=5, pady=2)
+
+        self._status_connection = tk.StringVar(value="⚪ Disconnected")
+        self._status_devices = tk.StringVar(value="")
+        self._status_installation = tk.StringVar(value="")
+
+        ttk.Label(self.status_frame, textvariable=self._status_connection).pack(side=tk.LEFT, padx=10)
+        ttk.Separator(self.status_frame, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=5)
+        ttk.Label(self.status_frame, textvariable=self._status_devices).pack(side=tk.LEFT, padx=10)
+        ttk.Separator(self.status_frame, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=5)
+        ttk.Label(self.status_frame, textvariable=self._status_installation).pack(side=tk.LEFT, padx=10)
 
         self._client = None
         self._metric_containers = []
+        self._all_tree_items: list[tuple[str, str]] = []  # (iid, searchable_text)
 
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
-
         self._to_quit = False
 
     def update(self):
@@ -182,50 +432,193 @@ class App:
         return self._to_quit
 
     def _on_tree_select(self, event):
-        if len(self.tree.selection()) == 0:  # nothing selected
+        if len(self.tree.selection()) == 0:
             if str(self.info_button["state"]) == tk.NORMAL:
                 self.info_button.config(state=tk.DISABLED)
         elif str(self.info_button["state"]) == tk.DISABLED:
             self.info_button.config(state=tk.NORMAL)
 
-    async def _async_connect(self, server: str, port: int, username: str | None, password: str | None, use_ssl: bool) -> bool:
+    def _on_double_click(self, event):
+        """Handle double-click to edit writable metrics."""
+        item = self.tree.identify_row(event.y)
+        if not item or not item.startswith("M"):
+            return
+        unique_id = item[1:]
+        if self._client is None:
+            return
+        metric = self._client.get_metric(unique_id)
+        if metric is not None and isinstance(metric, WritableMetric):
+            AttributeViewerDialog(self.root, metric)
+
+    def _expand_all(self):
+        self._expand_all_recursive()
+
+    def _expand_all_recursive(self):
+        def _expand(item):
+            self.tree.item(item, open=True)
+            for child in self.tree.get_children(item):
+                _expand(child)
+
+        for item in self.tree.get_children():
+            _expand(item)
+
+    def _collapse_all(self):
+        for item in self.tree.get_children():
+            self.tree.item(item, open=False)
+
+    def _clear_search(self):
+        self._search_var.set("")
+
+    def _on_search(self, *_args):
+        query = self._search_var.get().lower().strip()
+        if not query:
+            # Show all items
+            for iid, _ in self._all_tree_items:
+                if self.tree.exists(iid):
+                    # Detach/reattach doesn't work well with ttk, so just use tag visibility
+                    pass
+            # Re-fill tree to reset visibility
+            self._refill_tree_filtered("")
+            return
+        self._refill_tree_filtered(query)
+
+    def _refill_tree_filtered(self, query: str):
+        """Rebuild tree showing only items matching query."""
+        if self._client is None:
+            return
+
+        self.tree.delete(*self.tree.get_children())
+        self._metric_containers.clear()
+        self._all_tree_items.clear()
+
+        all_devices = self._client._devices  # Access internal dict to include metric-less parents
+        # Build device tree
+        root_devices = [d for d in all_devices.values() if d.parent_device is None]
+        root_devices.sort(key=lambda d: d.unique_id)
+
+        for device in root_devices:
+            self._insert_device_tree(device, "", all_devices, query)
+
+        if query:
+            # When filtering, expand everything so results are visible
+            self._expand_all_recursive()
+        else:
+            # Auto-expand first level only
+            for item in self.tree.get_children():
+                self.tree.item(item, open=True)
+
+    def _device_matches(self, device: Device, query: str, all_devices: dict) -> bool:
+        """Check if device or any of its children/metrics match the query."""
+        if not query:
+            return True
+        text = f"{device.name} {device.unique_id} {device.model or ''} {device.device_type.string}".lower()
+        if query in text:
+            return True
+        # Check metrics
+        for metric in device.metrics:
+            metric_text = f"{metric.name} {metric.short_id} {metric.formatted_value}".lower()
+            if query in metric_text:
+                return True
+        # Check children
+        children = [d for d in all_devices.values() if d.parent_device is device]
+        return any(self._device_matches(child, query, all_devices) for child in children)
+
+    def _insert_device_tree(self, device: Device, parent_iid: str, all_devices: dict, query: str):
+        """Insert a device and its children into the tree."""
+        if not self._device_matches(device, query, all_devices):
+            return
+
+        icon = DEVICE_TYPE_ICONS.get(device.device_type.id, "📦")
+        device_text = f"{icon} {device.name}"
+        device_iid = "D" + device.unique_id
+
+        device_item = self.tree.insert(
+            parent_iid,
+            "end",
+            text=device_text,
+            values=(device.serial_number or "", device.device_type.string, ""),
+            iid=device_iid,
+            tags=("device",),
+            open=True,
+        )
+        self._all_tree_items.append((device_iid, f"{device.name} {device.unique_id}".lower()))
+
+        # Add metrics
+        metrics = sorted(device.metrics, key=lambda x: x.short_id)
+        for metric in metrics:
+            metric_text = f"{metric.name} {metric.short_id} {metric.formatted_value}".lower()
+            if query and query not in metric_text and query not in f"{device.name} {device.unique_id}".lower():
+                continue
+
+            tags = []
+            kind_tag = f"kind_{metric.metric_kind.value}"
+            tags.append(kind_tag)
+            if isinstance(metric, WritableMetric):
+                tags.append("writable")
+
+            metric_iid = "M" + metric.unique_id
+            metric_item = self.tree.insert(
+                device_item,
+                "end",
+                text=f"  {metric.name or ''}",
+                values=(
+                    metric.formatted_value,
+                    metric.metric_kind.value,
+                    metric.unit_of_measurement or "",
+                ),
+                iid=metric_iid,
+                tags=tuple(tags),
+            )
+            self._metric_containers.append(MetricContainer(metric, self.tree, metric_item))
+            self._all_tree_items.append((metric_iid, metric_text))
+
+        # Add child devices
+        children = [d for d in all_devices.values() if d.parent_device is device]
+        children.sort(key=lambda d: d.unique_id)
+        for child in children:
+            self._insert_device_tree(child, device_iid, all_devices, query)
+
+    async def _async_connect(
+        self, server: str, port: int, username: str | None, password: str | None, use_ssl: bool
+    ) -> bool:
         try:
-            self._client = Hub(server, port, username, password, use_ssl, topic_log_info=self._log_topic, operation_mode=OperationMode.EXPERIMENTAL, update_frequency_seconds=3)
+            self._status_connection.set("🟡 Connecting...")
+            self._client = Hub(
+                server,
+                port,
+                username,
+                password,
+                use_ssl,
+                topic_log_info=self._log_topic,
+                operation_mode=OperationMode.EXPERIMENTAL,
+                update_frequency_seconds=3,
+            )
             await self._client.connect()
+            self._status_connection.set("🟡 Waiting for data...")
             await self._client.wait_for_first_refresh()
-            self._fill_tree()
+
+            self._refill_tree_filtered("")
+
+            device_count = len(self._client.devices)
+            metric_count = sum(len(d.metrics) for d in self._client.devices.values())
+            self._status_connection.set(f"🟢 Connected to {server}:{port}")
+            self._status_devices.set(f"📊 {device_count} devices, {metric_count} metrics")
+            self._status_installation.set(f"🆔 Installation: {self._client.installation_id}")
+
             self.disconnect_button.config(state=tk.NORMAL)
+            self.expand_button.config(state=tk.NORMAL)
+            self.collapse_button.config(state=tk.NORMAL)
             return True
         except Exception as e:
             LOGGER.exception("Error connecting to Venus device: %s", e)
-            message = str(e)
-            messagebox.showerror("Error", f"Error connecting: {message}")
+            self._status_connection.set("🔴 Connection failed")
+            messagebox.showerror("Error", f"Error connecting: {e}")
             self.connect_button.config(state=tk.NORMAL)
             return False
 
     def _fill_tree(self):
-        if not self._client:
-            return
-
-        devices = sorted(self._client.devices.values(), key=lambda x: x.unique_id)
-        for device in devices:
-            device_item = self.tree.insert(
-                "",
-                "end",
-                text=device.name,
-                values=(device.serial_number, ""),
-                iid="D" + device.unique_id,
-            )
-            metrics = sorted(device.metrics, key=lambda x: x.short_id)
-            for metric in metrics:
-                metric_item = self.tree.insert(
-                    device_item,
-                    "end",
-                    text=metric.name or "",
-                    values=(metric.formatted_value,),
-                    iid="M" + metric.unique_id,
-                )
-                self._metric_containers.append(MetricContainer(metric, self.tree, metric_item))
+        """Legacy fill - use _refill_tree_filtered instead."""
+        self._refill_tree_filtered("")
 
     def _info(self):
         if not self._client:
@@ -234,7 +627,7 @@ class App:
         item = self.tree.selection()[0]
         unique_id = item[1:]
         if item[0] == "D":
-            device = self._client.devices.get(unique_id)
+            device = self._client._devices.get(unique_id)
             if device is not None:
                 AttributeViewerDialog(self.root, device)
         elif item[0] == "M":
@@ -269,20 +662,27 @@ class App:
             if not success:
                 self.connect_button.config(state=tk.NORMAL)
 
-        # Use asyncio.create_task to schedule the coroutine in the existing event loop
         self._task = asyncio.create_task(connect())
 
     def _disconnect(self):
         self.disconnect_button.config(state=tk.DISABLED)
         self.info_button.config(state=tk.DISABLED)
+        self.expand_button.config(state=tk.DISABLED)
+        self.collapse_button.config(state=tk.DISABLED)
         self.tree.delete(*self.tree.get_children())
+        self._metric_containers.clear()
+        self._all_tree_items.clear()
 
         if self._client is not None:
             loop = asyncio.get_event_loop()
             asyncio.run_coroutine_threadsafe(self._client.disconnect(), loop)
             self._client = None
 
+        self._status_connection.set("⚪ Disconnected")
+        self._status_devices.set("")
+        self._status_installation.set("")
         self.connect_button.config(state=tk.NORMAL)
+
 
 async def run_app(log_topic: str | None):
     app = App(log_topic)
@@ -294,21 +694,17 @@ async def run_app(log_topic: str | None):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Victron Venus Client Metric Viewer')
-    parser.add_argument('--verbose', '-v', action='store_true', help='Enable debug logging')
-    parser.add_argument('--log-file', '-l', type=str, help='Log to a specified file')
-    parser.add_argument('--log-topic', '-lt', type=str, help='Log level bump to a specified topic')
+    parser = argparse.ArgumentParser(description="Victron Venus Metric Viewer")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
+    parser.add_argument("--log-file", "-l", type=str, help="Log to a specified file")
+    parser.add_argument("--log-topic", "-lt", type=str, help="Log level bump to a specified topic")
     args = parser.parse_args()
 
-    # Configure logging
     log_level = logging.INFO if args.verbose else logging.WARNING
-    log_config = {
-        'level': log_level,
-        'format': '%(asctime)s - %(name)s - %(levelname)s - [%(thread)d] - %(message)s'
-    }
+    log_config = {"level": log_level, "format": "%(asctime)s - %(name)s - %(levelname)s - [%(thread)d] - %(message)s"}
 
     if args.log_file:
-        log_config['filename'] = args.log_file
+        log_config["filename"] = args.log_file
 
     logging.basicConfig(**log_config)
 
