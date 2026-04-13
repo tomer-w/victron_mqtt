@@ -73,6 +73,9 @@ class TopicDescriptor:
     is_formula: bool = False  # True if this topic is calculated from other topics
     main_topic: bool = False  # True if this topic is the main topic for the dvice. Not all devices has to have main entity, but if it has, it should be the one with main_topic = True.
     hidden: bool = False  # When True, the metric is excluded from on_new_metric callbacks
+    sub_device_key: str | None = (
+        None  # When set, topics with this field create a separate sub-device per unique placeholder value (e.g., "output" creates sub-devices per output ID)
+    )
 
     def __repr__(self) -> str:
         """Return a string representation of the topic."""
@@ -323,12 +326,13 @@ class ParsedTopic:
         """Get the unique id of the device."""
         return f"{self.device_type.code}_{self.device_id}".lower()
 
-    def finalize_topic_fields(self, topic_desc: TopicDescriptor) -> None:
+    def finalize_topic_fields(self, topic_desc: TopicDescriptor, device_unique_id: str | None = None) -> None:
         """Finalize the fields of the ParsedTopic based on the TopicDescriptor."""
         self._key_values = self.get_key_values(topic_desc)
         self._key_values.update(topic_desc.key_values)
         self._short_id = self._replace_ids(topic_desc.short_id).lower()
-        self._unique_id = ParsedTopic.make_unique_id(self.get_device_unique_id(), self._short_id)
+        effective_device_id = device_unique_id if device_unique_id else self.get_device_unique_id()
+        self._unique_id = ParsedTopic.make_unique_id(effective_device_id, self._short_id)
         assert topic_desc.name is not None, f"TopicDescriptor name is None for topic: {topic_desc.topic}"
         self._name = self._replace_ids(topic_desc.name)
 

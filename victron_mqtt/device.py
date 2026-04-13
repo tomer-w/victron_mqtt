@@ -36,7 +36,14 @@ _LOGGER = logging.getLogger(__name__)
 class Device:
     """Class to represent a Victron device."""
 
-    def __init__(self, unique_id: str, parsed_topic: ParsedTopic, descriptor: TopicDescriptor) -> None:
+    def __init__(
+        self,
+        unique_id: str,
+        parsed_topic: ParsedTopic,
+        descriptor: TopicDescriptor,
+        *,
+        parent_device: Device | None = None,
+    ) -> None:
         """Initialize."""
         self._descriptor = descriptor
         self._unique_id = unique_id
@@ -49,8 +56,11 @@ class Device:
         self._serial_number = None
         self._firmware_version = None
         self._custom_name = None
+        self._parent_device: Device | None = parent_device
 
-        _LOGGER.debug("Device %s initialized", self._unique_id)
+        _LOGGER.debug(
+            "Device %s initialized (parent=%s)", self._unique_id, parent_device.unique_id if parent_device else None
+        )
 
     def __repr__(self) -> str:
         """Return a string representation of the device."""
@@ -63,7 +73,8 @@ class Device:
             f"device_type={self.device_type}, "
             f"device_id={self.device_id}, "
             f"firmware_version={self.firmware_version}, "
-            f"custom_name={self.custom_name})"
+            f"custom_name={self.custom_name}, "
+            f"parent_device={self._parent_device.unique_id if self._parent_device else None})"
         )
 
     def _set_device_property_from_topic(
@@ -114,7 +125,7 @@ class Device:
             self._set_device_property_from_topic(topic_desc, payload)
             return None
 
-        parsed_topic.finalize_topic_fields(topic_desc)
+        parsed_topic.finalize_topic_fields(topic_desc, device_unique_id=self._unique_id)
         if fallback_to_metric_topic:
             value = unwrap_bool(payload)
             if value is None:
@@ -331,6 +342,11 @@ class Device:
     def custom_name(self) -> str | None:
         """Return the custom name for devices."""
         return self._custom_name
+
+    @property
+    def parent_device(self) -> Device | None:
+        """Return the parent device if this is a sub-device, None otherwise."""
+        return self._parent_device
 
 
 @dataclass
