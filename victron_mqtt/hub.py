@@ -614,6 +614,16 @@ class Hub:
                     new_device_set[parent.unique_id] = parent
                     parent = parent.parent_device
 
+        # Remove devices that have no visible metrics and no children in the set
+        def _has_visible_content(dev: Device) -> bool:
+            """Check if a device has visible metrics or children with visible metrics."""
+            if dev.metrics:  # Has visible (non-hidden) metrics
+                return True
+            # Check if any device in the set is a child of this device
+            return any(d.parent_device is dev for d in new_device_set.values() if d is not dev)
+
+        new_device_set = {uid: dev for uid, dev in new_device_set.items() if _has_visible_content(dev)}
+
         # Sort: devices without parents first, then by depth
         def _device_depth(dev: Device) -> tuple[int, int]:
             depth = 0
