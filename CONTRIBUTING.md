@@ -1,365 +1,346 @@
-# Victron MQTT Integration Contribution Guide
+# Victron MQTT Contribution Guide
 
-## Finding MQTT Topics with MQTT Explorer
+Thank you for helping extend the library! This guide explains how to add new MQTT topics, enums, and device types.
 
-To add new metrics or debug existing ones, you first need to discover the MQTT topics published by your Victron system. The easiest way to do this is with [MQTT Explorer](https://mqtt-explorer.com/), a free and user-friendly desktop tool.
+## Finding MQTT Topics
 
-### Step 1: Download and Install MQTT Explorer
+To add new metrics, you first need to discover the MQTT topics published by your Victron system.
 
-- Go to [https://mqtt-explorer.com/](https://mqtt-explorer.com/) and download the version for your operating system (Windows, macOS, or Linux).
-- Install and launch the application.
+### Using MQTT Explorer
 
-### Step 2: Connect to Your Victron MQTT Broker
+1. Download [MQTT Explorer](https://mqtt-explorer.com/) (Windows, macOS, Linux)
+2. Connect to your Venus OS device (usually `venus.local:1883`)
+3. Expand the `N` node to see all topics
+4. Click on topics to see their values and history
 
-1. **Find your broker address:**
-   - If you are running Venus OS locally, the broker is usually at `venus.local` or the device's IP address, port `1883` (default).
-   - If you are using VRM or a remote system, you may need to set up port forwarding or use a VPN.
-2. **Open MQTT Explorer and click 'New Connection'.**
-3. **Fill in the connection details:**
-   - **Name:** Any name you like (e.g., "Victron Venus")
-   - **Host:** The IP address or hostname of your Victron device
-   - **Port:** `1883` (unless you changed it)
-   - **Username/Password:** Leave blank unless you have set credentials
-4. **Click 'Connect'.**
+**Tip:** Change a value on your Victron dashboard (e.g., turn a load on/off) and watch for updates in MQTT Explorer to identify which topic corresponds to which value.
 
-### Step 3: Browse and Compare Topics
+### Using the Built-in Dump Tool
 
+```bash
+python -m victron_mqtt.utils.dump_mqtt --host venus.local. --port 1883
+```
 
-- Once connected, MQTT Explorer will show a tree of all topics published by your Victron system.
-- Expand the `N` node to see all subtopics. These follow the pattern described later in this document (e.g., `N/portal_id/service_type/device_instance/metric_path`).
-- Use the search bar to filter for keywords (e.g., `Voltage`, `Battery`, `Ac/Power`).
-- Click on a topic to see its current value and recent history.
-- Compare the topics and values you see with the metrics you want to add or debug. Note the exact topic path and value format.
+### Reference Documentation
 
-**Tip 1:** If you are unsure which topic corresponds to a value on your Victron dashboard, try changing the value (e.g., turn a load on/off) and watch for updates in MQTT Explorer.
+- [Venus OS D-Bus wiki](https://github.com/victronenergy/venus/wiki/dbus) — detailed topic documentation and possible values
+- [Modbus TCP Register List](https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.victronenergy.com%2Fupload%2Fdocuments%2FCCGX-Modbus-TCP-register-list-3.60.xlsx) — the `dbus-obj-path` column maps to MQTT topics
 
 ---
 
-**Tip 2:** You can compare your findings to the following documents to try to understand all possible values. Please note that these documents are not complete and might not describe every available MQTT topic.
+## MQTT Topic Structure
 
-- [Modbus TCP Register List](https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.victronenergy.com%2Fupload%2Fdocuments%2FCCGX-Modbus-TCP-register-list-3.60.xlsx) - This is useful as it also has the ```dbus-obj-path``` column which usually maps directly to the MQTT topics.
-- [Venus dbus wiki](https://github.com/victronenergy/venus/wiki/dbus) - More data on each of the topics and possible values.
-
-Using those documents, you can better understand which topic you want to add to the integration.
-
-## Extending Victron MQTT Topic Map
-
-This section explains how to extend the `_victron_topics.py` and `_victron_enums.py` file to add support for additional Victron MQTT topics and devices.
-
-### Overview
-
-The `_victron_topics.py` file contains a dictionary that maps MQTT topic patterns to `TopicDescriptor` objects. Each descriptor defines how the topic should be interpreted, what type of entity it represents, and how its values should be processed.
-
-### Understanding MQTT Topic Patterns
-
-Victron Venus OS uses a structured MQTT topic hierarchy. The general pattern is:
+Victron Venus OS uses a structured MQTT topic hierarchy:
 
 ```
-N/{portal_id}/{service_type}/{device_instance}/{metric_path}
+N/{installation_id}/{service_type}/{device_id}/{metric_path}
 ```
 
-Where:
-- `N` = Notification (always N for Victron)
-- `{portal_id}` = Installation identifier (use `+` as wildcard)
-- `{service_type}` = Type of service (battery, solarcharger, vebus, etc.)
-- `{device_instance}` = Instance number of the device (use `+` as wildcard)
-- `{metric_path}` = Path to the specific metric
+- `N` — notification prefix (always `N`)
+- `{installation_id}` — installation identifier (auto-discovered)
+- `{service_type}` — device type (`battery`, `solarcharger`, `grid`, etc.)
+- `{device_id}` — instance number of the device
+- `{metric_path}` — path to the specific metric
 
-#### Common Topic Patterns
+## File Structure
 
-- Device attributes: `N/{installation_id}/{device_type}/{device_id}/ProductName`, `N/{installation_id}/{device_type}/{device_id}/Serial`
-- Device metrics: `N/{installation_id}/battery/{device_id}/Dc/0/Voltage`
-- Phase-specific metrics: `N/{installation_id}/grid/{device_id}/Ac/{phase}/Power` (where `{phase}` is L1, L2, L3)
-- System-level metrics: `N/{installation_id}/system/{device_id}/Ac/Grid/NumberOfPhases`
+| File | Purpose |
+|---|---|
+| `victron_mqtt/_victron_topics.py` | All topic descriptors (the main file you'll edit) |
+| `victron_mqtt/_victron_enums.py` | Enum definitions for enumerated values |
+| `victron_mqtt/__init__.py` | Public API exports |
 
-### TopicDescriptor Structure
+---
 
-Each MQTT topic is mapped to a `TopicDescriptor` with the following properties:
+## Adding New Topics
 
-#### Required Properties
+### Step 1: Create the TopicDescriptor
 
-- **`message_type`**: Type of Home Assistant entity (`MetricKind` enum)
-- **`short_id`**: Unique identifier for the metric
-- **`metric_type`**: Physical type of measurement (`MetricType` enum)
-- **`metric_nature`**: Nature of the metric (`MetricNature` enum)
-- **`value_type`**: Data type of the value (`ValueType` enum)
-
-#### Optional Properties
-
-- **`name`**: Human-readable name (required for non-attributes)
-- **`unit_of_measurement`**: Physical unit (V, A, W, etc.)
-- **`device_type`**: Type of device (`DeviceType` enum)
-- **`precision`**: Number of decimal places
-- **`enum`**: Enum class for enumerated values
-- **`min`/`max`**: Value ranges for number inputs
-
-### Available Enums and Constants
-
-#### MetricKind (Entity Types)
-```python
-ATTRIBUTE      # Device attributes (model, serial, etc.) - You will not need to use this one in most cases.
-SENSOR         # Read-only measurements
-BINARY_SENSOR  # On/off states
-SWITCH         # Controllable on/off
-SELECT         # Dropdown selection
-NUMBER         # Numeric input control
-```
-
-#### MetricType (Physical Measurements)
-```python
-POWER                       # Watts
-ENERGY                      # kWh
-VOLTAGE                     # Volts
-CURRENT                     # Amperes
-TEMPERATURE                 # Celsius
-FREQUENCY                   # Hertz
-PERCENTAGE                  # Percent
-ELECTRIC_STORAGE_CAPACITY   # Amp-hours
-```
-
-#### MetricNature (Measurement Characteristics)
-```python
-INSTANTANEOUS  # Current value
-CUMULATIVE     # Ever-increasing counter
-NONE           # Not applicable
-```
-
-#### ValueType (Data Types)
-```python
-INT            # Integer
-INT_DEFAULT_0  # Integer defaulting to 0
-FLOAT          # Floating point
-STRING         # Text
-ENUM           # Enumerated value
-```
-
-#### DeviceType (Device Categories)
-```python
-SYSTEM         # System-wide metrics
-SOLAR_CHARGER  # MPPT solar chargers
-INVERTER       # Inverters/chargers
-BATTERY        # Battery monitors
-GRID           # Grid connection
-EVCHARGER      # EV chargers
-PVINVERTER     # PV inverters
-```
-
-### Adding New Topic Definitions
-
-#### Step 1: Identify the MQTT Topic Structure
-
-First, determine the exact MQTT topic pattern. Use tools like [mqtt explorer](https://mqtt-explorer.com/) or the included `dump_mqtt.py` scripts to monitor MQTT traffic. I also recommend [mqtt explorer add-on](https://github.com/adamoutler/mqtt-explorer) if your boat is away and have internet connectivity.
-
-
-#### Step 2: Create the TopicDescriptor
-
-Add a new entry to the `topic_map` dictionary:
+Add a new entry to the `topics` list in `_victron_topics.py`. **Topics are sorted alphabetically by their `topic` field** — insert your new entry in the correct position.
 
 ```python
-"N/{installation_id}/service_type/{device_id}/MetricPath": TopicDescriptor(
-    message_type=MetricKind.SENSOR,          # Entity type
-    short_id="unique_metric_id",             # Unique identifier
-    name="Human Readable Name",              # Display name
-    unit_of_measurement="V",                 # Physical unit
-    metric_type=MetricType.VOLTAGE,          # Measurement type
-    metric_nature=MetricNature.MEASUREMENT, # Measurement nature
-    device_type=DeviceType.BATTERY,          # Device category
-    value_type=ValueType.FLOAT,              # Data type
-    precision=1,                             # Decimal places
-),
-```
-
-#### Step 3: Handle Phase-Specific Metrics
-
-For multi-phase systems, use the `{phase}` placeholder in `short_id` and `name`:
-
-```python
-"N/{installation_id}/grid/{device_id}/Ac/+/Voltage": TopicDescriptor(
+TopicDescriptor(
+    topic="N/{installation_id}/battery/{device_id}/System/MinCellVoltage",
     message_type=MetricKind.SENSOR,
-    short_id="grid_voltage_{phase}",         # Will become grid_voltage_L1, etc.
-    name="Grid voltage on {phase}",          # Will become "Grid voltage on L1"
-    unit_of_measurement="V",
+    short_id="battery_min_cell_voltage",
+    name="Battery minimum cell voltage",
     metric_type=MetricType.VOLTAGE,
-    metric_nature=MetricNature.MEASUREMENT,
-    device_type=DeviceType.GRID,
-    value_type=ValueType.FLOAT,
-    precision=1,
+    # unit_of_measurement, value_type, precision auto-set by MetricType defaults
 ),
 ```
 
-### Adding New Device Types
+### TopicDescriptor Fields
 
-#### Step 1: Add to DeviceType Enum
+#### Required
 
-If you're adding support for a new device category, add it to the `DeviceType` enum in `constants.py`:
+| Field | Description |
+|---|---|
+| `topic` | MQTT topic pattern with `{installation_id}` and `{device_id}` placeholders |
+| `message_type` | Entity kind: `SENSOR`, `BINARY_SENSOR`, `SWITCH`, `SELECT`, `NUMBER`, `TIME`, `BUTTON`, `ATTRIBUTE`, `DEVICE_TRACKER` |
+| `short_id` | Unique identifier for the metric (snake_case, lowercase) |
+| `name` | Human-readable display name (required for non-ATTRIBUTEs, start with capital letter) |
+
+#### Optional
+
+| Field | Description | Default |
+|---|---|---|
+| `value_type` | `INT`, `FLOAT`, `STRING`, `ENUM`, `BITMASK`, `EPOCH` | Auto-set by metric_type |
+| `metric_type` | `VOLTAGE`, `POWER`, `ENERGY`, `CURRENT`, `TEMPERATURE`, `FREQUENCY`, `PERCENTAGE`, etc. | `NONE` |
+| `metric_nature` | `MEASUREMENT`, `TOTAL`, `TOTAL_INCREASING` | Auto-set by metric_type |
+| `unit_of_measurement` | Physical unit (`V`, `A`, `W`, `kWh`, `°C`, etc.) | Auto-set by metric_type |
+| `precision` | Decimal places for float values | Auto-set by metric_type |
+| `enum` | Enum class for `ENUM`/`BITMASK` value types | `None` |
+| `min` / `max` | Value range for `NUMBER` inputs | `None` |
+| `step` | Step size for `NUMBER` inputs | `None` |
+| `main_topic` | `True` if this is the main entity for the device | `False` |
+| `experimental` | `True` to only include in `EXPERIMENTAL` operation mode | `False` |
+| `hidden` | `True` to hide from public APIs (used by formula source metrics) | `False` |
+| `sub_device_key` | Placeholder name that creates sub-devices (e.g., `"output"`) | `None` |
+| `depends_on` | List of metric short_ids this formula depends on | `[]` |
+
+#### MetricType Defaults
+
+Many fields auto-populate based on `metric_type`. For example, setting `metric_type=MetricType.VOLTAGE` automatically sets:
+- `unit_of_measurement = "V"`
+- `value_type = ValueType.FLOAT`
+- `precision = 3`
+- `metric_nature = MetricNature.MEASUREMENT`
+
+So you often only need to specify `metric_type` and the rest fills in.
+
+### Step 2: Handle Phase-Specific Metrics
+
+For multi-phase metrics (L1/L2/L3), use `+` in the topic and `{phase}` in `short_id` and `name`:
 
 ```python
-class DeviceType(Enum):
-    # ... existing types ...
-    NEW_DEVICE = "new_device"
-```
-
-#### Step 2: Add Device-Specific Topics
-
-Add the device's MQTT topics to the topic map, using the new device type:
-
-```python
-"N/{installation_id}/new_device/{device_id}/SomeMetric": TopicDescriptor(
+TopicDescriptor(
+    topic="N/{installation_id}/grid/{device_id}/Ac/+/Voltage",
     message_type=MetricKind.SENSOR,
-    short_id="new_device_metric",
-    name="New Device Metric",
-    device_type=DeviceType.NEW_DEVICE,
-    # ... other properties
+    short_id="grid_voltage_{phase}",
+    name="Grid voltage on {phase}",
+    metric_type=MetricType.VOLTAGE,
 ),
 ```
 
-### Adding Enumerated Values
+### Step 3: Handle Range Placeholders
 
-#### Step 1: Create Enum Class
+For topics with numbered variants, use the `{name(start-end)}` syntax:
 
-For metrics with predefined values, create a new enum in `victron_enums.py`:
+```python
+TopicDescriptor(
+    topic="N/{installation_id}/battery/{device_id}/Voltages/Cell{cell_id(1-16)}",
+    message_type=MetricKind.SENSOR,
+    short_id="battery_cell_{cell_id}_voltage",
+    name="Cell {cell_id} voltage",
+    metric_type=MetricType.VOLTAGE,
+),
+```
+
+This auto-expands into 16 separate topic subscriptions, one per cell.
+
+---
+
+## Adding New Enums
+
+### Step 1: Create the Enum Class
+
+Add to `_victron_enums.py`. Each member takes three arguments: `(code, id, string)`:
 
 ```python
 class NewDeviceMode(VictronEnum):
     """New Device Mode Enum"""
-    Mode1 = (0, "Mode 1")
-    Mode2 = (1, "Mode 2")
-    Mode3 = (2, "Mode 3")
+
+    MODE_A = (0, "mode_a", "Mode A")
+    MODE_B = (1, "mode_b", "Mode B")
+    MODE_C = (2, "mode_c", "Mode C")
 ```
 
-#### Step 2: Use in TopicDescriptor
+- `code` — the numeric value from MQTT
+- `id` — snake_case identifier (used for HA entity state)
+- `string` — human-readable display name
 
-Reference the enum in your topic descriptor:
+### Step 2: Use in TopicDescriptor
 
 ```python
-"N/{installation_id}/new_device/{device_id}/Mode": TopicDescriptor(
+TopicDescriptor(
+    topic="N/{installation_id}/device/{device_id}/Mode",
     message_type=MetricKind.SELECT,
-    short_id="new_device_mode",
-    name="New Device Mode",
-    metric_type=MetricType.NONE,
-    metric_nature=MetricNature.NONE,
-    device_type=DeviceType.NEW_DEVICE,
+    short_id="device_mode",
+    name="Device mode",
     value_type=ValueType.ENUM,
     enum=NewDeviceMode,
 ),
 ```
 
-### Adding Controllable Entities
+### Step 3: Export in `__init__.py`
 
-For metrics that can be controlled (switches, selects, numbers), use appropriate `MetricKind` values:
+Add the import and `__all__` entry:
 
-#### Switch Example
 ```python
-"N/{installation_id}/device/{device_id}/EnableSomething": TopicDescriptor(
+from ._victron_enums import ..., NewDeviceMode
+
+__all__ = [
+    ...,
+    "NewDeviceMode",
+]
+```
+
+---
+
+## Adding New Device Types
+
+If you're adding topics for a device type that doesn't exist yet:
+
+### Step 1: Add to DeviceType Enum
+
+In `_victron_enums.py`:
+
+```python
+class DeviceType(VictronDeviceEnum):
+    # ...existing entries...
+    NEW_DEVICE = ("newdevice", "new_device", "New Device")
+```
+
+Arguments: `(mqtt_code, enum_id, display_string)`
+
+- `mqtt_code` — must exactly match the device type in the MQTT topic path
+- `enum_id` — snake_case identifier
+- `display_string` — human-readable name
+
+### Step 2: Add Device Topics
+
+Add topics to `_victron_topics.py` in alphabetical order.
+
+---
+
+## Adding Controllable Entities
+
+### Switch (on/off)
+
+```python
+TopicDescriptor(
+    topic="N/{installation_id}/device/{device_id}/Enable",
     message_type=MetricKind.SWITCH,
     short_id="device_enable",
-    name="Enable Something",
-    device_type=DeviceType.DEVICE,
+    name="Enable",
     value_type=ValueType.ENUM,
     enum=GenericOnOff,
 ),
 ```
 
-#### Number Input Example
+Switches must use an enum with exactly two members: `id="on"` and `id="off"`.
+
+### Number Input
+
 ```python
-"N/{installation_id}/device/{device_id}/SetCurrent": TopicDescriptor(
+TopicDescriptor(
+    topic="N/{installation_id}/device/{device_id}/SetCurrent",
     message_type=MetricKind.NUMBER,
     short_id="device_set_current",
-    name="Set Current",
-    unit_of_measurement="A",
+    name="Set current",
     metric_type=MetricType.CURRENT,
-    device_type=DeviceType.DEVICE,
-    value_type=ValueType.INT,
-    precision=0,
     min=0,
     max=32,
 ),
 ```
 
-### Common Patterns and Examples
+### Select (dropdown)
 
-#### Battery Management System Metrics
 ```python
-"N/{installation_id}/battery/{device_id}/System/MinCellVoltage": TopicDescriptor(
-    message_type=MetricKind.SENSOR,
-    short_id="battery_min_cell_voltage",
-    name="Battery minimum cell voltage",
-    unit_of_measurement="V",
-    metric_type=MetricType.VOLTAGE,
-    metric_nature=MetricNature.MEASUREMENT,
-    device_type=DeviceType.BATTERY,
-    value_type=ValueType.FLOAT,
-    precision=3,
+TopicDescriptor(
+    topic="N/{installation_id}/device/{device_id}/Mode",
+    message_type=MetricKind.SELECT,
+    short_id="device_mode",
+    name="Mode",
+    value_type=ValueType.ENUM,
+    enum=NewDeviceMode,
 ),
 ```
 
-#### Tank Level Sensors
+---
+
+## Sub-Device Topics
+
+Some devices contain sub-devices (e.g., switch SwitchableOutputs). Use `sub_device_key` to create separate child devices:
+
 ```python
-"N/{installation_id}/tank/{device_id}/Level": TopicDescriptor(
-    message_type=MetricKind.SENSOR,
-    short_id="tank_level",
-    name="Tank level",
-    unit_of_measurement="%",
-    metric_type=MetricType.PERCENTAGE,
-    metric_nature=MetricNature.MEASUREMENT,
-    device_type=DeviceType.TANK,  # You'd need to add this to DeviceType
-    value_type=ValueType.FLOAT,
-    precision=1,
+# Attribute on the sub-device (sets device name)
+TopicDescriptor(
+    topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/Settings/CustomName",
+    message_type=MetricKind.ATTRIBUTE,
+    short_id="custom_name",
+    value_type=ValueType.STRING,
+    sub_device_key="output",
+),
+# Metric on the sub-device
+TopicDescriptor(
+    topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/State",
+    message_type=MetricKind.SWITCH,
+    short_id="switch_{output}_state",
+    name="State",
+    value_type=ValueType.ENUM,
+    enum=GenericOnOff,
+    sub_device_key="output",
 ),
 ```
 
-#### Temperature Sensors
-```python
-"N/{installation_id}/temperature/{device_id}/Temperature": TopicDescriptor(
-    message_type=MetricKind.SENSOR,
-    short_id="temperature_sensor",
-    name="Temperature",
-    unit_of_measurement="°C",
-    metric_type=MetricType.TEMPERATURE,
-    metric_nature=MetricNature.MEASUREMENT,
-    device_type=DeviceType.TEMPERATURE,  # You'd need to add this to DeviceType
-    value_type=ValueType.FLOAT,
-    precision=1,
-),
-```
+Each unique `{output}` value creates a separate sub-device with `parent_device` pointing to the parent switch.
 
-### Testing Your Changes
+---
 
-1. **Validate topic patterns**: Ensure your MQTT topic patterns match actual Venus OS output
-2. **Test with real data**: Use the included `view_metric.py` scripts to verify your mappings work
-   ```bash
-   cd src
-   python -m victron_mqtt.utils.view_metrics
-   ```
-3. **Check for conflicts**: Ensure your `short_id` values are unique
-4. **Run tests**: Execute the test suite to verify no regressions. This requires you to specify connection parameters (see `conftest.py`)
+## Testing
+
+### Run the Test Suite
 
 ```bash
-# Run the test suite
+# Static validation tests (no MQTT connection required)
 python -m pytest tests/static_test.py tests/static_hub_test.py tests/parsed_topics_test.py
+
+# All tests
+python -m pytest tests/
 ```
 
-### Best Practices
+### What the Static Tests Check
 
-1. **Use descriptive short_ids**: Make them unique and self-explanatory
-2. **Follow naming conventions**: Use snake_case for IDs, proper capitalization for names
-3. **Set appropriate precision**: Don't over-specify decimal places
-4. **Group related metrics**: Keep similar device types together in the file
-5. **Add comments**: Document special cases or unusual topic patterns
-6. **Validate units**: Ensure unit_of_measurement matches the actual data
-7. **Consider device variations**: Some devices may have slightly different topic structures
+- No duplicate `short_id` values
+- No duplicate device type + name combinations
+- Required fields present for sensors
+- Names start with capital letters
+- Enum consistency (SWITCH topics must have on/off enum)
+- Topics sorted alphabetically
+- Valid device types in topic paths
+- No forbidden placeholders in short_id or name
 
-### Common Pitfalls
+### Manual Testing
 
-- **Wildcards in wrong positions**: Ensure `+` wildcards match the actual topic structure
-- **Missing precision for floats**: Always specify appropriate precision for numeric values
-- **Wrong MetricNature**: Energy counters should be CUMULATIVE, instantaneous readings should be INSTANTANEOUS
-- **Conflicting short_ids**: Each metric must have a unique short_id within its device
-- **Missing device_type**: Always specify the appropriate device type for proper grouping
+Use the metric viewer to verify your changes work with real data:
 
-### Getting Help
+```bash
+python -m victron_mqtt.utils.view_metrics
+```
+
+---
+
+## Best Practices
+
+1. **Keep topics alphabetically sorted** in `_victron_topics.py`
+2. **Use descriptive short_ids** — unique, snake_case, self-explanatory
+3. **Let MetricType set defaults** — don't manually set unit/precision/nature when MetricType handles it
+4. **Follow naming conventions** — sentence case for names, snake_case for short_ids
+5. **Add enums to `__init__.py`** — all `VictronEnum` subclasses must be exported
+6. **Test with real hardware** when possible — verify topic patterns match actual MQTT output
+7. **Attach `dump_mqtt` output** to your PR for review
+
+## Common Pitfalls
+
+- **Wrong sort order** — the alphabetical sort test will fail if topics aren't in order
+- **Missing enum export** — new enums must be added to `__init__.py`'s `__all__`
+- **Wrong MetricNature** — energy counters should be `TOTAL`, instantaneous readings should be `MEASUREMENT`
+- **Precision on non-float types** — `STRING`, `ENUM`, `BITMASK` must not have precision set
+- **Phase placeholder** — topics with `+` for L1/L2/L3 must use `{phase}` in short_id and name
+
+## Getting Help
 
 - Check existing patterns in `_victron_topics.py` for similar metrics
-- Monitor MQTT traffic to understand the exact topic structure
-- Review Venus OS documentation for metric meanings
-- Test with real hardware when possible
+- Review the [Venus OS D-Bus wiki](https://github.com/victronenergy/venus/wiki/dbus)
+- Open an [issue](https://github.com/tomer-w/victron_mqtt/issues) if you need guidance
