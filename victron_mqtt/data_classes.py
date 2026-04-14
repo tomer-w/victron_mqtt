@@ -152,6 +152,34 @@ class TopicDescriptor:
                 self.precision = 1
             if self.metric_nature == MetricNature.NONE:
                 self.metric_nature = MetricNature.MEASUREMENT
+        # Humidity default
+        if self.metric_type == MetricType.HUMIDITY:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "%"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.MEASUREMENT
+        # Pressure default
+        if self.metric_type == MetricType.PRESSURE:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "hPa"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.MEASUREMENT
+        # Distance default
+        if self.metric_type == MetricType.DISTANCE:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "m"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 2
         # Electric storage capacity default
         if self.metric_type == MetricType.ELECTRIC_STORAGE_CAPACITY:
             if self.unit_of_measurement is None:

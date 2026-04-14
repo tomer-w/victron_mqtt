@@ -79,6 +79,7 @@ def test_naming_unit_consistency():
                 )
             if descriptor.unit_of_measurement == "%" and descriptor.metric_type not in [
                 MetricType.PERCENTAGE,
+                MetricType.HUMIDITY,
                 MetricType.ELECTRIC_STORAGE_PERCENTAGE,
             ]:
                 errors.append(
