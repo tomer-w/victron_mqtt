@@ -1,7 +1,8 @@
 """A utility to visualize and interact with Victron Venus OS devices and metrics.
 
 Features:
-- Hierarchical tree view showing parent/child device relationships
+- Hierarchical device tree showing parent/child relationships
+- Metrics pane showing metrics for the selected device
 - Live-updating metric values with color-coded metric kinds
 - Search/filter for devices and metrics
 - Double-click writable metrics to edit values inline
@@ -187,26 +188,37 @@ class AttributeViewerDialog(simpledialog.Dialog):
         assert metric.enum_values is not None
 
         is_on = str(metric.value).lower() in ["on", "1", "true"]
+
+        style = ttk.Style()
+        style.configure("SwitchOnDot.TLabel", foreground="#2E7D32")
+        style.configure("SwitchOffDot.TLabel", foreground="#C62828")
+
         btn_frame = ttk.Frame(parent)
         btn_frame.grid(row=0, column=0, columnspan=2, pady=5)
 
+        on_frame = ttk.Frame(btn_frame)
+        on_frame.pack(side=tk.LEFT, padx=5)
+        ttk.Label(on_frame, text="●", style="SwitchOnDot.TLabel").pack(side=tk.LEFT, padx=(0, 4))
         self._on_btn = ttk.Button(
-            btn_frame,
-            text="🟢 ON",
+            on_frame,
+            text="ON",
             width=10,
             command=lambda: self._set_switch("on"),
             state=tk.DISABLED if is_on else tk.NORMAL,
         )
-        self._on_btn.pack(side=tk.LEFT, padx=5)
+        self._on_btn.pack(side=tk.LEFT)
 
+        off_frame = ttk.Frame(btn_frame)
+        off_frame.pack(side=tk.LEFT, padx=5)
+        ttk.Label(off_frame, text="●", style="SwitchOffDot.TLabel").pack(side=tk.LEFT, padx=(0, 4))
         self._off_btn = ttk.Button(
-            btn_frame,
-            text="🔴 OFF",
+            off_frame,
+            text="OFF",
             width=10,
             command=lambda: self._set_switch("off"),
             state=tk.DISABLED if not is_on else tk.NORMAL,
         )
-        self._off_btn.pack(side=tk.LEFT, padx=5)
+        self._off_btn.pack(side=tk.LEFT)
 
     def _set_switch(self, value: str):
         is_on = value == "on"
@@ -382,40 +394,67 @@ class App:
         self.clear_search_button = ttk.Button(self.toolbar, text="✕", width=3, command=self._clear_search)
         self.clear_search_button.pack(side=tk.LEFT, padx=2, pady=2)
 
-        # --- Tree view ---
-        tree_frame = ttk.Frame(self.root)
-        tree_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=3)
+        # --- Two-pane layout: devices (left) + metrics (right) ---
+        pane = ttk.Panedwindow(self.root, orient=tk.HORIZONTAL)
+        pane.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=3)
 
-        self.tree = ttk.Treeview(tree_frame, selectmode="browse", columns=("value", "kind", "unit"))
-        self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
-        self.tree.bind("<Double-1>", self._on_double_click)
+        devices_frame = ttk.Frame(pane)
+        metrics_frame = ttk.Frame(pane)
+        pane.add(devices_frame, weight=2)
+        pane.add(metrics_frame, weight=3)
 
-        # Column configuration
-        self.tree.heading("#0", text="Name", anchor=tk.W)
-        self.tree.heading("value", text="Value", anchor=tk.W)
-        self.tree.heading("kind", text="Kind", anchor=tk.W)
-        self.tree.heading("unit", text="Unit", anchor=tk.W)
+        ttk.Label(devices_frame, text="Devices", font=("", 10, "bold")).grid(
+            row=0, column=0, sticky=tk.W, padx=2, pady=(0, 4)
+        )
+        self.device_tree = ttk.Treeview(devices_frame, selectmode="browse", columns=("type",))
+        self.device_tree.bind("<<TreeviewSelect>>", self._on_device_select)
+        self.device_tree.bind("<Double-1>", self._on_device_double_click)
 
-        self.tree.column("#0", width=400, minwidth=200)
-        self.tree.column("value", width=250, minwidth=100)
-        self.tree.column("kind", width=120, minwidth=80)
-        self.tree.column("unit", width=80, minwidth=50)
+        self.device_tree.heading("#0", text="Device", anchor=tk.W)
+        self.device_tree.heading("type", text="Type", anchor=tk.W)
+        self.device_tree.column("#0", width=300, minwidth=180)
+        self.device_tree.column("type", width=180, minwidth=100)
 
-        # Scrollbars
-        vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
-        hsb = ttk.Scrollbar(tree_frame, orient="horizontal", command=self.tree.xview)
-        self.tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
-        self.tree.grid(row=0, column=0, sticky="nsew")
-        vsb.grid(row=0, column=1, sticky="ns")
-        hsb.grid(row=1, column=0, sticky="ew")
-        tree_frame.grid_rowconfigure(0, weight=1)
-        tree_frame.grid_columnconfigure(0, weight=1)
+        device_vsb = ttk.Scrollbar(devices_frame, orient="vertical", command=self.device_tree.yview)
+        device_hsb = ttk.Scrollbar(devices_frame, orient="horizontal", command=self.device_tree.xview)
+        self.device_tree.configure(yscrollcommand=device_vsb.set, xscrollcommand=device_hsb.set)
+        self.device_tree.grid(row=1, column=0, sticky="nsew")
+        device_vsb.grid(row=1, column=1, sticky="ns")
+        device_hsb.grid(row=2, column=0, sticky="ew")
+        devices_frame.grid_rowconfigure(1, weight=1)
+        devices_frame.grid_columnconfigure(0, weight=1)
+        self.device_tree.tag_configure("device", font=("", 10, "bold"))
+
+        self._metrics_title_var = tk.StringVar(value="Metrics")
+        ttk.Label(metrics_frame, textvariable=self._metrics_title_var, font=("", 10, "bold")).grid(
+            row=0, column=0, sticky=tk.W, padx=2, pady=(0, 4)
+        )
+        self.metric_tree = ttk.Treeview(metrics_frame, selectmode="browse", columns=("value", "kind", "unit"))
+        self.metric_tree.bind("<<TreeviewSelect>>", self._on_metric_select)
+        self.metric_tree.bind("<Double-1>", self._on_metric_double_click)
+
+        self.metric_tree.heading("#0", text="Metric", anchor=tk.W)
+        self.metric_tree.heading("value", text="Value", anchor=tk.W)
+        self.metric_tree.heading("kind", text="Kind", anchor=tk.W)
+        self.metric_tree.heading("unit", text="Unit", anchor=tk.W)
+        self.metric_tree.column("#0", width=350, minwidth=180)
+        self.metric_tree.column("value", width=220, minwidth=100)
+        self.metric_tree.column("kind", width=120, minwidth=80)
+        self.metric_tree.column("unit", width=80, minwidth=50)
+
+        metric_vsb = ttk.Scrollbar(metrics_frame, orient="vertical", command=self.metric_tree.yview)
+        metric_hsb = ttk.Scrollbar(metrics_frame, orient="horizontal", command=self.metric_tree.xview)
+        self.metric_tree.configure(yscrollcommand=metric_vsb.set, xscrollcommand=metric_hsb.set)
+        self.metric_tree.grid(row=1, column=0, sticky="nsew")
+        metric_vsb.grid(row=1, column=1, sticky="ns")
+        metric_hsb.grid(row=2, column=0, sticky="ew")
+        metrics_frame.grid_rowconfigure(1, weight=1)
+        metrics_frame.grid_columnconfigure(0, weight=1)
 
         # Tag colors for metric kinds
         for kind, color in METRIC_KIND_COLORS.items():
-            self.tree.tag_configure(f"kind_{kind.value}", foreground=color)
-        self.tree.tag_configure("device", font=("", 10, "bold"))
-        self.tree.tag_configure("writable", foreground="#FF6F00")
+            self.metric_tree.tag_configure(f"kind_{kind.value}", foreground=color)
+        self.metric_tree.tag_configure("writable", foreground="#FF6F00")
 
         # --- Status bar ---
         self.status_frame = ttk.Frame(self.root, relief=tk.SUNKEN)
@@ -433,7 +472,7 @@ class App:
 
         self._client = None
         self._metric_containers = []
-        self._all_tree_items: list[tuple[str, str]] = []  # (iid, searchable_text)
+        self._selected_device_id: str | None = None
 
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self._to_quit = False
@@ -448,58 +487,61 @@ class App:
     def to_quit(self):
         return self._to_quit
 
-    def _on_tree_select(self, event):
-        if len(self.tree.selection()) == 0:
-            if str(self.info_button["state"]) == tk.NORMAL:
-                self.info_button.config(state=tk.DISABLED)
-        elif str(self.info_button["state"]) == tk.DISABLED:
-            self.info_button.config(state=tk.NORMAL)
+    def _refresh_info_button_state(self):
+        has_device_selection = len(self.device_tree.selection()) > 0
+        has_metric_selection = len(self.metric_tree.selection()) > 0
+        self.info_button.config(state=tk.NORMAL if (has_device_selection or has_metric_selection) else tk.DISABLED)
 
-    def _on_double_click(self, event):
-        """Handle double-click to view/edit any metric or device."""
-        item = self.tree.identify_row(event.y)
+    def _on_device_select(self, _event):
+        if self._client is None:
+            return
+        selection = self.device_tree.selection()
+        self._selected_device_id = selection[0][1:] if selection else None
+        self._refill_metric_pane()
+        self._refresh_info_button_state()
+
+    def _on_metric_select(self, _event):
+        self._refresh_info_button_state()
+
+    def _on_device_double_click(self, event):
+        """Handle double-click on a device node."""
+        item = self.device_tree.identify_row(event.y)
         if not item or self._client is None:
             return
-        unique_id = item[1:]
-        if item.startswith("M"):
-            metric = self._client._all_metrics.get(unique_id)
-            if metric is not None:
-                AttributeViewerDialog(self.root, metric)
-        elif item.startswith("D"):
-            device = self._client._devices.get(unique_id)
-            if device is not None:
-                AttributeViewerDialog(self.root, device)
+        device = self._client._devices.get(item[1:])
+        if device is not None:
+            AttributeViewerDialog(self.root, device)
+
+    def _on_metric_double_click(self, event):
+        """Handle double-click on a metric row."""
+        item = self.metric_tree.identify_row(event.y)
+        if not item or self._client is None:
+            return
+        metric = self._client.get_metric(item[1:])
+        if metric is not None:
+            AttributeViewerDialog(self.root, metric)
 
     def _expand_all(self):
         self._expand_all_recursive()
 
     def _expand_all_recursive(self):
         def _expand(item):
-            self.tree.item(item, open=True)
-            for child in self.tree.get_children(item):
+            self.device_tree.item(item, open=True)
+            for child in self.device_tree.get_children(item):
                 _expand(child)
 
-        for item in self.tree.get_children():
+        for item in self.device_tree.get_children():
             _expand(item)
 
     def _collapse_all(self):
-        for item in self.tree.get_children():
-            self.tree.item(item, open=False)
+        for item in self.device_tree.get_children():
+            self.device_tree.item(item, open=False)
 
     def _clear_search(self):
         self._search_var.set("")
 
     def _on_search(self, *_args):
         query = self._search_var.get().lower().strip()
-        if not query:
-            # Show all items
-            for iid, _ in self._all_tree_items:
-                if self.tree.exists(iid):
-                    # Detach/reattach doesn't work well with ttk, so just use tag visibility
-                    pass
-            # Re-fill tree to reset visibility
-            self._refill_tree_filtered("")
-            return
         self._refill_tree_filtered(query)
 
     def _refill_tree_filtered(self, query: str):
@@ -507,9 +549,12 @@ class App:
         if self._client is None:
             return
 
-        self.tree.delete(*self.tree.get_children())
+        previous_selected_device_id = self._selected_device_id
+
+        self.device_tree.delete(*self.device_tree.get_children())
+        self.metric_tree.delete(*self.metric_tree.get_children())
         self._metric_containers.clear()
-        self._all_tree_items.clear()
+        self._selected_device_id = None
 
         all_devices = self._client._devices  # Access internal dict to include metric-less parents
         # Build device tree
@@ -524,8 +569,26 @@ class App:
             self._expand_all_recursive()
         else:
             # Auto-expand first level only
-            for item in self.tree.get_children():
-                self.tree.item(item, open=True)
+            for item in self.device_tree.get_children():
+                self.device_tree.item(item, open=True)
+
+        if previous_selected_device_id is not None:
+            previous_iid = "D" + previous_selected_device_id
+            if self.device_tree.exists(previous_iid):
+                self.device_tree.selection_set(previous_iid)
+                self.device_tree.focus(previous_iid)
+                self._selected_device_id = previous_selected_device_id
+
+        if self._selected_device_id is None:
+            roots = self.device_tree.get_children()
+            if roots:
+                first_iid = roots[0]
+                self.device_tree.selection_set(first_iid)
+                self.device_tree.focus(first_iid)
+                self._selected_device_id = first_iid[1:]
+
+        self._refill_metric_pane()
+        self._refresh_info_button_state()
 
     def _device_matches(self, device: Device, query: str, all_devices: dict) -> bool:
         """Check if device or any of its children/metrics match the query."""
@@ -552,35 +615,49 @@ class App:
         device_text = f"{icon} {device.name}"
         device_iid = "D" + device.unique_id
 
-        device_item = self.tree.insert(
+        self.device_tree.insert(
             parent_iid,
             "end",
             text=device_text,
-            values=(device.serial_number or "", device.device_type.string, ""),
+            values=(device.device_type.string,),
             iid=device_iid,
             tags=("device",),
             open=True,
         )
-        self._all_tree_items.append((device_iid, f"{device.name} {device.unique_id}".lower()))
 
-        # Add metrics
+        # Add child devices
+        children = [d for d in all_devices.values() if d.parent_device is device]
+        children.sort(key=lambda d: d.unique_id)
+        for child in children:
+            self._insert_device_tree(child, device_iid, all_devices, query)
+
+    def _refill_metric_pane(self):
+        """Refresh metrics pane for the currently selected device."""
+        self.metric_tree.delete(*self.metric_tree.get_children())
+        self._metric_containers.clear()
+
+        if self._client is None or self._selected_device_id is None:
+            self._metrics_title_var.set("Metrics")
+            return
+
+        device = self._client._devices.get(self._selected_device_id)
+        if device is None:
+            self._metrics_title_var.set("Metrics")
+            return
+
+        self._metrics_title_var.set(f"Metrics - {device.name} ({device.unique_id})")
+
         metrics = sorted(device.metrics, key=lambda x: x.short_id)
         for metric in metrics:
-            metric_text = f"{metric.name} {metric.short_id} {metric.formatted_value}".lower()
-            if query and query not in metric_text and query not in f"{device.name} {device.unique_id}".lower():
-                continue
-
-            tags = []
-            kind_tag = f"kind_{metric.metric_kind.value}"
-            tags.append(kind_tag)
+            tags = [f"kind_{metric.metric_kind.value}"]
             if isinstance(metric, WritableMetric):
                 tags.append("writable")
 
             metric_iid = "M" + metric.unique_id
-            metric_item = self.tree.insert(
-                device_item,
+            metric_item = self.metric_tree.insert(
+                "",
                 "end",
-                text=f"  {metric.name or ''}",
+                text=f"{metric.name or ''}",
                 values=(
                     metric.formatted_value,
                     metric.metric_kind.value,
@@ -589,14 +666,7 @@ class App:
                 iid=metric_iid,
                 tags=tuple(tags),
             )
-            self._metric_containers.append(MetricContainer(metric, self.tree, metric_item))
-            self._all_tree_items.append((metric_iid, metric_text))
-
-        # Add child devices
-        children = [d for d in all_devices.values() if d.parent_device is device]
-        children.sort(key=lambda d: d.unique_id)
-        for child in children:
-            self._insert_device_tree(child, device_iid, all_devices, query)
+            self._metric_containers.append(MetricContainer(metric, self.metric_tree, metric_item))
 
     async def _async_connect(
         self, server: str, port: int, username: str | None, password: str | None, use_ssl: bool
@@ -644,16 +714,18 @@ class App:
         if not self._client:
             return
 
-        item = self.tree.selection()[0]
-        unique_id = item[1:]
-        if item[0] == "D":
-            device = self._client._devices.get(unique_id)
-            if device is not None:
-                AttributeViewerDialog(self.root, device)
-        elif item[0] == "M":
-            metric = self._client.get_metric(unique_id)
+        metric_selection = self.metric_tree.selection()
+        if metric_selection:
+            metric = self._client.get_metric(metric_selection[0][1:])
             if metric is not None:
                 AttributeViewerDialog(self.root, metric)
+            return
+
+        device_selection = self.device_tree.selection()
+        if device_selection:
+            device = self._client._devices.get(device_selection[0][1:])
+            if device is not None:
+                AttributeViewerDialog(self.root, device)
 
     def _connect(self):
         self.connect_button.config(state=tk.DISABLED)
@@ -689,9 +761,10 @@ class App:
         self.info_button.config(state=tk.DISABLED)
         self.expand_button.config(state=tk.DISABLED)
         self.collapse_button.config(state=tk.DISABLED)
-        self.tree.delete(*self.tree.get_children())
+        self.device_tree.delete(*self.device_tree.get_children())
+        self.metric_tree.delete(*self.metric_tree.get_children())
         self._metric_containers.clear()
-        self._all_tree_items.clear()
+        self._selected_device_id = None
 
         if self._client is not None:
             loop = asyncio.get_event_loop()
