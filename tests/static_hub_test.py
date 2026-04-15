@@ -1773,6 +1773,35 @@ async def test_min_max_float():
 
 
 @pytest.mark.asyncio
+async def test_dynamic_step_dependencies_fallback_default():
+    """Test that dynamic step falls back to the default when dependency is missing."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/Dimming", '{"value": 40}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_2"]
+    metric = device.get_metric("switch_2_dimming")
+    assert isinstance(metric, WritableMetric), "Metric should exist in the device"
+    assert metric.step == 1, f"Expected metric step to fall back to 1, got {metric.step}"
+
+
+@pytest.mark.asyncio
+async def test_dynamic_step_dependencies_resolved_metric():
+    """Test that dynamic step resolves from the referenced StepSize metric."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/Settings/StepSize", '{"value": 5}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/Dimming", '{"value": 40}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_2"]
+    metric = device.get_metric("switch_2_dimming")
+    assert isinstance(metric, WritableMetric), "Metric should exist in the device"
+    assert metric.step == 5, f"Expected metric step to resolve to 5, got {metric.step}"
+
+
+@pytest.mark.asyncio
 async def test_on_connect_fail_before_first_connect():
     """Test that connection failures before first connect raise CannotConnectError."""
     hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id="test123")

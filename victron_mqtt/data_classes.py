@@ -61,7 +61,7 @@ class TopicDescriptor:
     min_max_range: RangeType = RangeType.STATIC
     min: float | int | str | None = None
     max: float | int | str | None = None
-    step: float | int | None = None
+    step: float | int | str | None = None
     is_adjustable_suffix: str | None = None
     key_values: dict[str, str] = field(default_factory=dict)
     experimental: bool = False

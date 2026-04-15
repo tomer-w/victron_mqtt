@@ -260,9 +260,9 @@ class AttributeViewerDialog(simpledialog.Dialog):
     def _build_number_control(self, parent, metric: WritableMetric, descriptor):
         """Build a slider + entry for number metrics with min/max/step."""
         current_value = float(metric.value) if metric.value is not None else 0.0
-        min_val = float(descriptor.min) if descriptor.min is not None else 0.0
-        max_val = float(descriptor.max) if descriptor.max is not None else 100.0
-        step = float(descriptor.step) if descriptor.step is not None else 1.0
+        min_val = float(metric.min_value) if metric.min_value is not None else 0.0
+        max_val = float(metric.max_value) if metric.max_value is not None else 100.0
+        step = float(metric.step) if metric.step is not None else 1.0
         precision = descriptor.precision or 0
         unit = metric.unit_of_measurement or ""
 

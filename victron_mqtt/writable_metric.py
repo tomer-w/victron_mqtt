@@ -20,13 +20,16 @@ class WritableMetric(Metric):
 
     _min_value: int | float | None = None
     _max_value: int | float | None = None
+    _step_value: int | float | None = None
 
     def __init__(self, *, descriptor: TopicDescriptor | None = None, topic: str | None = None, **kwargs: Any) -> None:
         """Initialize the WritableMetric."""
         assert descriptor is not None
         _LOGGER.debug(
             "Creating new WritableMetric: short_id=%s, type=%s, nature=%s",
-            descriptor.short_id, descriptor.metric_type, descriptor.metric_nature
+            descriptor.short_id,
+            descriptor.metric_type,
+            descriptor.metric_nature,
         )
         self._write_topic: str | None = None
         if topic is not None:
@@ -43,16 +46,14 @@ class WritableMetric(Metric):
     def phase2_init(self, device_id: str, all_metrics: dict[str, Metric]) -> None:
         """Phase 2 initialization of the WritableMetric."""
         super().phase2_init(device_id, all_metrics)
-        self._min_value = self._get_min_max_value(self._descriptor.min, device_id, all_metrics)
-        self._max_value = self._get_min_max_value(self._descriptor.max, device_id, all_metrics)
+        self._min_value = self._resolve_range_value(self._descriptor.min, device_id, all_metrics)
+        self._max_value = self._resolve_range_value(self._descriptor.max, device_id, all_metrics)
+        self._step_value = self._resolve_range_value(self._descriptor.step, device_id, all_metrics)
 
-    def _get_min_max_value(
-        self,
-        range_value: int | float | str | None,
-        device_id: str,
-        all_metrics: dict[str, Metric]
-        ) -> int | float | None:
-        """Resolve a range value (min/max) that may be static or reference another metric."""
+    def _resolve_range_value(
+        self, range_value: int | float | str | None, device_id: str, all_metrics: dict[str, Metric]
+    ) -> int | float | None:
+        """Resolve a range value (min/max/step) that may be static or reference another metric."""
         if range_value is None:
             return None
 
@@ -72,8 +73,10 @@ class WritableMetric(Metric):
 
         if ref_metric is None:
             _LOGGER.debug(
-            "Referenced metric '%s' not found for %s, using default value %s",
-            metric_unique_id, self._descriptor.short_id, default_value
+                "Referenced metric '%s' not found for %s, using default value %s",
+                metric_unique_id,
+                self._descriptor.short_id,
+                default_value,
             )
             return default_value
 
@@ -92,7 +95,7 @@ class WritableMetric(Metric):
     @property
     def step(self) -> float | int | None:
         """Get the step value for this metric, if defined."""
-        return self._descriptor.step
+        return self._step_value
 
     def set(self, value: str | float | int | bool | VictronEnum) -> None:
         """Set the value of this metric by publishing to the write topic."""
@@ -107,12 +110,14 @@ class WritableMetric(Metric):
 
         if value_type is ValueType.ENUM:
             assert topic_desc.enum is not None, "Enum must be provided for enum value types"
-            assert isinstance(value, (VictronEnum, str)), "Enum values must be VictronEnum or str"
+            assert isinstance(value, VictronEnum | str), "Enum values must be VictronEnum or str"
             return wrap_enum(value, topic_desc.enum)
 
         if value_type is ValueType.BITMASK:
             assert topic_desc.enum is not None, "Enum must be provided for bitmask value types"
-            assert isinstance(value, (VictronEnum, str, Iterable)), "Bitmask values must be VictronEnum, str or iterable"
+            assert isinstance(value, VictronEnum | str | Iterable), (
+                "Bitmask values must be VictronEnum, str or iterable"
+            )
             return wrap_bitmask(value, topic_desc.enum)
 
         wrapper = cast("Callable[[Any], str]", VALUE_TYPE_WRAPPER[value_type])

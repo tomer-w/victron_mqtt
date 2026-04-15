@@ -562,10 +562,10 @@ def test_no_more_than_one_main_topic_per_device_type():
 
 
 def test_min_max_values_aligned_with_range_type():
-    """Test that min/max values are properly formatted for _get_min_max_value logic.
+    """Test that min/max/step values are properly formatted for range resolution logic.
 
-    Validates that _get_min_max_value can successfully parse all min/max values.
-    Min/max values can be:
+    Validates that _resolve_range_value can successfully parse all min/max/step values.
+    Range values can be:
     - Numeric (int or float) - static values
     - String in format "metric_id:default_value" - dynamic references to other metrics
     """
@@ -575,7 +575,7 @@ def test_min_max_values_aligned_with_range_type():
 
     errors = []
 
-    # Create a mock WritableMetric instance to access _get_min_max_value
+    # Create a mock WritableMetric instance to access _resolve_range_value
     mock_metric = WritableMetric.__new__(WritableMetric)
     mock_metric._key_values = {}
     mock_descriptor = TopicDescriptor(topic="mock", message_type=get_metric_kind().SENSOR, short_id="mock", name="mock")
@@ -585,16 +585,23 @@ def test_min_max_values_aligned_with_range_type():
         # Test min value
         if descriptor.min is not None:
             try:
-                mock_metric._get_min_max_value(descriptor.min, "test_device", {})
+                mock_metric._resolve_range_value(descriptor.min, "test_device", {})
             except Exception as e:
                 errors.append(f"Topic '{descriptor.topic}' has invalid min={descriptor.min}: {e}")
 
         # Test max value
         if descriptor.max is not None:
             try:
-                mock_metric._get_min_max_value(descriptor.max, "test_device", {})
+                mock_metric._resolve_range_value(descriptor.max, "test_device", {})
             except Exception as e:
                 errors.append(f"Topic '{descriptor.topic}' has invalid max={descriptor.max}: {e}")
+
+        # Test step value
+        if descriptor.step is not None:
+            try:
+                mock_metric._resolve_range_value(descriptor.step, "test_device", {})
+            except Exception as e:
+                errors.append(f"Topic '{descriptor.topic}' has invalid step={descriptor.step}: {e}")
 
     if errors:
         pytest.fail("\n".join(errors))

@@ -943,6 +943,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.INT,
         min="evcharger_min_set_current:0",
         max="evcharger_max_set_current:32",
+        step=1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/evcharger/{device_id}/StartStop",
@@ -1473,6 +1474,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.FLOAT,
         min=0,
         max=200,
+        step=0.1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ac/In/1/{phase}/I",
@@ -1705,6 +1707,7 @@ topics: list[TopicDescriptor] = [
         short_id="multi_ess_min_soc_limit",
         name="ESS minimum SoC limit",
         metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
+        step=5,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Settings/Ess/Mode",
@@ -1813,6 +1816,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=-1,  # -1 means not set
         max=100,
+        step=1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/AcInputLimit",
@@ -1823,6 +1827,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.INT,
         min=-1,  # -1 means not set
         max=100,
+        step=1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/AcPowerSetPoint",
@@ -1834,6 +1839,7 @@ topics: list[TopicDescriptor] = [
         min_max_range=RangeType.DYNAMIC,
         min=-10000,  # Dynamic range, depends on device model,
         max=10000,  # Dynamic range, depends on device model
+        step=10,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/MinimumSocLimit",
@@ -1843,6 +1849,7 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
+        step=5,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Day",
@@ -1879,6 +1886,7 @@ topics: list[TopicDescriptor] = [
         name="ESS BatteryLife schedule charge {slot} SoC",
         metric_type=MetricType.ELECTRIC_STORAGE_PERCENTAGE,
         value_type=ValueType.INT,
+        step=5,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/Schedule/Charge/{slot}/Start",
@@ -1923,6 +1931,7 @@ topics: list[TopicDescriptor] = [
         min_max_range=RangeType.DYNAMIC,
         min=-1,
         max=1000000,
+        step=50,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxDischargePower",
@@ -1932,6 +1941,7 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.POWER,
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
+        step=50,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxFeedInPower",
@@ -1943,6 +1953,7 @@ topics: list[TopicDescriptor] = [
         min_max_range=RangeType.DYNAMIC,
         min=-1,
         max=1000000,
+        step=100,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/OvervoltageFeedIn",
@@ -1978,6 +1989,7 @@ topics: list[TopicDescriptor] = [
         name="Generator QH start on voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
+        step=0.1,
         depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
@@ -1987,6 +1999,7 @@ topics: list[TopicDescriptor] = [
         name="Generator QH stop on voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
+        step=0.1,
         depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
@@ -2006,6 +2019,7 @@ topics: list[TopicDescriptor] = [
         name="Generator start on voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
+        step=0.1,
         depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
@@ -2025,6 +2039,7 @@ topics: list[TopicDescriptor] = [
         name="Generator stop on voltage",
         metric_type=MetricType.VOLTAGE,
         min_max_range=RangeType.DYNAMIC,
+        step=0.1,
         depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
@@ -2114,6 +2129,7 @@ topics: list[TopicDescriptor] = [
         name="Generator QH start on SoC",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
+        step=1,
         depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
@@ -2124,6 +2140,7 @@ topics: list[TopicDescriptor] = [
         name="Generator QH stop on SoC",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
+        step=1,
         depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
@@ -2144,6 +2161,7 @@ topics: list[TopicDescriptor] = [
         name="Generator start on SoC",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
+        step=1,
         depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
@@ -2164,6 +2182,7 @@ topics: list[TopicDescriptor] = [
         name="Generator stop on SoC",
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
+        step=1,
         depends_on=["generator_{gen_id}_generator_autorun"],
     ),
     TopicDescriptor(
@@ -2193,6 +2212,7 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.CURRENT,
         value_type=ValueType.INT,
         min_max_range=RangeType.DYNAMIC,
+        step=1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/SystemSetup/MaxChargeVoltage",
@@ -2440,7 +2460,17 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.PERCENTAGE,
         min=0,
         max=100,
+        step="switch_{output}_step_size:1",
         unit_of_measurement="%",
+        sub_device_key="output",
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/Settings/StepSize",
+        message_type=MetricKind.SENSOR,
+        short_id="switch_{output}_step_size",
+        name="Step size",
+        value_type=ValueType.INT,
+        hidden=True,
         sub_device_key="output",
     ),
     TopicDescriptor(
@@ -2863,6 +2893,7 @@ topics: list[TopicDescriptor] = [
         short_id="temperature_offset",
         name="Offset",
         metric_type=MetricType.TEMPERATURE,
+        step=1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/temperature/{device_id}/Pressure",
@@ -2882,6 +2913,7 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.NONE,
         value_type=ValueType.FLOAT,
         precision=2,
+        step=0.1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/temperature/{device_id}/Status",
