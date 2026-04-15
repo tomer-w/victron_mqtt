@@ -281,6 +281,36 @@ class Hub:
             [desc for desc in expanded_topics if desc.is_adjustable_suffix],
             lambda desc: Hub._remove_placeholders_map(merge_is_adjustable_suffix(desc)),
         )
+        # Descriptors that create sub-devices may contain arbitrary string identifiers.
+        # Build a map keyed by the placeholder's position index and then by (prefix, suffix)
+        # around it so that the free-text segment (e.g. "output_1", "ev_connected") is simply
+        # skipped during lookup.  Keying on the index avoids scanning every possible split
+        # position at message-handling time.
+        self.sub_device_topic_patterns: dict[DeviceType, dict[int, dict[tuple[str, str], list[TopicDescriptor]]]] = {}
+        for desc in expanded_topics:
+            if desc.sub_device_key is None:
+                continue
+            assert not desc.is_formula, "Formula topics should not have sub-devices"
+            topic_device_type = topic_to_device_type(desc.topic.split("/"))
+            assert topic_device_type is not None, f"Topic {desc.topic} should have a valid device type"
+            sub_device_placeholder = f"{{{desc.sub_device_key}}}"
+            desc_topic_parts = desc.topic.split("/")
+            assert sub_device_placeholder in desc_topic_parts, (
+                f"Topic {desc.topic} should contain the sub-device placeholder {sub_device_placeholder}"
+            )
+            sub_device_idx = desc_topic_parts.index(sub_device_placeholder)
+            prefix = "/".join(desc_topic_parts[:sub_device_idx])
+            suffix = "/".join(desc_topic_parts[sub_device_idx + 1 :])
+            if topic_device_type not in self.sub_device_topic_patterns:
+                self.sub_device_topic_patterns[topic_device_type] = {}
+            by_idx = self.sub_device_topic_patterns[topic_device_type]
+            if sub_device_idx not in by_idx:
+                by_idx[sub_device_idx] = {}
+            by_pattern = by_idx[sub_device_idx]
+            pattern_key = (prefix, suffix)
+            if pattern_key not in by_pattern:
+                by_pattern[pattern_key] = []
+            by_pattern[pattern_key].append(desc)
         subscription_list1 = [
             Hub._remove_placeholders(topic.topic) for topic in expanded_topics if not topic.is_formula
         ]
@@ -719,10 +749,30 @@ class Hub:
             desc_list = self.topic_map.get(parsed_topic.wildcards_without_device_type)
         if desc_list is None:
             desc_list = self.fallback_map.get(parsed_topic.wildcards_with_device_type)
-            fallback_to_metric_topic = True
+            if desc_list is not None:
+                fallback_to_metric_topic = True
         if desc_list is None:
             desc_list = self.fallback_map.get(parsed_topic.wildcards_without_device_type)
-            fallback_to_metric_topic = True
+            if desc_list is not None:
+                fallback_to_metric_topic = True
+        if desc_list is None:
+            # Fallback for sub-device descriptors (e.g., SwitchableOutput/{output}) where
+            # the segment right after the sub-device prefix is free text.
+            # Try every possible split position in the incoming topic as a (prefix, suffix) key.
+            device_pattern_map = self.sub_device_topic_patterns.get(parsed_topic.device_type)
+            if device_pattern_map:
+                topic_parts = parsed_topic.full_topic.split("/")
+                topic_parts[1] = "{installation_id}"
+                topic_parts[3] = "{device_id}"
+                for sub_device_idx, by_pattern in device_pattern_map.items():
+                    if sub_device_idx >= len(topic_parts):
+                        continue
+                    prefix = "/".join(topic_parts[:sub_device_idx])
+                    suffix = "/".join(topic_parts[sub_device_idx + 1 :])
+                    candidates = by_pattern.get((prefix, suffix))
+                    if candidates is not None:
+                        desc_list = candidates
+                        break
         if desc_list is None:
             log_debug("Ignoring message - no descriptor found for topic: %s", topic)
             return

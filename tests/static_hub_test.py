@@ -1335,6 +1335,70 @@ async def test_remote_name_dont_exists():
 
 
 @pytest.mark.asyncio
+async def test_switch_output_token_id_state_is_parsed():
+    """Test that switch output IDs encoded as output_1 are parsed and mapped."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/output_1/State", '{"value": 1}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_output_1"]
+    metric = device.get_metric("switch_output_1_state")
+    assert metric is not None, "metric should exist in the device"
+    assert metric.key_values["output"] == "output_1"
+    assert metric.value == GenericOnOff.ON, f"Expected metric value to be ON, got {metric.value}"
+
+
+@pytest.mark.asyncio
+async def test_switch_output_token_id_name_and_custom_name_are_parsed():
+    """Test that switch output IDs encoded as output_1 map attributes and metric together."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/output_1/State", '{"value": 1}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/output_1/Name", '{"value": "Toggle"}')
+    await inject_message(
+        hub,
+        "N/123/switch/170/SwitchableOutput/output_1/Settings/CustomName",
+        '{"value": "EV connected"}',
+    )
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_output_1"]
+    assert device.model == "Toggle", f"Expected model to be 'Toggle', got {device.model}"
+    assert device.custom_name == "EV connected", f"Expected custom_name to be 'EV connected', got {device.custom_name}"
+    assert device.name == "EV connected", f"Expected device name to be 'EV connected', got {device.name}"
+
+    metric = device.get_metric("switch_output_1_state")
+    assert metric is not None, "metric should exist in the device"
+    assert metric.value == GenericOnOff.ON, f"Expected metric value to be ON, got {metric.value}"
+
+
+@pytest.mark.asyncio
+async def test_switch_output_token_id_non_numeric_is_parsed():
+    """Test that non-numeric SwitchableOutput IDs are treated as valid output identifiers."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/ev_connected/State", '{"value": 1}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/ev_connected/Name", '{"value": "Toggle"}')
+    await inject_message(
+        hub,
+        "N/123/switch/170/SwitchableOutput/ev_connected/Settings/CustomName",
+        '{"value": "EV connected"}',
+    )
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_ev_connected"]
+    assert device.model == "Toggle", f"Expected model to be 'Toggle', got {device.model}"
+    assert device.custom_name == "EV connected", f"Expected custom_name to be 'EV connected', got {device.custom_name}"
+    assert device.name == "EV connected", f"Expected device name to be 'EV connected', got {device.name}"
+
+    metric = device.get_metric("switch_ev_connected_state")
+    assert metric is not None, "metric should exist in the device"
+    assert metric.key_values["output"] == "ev_connected"
+    assert metric.value == GenericOnOff.ON, f"Expected metric value to be ON, got {metric.value}"
+
+
+@pytest.mark.asyncio
 async def test_remote_name_exists():
     """Test that sub-device gets custom name via ATTRIBUTE."""
     hub: Hub = await create_mocked_hub()
