@@ -3,12 +3,10 @@ name: Build and Publish to PyPI and Github Pages
 on:
   release:
     types: [published]
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -17,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write  # Required for OIDC
-      contents: read
+      contents: write
       pages: write
     environment:
       name: pypi
@@ -30,6 +28,24 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v6
+
+      - name: Sync version from release tag
+        if: github.event_name == 'release'
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+          CURRENT=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          if [ "$VERSION" != "$CURRENT" ]; then
+            echo "Updating version: $CURRENT → $VERSION"
+            sed -i "s/^version = \".*\"/version = \"$VERSION\"/" pyproject.toml
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add pyproject.toml
+            git commit -m "chore: bump version to $VERSION [skip ci]"
+            git push
+          else
+            echo "Version is already $VERSION, no change needed."
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v6
