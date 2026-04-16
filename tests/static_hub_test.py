@@ -994,6 +994,61 @@ async def test_gps_location_formula():
 
 
 @pytest.mark.asyncio
+async def test_gps_location_formula_with_null_course():
+    """Test that gps_location still resolves when Course is null."""
+    from victron_mqtt.data_classes import GpsLocation
+
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 51.5074}')
+    await inject_message(hub, "N/123/gps/5/Position/Longitude", '{"value": -0.1278}')
+    await inject_message(hub, "N/123/gps/5/Fix", '{"value": 1}')
+    await inject_message(hub, "N/123/gps/5/Altitude", '{"value": 260.5}')
+    await inject_message(hub, "N/123/gps/5/Course", '{"value": null}')
+    await inject_message(hub, "N/123/gps/5/Speed", '{"value": 12.5}')
+    await finalize_injection(hub, disconnect=False)
+
+    device = hub.devices["gps_5"]
+    location_metric = device.get_metric("gps_location")
+    assert location_metric is not None, "GPS location formula metric should exist even when Course is null"
+    assert isinstance(location_metric.value, GpsLocation)
+    assert location_metric.value.latitude == 51.5074
+    assert location_metric.value.longitude == -0.1278
+    assert location_metric.value.altitude == 260.5
+    assert location_metric.value.course is None
+    assert location_metric.value.speed == 12.5
+
+    await hub_disconnect(hub)
+
+
+@pytest.mark.asyncio
+async def test_gps_location_formula_optional_dependency_arrives_late():
+    """Test that optional gps dependencies can be attached after formula creation."""
+    hub: Hub = await create_mocked_hub()
+
+    # Create gps_location formula with required deps only.
+    await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 51.5074}')
+    await inject_message(hub, "N/123/gps/5/Position/Longitude", '{"value": -0.1278}')
+    await inject_message(hub, "N/123/gps/5/Fix", '{"value": 1}')
+    await finalize_injection(hub, disconnect=False)
+
+    device = hub.devices["gps_5"]
+    location_metric = device.get_metric("gps_location")
+    assert location_metric is not None
+    assert location_metric.value is not None
+    assert location_metric.value.course is None
+
+    # Later optional dependency should be attached and recalculate the formula.
+    await inject_message(hub, "N/123/gps/5/Course", '{"value": 123.0}')
+    await finalize_injection(hub, disconnect=False)
+
+    assert location_metric.value is not None
+    assert location_metric.value.course == 123.0
+
+    await hub_disconnect(hub)
+
+
+@pytest.mark.asyncio
 async def test_gps_location_formula_partial():
     """Test that the GPS location formula does not resolve when only one coordinate is available."""
     hub: Hub = await create_mocked_hub()

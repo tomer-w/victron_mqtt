@@ -27,6 +27,14 @@ class GpsLocation:
         return f"({self.latitude}, {self.longitude})"
 
 
+@dataclass(frozen=True)
+class TopicDependency:
+    """Dependency definition for regular/formula topics."""
+
+    short_id: str
+    required: bool = True
+
+
 def topic_to_device_type(topic_parts: list[str]) -> DeviceType | None:
     """Extract the device type from the topic."""
     if topic_parts[0] == "$$func":
@@ -68,7 +76,7 @@ class TopicDescriptor:
     # Depends on format is different for regular and formula topics:
     # For regular topics, the depends_on list contains the {device_id}_{metric_short_id} of the metric it depends on
     # For formula topics, the depends_on list contains the {device_type}_{metric_short_id} of the metrics it depends on as it will be generated for all device ids from the specific device type
-    depends_on: list[str] = field(default_factory=list[str])
+    depends_on: list[str | TopicDependency] = field(default_factory=list[str | TopicDependency])
     generic_name: str | None = None
     is_formula: bool = False  # True if this topic is calculated from other topics
     main_topic: bool = False  # True if this topic is the main topic for the dvice. Not all devices has to have main entity, but if it has, it should be the one with main_topic = True.
@@ -254,6 +262,13 @@ class TopicDescriptor:
             ValueType.INT_SECONDS_TO_MINUTES,
         ]:
             self.precision = None
+
+    @staticmethod
+    def dependency_parts(dependency: str | TopicDependency) -> tuple[str, bool]:
+        """Return dependency short_id and required flag."""
+        if isinstance(dependency, TopicDependency):
+            return dependency.short_id, dependency.required
+        return dependency, True
 
 
 @dataclass
