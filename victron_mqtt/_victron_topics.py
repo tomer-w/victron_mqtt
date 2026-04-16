@@ -863,6 +863,14 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/evcharger/{device_id}/AutoStart",
+        message_type=MetricKind.SWITCH,
+        short_id="evcharger_auto_start",
+        name="Auto start",
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/evcharger/{device_id}/Connected",
         message_type=MetricKind.BINARY_SENSOR,
         short_id="evcharger_connected",
