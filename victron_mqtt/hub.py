@@ -550,13 +550,11 @@ class Hub:
         if not metric_placeholder.topic_descriptor.depends_on:
             return True
         for dependency in metric_placeholder.topic_descriptor.depends_on:
-            dependency_short_id, required = TopicDescriptor.dependency_parts(dependency)
+            dependency_short_id, _required = TopicDescriptor.dependency_parts(dependency)
             metric_id = ParsedTopic.replace_ids(dependency_short_id, metric_placeholder.parsed_topic.key_values)
             dependency_metric = self._all_metrics.get(metric_id)
             dependency_placeholder = self._metrics_placeholders.get(metric_id)
             if dependency_metric is None and dependency_placeholder is None:
-                if not required:
-                    continue
                 _LOGGER.debug(
                     "Regular topic %s is missing dependency metric: %s",
                     metric_placeholder.parsed_topic.full_topic,
