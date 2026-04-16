@@ -430,8 +430,8 @@ async def test_expend_message():
     assert metric.key_values["output"] == "2"
     assert metric.value == GenericOnOff.ON, f"Expected metric value to be GenericOnOff.ON, got {metric.value}"
     assert device.parent_device is not None, "Sub-device should have a parent"
-    assert device.parent_device.unique_id == "switch_170", (
-        f"Parent should be switch_170, got {device.parent_device.unique_id}"
+    assert device.parent_device.unique_id == "system_0", (
+        f"Parent should be system_0 (skipping empty switch_170), got {device.parent_device.unique_id}"
     )
 
 
@@ -1196,8 +1196,12 @@ async def test_empty_devices_not_notified():
 
 
 @pytest.mark.asyncio
-async def test_parent_device_with_children_notified():
-    """Test that a parent device with no metrics but with children is still notified."""
+async def test_empty_parent_device_skipped_in_notifications():
+    """Test that a parent device with no metrics is skipped in notifications.
+
+    Sub-devices connect to the grandparent (system_0) via parent_device,
+    which automatically skips empty intermediate parents.
+    """
     hub: Hub = await create_mocked_hub()
 
     notified_device_ids: list[str] = []
@@ -1211,13 +1215,16 @@ async def test_parent_device_with_children_notified():
     await inject_message(hub, "N/123/switch/10/SwitchableOutput/3/State", '{"value": 1}')
     await finalize_injection(hub)
 
-    # Parent should be notified (it has a child with metrics)
-    assert "switch_10" in notified_device_ids, "Parent with children should be notified"
+    # Empty parent should NOT be notified (it has no metrics of its own)
+    assert "switch_10" not in notified_device_ids, "Empty parent should be skipped in notifications"
     # Child should be notified
     assert "switch_10_output_3" in notified_device_ids, "Child device should be notified"
-    # Parent should come before child
-    assert notified_device_ids.index("switch_10") < notified_device_ids.index("switch_10_output_3"), (
-        "Parent should be notified before child"
+
+    # parent_device should skip the empty switch_10 and point to system_0
+    device = hub.devices["switch_10_output_3"]
+    assert device.parent_device is not None, "Sub-device should have a parent"
+    assert device.parent_device.unique_id == "system_0", (
+        f"Parent should be system_0 (skipping empty switch_10), got {device.parent_device.unique_id}"
     )
 
 

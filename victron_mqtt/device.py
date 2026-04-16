@@ -345,8 +345,16 @@ class Device:
 
     @property
     def parent_device(self) -> Device | None:
-        """Return the parent device if this is a sub-device, None otherwise."""
-        return self._parent_device
+        """Return the nearest ancestor with visible metrics.
+
+        Skips empty intermediate parents (e.g. a switch device whose only
+        purpose is to group SwitchableOutput sub-devices).  The root device
+        (one with no parent itself) is never skipped.
+        """
+        parent = self._parent_device
+        while parent is not None and not parent.metrics and parent._parent_device is not None:
+            parent = parent._parent_device
+        return parent
 
 
 @dataclass

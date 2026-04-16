@@ -655,11 +655,13 @@ class Hub:
 
         # Topologically sort: parent devices before their children.
         # Collect devices that have new metrics in this batch.
+        # device.parent_device skips empty intermediate parents (e.g. a
+        # switch device that only groups SwitchableOutput sub-devices).
         new_device_set: dict[str, Device] = {}
         for device, _metric in new_metrics:
             if device.unique_id not in new_device_set:
                 new_device_set[device.unique_id] = device
-                # Also include parent if not already notified
+                # Also include parent chain if not already notified
                 parent = device.parent_device
                 while parent is not None and parent.unique_id not in new_device_set:
                     new_device_set[parent.unique_id] = parent
@@ -670,7 +672,7 @@ class Hub:
             """Check if a device has visible metrics or children with visible metrics."""
             if dev.metrics:  # Has visible (non-hidden) metrics
                 return True
-            # Check if any device in the set is a child of this device
+            # Check if any device in the set considers this device its parent
             return any(d.parent_device is dev for d in new_device_set.values() if d is not dev)
 
         new_device_set = {uid: dev for uid, dev in new_device_set.items() if _has_visible_content(dev)}

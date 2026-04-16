@@ -556,8 +556,8 @@ class App:
         self._metric_containers.clear()
         self._selected_device_id = None
 
-        all_devices = self._client._devices  # Access internal dict to include metric-less parents
-        # Build device tree
+        all_devices = self._client.devices  # Public API — only devices with metrics
+        # Build device tree — parent_device already skips empty intermediate parents.
         root_devices = [d for d in all_devices.values() if d.parent_device is None]
         root_devices.sort(key=lambda d: d.unique_id)
 
