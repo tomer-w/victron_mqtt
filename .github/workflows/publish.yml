@@ -32,22 +32,52 @@ jobs:
           ref: ${{ github.event.release.target_commitish }}
           fetch-depth: 0
 
-      - name: Sync version from release tag
+      - name: Sync version and update changelog from release tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ github.event.release.tag_name }}"
           VERSION="${TAG#v}"
           TARGET_BRANCH="${{ github.event.release.target_commitish }}"
+
+          # Update version in pyproject.toml if needed
           CURRENT=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
           if [ "$VERSION" != "$CURRENT" ]; then
             echo "Updating version: $CURRENT → $VERSION"
             sed -i "s/^version = \".*\"/version = \"$VERSION\"/" pyproject.toml
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add pyproject.toml
-            git commit -m "chore: bump version to $VERSION [skip ci]"
-            git push origin HEAD:"$TARGET_BRANCH"
           else
             echo "Version is already $VERSION, no change needed."
+          fi
+
+          # Prepend release notes to CHANGELOG.md
+          RELEASE_BODY=$(gh release view "$TAG" --json body -q .body)
+          RELEASE_DATE=$(gh release view "$TAG" --json publishedAt -q .publishedAt | cut -dT -f1)
+
+          if [ -n "$RELEASE_BODY" ]; then
+            # Downgrade ## to ### so sub-headers nest under the version heading
+            RELEASE_BODY=$(echo "$RELEASE_BODY" | sed 's/^## /### /')
+            ENTRY="## ${VERSION} (${RELEASE_DATE})"$'\n\n'"${RELEASE_BODY}"$'\n\n'
+            if [ -f CHANGELOG.md ]; then
+              # Prepend after the title line (# Changelog)
+              if head -1 CHANGELOG.md | grep -q "^# "; then
+                HEADER=$(head -1 CHANGELOG.md)
+                TAIL=$(tail -n +2 CHANGELOG.md)
+                printf '%s\n\n%s%s\n' "$HEADER" "$ENTRY" "$TAIL" > CHANGELOG.md
+              else
+                printf '%s%s' "$ENTRY" "$(cat CHANGELOG.md)" > CHANGELOG.md
+              fi
+            else
+              printf '# Changelog\n\n%s' "$ENTRY" > CHANGELOG.md
+            fi
+          fi
+
+          # Commit and push if anything changed
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml CHANGELOG.md
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: bump version to $VERSION [skip ci]"
+            git push origin HEAD:"$TARGET_BRANCH"
           fi
 
       - name: Set up Python
