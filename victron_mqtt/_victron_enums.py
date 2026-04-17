@@ -22,7 +22,7 @@ class DeviceType(VictronDeviceEnum):
     GENERATOR0 = ("Generator0", "generator0", "Generator 0 settings")
     GENERATOR1 = ("Generator1", "generator1", "Generator 1 settings")
     TANK = ("tank", "tank", "Liquid tank")
-    MULTI_RS_SOLAR = ("multi", "multi_rs_solar", "Multi RS solar")
+    MULTI_RS_SOLAR = ("multi", "multi_rs_solar", "Multi RS Solar")
     CGWACS = ("CGwacs", "cgwacs", "<Not used>", "system")  # Should be mapped to SYSTEM
     DC_LOAD = ("dcload", "dc_load", "DC load")
     ALTERNATOR = (
