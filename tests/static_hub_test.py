@@ -671,7 +671,128 @@ async def test_metric_keepalive_update_frequency_none(mock_time: MagicMock) -> N
 
 
 @pytest.mark.asyncio
-async def test_existing_installation_id():
+async def test_update_frequency_override_zero():
+    """Test that a per-topic override of 0 causes updates on every message, even when hub default is None."""
+    hub: Hub = await create_mocked_hub(update_frequency_overrides={"grid_energy_forward_l1": 0})
+
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 42}')
+    await finalize_injection(hub, False)
+
+    device = hub.devices["grid_30"]
+    metric = device.get_metric("grid_energy_forward_l1")
+    assert metric is not None
+    assert metric._update_frequency == 0
+    metric.on_update = MagicMock()
+
+    # Same value should trigger update when override is 0
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 42}')
+    assert metric.on_update.call_count == 1, "on_update should be called for same value when override is 0"
+
+    await hub_disconnect(hub)
+
+
+@pytest.mark.asyncio
+@patch("victron_mqtt.metric.time.monotonic")
+async def test_update_frequency_override_throttle(mock_time: MagicMock) -> None:
+    """Test that a per-topic override throttles at the specified interval, independent of hub default."""
+    mock_time.return_value = 0.0
+    hub: Hub = await create_mocked_hub(
+        update_frequency_seconds=0, update_frequency_overrides={"grid_energy_forward_l1": 5}
+    )
+
+    mock_time.return_value = 10
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 42}', mock_time)
+    await finalize_injection(hub, False, mock_time)
+
+    device = hub.devices["grid_30"]
+    metric = device.get_metric("grid_energy_forward_l1")
+    assert metric is not None
+    assert metric._update_frequency == 5
+    metric.on_update = MagicMock()
+
+    # First update should go through
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 43}', mock_time)
+    assert metric.on_update.call_count == 1
+
+    # Second update within 5s should be throttled
+    mock_time.return_value = 12
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 44}', mock_time)
+    assert metric.on_update.call_count == 1, "Should be throttled within 5s interval"
+
+    # After 5s, update should go through
+    mock_time.return_value = 16
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 45}', mock_time)
+    assert metric.on_update.call_count == 2, "Should update after 5s elapsed"
+
+    await hub_disconnect(hub, mock_time)
+
+
+@pytest.mark.asyncio
+async def test_update_frequency_override_fallback():
+    """Test that metrics without override fall back to hub default."""
+    hub: Hub = await create_mocked_hub(update_frequency_seconds=0, update_frequency_overrides={"some_other_metric": 5})
+
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 42}')
+    await finalize_injection(hub, False)
+
+    device = hub.devices["grid_30"]
+    metric = device.get_metric("grid_energy_forward_l1")
+    assert metric is not None
+    assert metric._update_frequency == 0, "Should fall back to hub default of 0"
+    metric.on_update = MagicMock()
+
+    # With hub default 0, same value should trigger update
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 42}')
+    assert metric.on_update.call_count == 1, "Should use hub default frequency of 0"
+
+    await hub_disconnect(hub)
+
+
+@pytest.mark.asyncio
+async def test_update_frequency_override_generic_short_id():
+    """Test that generic_short_id override applies to all expanded metrics from that template."""
+    hub: Hub = await create_mocked_hub(update_frequency_overrides={"grid_energy_forward_{phase}": 0})
+
+    # Inject two different phases
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 42}')
+    await inject_message(hub, "N/123/grid/30/Ac/L2/Energy/Forward", '{"value": 43}')
+    await finalize_injection(hub, False)
+
+    device = hub.devices["grid_30"]
+    metric_l1 = device.get_metric("grid_energy_forward_l1")
+    metric_l2 = device.get_metric("grid_energy_forward_l2")
+    assert metric_l1 is not None
+    assert metric_l2 is not None
+    assert metric_l1._update_frequency == 0, "L1 should use generic override"
+    assert metric_l2._update_frequency == 0, "L2 should use generic override"
+
+    await hub_disconnect(hub)
+
+
+@pytest.mark.asyncio
+async def test_update_frequency_override_specific_beats_generic():
+    """Test that specific short_id override takes precedence over generic_short_id override."""
+    hub: Hub = await create_mocked_hub(
+        update_frequency_seconds=30,
+        update_frequency_overrides={
+            "grid_energy_forward_{phase}": 10,
+            "grid_energy_forward_l1": 0,
+        },
+    )
+
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 42}')
+    await inject_message(hub, "N/123/grid/30/Ac/L2/Energy/Forward", '{"value": 43}')
+    await finalize_injection(hub, False)
+
+    device = hub.devices["grid_30"]
+    metric_l1 = device.get_metric("grid_energy_forward_l1")
+    metric_l2 = device.get_metric("grid_energy_forward_l2")
+    assert metric_l1 is not None
+    assert metric_l2 is not None
+    assert metric_l1._update_frequency == 0, "L1 should use specific override (0)"
+    assert metric_l2._update_frequency == 10, "L2 should use generic override (10)"
+
+    await hub_disconnect(hub)
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
     hub: Hub = await create_mocked_hub(installation_id="123")
 
@@ -2044,6 +2165,7 @@ def _make_metric(descriptor=None, hub=None, **overrides) -> Metric:
     if hub is None:
         hub = MagicMock()
         hub._update_frequency_seconds = 0
+        hub._update_frequency_overrides = {}
         hub._loop = MagicMock()
         hub._loop.is_running.return_value = False
         hub._topic_log_info = None
@@ -2059,6 +2181,7 @@ def _make_metric(descriptor=None, hub=None, **overrides) -> Metric:
     m._last_seen = 0.0
     m._last_notified = 0.0
     m._depend_on_me = []
+    m._update_frequency = hub._update_frequency_seconds
     return m
 
 
@@ -2501,6 +2624,7 @@ class TestWritableFormulaMetricKeepalive:
     def test_keepalive_is_noop(self):
         hub = MagicMock()
         hub._update_frequency_seconds = 0
+        hub._update_frequency_overrides = {}
         hub._loop = MagicMock()
         hub._loop.is_running.return_value = False
         hub._topic_log_info = None
@@ -2520,6 +2644,7 @@ class TestWritableFormulaMetricKeepalive:
         wfm._last_seen = 0.0
         wfm._last_notified = 0.0
         wfm._depend_on_me = []
+        wfm._update_frequency = 0
 
         wfm._keepalive(force_invalidate=False, log_debug=log)
         log.assert_called()
@@ -2531,6 +2656,7 @@ class TestWritableFormulaMetricSet:
     def test_set_formula_returns_none(self):
         hub = MagicMock()
         hub._update_frequency_seconds = 0
+        hub._update_frequency_overrides = {}
         hub._loop = MagicMock()
         hub._loop.is_running.return_value = False
         hub._topic_log_info = None
@@ -2552,6 +2678,7 @@ class TestWritableFormulaMetricSet:
         wfm._last_seen = 0.0
         wfm._last_notified = 0.0
         wfm._depend_on_me = []
+        wfm._update_frequency = 0
         wfm._func = MagicMock()
         wfm._write_func = write_func
         wfm._depends_on = {}
@@ -2573,6 +2700,7 @@ class TestFormulaMetricNoneReturn:
     def test_formula_returns_none(self):
         hub = MagicMock()
         hub._update_frequency_seconds = 0
+        hub._update_frequency_overrides = {}
         hub._loop = MagicMock()
         hub._loop.is_running.return_value = False
         hub._topic_log_info = None
@@ -2595,6 +2723,7 @@ class TestFormulaMetricNoneReturn:
         fm._last_seen = 0.0
         fm._last_notified = 0.0
         fm._depend_on_me = []
+        fm._update_frequency = 0
         fm._func = formula_none
         fm._depends_on = {}
         fm.transient_state = None

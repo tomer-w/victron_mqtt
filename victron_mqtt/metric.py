@@ -70,6 +70,15 @@ class Metric:
         self._generic_short_id = self._descriptor.short_id
         self._generic_name = self._descriptor.generic_name
 
+        # Resolve effective update frequency once: specific short_id override > generic template override > hub default
+        overrides = hub._update_frequency_overrides
+        if short_id in overrides:
+            self._update_frequency: int | None = overrides[short_id]
+        elif self._generic_short_id in overrides:
+            self._update_frequency = overrides[self._generic_short_id]
+        else:
+            self._update_frequency = hub._update_frequency_seconds
+
         _LOGGER.debug("Metric %s initialized", repr(self))
 
     def __str__(self) -> str:
@@ -248,7 +257,7 @@ class Metric:
 
         # In case of zero update frequency, always consider changed when MQTT message is received
         # also if this is the first time the metric is being notified
-        if force or self._hub._update_frequency_seconds == 0 or self._last_notified == 0:
+        if force or self._update_frequency == 0 or self._last_notified == 0:
             should_notify = True
             force = True
         elif value != self._value:
@@ -270,14 +279,14 @@ class Metric:
         self._value = value
 
         # In case of non-zero update frequency, respect the update frequency limit only for numerical values
-        if not force and self._hub._update_frequency_seconds is not None and isinstance(value, float | int):
+        if not force and self._update_frequency is not None and isinstance(value, float | int):
             elapsed = now - self._last_notified
-            if elapsed < self._hub._update_frequency_seconds:
+            if elapsed < self._update_frequency:
                 _LOGGER.debug(
                     "Update for %s skipped due to frequency limit (%.2fs < %ds)",
                     self.unique_id,
                     elapsed,
-                    self._hub._update_frequency_seconds,
+                    self._update_frequency,
                 )
                 should_notify = False
             else:

@@ -27,7 +27,8 @@ async def create_mocked_hub(
     operation_mode: OperationMode = OperationMode.FULL,
     device_type_exclude_filter: list[DeviceType] | None = None,
     update_frequency_seconds: int | None = None,
-    disable_keepalive_loop: bool = True
+    update_frequency_overrides: dict[str, int] | None = None,
+    disable_keepalive_loop: bool = True,
 ) -> Hub:
     """Create and return a mocked Hub object for testing.
 
@@ -41,6 +42,8 @@ async def create_mocked_hub(
         operation_mode: The operation mode for the Hub (FULL, READ_ONLY, or EXPERIMENTAL).
         device_type_exclude_filter: Optional list of device types to exclude from processing.
         update_frequency_seconds: Optional update frequency for metrics in seconds.
+        update_frequency_overrides: Optional per-topic update frequency overrides.
+            Maps short_id to frequency in seconds.
         disable_keepalive_loop: If True (default), disables the keepalive loop to prevent
             background tasks during testing. Set to False if you need to test keepalive behavior.
 
@@ -62,6 +65,7 @@ async def create_mocked_hub(
             assert len(hub.devices) == 1
         ```
     """
+
     async def _async_noop(_self: Any) -> None:
         pass
 
@@ -71,7 +75,7 @@ async def create_mocked_hub(
         keepalive_patch.start()
 
     try:
-        with patch('victron_mqtt.hub.mqtt.Client') as mock_client:
+        with patch("victron_mqtt.hub.mqtt.Client") as mock_client:
             hub = Hub(
                 host="localhost",
                 port=1883,
@@ -81,7 +85,8 @@ async def create_mocked_hub(
                 installation_id=installation_id,
                 operation_mode=operation_mode,
                 device_type_exclude_filter=device_type_exclude_filter,
-                update_frequency_seconds=update_frequency_seconds
+                update_frequency_seconds=update_frequency_seconds,
+                update_frequency_overrides=update_frequency_overrides,
             )
             mocked_client = MagicMock()
             mock_client.return_value = mocked_client
@@ -99,7 +104,10 @@ async def create_mocked_hub(
 
             # Mock connect_async to trigger the _on_connect callback
             def mock_connect_async(*_args: Any, **_kwargs: Any) -> None:
-                hub._on_connect(hub._client, None, ConnectFlags(False), ReasonCode(PacketTypes.CONNACK, identifier=0), None)
+                hub._on_connect(
+                    hub._client, None, ConnectFlags(False), ReasonCode(PacketTypes.CONNACK, identifier=0), None
+                )
+
             mocked_client.connect_async = MagicMock(name="connect_async", side_effect=mock_connect_async)
 
             # Ensure loop_start is a no-op
@@ -112,9 +120,7 @@ async def create_mocked_hub(
             def mock_subscribe(topic: str):
                 if topic == TOPIC_INSTALLATION_ID:
                     mocked_client.on_message(
-                        mocked_client,
-                        None,
-                        MagicMock(topic="N/123/system/0/Serial", payload=b'{"value": "123"}')
+                        mocked_client, None, MagicMock(topic="N/123/system/0/Serial", payload=b'{"value": "123"}')
                     )
                     return
                 assert "{installation_id}" not in topic
@@ -141,16 +147,13 @@ async def create_mocked_hub(
                     mocked_client.on_message(
                         mocked_client,
                         None,
-                        MagicMock(topic="N/123/full_publish_completed", payload=keepalive_payload.encode())
+                        MagicMock(topic="N/123/full_publish_completed", payload=keepalive_payload.encode()),
                     )
                     logger.info("Mocked full_publish_completed")
                 if topic.startswith("W/"):
                     read_topic = "N" + topic[1:]
-                    mocked_client.on_message(
-                        mocked_client,
-                        None,
-                        MagicMock(topic=read_topic, payload=value.encode())
-                    )
+                    mocked_client.on_message(mocked_client, None, MagicMock(topic=read_topic, payload=value.encode()))
+
             mocked_client.publish = MagicMock(name="publish", side_effect=mock_publish)
 
             await hub.connect()
@@ -192,12 +195,7 @@ async def hub_disconnect(hub: Hub, mock_time: MagicMock | None = None):
         mock_time.side_effect = None
 
 
-async def inject_message(
-    hub_instance: Hub,
-    topic: str,
-    payload: str,
-    mock_time: MagicMock | None = None
-):
+async def inject_message(hub_instance: Hub, topic: str, payload: str, mock_time: MagicMock | None = None):
     """Inject a single MQTT message into a mocked Hub.
 
     This simulates receiving an MQTT message on the given topic with the
@@ -222,11 +220,7 @@ async def inject_message(
     await sleep_short(mock_time)
 
 
-async def finalize_injection(
-    hub: Hub,
-    disconnect: bool = True,
-    mock_time: MagicMock | None = None
-):
+async def finalize_injection(hub: Hub, disconnect: bool = True, mock_time: MagicMock | None = None):
     """Finalize the injection of messages into the Hub.
 
     This completes the message injection process by triggering keepalive,

@@ -89,6 +89,7 @@ class Hub:
         operation_mode: OperationMode = OperationMode.FULL,
         device_type_exclude_filter: list[DeviceType] | None = None,
         update_frequency_seconds: int | None = None,
+        update_frequency_overrides: dict[str, int] | None = None,
     ) -> None:
         """
         Initialize a Hub instance for communicating with a Venus OS MQTT broker.
@@ -127,6 +128,14 @@ class Hub:
             if None = Update only when source data change
             if 0 = Update as new mqtt data received
             if > 0 = Update no more than specified interval (in seconds)
+        update_frequency_overrides: dict[str, int] | None
+            Optional per-topic update frequency overrides. Maps topic short_id
+            (resolved or generic template) to a frequency in seconds.
+            Overrides take precedence over `update_frequency_seconds` for
+            matching metrics. Use the resolved short_id (e.g. "grid_power_l1")
+            to override a specific metric, or the generic template short_id
+            (e.g. "grid_power_{phase}") to override all metrics from that
+            template.
 
         Behavior
         --------
@@ -161,7 +170,7 @@ class Hub:
         if not 0 < port < 65536:
             raise ValueError("port must be an integer between 1 and 65535")
         _LOGGER.info(
-            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, topic_log_info=%s)",
+            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, update_frequency_overrides=%s, topic_log_info=%s)",
             self._instance_id,
             host,
             port,
@@ -173,6 +182,7 @@ class Hub:
             operation_mode,
             device_type_exclude_filter,
             update_frequency_seconds,
+            update_frequency_overrides,
             topic_log_info,
         )
         self._model_name = model_name
@@ -196,6 +206,9 @@ class Hub:
         self._operation_mode = operation_mode
         self._device_type_exclude_filter = device_type_exclude_filter
         self._update_frequency_seconds = update_frequency_seconds
+        self._update_frequency_overrides: dict[str, int] = (
+            dict(update_frequency_overrides) if update_frequency_overrides else {}
+        )
         # The client ID is generated using a random string and the instance ID. It has to be unique between all clients connected to the same mqtt server. If not, they may reset each other connection.
         random_string = "".join(random.choices(string.ascii_letters + string.digits, k=8))
         self._client_id = f"victron_mqtt-{random_string}-{self._instance_id}"
