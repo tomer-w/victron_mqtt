@@ -1553,6 +1553,8 @@ async def test_on_connect_sets_up_subscriptions():
 
     # Set required properties
     hub._client = mocked_client
+    hub._installation_id = "test123"  # Would have been set during first connect()
+    hub._subscription_list = [t.replace("{installation_id}", "test123") for t in hub._subscription_list]
     hub._first_connect = False  # Mark as not first connect to allow subscriptions
     hub._loop = asyncio.get_running_loop()  # Set the event loop
 
@@ -1896,6 +1898,7 @@ async def test_on_connect_fail_after_first_successful_connect():
     mocked_client = MagicMock(spec=Client)
     hub._client = mocked_client
     hub._loop = asyncio.get_running_loop()
+    hub._installation_id = "test123"  # Would have been set during first connect()
     hub._first_connect = False  # Mark as not first connect (already connected once)
 
     # Simulate a successful connection first
@@ -1932,6 +1935,7 @@ async def test_on_connect_fail_resets_counters_on_successful_reconnect():
     mocked_client = MagicMock(spec=Client)
     hub._client = mocked_client
     hub._loop = asyncio.get_running_loop()
+    hub._installation_id = "test123"  # Would have been set during first connect()
     hub._first_connect = False
 
     # First successful connection

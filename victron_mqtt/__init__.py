@@ -42,7 +42,15 @@ from .constants import MetricKind, MetricNature, MetricType, OperationMode, Rang
 from .data_classes import GpsLocation
 from .device import Device
 from .formula_metric import FormulaMetric
-from .hub import AuthenticationError, CannotConnectError, Hub, NotConnectedError, ProgrammingError, TopicNotFoundError
+from .hub import (
+    AuthenticationError,
+    CannotConnectError,
+    Hub,
+    InvalidInstallationIdError,
+    NotConnectedError,
+    ProgrammingError,
+    TopicNotFoundError,
+)
 from .metric import Metric
 from .writable_metric import WritableMetric
 
@@ -79,6 +87,7 @@ __all__ = [
     "GenericOnOff",
     "GpsLocation",
     "Hub",
+    "InvalidInstallationIdError",
     "InverterMode",
     "Metric",
     "MetricKind",
