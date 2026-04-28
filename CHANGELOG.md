@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026.4.18 (2026-04-28)
+
+### Changes
+
+- Add update frequency override for each metric
+- Add ChargeCurrentLimit for PC Solarchargers: https://github.com/tomer-w/ha-victron-mqtt/issues/372
+- Improve handling of installation_id
+- Create changelog automatically
+
+### 🧰 Maintenance
+
+- Bump actions/upload-pages-artifact from 4 to 5 @[dependabot[bot]](https://github.com/apps/dependabot) (#94)
+- Bump actions/upload-pages-artifact from 4 to 5 (#94)
+- WIP: custom update frequency changes
+- chore: bump version to 2026.4.17 [skip ci]
+
+### Contributors
+
+@dependabot[bot], @github-actions[bot], @tomer-w and [dependabot[bot]](https://github.com/apps/dependabot)
+
+
+
 ## 2026.4.17 (2026-04-17)
 
 ### Changes
@@ -2373,4 +2395,3 @@ Add Name to definitions so it will be removed from localization
 ## 2025.6.22 (2025-06-30)
 
 add support for pvinverter by @SlapJackNpNp
-
