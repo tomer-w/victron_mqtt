@@ -2444,6 +2444,15 @@ topics: list[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/solarcharger/{device_id}/Settings/ChargeCurrentLimit",
+        message_type=MetricKind.NUMBER,
+        short_id="solarcharger_charge_current_limit",
+        name="Charge current limit",
+        metric_type=MetricType.CURRENT,
+        min=0,
+        max=200,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/State",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_state",
