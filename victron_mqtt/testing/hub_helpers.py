@@ -27,6 +27,7 @@ async def create_mocked_hub(
     operation_mode: OperationMode = OperationMode.FULL,
     device_type_exclude_filter: list[DeviceType] | None = None,
     update_frequency_seconds: int | None = None,
+    update_frequency_overrides: dict[str, int] | None = None,
     disable_keepalive_loop: bool = True,
 ) -> Hub:
     """Create and return a mocked Hub object for testing.
@@ -41,6 +42,8 @@ async def create_mocked_hub(
         operation_mode: The operation mode for the Hub (FULL, READ_ONLY, or EXPERIMENTAL).
         device_type_exclude_filter: Optional list of device types to exclude from processing.
         update_frequency_seconds: Optional update frequency for metrics in seconds.
+        update_frequency_overrides: Optional per-topic update frequency overrides.
+            Maps short_id to frequency in seconds.
         disable_keepalive_loop: If True (default), disables the keepalive loop to prevent
             background tasks during testing. Set to False if you need to test keepalive behavior.
 
@@ -83,6 +86,7 @@ async def create_mocked_hub(
                 operation_mode=operation_mode,
                 device_type_exclude_filter=device_type_exclude_filter,
                 update_frequency_seconds=update_frequency_seconds,
+                update_frequency_overrides=update_frequency_overrides,
             )
             mocked_client = MagicMock()
             mock_client.return_value = mocked_client
