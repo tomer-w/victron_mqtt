@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.4.19 (2026-04-30)
+
+### Changes
+
+- Revert "Add update frequency override for each metric"
+
+### Contributors
+
+@tomer-w
+
+
+
 ## 2026.4.18 (2026-04-28)
 
 ### Changes
