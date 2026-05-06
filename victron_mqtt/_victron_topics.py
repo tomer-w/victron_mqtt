@@ -1979,6 +1979,14 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
     ),
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/PreventFeedback",
+        message_type=MetricKind.SWITCH,
+        short_id="system_settings_prevent_ac_feedin",
+        name="ESS prevent AC feed-in",
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
     # Dynamic ESS settings topics
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/DynamicEss/Mode",
