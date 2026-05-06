@@ -1866,6 +1866,67 @@ async def test_dynamic_step_dependencies_resolved_metric():
 
 
 @pytest.mark.asyncio
+async def test_dynamic_unit_fallback_default():
+    """Test that dynamic unit falls back to the default when dependency is missing."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/Dimming", '{"value": 40}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_2"]
+    metric = device.get_metric("switch_2_dimming")
+    assert isinstance(metric, WritableMetric), "Metric should exist in the device"
+    assert metric.unit_of_measurement == "%", f"Expected unit to fall back to '%', got {metric.unit_of_measurement}"
+
+
+@pytest.mark.asyncio
+async def test_dynamic_unit_resolved_metric():
+    """Test that dynamic unit resolves from the referenced Unit metric."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/Settings/Unit", '{"value": "°C"}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/Dimming", '{"value": 40}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_2"]
+    metric = device.get_metric("switch_2_dimming")
+    assert isinstance(metric, WritableMetric), "Metric should exist in the device"
+    assert metric.unit_of_measurement == "°C", f"Expected unit to resolve to '°C', got {metric.unit_of_measurement}"
+
+
+@pytest.mark.asyncio
+async def test_dynamic_min_max_fallback_default():
+    """Test that dynamic min/max fall back to defaults when dependencies are missing."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/Dimming", '{"value": 40}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_2"]
+    metric = device.get_metric("switch_2_dimming")
+    assert isinstance(metric, WritableMetric), "Metric should exist in the device"
+    assert metric.min_value == 0, f"Expected min to fall back to 0, got {metric.min_value}"
+    assert metric.max_value == 100, f"Expected max to fall back to 100, got {metric.max_value}"
+
+
+@pytest.mark.asyncio
+async def test_dynamic_min_max_resolved_metric():
+    """Test that dynamic min/max resolve from the referenced DimmingMin/DimmingMax metrics."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/Settings/DimmingMin", '{"value": 10}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/Settings/DimmingMax", '{"value": 50}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/Dimming", '{"value": 40}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_2"]
+    metric = device.get_metric("switch_2_dimming")
+    assert isinstance(metric, WritableMetric), "Metric should exist in the device"
+    assert metric.min_value == 10, f"Expected min to resolve to 10, got {metric.min_value}"
+    assert metric.max_value == 50, f"Expected max to resolve to 50, got {metric.max_value}"
+
+
+@pytest.mark.asyncio
 async def test_on_connect_fail_before_first_connect():
     """Test that connection failures before first connect raise CannotConnectError."""
     hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id="test123")

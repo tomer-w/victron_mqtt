@@ -21,6 +21,7 @@ class WritableMetric(Metric):
     _min_value: int | float | None = None
     _max_value: int | float | None = None
     _step_value: int | float | None = None
+    _unit_of_measurement: str | None = None
 
     def __init__(self, *, descriptor: TopicDescriptor | None = None, topic: str | None = None, **kwargs: Any) -> None:
         """Initialize the WritableMetric."""
@@ -49,6 +50,9 @@ class WritableMetric(Metric):
         self._min_value = self._resolve_range_value(self._descriptor.min, device_id, all_metrics)
         self._max_value = self._resolve_range_value(self._descriptor.max, device_id, all_metrics)
         self._step_value = self._resolve_range_value(self._descriptor.step, device_id, all_metrics)
+        self._unit_of_measurement = self._resolve_string_value(
+            self._descriptor.unit_of_measurement, device_id, all_metrics
+        )
 
     def _resolve_range_value(
         self, range_value: int | float | str | None, device_id: str, all_metrics: dict[str, Metric]
@@ -81,6 +85,38 @@ class WritableMetric(Metric):
             return default_value
 
         return ref_metric.value
+
+    def _resolve_string_value(self, value: str | None, device_id: str, all_metrics: dict[str, Metric]) -> str | None:
+        """Resolve a string value that may be static or reference another metric (format: 'metric_id:default')."""
+        if value is None:
+            return None
+
+        if ":" not in value:
+            return value
+
+        parts = value.split(":", 1)
+        dependency_id: str = parts[0]
+        default_value: str = parts[1]
+
+        metric_unique_id = ParsedTopic.make_unique_id(device_id, dependency_id)
+        metric_unique_id = ParsedTopic.replace_ids(metric_unique_id, self.key_values)
+        ref_metric = all_metrics.get(metric_unique_id)
+
+        if ref_metric is None or ref_metric.value is None:
+            _LOGGER.debug(
+                "Referenced metric '%s' not found for %s, using default value '%s'",
+                metric_unique_id,
+                self._descriptor.short_id,
+                default_value,
+            )
+            return default_value
+
+        return str(ref_metric.value)
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Get the resolved unit of measurement for this metric."""
+        return self._unit_of_measurement
 
     @property
     def min_value(self) -> int | float | None:
