@@ -4,6 +4,7 @@ Maps all the MQTT topics to either attributes or metrics.
 
 from ._victron_enums import (
     ACActiveInputSource,
+    AcInputTypeEnum,
     ACSystemMode,
     ActiveInputEnum,
     BatteryState,
@@ -2219,6 +2220,22 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.STRING,
     ),
     # System Setup topics
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/SystemSetup/AcInput1",
+        message_type=MetricKind.SELECT,
+        short_id="system_ac_input_1_type",
+        name="AC input 1 source type",
+        value_type=ValueType.ENUM,
+        enum=AcInputTypeEnum,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/SystemSetup/AcInput2",
+        message_type=MetricKind.SELECT,
+        short_id="system_ac_input_2_type",
+        name="AC input 2 source type",
+        value_type=ValueType.ENUM,
+        enum=AcInputTypeEnum,
+    ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/SystemSetup/MaxChargeCurrent",
         message_type=MetricKind.NUMBER,

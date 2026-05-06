@@ -4,6 +4,7 @@ A Asynchronous Python API client for the Victron Venus OS.
 
 from ._victron_enums import (
     ACActiveInputSource,
+    AcInputTypeEnum,
     ACSystemMode,
     ActiveInputEnum,
     BatteryState,
@@ -57,6 +58,7 @@ from .writable_metric import WritableMetric
 __all__ = [
     "ACActiveInputSource",
     "ACSystemMode",
+    "AcInputTypeEnum",
     "ActiveInputEnum",
     "AuthenticationError",
     "BatteryState",

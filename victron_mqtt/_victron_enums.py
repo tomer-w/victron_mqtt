@@ -468,6 +468,15 @@ class ACActiveInputSource(VictronEnum):
     NOT_CONNECTED = (240, "not_connected", "Not connected")
 
 
+class AcInputTypeEnum(VictronEnum):
+    """AC Input Type Enum"""
+
+    NOT_USED = (0, "not_used", "Not used")
+    GRID = (1, "grid", "Grid")
+    GENERATOR = (2, "generator", "Generator")
+    SHORE = (3, "shore", "Shore")
+
+
 class ChargeSchedule(VictronEnum):
     """Charge Schedule Enum"""
 
