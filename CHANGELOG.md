@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026.5.0 (2026-05-07)
+
+### Changes
+
+- feat: add ESS prevent AC feed-in switch: https://github.com/tomer-w/ha-victron-mqtt/issues/380
+- feat: add dynamic unit/min/max for virtual switch dimming: https://github.com/tomer-w/ha-victron-mqtt/issues/379
+- feat: add writable SELECT entities for AC input 1/2 source type: https://github.com/tomer-w/ha-victron-mqtt/issues/383
+
+### Contributors
+
+@tomer-w
+
+
+
 ## 2026.4.19 (2026-04-30)
 
 ### Changes
