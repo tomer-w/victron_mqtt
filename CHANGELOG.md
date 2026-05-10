@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026.5.1 (2026-05-10)
+
+### Changes
+
+
+* No changes
+
+- Add support for more switchableoutput types. Not just switches.
+- Minor bug fixes in switchabeoutputs
+
+### Contributors
+
+No contributors
+
+
+
 ## 2026.5.0 (2026-05-07)
 
 ### Changes
