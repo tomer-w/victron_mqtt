@@ -539,3 +539,22 @@ class BatteryState(VictronEnum):
     IDLE = (0, "idle", "Idle")
     CHARGING = (1, "charging", "Charging")
     DISCHARGING = (2, "discharging", "Discharging")
+
+
+class SwitchableOutputType(VictronEnum):
+    """SwitchableOutput type Enum"""
+
+    MOMENTARY = (0, "momentary", "Momentary")
+    TOGGLE = (1, "toggle", "Toggle")
+    DIMMABLE = (2, "dimmable", "Dimmable")
+    TEMPERATURE_SETPOINT = (3, "temperature_setpoint", "Temperature setpoint")
+    STEPPED_SWITCH = (4, "stepped_switch", "Stepped switch")
+    SLAVE_MODE = (5, "slave_mode", "Slave mode")
+    DROPDOWN = (6, "dropdown", "Dropdown")
+    BASIC_SLIDER = (7, "basic_slider", "Basic slider")
+    NUMERIC_INPUT = (8, "numeric_input", "Numeric input")
+    THREE_STATE_SWITCH = (9, "three_state_switch", "Three-state switch")
+    BILGE_PUMP_CONTROL = (10, "bilge_pump_control", "Bilge pump control")
+    RGB_COLOR_WHEEL = (11, "rgb_color_wheel", "RGB color wheel")
+    CCT_COLOR_WHEEL = (12, "cct_color_wheel", "CCT color wheel")
+    RGBW_COLOR_WHEEL = (13, "rgbw_color_wheel", "RGBW color wheel")

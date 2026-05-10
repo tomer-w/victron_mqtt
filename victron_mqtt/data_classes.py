@@ -71,6 +71,10 @@ class TopicDescriptor:
     max: float | int | str | None = None
     step: float | int | str | None = None
     is_adjustable_suffix: str | None = None
+    output_type: int | str | None = (
+        None  # SwitchableOutput type (static or metric reference). When 6 (dropdown), labels are used.
+    )
+    labels: str | None = None  # JSON labels metric reference (format: 'metric_id:default')
     key_values: dict[str, str] = field(default_factory=dict)
     experimental: bool = False
     # Depends on format is different for regular and formula topics:
@@ -96,6 +100,9 @@ class TopicDescriptor:
 
     def __post_init__(self):
         assert self.message_type == MetricKind.ATTRIBUTE or self.name is not None
+        if self.message_type == MetricKind.DYNAMIC:
+            assert self.output_type is not None, f"DYNAMIC metric '{self.short_id}' must have output_type defined"
+            assert self.labels is not None, f"DYNAMIC metric '{self.short_id}' must have labels defined"
         self.generic_name = replace_complex_id_to_simple(self.name) if self.name else None
         self.is_formula = self.topic.startswith("$$func/")
         if not self.is_formula:

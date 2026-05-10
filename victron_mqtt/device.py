@@ -17,7 +17,8 @@ from ._unwrappers import (
     unwrap_int_seconds_to_hours,
     unwrap_int_seconds_to_minutes,
 )
-from .constants import MetricKind, RangeType, VictronEnum
+from ._victron_enums import SwitchableOutputType
+from .constants import MetricKind, OperationMode, RangeType, VictronEnum
 from .data_classes import ParsedTopic, TopicDescriptor
 from .formula_metric import FormulaMetric
 from .metric import Metric
@@ -195,6 +196,35 @@ class Device:
                 new_topic_desc = copy.deepcopy(new_topic_desc)  # Deep copy
                 new_topic_desc.message_type = MetricKind.SENSOR
 
+        # Handle READ_ONLY mode: resolve writable types to read-only equivalents
+        if hub._operation_mode == OperationMode.READ_ONLY and new_topic_desc.message_type in [
+            MetricKind.SWITCH,
+            MetricKind.NUMBER,
+            MetricKind.SELECT,
+            MetricKind.BUTTON,
+            MetricKind.TIME,
+            MetricKind.DYNAMIC,
+        ]:
+            if new_topic_desc.message_type == MetricKind.DYNAMIC:
+                # DYNAMIC resolves based on output_type:
+                # DROPDOWN → SENSOR (read-only SELECT), DIMMABLE → SENSOR (read-only NUMBER), else → BINARY_SENSOR
+                assert new_topic_desc.output_type is not None
+                assert isinstance(new_topic_desc.output_type, str)
+                parts = new_topic_desc.output_type.split(":")
+                dep_id = ParsedTopic.replace_ids(parts[0], metric_placeholder.parsed_topic.key_values)
+                type_metric_id = ParsedTopic.make_unique_id(self._unique_id, dep_id)
+                type_metric = hub._all_metrics.get(type_metric_id)
+                if type_metric and type_metric.value in (SwitchableOutputType.DROPDOWN, SwitchableOutputType.DIMMABLE):
+                    resolved_kind = MetricKind.SENSOR
+                else:
+                    resolved_kind = MetricKind.BINARY_SENSOR
+            elif new_topic_desc.message_type == MetricKind.SWITCH:
+                resolved_kind = MetricKind.BINARY_SENSOR
+            else:
+                resolved_kind = MetricKind.SENSOR
+            new_topic_desc = copy.deepcopy(new_topic_desc)
+            new_topic_desc.message_type = resolved_kind
+
         # Handle dynamic min/max range
         if new_topic_desc.min_max_range == RangeType.DYNAMIC:
             max_value = unwrap_float(metric_placeholder.payload, new_topic_desc.precision, "max")
@@ -221,6 +251,7 @@ class Device:
             MetricKind.SELECT,
             MetricKind.BUTTON,
             MetricKind.TIME,
+            MetricKind.DYNAMIC,
         ]:
             metric = WritableMetric(
                 device=self,

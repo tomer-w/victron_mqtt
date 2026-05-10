@@ -2764,3 +2764,151 @@ class TestLeftRiemannSum:
         metric.value = None
         result = left_riemann_sum({"m": metric}, None)
         assert result is None
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Dynamic MetricKind tests (SwitchableOutput State)
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+@pytest.mark.asyncio
+async def test_state_type_dropdown_becomes_select():
+    """When Settings/Type is 6 (dropdown) and Labels are set, State metric_kind should be SELECT."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/Settings/Type", '{"value": 6}')
+    await inject_message(
+        hub, "N/123/switch/170/SwitchableOutput/0/Settings/Labels", '{"value": "[\\"Off\\", \\"Eco\\", \\"On\\"]"}'
+    )
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/State", '{"value": 1}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_0"]
+    metric = device.get_metric("switch_0_state")
+
+    assert metric is not None
+    assert isinstance(metric, WritableMetric)
+    assert metric.metric_kind == MetricKind.SELECT, f"Expected SELECT, got {metric.metric_kind}"
+    assert metric.enum_values == ["Off", "Eco", "On"]
+    assert metric.value == GenericOnOff.ON
+
+
+@pytest.mark.asyncio
+async def test_state_type_dimmable_becomes_number():
+    """When Settings/Type is 2 (dimmable), State metric_kind should be NUMBER."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/Settings/Type", '{"value": 2}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/State", '{"value": 1}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_0"]
+    metric = device.get_metric("switch_0_state")
+
+    assert metric is not None
+    assert isinstance(metric, WritableMetric)
+    assert metric.metric_kind == MetricKind.NUMBER
+
+
+@pytest.mark.asyncio
+async def test_state_no_type_defaults_switch():
+    """When Settings/Type is not present, State should default to SWITCH (output_type defaults to 1)."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/State", '{"value": 1}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_0"]
+    metric = device.get_metric("switch_0_state")
+
+    assert metric is not None
+    assert isinstance(metric, WritableMetric)
+    assert metric.metric_kind == MetricKind.SWITCH
+    assert metric.enum_values == ["off", "on"]
+
+
+@pytest.mark.asyncio
+async def test_state_type_dropdown_without_labels_stays_switch():
+    """When Settings/Type is 6 but Labels are missing, metric_kind should stay SWITCH."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/Settings/Type", '{"value": 6}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/State", '{"value": 1}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_0"]
+    metric = device.get_metric("switch_0_state")
+
+    assert metric is not None
+    assert isinstance(metric, WritableMetric)
+    assert metric.metric_kind == MetricKind.SWITCH, "Without labels, should remain SWITCH"
+
+
+@pytest.mark.asyncio
+async def test_state_dropdown_set_by_label():
+    """When State is in dropdown mode, setting by label should publish the label index."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/Settings/Type", '{"value": 6}')
+    await inject_message(
+        hub, "N/123/switch/170/SwitchableOutput/0/Settings/Labels", '{"value": "[\\"Off\\", \\"Eco\\", \\"On\\"]"}'
+    )
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/State", '{"value": 0}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_0"]
+    metric = device.get_metric("switch_0_state")
+
+    assert metric is not None
+    assert isinstance(metric, WritableMetric)
+    assert metric.metric_kind == MetricKind.SELECT
+
+    published = {}
+
+    def mock_publish(topic: str, value: PayloadType) -> None:
+        published["topic"] = topic
+        published["value"] = value
+
+    hub._publish = mock_publish  # type: ignore[assignment]
+
+    metric.value = "Eco"
+
+    assert published, "Expected publish to be called after setting value"
+    assert published["value"] == '{"value": 1}', f"Expected published value index 1 for 'Eco', got {published['value']}"
+
+
+@pytest.mark.asyncio
+async def test_state_read_only_dropdown_becomes_sensor():
+    """In READ_ONLY mode, DYNAMIC with DROPDOWN should resolve to SENSOR (read-only SELECT)."""
+    hub: Hub = await create_mocked_hub(operation_mode=OperationMode.READ_ONLY)
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/Settings/Type", '{"value": 6}')
+    await inject_message(
+        hub, "N/123/switch/170/SwitchableOutput/0/Settings/Labels", '{"value": "[\\"Off\\", \\"Eco\\", \\"On\\"]"}'
+    )
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/State", '{"value": 1}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_0"]
+    metric = device.get_metric("switch_0_state")
+
+    assert metric is not None
+    assert not isinstance(metric, WritableMetric), "In READ_ONLY mode the metric should NOT be a WritableMetric"
+    assert metric.metric_kind == MetricKind.SENSOR
+
+
+@pytest.mark.asyncio
+async def test_state_read_only_toggle_becomes_binary_sensor():
+    """In READ_ONLY mode, DYNAMIC with non-dropdown type should resolve to BINARY_SENSOR (read-only SWITCH)."""
+    hub: Hub = await create_mocked_hub(operation_mode=OperationMode.READ_ONLY)
+
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/Settings/Type", '{"value": 1}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/State", '{"value": 1}')
+    await finalize_injection(hub)
+
+    device = hub.devices["switch_170_output_0"]
+    metric = device.get_metric("switch_0_state")
+
+    assert metric is not None
+    assert not isinstance(metric, WritableMetric), "In READ_ONLY mode the metric should NOT be a WritableMetric"
+    assert metric.metric_kind == MetricKind.BINARY_SENSOR

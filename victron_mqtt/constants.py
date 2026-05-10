@@ -20,6 +20,7 @@ class MetricKind(Enum):
     BUTTON = "button"
     TIME = "time"
     DEVICE_TRACKER = "device_tracker"
+    DYNAMIC = "dynamic"
 
 
 class MetricNature(Enum):

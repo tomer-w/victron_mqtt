@@ -180,6 +180,7 @@ def test_enum_message_type():
                 MetricKind.SENSOR,
                 MetricKind.SWITCH,
                 MetricKind.BUTTON,
+                MetricKind.DYNAMIC,
             ]:
                 errors.append(
                     f"Topic '{descriptor.topic}' has 'enum' but message_type is {descriptor.message_type} (should be SELECT, SENSOR, SWITCH, BUTTON, or BINARY_SENSOR for GenericOnOff)"

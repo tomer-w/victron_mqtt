@@ -1,7 +1,6 @@
 """Module to communicate with the Venus OS MQTT Broker."""
 
 import asyncio
-import copy
 import json
 import logging
 import random
@@ -224,20 +223,8 @@ class Hub:
                 continue
             if topic.message_type == MetricKind.SERVICE:
                 self._service_active_topics[topic.short_id] = topic
-            # if operation_mode is READ_ONLY we should change all TopicDescriptor to SENSOR and BINARY_SENSOR
-            elif operation_mode != OperationMode.READ_ONLY or topic.message_type in [
-                MetricKind.ATTRIBUTE,
-                MetricKind.SENSOR,
-                MetricKind.BINARY_SENSOR,
-            ]:
+            else:
                 metrics_active_topics.append(topic)
-            else:  # READ ONLY and writable topic
-                # deep copy the topic
-                new_topic = copy.deepcopy(topic)
-                new_topic.message_type = (
-                    MetricKind.BINARY_SENSOR if topic.message_type == MetricKind.SWITCH else MetricKind.SENSOR
-                )
-                metrics_active_topics.append(new_topic)
 
         # Replace all {placeholder} patterns with + for MQTT wildcards
         expanded_topics = Hub.expand_topic_list(metrics_active_topics)

@@ -34,6 +34,7 @@ from ._victron_enums import (
     PhoenixInverterMode,
     SolarChargerDeviceOffReason,
     State,
+    SwitchableOutputType,
     TemperatureStatus,
     TemperatureType,
 )
@@ -2499,7 +2500,7 @@ topics: list[TopicDescriptor] = [
         name="Total yield",
         metric_type=MetricType.ENERGY,
     ),
-    # Switch topics
+    # Switch topics based on SwitchableOutput
     TopicDescriptor(
         topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/Dimming",
         message_type=MetricKind.NUMBER,
@@ -2532,11 +2533,30 @@ topics: list[TopicDescriptor] = [
         sub_device_key="output",
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/Settings/Labels",
+        message_type=MetricKind.SENSOR,
+        short_id="switch_{output}_labels",
+        name="Labels",
+        value_type=ValueType.STRING,
+        hidden=True,
+        sub_device_key="output",
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/Settings/StepSize",
         message_type=MetricKind.SENSOR,
         short_id="switch_{output}_step_size",
         name="Step size",
         value_type=ValueType.FLOAT,
+        hidden=True,
+        sub_device_key="output",
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/Settings/Type",
+        message_type=MetricKind.SENSOR,
+        short_id="switch_{output}_type",
+        name="Output type",
+        value_type=ValueType.ENUM,
+        enum=SwitchableOutputType,
         hidden=True,
         sub_device_key="output",
     ),
@@ -2551,11 +2571,13 @@ topics: list[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/State",
-        message_type=MetricKind.SWITCH,
+        message_type=MetricKind.DYNAMIC,
         short_id="switch_{output}_state",
         name="State",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        output_type="switch_{output}_type:1",
+        labels="switch_{output}_labels:",
         sub_device_key="output",
     ),
     # System topics

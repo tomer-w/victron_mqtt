@@ -2,13 +2,15 @@
 Support for Victron Venus WritableMetric.
 """
 
+import json
 import logging
 from collections.abc import Callable, Iterable
 from enum import Enum
 from typing import Any, cast
 
 from ._unwrappers import VALUE_TYPE_WRAPPER, wrap_bitmask, wrap_enum
-from .constants import ValueType, VictronEnum
+from ._victron_enums import SwitchableOutputType
+from .constants import MetricKind, ValueType, VictronEnum
 from .data_classes import ParsedTopic, TopicDescriptor
 from .metric import Metric
 
@@ -22,6 +24,8 @@ class WritableMetric(Metric):
     _max_value: int | float | None = None
     _step_value: int | float | None = None
     _unit_of_measurement: str | None = None
+    _output_type: int | float | VictronEnum | None = None
+    _labels: list[str] | None = None
 
     def __init__(self, *, descriptor: TopicDescriptor | None = None, topic: str | None = None, **kwargs: Any) -> None:
         """Initialize the WritableMetric."""
@@ -53,6 +57,16 @@ class WritableMetric(Metric):
         self._unit_of_measurement = self._resolve_string_value(
             self._descriptor.unit_of_measurement, device_id, all_metrics
         )
+        self._output_type = self._resolve_range_value(self._descriptor.output_type, device_id, all_metrics)
+        labels_str = self._resolve_string_value(self._descriptor.labels, device_id, all_metrics)
+        if labels_str:
+            try:
+                parsed = json.loads(labels_str)
+                self._labels = parsed if isinstance(parsed, list) else None
+            except (json.JSONDecodeError, TypeError):
+                self._labels = None
+        else:
+            self._labels = None
 
     def _resolve_range_value(
         self, range_value: int | float | str | None, device_id: str, all_metrics: dict[str, Metric]
@@ -133,10 +147,40 @@ class WritableMetric(Metric):
         """Get the step value for this metric, if defined."""
         return self._step_value
 
+    @property
+    def _is_dynamic_dropdown(self) -> bool:
+        """Check if this is a DYNAMIC metric resolved to dropdown (SELECT) mode."""
+        return (
+            self._descriptor.message_type == MetricKind.DYNAMIC
+            and self._output_type == SwitchableOutputType.DROPDOWN
+            and self._labels is not None
+        )
+
+    @property
+    def metric_kind(self) -> MetricKind:
+        """Returns the metric kind, resolved dynamically when DYNAMIC."""
+        if self._descriptor.message_type == MetricKind.DYNAMIC:
+            if self._is_dynamic_dropdown:
+                return MetricKind.SELECT
+            if self._output_type == SwitchableOutputType.DIMMABLE:
+                return MetricKind.NUMBER
+            return MetricKind.SWITCH
+        return super().metric_kind
+
+    @property
+    def enum_values(self) -> list[str] | None:
+        """Get the enum values. Returns labels when in dropdown mode."""
+        if self._is_dynamic_dropdown:
+            return self._labels
+        return super().enum_values
+
     def set(self, value: str | float | int | bool | VictronEnum) -> None:
         """Set the value of this metric by publishing to the write topic."""
         assert self._write_topic is not None
-        payload = WritableMetric._wrap_payload(self._descriptor, value)
+        if self._is_dynamic_dropdown and isinstance(value, str):
+            payload = json.dumps({"value": self._labels.index(value)})  # type: ignore[union-attr]
+        else:
+            payload = WritableMetric._wrap_payload(self._descriptor, value)
         self._hub._publish(self._write_topic, payload)
 
     @staticmethod
