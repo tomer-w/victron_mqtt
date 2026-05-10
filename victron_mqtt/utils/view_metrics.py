@@ -263,7 +263,12 @@ class AttributeViewerDialog(simpledialog.Dialog):
         min_val = float(metric.min_value) if metric.min_value is not None else 0.0
         max_val = float(metric.max_value) if metric.max_value is not None else 100.0
         step = float(metric.step) if metric.step is not None else 1.0
-        precision = descriptor.precision or 0
+        if descriptor.precision is not None:
+            precision = descriptor.precision
+        else:
+            # Infer precision from step (e.g. step=0.001 → precision=3)
+            step_str = f"{step:.10g}"
+            precision = len(step_str.split(".")[1]) if "." in step_str else 0
         unit = metric.unit_of_measurement or ""
 
         self._writable_var = tk.StringVar(value=str(current_value))
@@ -519,7 +524,22 @@ class App:
             return
         metric = self._client.get_metric(item[1:])
         if metric is not None:
+            # Unregister the update callback while the modal dialog is open
+            # to prevent stale queued updates from overwriting the value.
+            saved_callback = metric.on_update
+            metric.on_update = None
             AttributeViewerDialog(self.root, metric)
+            metric.on_update = saved_callback
+            # Refresh the metric display after the modal dialog closes
+            if self.metric_tree.exists(item):
+                self.metric_tree.item(
+                    item,
+                    values=(
+                        metric.formatted_value,
+                        metric.metric_kind.value,
+                        metric.unit_of_measurement or "",
+                    ),
+                )
 
     def _expand_all(self):
         self._expand_all_recursive()

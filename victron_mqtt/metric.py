@@ -124,9 +124,10 @@ class Metric:
             return ""
         if isinstance(value, float) and self._descriptor.precision is not None and self._descriptor.precision == 0:
             value = int(value)
-        if self._descriptor.unit_of_measurement is None:
+        units = self.unit_of_measurement
+        if units is None:
             return str(value)
-        return f"{value} {self._descriptor.unit_of_measurement}"
+        return f"{value} {units}"
 
     @property
     def formatted_value(self):
