@@ -4,15 +4,12 @@
 
 ### Changes
 
-
-* No changes
-
 - Add support for more switchableoutput types. Not just switches.
 - Minor bug fixes in switchabeoutputs
 
 ### Contributors
 
-No contributors
+@tomer-w
 
 
 
