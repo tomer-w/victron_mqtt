@@ -442,6 +442,15 @@ class ESSState(VictronEnum):
     )
 
 
+class ESSUserMode(VictronEnum):
+    """ESS User Mode Enum - matches the 4 user-facing modes shown in VRM."""
+
+    OPTIMIZED_BATTERY_LIFE = (1, "optimized_battery_life", "Optimized (with BatteryLife)")
+    OPTIMIZED_NO_BATTERY_LIFE = (10, "optimized_no_battery_life", "Optimized (without BatteryLife)")
+    KEEP_BATTERIES_CHARGED = (9, "keep_batteries_charged", "Keep batteries charged")
+    EXTERNAL_CONTROL = (3, "external_control", "External control")
+
+
 class ESSModeHub4(VictronEnum):
     """ESS Mode Enum for Hub4Control"""
 

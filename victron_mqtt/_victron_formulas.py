@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._victron_enums import ChargeSchedule, GenericOnOff
+from ._victron_enums import ChargeSchedule, ESSModeHub4, ESSState, ESSUserMode, GenericOnOff
 from .data_classes import GpsLocation
 from .formula_common import left_riemann_sum_internal
 from .writable_metric import WritableMetric
@@ -133,3 +133,84 @@ def gps_location(
         course=course_metric.value if course_metric else None,
         speed=speed_metric.value if speed_metric else None,
     ), None
+
+
+def ess_user_mode(
+    depends_on: dict[str, Metric], _transient_state: FormulaTransientState | None
+) -> tuple[ESSUserMode | None, None]:
+    """Derive the user-facing ESS mode from BatteryLife/State and Hub4Mode.
+
+    Per Victron docs (https://github.com/victronenergy/venus/wiki/dbus#settings):
+    - BatteryLife/State 1..8 = Optimized with BatteryLife
+    - BatteryLife/State 9 = Keep batteries charged
+    - BatteryLife/State 10..12 = Optimized without BatteryLife
+    - Hub4Mode 3 = External control
+    """
+    state_metric = None
+    hub4_metric = None
+    for metric in depends_on.values():
+        if metric.generic_short_id == "system_ess_batterylife_state":
+            state_metric = metric
+        elif metric.generic_short_id == "system_ess_mode":
+            hub4_metric = metric
+
+    if state_metric is None or state_metric.value is None:
+        return None, None
+
+    # External control is determined by Hub4Mode = 3
+    if hub4_metric is not None and hub4_metric.value == ESSModeHub4.EXTERNAL_CONTROL:
+        return ESSUserMode.EXTERNAL_CONTROL, None
+
+    state_value = state_metric.value
+    code = state_value.code if isinstance(state_value, ESSState) else int(state_value)
+
+    if code == 9:
+        return ESSUserMode.KEEP_BATTERIES_CHARGED, None
+    if code >= 10:
+        return ESSUserMode.OPTIMIZED_NO_BATTERY_LIFE, None
+    # Values 1-8 are all sub-states of Optimized with BatteryLife
+    return ESSUserMode.OPTIMIZED_BATTERY_LIFE, None
+
+
+def ess_user_mode_set(
+    value: str, depends_on: dict[str, Metric], _transient_state: FormulaTransientState | None
+) -> tuple[ESSUserMode, None]:
+    """Set the ESS user mode by writing to both BatteryLife/State and Hub4Mode.
+
+    Per Victron docs:
+    - Optimized (with BatteryLife): write 1 to BatteryLife/State, keep Hub4Mode at 1 or 2
+    - Optimized (without BatteryLife): write 10 to BatteryLife/State, keep Hub4Mode at 1 or 2
+    - Keep batteries charged: write 9 to BatteryLife/State, keep Hub4Mode at 1 or 2
+    - External control: write 3 to Hub4Mode
+    """
+    mode: ESSUserMode | None = value if isinstance(value, ESSUserMode) else ESSUserMode.from_id_or_string(value)
+    assert mode is not None, "Failed to determine ESS user mode"
+
+    state_metric = None
+    hub4_metric = None
+    for metric in depends_on.values():
+        if metric.generic_short_id == "system_ess_batterylife_state":
+            state_metric = metric
+        elif metric.generic_short_id == "system_ess_mode":
+            hub4_metric = metric
+
+    assert state_metric is not None, "BatteryLife/State metric not found"
+    assert hub4_metric is not None, "Hub4Mode metric not found"
+    assert isinstance(state_metric, WritableMetric), "BatteryLife/State must be writable"
+    assert isinstance(hub4_metric, WritableMetric), "Hub4Mode must be writable"
+
+    if mode == ESSUserMode.EXTERNAL_CONTROL:
+        hub4_metric.set(ESSModeHub4.EXTERNAL_CONTROL)
+    else:
+        # Ensure Hub4Mode is not External control; preserve phase compensation setting
+        if hub4_metric.value == ESSModeHub4.EXTERNAL_CONTROL:
+            hub4_metric.set(ESSModeHub4.PHASE_COMPENSATION_ENABLED)
+
+        if mode == ESSUserMode.OPTIMIZED_BATTERY_LIFE:
+            state_metric.set(ESSState.WITH_BATTERY_LIFE)
+        elif mode == ESSUserMode.OPTIMIZED_NO_BATTERY_LIFE:
+            state_metric.set(ESSState.SELF_CONSUMPTION_SOC_ABOVE_MIN)
+        elif mode == ESSUserMode.KEEP_BATTERIES_CHARGED:
+            state_metric.set(ESSState.KEEP_BATTERIES_CHARGED)
+
+    return mode, None
