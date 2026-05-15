@@ -2397,6 +2397,7 @@ topics: list[TopicDescriptor] = [
         short_id="solarcharger_yield_today",
         name="Yield today",
         metric_type=MetricType.ENERGY,
+        precision=2,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/1/MaxPower",
@@ -2411,6 +2412,7 @@ topics: list[TopicDescriptor] = [
         short_id="solarcharger_yield_yesterday",
         name="Yield yesterday",
         metric_type=MetricType.ENERGY,
+        precision=2,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/Load/I",
