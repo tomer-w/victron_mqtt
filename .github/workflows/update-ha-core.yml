@@ -98,7 +98,7 @@ jobs:
             - Update `victron-mqtt` dependency version in `manifest.json`, `requirements_all.txt`, and `requirements_test_all.txt`
             - Update entity translations (`strings.json`) from latest topic definitions
 
-            Changelog: https://github.com/tomer-w/victron_mqtt/releases/tag/v${{ steps.new_version.outputs.version }}
+            Changelog: https://github.com/tomer-w/victron_mqtt/compare/v${{ steps.current_version.outputs.version }}...v${{ steps.new_version.outputs.version }}
 
             ## Type of change
 
