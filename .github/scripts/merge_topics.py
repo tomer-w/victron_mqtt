@@ -147,14 +147,14 @@ def main():
 
         # DYNAMIC resolves at runtime to different platforms depending on
         # device configuration, so add the entry under every possible platform.
-        # number doesn't use state translations, so strip it for that platform.
+        # For DYNAMIC: strip state from number (no state concept) and select
+        # (options come from runtime labels, not the static enum).
         if entity_type == "dynamic":
             target_types = ["switch", "select", "number", "sensor", "binary_sensor"]
+            no_state_platforms = {"number", "select"}
         else:
             target_types = [entity_type]
-
-        # Platforms where state translations are not applicable
-        no_state_platforms = {"number"}
+            no_state_platforms: set[str] = set()
 
         for t in target_types:
             if t not in entity:
@@ -230,7 +230,7 @@ def main():
                 sorted_entry["name"] = entry["name"]
             if "unit_of_measurement" in entry and entity_type != "time":
                 sorted_entry["unit_of_measurement"] = entry["unit_of_measurement"]
-            if "state" in entry and entity_type not in ("button", "number"):
+            if "state" in entry and entity_type != "button":
                 # For binary_sensor and switches, skip state if it only has on/off options
                 state_keys = set(entry["state"].keys())
                 if entity_type in ["binary_sensor", "switch"] and state_keys <= {"on", "off"}:
