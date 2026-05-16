@@ -166,7 +166,8 @@ def main():
         count += 1
 
         # If is_adjustable_suffix is set, also add to sensor entity type
-        if is_adjustable_suffix is not None and entity_type != "sensor":
+        # (skip if already added via DYNAMIC expansion which includes sensor)
+        if is_adjustable_suffix is not None and "sensor" not in target_types:
             if "sensor" not in entity:
                 entity["sensor"] = {}
             entity["sensor"][translation_key] = entity_entry
