@@ -467,10 +467,8 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="battery_time_since_last_full_charge",
         name="Time since last full charge",
-        unit_of_measurement="seconds",
-        metric_type=MetricType.NONE,
-        metric_nature=MetricNature.TOTAL,
-        value_type=ValueType.FLOAT,
+        metric_type=MetricType.DURATION,
+        value_type=ValueType.INT,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/History/TotalAhDrawn",
@@ -627,7 +625,6 @@ topics: list[TopicDescriptor] = [
         short_id="battery_time_to_go",
         name="Time to go",
         metric_type=MetricType.DURATION,
-        metric_nature=MetricNature.MEASUREMENT,
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
