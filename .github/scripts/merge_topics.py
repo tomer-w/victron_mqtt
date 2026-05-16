@@ -147,15 +147,22 @@ def main():
 
         # DYNAMIC resolves at runtime to different platforms depending on
         # device configuration, so add the entry under every possible platform.
+        # number doesn't use state translations, so strip it for that platform.
         if entity_type == "dynamic":
             target_types = ["switch", "select", "number", "sensor", "binary_sensor"]
         else:
             target_types = [entity_type]
 
+        # Platforms where state translations are not applicable
+        no_state_platforms = {"number"}
+
         for t in target_types:
             if t not in entity:
                 entity[t] = {}
-            entity[t][translation_key] = entity_entry
+            if t in no_state_platforms and "state" in entity_entry:
+                entity[t][translation_key] = {k: v for k, v in entity_entry.items() if k != "state"}
+            else:
+                entity[t][translation_key] = entity_entry
         count += 1
 
         # If is_adjustable_suffix is set, also add to sensor entity type
@@ -222,7 +229,7 @@ def main():
                 sorted_entry["name"] = entry["name"]
             if "unit_of_measurement" in entry and entity_type != "time":
                 sorted_entry["unit_of_measurement"] = entry["unit_of_measurement"]
-            if "state" in entry and entity_type != "button":
+            if "state" in entry and entity_type not in ("button", "number"):
                 # For binary_sensor and switches, skip state if it only has on/off options
                 state_keys = set(entry["state"].keys())
                 if entity_type in ["binary_sensor", "switch"] and state_keys <= {"on", "off"}:
