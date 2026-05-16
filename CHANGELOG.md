@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.5.3 (2026-05-16)
+
+### Changes
+
+- Text changes based on CR
+- multiple fixes in the script which generate HA PRs
+
+### Contributors
+
+@tomer-w 
+
+
 ## 2026.5.2 (2026-05-16)
 
 ### Changes
