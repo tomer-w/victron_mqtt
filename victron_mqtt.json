@@ -6129,7 +6129,7 @@
     {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/State",
       "message_type": "MetricKind.SELECT",
-      "short_id": "system_ess_batterylife_state",
+      "short_id": "system_ess_batterylife_state_full",
       "name": "ESS BatteryLife state",
       "unit_of_measurement": null,
       "metric_type": "MetricType.ENUM",
@@ -6183,7 +6183,7 @@
     {
       "topic": "$$func/system/ess_user_mode:ess_user_mode_set",
       "message_type": "MetricKind.SELECT",
-      "short_id": "system_ess_user_mode",
+      "short_id": "system_ess_batterylife_state",
       "name": "ESS mode",
       "unit_of_measurement": null,
       "metric_type": "MetricType.ENUM",
@@ -6201,7 +6201,7 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [
-        "system_ess_batterylife_state",
+        "system_ess_batterylife_state_full",
         "system_ess_mode"
       ],
       "generic_name": "ESS mode",

@@ -1915,7 +1915,7 @@ topics: list[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/State",
         message_type=MetricKind.SELECT,
-        short_id="system_ess_batterylife_state",
+        short_id="system_ess_batterylife_state_full",
         name="ESS BatteryLife state",
         value_type=ValueType.ENUM,
         enum=ESSState,
@@ -1931,9 +1931,9 @@ topics: list[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="$$func/system/ess_user_mode:ess_user_mode_set",
-        depends_on=["system_ess_batterylife_state", "system_ess_mode"],
+        depends_on=["system_ess_batterylife_state_full", "system_ess_mode"],
         message_type=MetricKind.SELECT,
-        short_id="system_ess_user_mode",
+        short_id="system_ess_batterylife_state",
         name="ESS mode",
         value_type=ValueType.ENUM,
         enum=ESSUserMode,
