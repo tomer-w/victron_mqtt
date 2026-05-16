@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026.5.2 (2026-05-16)
+
+### Changes
+
+- Remove un-needed measurement from battery TimeToGo and TimeSinceLastFullCharge: https://github.com/tomer-w/ha-victron-mqtt/issues/393
+- Increase precision for solar charger yield metrics: https://github.com/tomer-w/ha-victron-mqtt/issues/391
+- Fix ESS modes: https://github.com/tomer-w/ha-victron-mqtt/discussions/395
+- Fix dynamic units for switchable outputs
+
+### Contributors
+
+@tomer-w 
+
+
 ## 2026.5.1 (2026-05-10)
 
 ### Changes
