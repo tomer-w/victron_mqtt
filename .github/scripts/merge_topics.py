@@ -147,11 +147,12 @@ def main():
 
         # DYNAMIC resolves at runtime to different platforms depending on
         # device configuration, so add the entry under every possible platform.
-        # For DYNAMIC: strip state from number (no state concept) and select
-        # (options come from runtime labels, not the static enum).
+        # For DYNAMIC: only binary_sensor uses the static enum state; strip
+        # state from all other platforms (number/select have no state concept,
+        # sensor state values are unknown at build time).
         if entity_type == "dynamic":
             target_types = ["switch", "select", "number", "sensor", "binary_sensor"]
-            no_state_platforms = {"number", "select"}
+            no_state_platforms = {"number", "select", "sensor"}
         else:
             target_types = [entity_type]
             no_state_platforms: set[str] = set()
