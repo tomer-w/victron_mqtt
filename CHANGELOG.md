@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.5.4 (2026-05-16)
+
+### Changes
+
+- fix backward compatibility break
+
+### Contributors
+
+@tomer-w 
+
+
 ## 2026.5.3 (2026-05-16)
 
 ### Changes
