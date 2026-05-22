@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026.5.5 (2026-05-22)
+
+### Changes
+
+- Add PreferRenewableEnergy support based on https://github.com/victronenergy/venus/issues/1052. This is fixing: https://github.com/tomer-w/ha-victron-mqtt/discussions/247
+- strip enum from dynamic sensors
+
+### Contributors
+
+@tomer-w 
+
+
+
 ## 2026.5.4 (2026-05-16)
 
 ### Changes
