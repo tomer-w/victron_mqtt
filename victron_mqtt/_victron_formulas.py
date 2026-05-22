@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._victron_enums import ChargeSchedule, ESSModeHub4, ESSState, ESSUserMode, GenericOnOff
+from ._victron_enums import ChargeSchedule, ESSModeHub4, ESSState, ESSUserMode, GenericOnOff, PreferRenewableEnergyEnum
 from .data_classes import GpsLocation
 from .formula_common import left_riemann_sum_internal
 from .writable_metric import WritableMetric
@@ -214,3 +214,48 @@ def ess_user_mode_set(
             state_metric.set(ESSState.KEEP_BATTERIES_CHARGED)
 
     return mode, None
+
+
+def prefer_renewable_energy(
+    depends_on: dict[str, Metric], _transient_state: FormulaTransientState | None
+) -> tuple[GenericOnOff | None, None]:
+    """Derive a binary switch from the PreferRenewableEnergy raw state.
+
+    See https://github.com/victronenergy/venus/issues/1052
+    - 0 (Full charge active) → OFF (override in progress, charging fully)
+    - 1 (Renewable priority) → ON (solar/wind priority active)
+    - 2 (Overridden by generator) → None (unavailable, user cannot control)
+    """
+    assert len(depends_on) == 1, "Expected exactly one input metric for prefer_renewable_energy"
+    metric = next(iter(depends_on.values()))
+    if metric.value is None:
+        return None, None
+
+    if metric.value == PreferRenewableEnergyEnum.OVERRIDDEN:
+        return None, None
+    if metric.value == PreferRenewableEnergyEnum.RENEWABLE_PRIORITY:
+        return GenericOnOff.ON, None
+    return GenericOnOff.OFF, None
+
+
+def prefer_renewable_energy_set(
+    value: str, depends_on: dict[str, Metric], _transient_state: FormulaTransientState | None
+) -> tuple[GenericOnOff, None]:
+    """Set PreferRenewableEnergy by writing to the raw metric.
+
+    - ON → write RENEWABLE_PRIORITY (1) to cancel full charge / keep renewable priority
+    - OFF → write FULL_CHARGE_ACTIVE (0) to trigger a one-time full charge
+    """
+    assert len(depends_on) == 1, "Expected exactly one input metric for prefer_renewable_energy_set"
+    enabled: GenericOnOff | None = value if isinstance(value, GenericOnOff) else GenericOnOff.from_id_or_string(value)
+    assert enabled is not None, "Failed to determine enabled state"
+
+    metric = next(iter(depends_on.values()))
+    assert isinstance(metric, WritableMetric), "Expected WritableMetric for prefer_renewable_energy_set"
+
+    if enabled == GenericOnOff.ON:
+        metric.set(PreferRenewableEnergyEnum.RENEWABLE_PRIORITY)
+    else:
+        metric.set(PreferRenewableEnergyEnum.FULL_CHARGE_ACTIVE)
+
+    return enabled, None

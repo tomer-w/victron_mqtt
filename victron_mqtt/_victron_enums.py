@@ -59,6 +59,20 @@ class GenericOnOff(VictronEnum):
     ON = (1, "on", "On")
 
 
+class PreferRenewableEnergyEnum(VictronEnum):
+    """Prefer Renewable Energy state.
+
+    See https://github.com/victronenergy/venus/issues/1052
+    0 = One-time full charge in progress (override active, self-resets to 1)
+    1 = Prefer renewable energy active (charge to float only)
+    2 = Overridden by generator or Quattro on AC-in-1 (user cannot control)
+    """
+
+    FULL_CHARGE_ACTIVE = (0, "full_charge_active", "Full charge active")
+    RENEWABLE_PRIORITY = (1, "renewable_priority", "Renewable priority")
+    OVERRIDDEN = (2, "overridden", "Overridden by generator")
+
+
 class ACSystemMode(VictronEnum):
     """AC System Mode Enum"""
 
