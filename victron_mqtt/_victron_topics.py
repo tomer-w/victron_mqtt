@@ -1479,6 +1479,58 @@ topics: list[TopicDescriptor] = [
         name="Total PV yield user",
         metric_type=MetricType.ENERGY,
     ),
+    # Meteo sensor topics (SolarSense irradiance sensor)
+    TopicDescriptor(
+        topic="N/{installation_id}/meteo/{device_id}/Alarms/LowBattery",
+        message_type=MetricKind.SENSOR,
+        short_id="meteo_alarm_low_battery",
+        name="Low battery alarm",
+        value_type=ValueType.ENUM,
+        enum=GenericAlarmEnum,
+        metric_type=MetricType.PROBLEM,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/meteo/{device_id}/BatteryVoltage",
+        message_type=MetricKind.SENSOR,
+        short_id="meteo_battery_voltage",
+        name="Battery voltage",
+        metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/meteo/{device_id}/CellTemperature",
+        message_type=MetricKind.SENSOR,
+        short_id="meteo_cell_temperature",
+        name="Cell temperature",
+        metric_type=MetricType.TEMPERATURE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/meteo/{device_id}/InstallationPower",
+        message_type=MetricKind.SENSOR,
+        short_id="meteo_installation_power",
+        name="Installation power",
+        metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/meteo/{device_id}/Irradiance",
+        message_type=MetricKind.SENSOR,
+        short_id="meteo_irradiance",
+        name="Irradiance",
+        metric_type=MetricType.IRRADIANCE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/meteo/{device_id}/TimeSinceLastSun",
+        message_type=MetricKind.SENSOR,
+        short_id="meteo_time_since_last_sun",
+        name="Time since last sun",
+        metric_type=MetricType.DURATION,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/meteo/{device_id}/TodaysYield",
+        message_type=MetricKind.SENSOR,
+        short_id="meteo_todays_yield",
+        name="Today's yield",
+        metric_type=MetricType.ENERGY,
+    ),
     # Multi RS Solar topics
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ac/ActiveIn/ActiveInput",

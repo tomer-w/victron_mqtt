@@ -265,6 +265,16 @@ class TopicDescriptor:
                 self.precision = 2
             if self.metric_nature == MetricNature.NONE:
                 self.metric_nature = MetricNature.MEASUREMENT
+        # Irradiance default
+        if self.metric_type == MetricType.IRRADIANCE:
+            if self.unit_of_measurement is None:
+                self.unit_of_measurement = "W/m²"
+            if self.value_type is None:
+                self.value_type = ValueType.FLOAT
+            if self.precision is None:
+                self.precision = 1
+            if self.metric_nature == MetricNature.NONE:
+                self.metric_nature = MetricNature.MEASUREMENT
         # General initialization
         if self.value_type not in [
             ValueType.FLOAT,

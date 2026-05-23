@@ -44,6 +44,7 @@ class DeviceType(VictronDeviceEnum):
         "system",
     )  # For whatever reason some system topics are under platform
     HEATPUMP = ("heatpump", "heatpump", "Heat pump")
+    METEO = ("meteo", "meteo", "Irradiance sensor")
     DYNAMIC_ESS = ("DynamicEss", "dynamic_ess", "Dynamic ESS", "system")  # Dynamic ESS settings are under system
     ACLOAD = ("acload", "acload", "AC load")
     CHARGER = ("charger", "charger", "Charger")

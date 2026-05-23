@@ -58,6 +58,7 @@ class MetricType(Enum):
     HEADING = "heading"
     SPEED = "speed"
     COST = "cost"
+    IRRADIANCE = "irradiance"
     PROBLEM = "problem"
     CONNECTIVITY = "connectivity"
     RESTART = "restart"
