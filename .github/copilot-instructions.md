@@ -75,6 +75,7 @@ TopicDescriptor(
 - For alarms/status: use `MetricKind.SENSOR` with `ValueType.ENUM`
 - For measurements: use appropriate `MetricType` (VOLTAGE, CURRENT, POWER, etc.)
 - When adding TopicDescriptor make sure to keep the alphabetical order which the file has based on the topic field.
+- Run ruff to ensure formatting and linting compliance after adding new topics or enums.
 
 ## GitHub Issue Analysis
 
