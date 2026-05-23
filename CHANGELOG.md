@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026.5.6 (2026-05-23)
+
+### Changes
+
+- Fix regression with system_ess_batterylife_state: https://github.com/tomer-w/ha-victron-mqtt/issues/404
+- Add meteo metrics: https://github.com/tomer-w/ha-victron-mqtt/issues/402
+- Add generator next test run: https://github.com/tomer-w/victron_mqtt/issues/95
+
+### Contributors
+
+@tomer-w 
+
+
+
 ## 2026.5.5 (2026-05-22)
 
 ### Changes
