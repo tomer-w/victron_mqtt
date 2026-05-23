@@ -999,6 +999,13 @@ topics: list[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/generator/{device_id}/NextTestRun",
+        message_type=MetricKind.SENSOR,
+        short_id="generator_next_test_run",
+        name="Next test run",
+        value_type=ValueType.EPOCH,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/generator/{device_id}/RunningByConditionCode",
         message_type=MetricKind.SENSOR,
         short_id="generator_run_state",
