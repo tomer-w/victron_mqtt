@@ -149,7 +149,7 @@ def ess_user_mode(
     state_metric = None
     hub4_metric = None
     for metric in depends_on.values():
-        if metric.generic_short_id == "system_ess_batterylife_state":
+        if metric.generic_short_id == "system_ess_batterylife_state_full":
             state_metric = metric
         elif metric.generic_short_id == "system_ess_mode":
             hub4_metric = metric
@@ -189,7 +189,7 @@ def ess_user_mode_set(
     state_metric = None
     hub4_metric = None
     for metric in depends_on.values():
-        if metric.generic_short_id == "system_ess_batterylife_state":
+        if metric.generic_short_id == "system_ess_batterylife_state_full":
             state_metric = metric
         elif metric.generic_short_id == "system_ess_mode":
             hub4_metric = metric

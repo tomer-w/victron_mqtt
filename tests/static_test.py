@@ -1,5 +1,8 @@
 """Tests basic connectivity functionality. Does require a running Venus OS instance to connect to."""
 
+import ast
+import inspect
+
 import pytest
 
 
@@ -753,3 +756,72 @@ def test_enum_strings_are_sentence_case():
                 )
     if errors:
         pytest.fail(f"Found {len(errors)} enum strings violating sentence case:\n" + "\n".join(errors))
+
+
+def test_formula_functions_reference_valid_dependencies():
+    """Ensure formula functions only reference generic_short_ids that exist in their depends_on list.
+
+    This catches bugs where a topic's short_id is renamed in the descriptor but
+    the formula function still looks up the old name via generic_short_id.
+    """
+    import victron_mqtt._victron_formulas as formulas
+
+    topics = get_topics()
+
+    # Build a set of all known short_ids (dependency targets)
+    all_short_ids = {t.short_id for t in topics}
+
+    errors = []
+
+    for topic in topics:
+        if not topic.is_formula:
+            continue
+
+        # Extract the read function name from the topic
+        # Format: "$$func/{device_type}/{func_name}" or "$$func/{device_type}/{func_name}:{set_func}"
+        func_path = topic.topic.split("/")[-1]
+        func_names = func_path.split(":")
+
+        # Resolve depends_on short_ids (stripping TopicDependency wrappers)
+        dep_short_ids = set()
+        for dep in topic.depends_on:
+            dep_id = dep.short_id if hasattr(dep, "short_id") else str(dep)
+            dep_short_ids.add(dep_id)
+
+        for func_name in func_names:
+            func = getattr(formulas, func_name, None)
+            if func is None:
+                continue
+
+            # Parse the function source to find generic_short_id comparisons
+            source = inspect.getsource(func)
+            tree = ast.parse(source)
+            referenced_ids = set()
+            for node in ast.walk(tree):
+                # Match: metric.generic_short_id == "some_id"
+                if (
+                    isinstance(node, ast.Compare)
+                    and len(node.ops) == 1
+                    and isinstance(node.ops[0], ast.Eq)
+                    and isinstance(node.left, ast.Attribute)
+                    and node.left.attr == "generic_short_id"
+                    and len(node.comparators) == 1
+                    and isinstance(node.comparators[0], ast.Constant)
+                    and isinstance(node.comparators[0].value, str)
+                ):
+                    referenced_ids.add(node.comparators[0].value)
+
+            for ref_id in referenced_ids:
+                if ref_id not in dep_short_ids:
+                    errors.append(
+                        f"Formula '{func_name}' (topic short_id='{topic.short_id}') references "
+                        f"generic_short_id '{ref_id}' which is not in depends_on {sorted(dep_short_ids)}"
+                    )
+                if ref_id not in all_short_ids:
+                    errors.append(
+                        f"Formula '{func_name}' (topic short_id='{topic.short_id}') references "
+                        f"generic_short_id '{ref_id}' which does not exist as any topic's short_id"
+                    )
+
+    if errors:
+        pytest.fail(f"Found {len(errors)} formula dependency mismatches:\n" + "\n".join(errors))
