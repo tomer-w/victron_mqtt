@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.5.7 (2026-05-24)
+
+### Changes
+
+- Fix N/{installation_id}/solarcharger/{device_id}/History/Daily/0/TimeIn* to be in minutes: https://github.com/tomer-w/ha-victron-mqtt/issues/401
+
+### Contributors
+
+@tomer-w 
+
+
+
 ## 2026.5.6 (2026-05-23)
 
 ### Changes
