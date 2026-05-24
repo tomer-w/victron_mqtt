@@ -2431,6 +2431,7 @@ topics: list[TopicDescriptor] = [
         name="Time in absorption today",
         metric_type=MetricType.DURATION,
         metric_nature=MetricNature.TOTAL_INCREASING,
+        unit_of_measurement="min",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/TimeInBulk",
@@ -2439,6 +2440,7 @@ topics: list[TopicDescriptor] = [
         name="Time in bulk today",
         metric_type=MetricType.DURATION,
         metric_nature=MetricNature.TOTAL_INCREASING,
+        unit_of_measurement="min",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/TimeInFloat",
@@ -2447,6 +2449,7 @@ topics: list[TopicDescriptor] = [
         name="Time in float today",
         metric_type=MetricType.DURATION,
         metric_nature=MetricNature.TOTAL_INCREASING,
+        unit_of_measurement="min",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/Yield",
