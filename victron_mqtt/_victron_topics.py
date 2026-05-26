@@ -1325,6 +1325,14 @@ topics: list[TopicDescriptor] = [
     ),
     # Hub4 topics
     TopicDescriptor(
+        topic="N/{installation_id}/hub4/{device_id}/Overrides/ForceCharge",
+        message_type=MetricKind.SWITCH,
+        short_id="hub4_force_charge",
+        name="Force charge",
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/hub4/{device_id}/Overrides/Setpoint",
         message_type=MetricKind.NUMBER,
         short_id="hub4_ac_grid_setpoint",
@@ -2016,6 +2024,18 @@ topics: list[TopicDescriptor] = [
         enum=ESSModeHub4,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxChargePercentage",
+        message_type=MetricKind.NUMBER,
+        short_id="system_ess_max_charge_percentage",
+        name="ESS max charge percentage",
+        unit_of_measurement="%",
+        metric_type=MetricType.PERCENTAGE,
+        value_type=ValueType.INT,
+        min=0,
+        max=100,
+        step=1,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxChargePower",
         message_type=MetricKind.NUMBER,
         short_id="system_ess_max_charge_power",
@@ -2026,6 +2046,18 @@ topics: list[TopicDescriptor] = [
         min=-1,
         max=1000000,
         step=50,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxDischargePercentage",
+        message_type=MetricKind.NUMBER,
+        short_id="system_ess_max_discharge_percentage",
+        name="ESS max discharge percentage",
+        unit_of_measurement="%",
+        metric_type=MetricType.PERCENTAGE,
+        value_type=ValueType.INT,
+        min=0,
+        max=100,
+        step=1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/MaxDischargePower",
