@@ -6598,7 +6598,7 @@
       "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.ENUM",
       "precision": null,
-      "enum": "GenericOnOff",
+      "enum": "GenericOnOffInverted",
       "min_max_range": "RangeType.STATIC",
       "min": null,
       "max": null,
@@ -12868,6 +12868,21 @@
         {
           "id": "on",
           "name": "On",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "GenericOnOffInverted",
+      "EnumValues": [
+        {
+          "id": "on",
+          "name": "On",
+          "value": 0
+        },
+        {
+          "id": "off",
+          "name": "Off",
           "value": 1
         }
       ]

@@ -30,6 +30,7 @@ from ._victron_enums import (
     GeneratorRunningByConditionCode,
     GenericAlarmEnum,
     GenericOnOff,
+    GenericOnOffInverted,
     InverterMode,
     MppOperationMode,
     PhoenixInverterMode,
@@ -2062,7 +2063,7 @@ topics: list[TopicDescriptor] = [
         short_id="system_settings_prevent_ac_feedin",
         name="AC-coupled PV - feed in excess",
         value_type=ValueType.ENUM,
-        enum=GenericOnOff,
+        enum=GenericOnOffInverted,
     ),
     # Dynamic ESS settings topics
     TopicDescriptor(
