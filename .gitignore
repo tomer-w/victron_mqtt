@@ -195,3 +195,5 @@ cython_debug/
 docs/_data/*
 docs/_site/*
 victron_snapshot.json
+
+.github/mcp.json
