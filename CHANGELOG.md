@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026.5.8 (2026-05-26)
+
+### Changes
+
+- Make all references local so library can be imported to private location
+- Improve ESS name
+
+### Contributors
+
+No contributors
+
+
+
 ## 2026.5.7 (2026-05-24)
 
 ### Changes
