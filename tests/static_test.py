@@ -2,6 +2,7 @@
 
 import ast
 import inspect
+from pathlib import Path
 
 import pytest
 
@@ -825,3 +826,40 @@ def test_formula_functions_reference_valid_dependencies():
 
     if errors:
         pytest.fail(f"Found {len(errors)} formula dependency mismatches:\n" + "\n".join(errors))
+
+
+def test_no_absolute_self_imports():
+    """Ensure the library only uses relative imports and never references itself absolutely.
+
+    Absolute self-imports (e.g. `from victron_mqtt import ...` or `import victron_mqtt`)
+    inside the package break vendored deployments where the package is embedded under a
+    different parent path.
+    """
+    pkg_dir = Path(__file__).resolve().parent.parent / "victron_mqtt"
+    errors: list[str] = []
+
+    for py_file in sorted(pkg_dir.rglob("*.py")):
+        rel_path = py_file.relative_to(pkg_dir.parent)
+        try:
+            tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(rel_path))
+        except SyntaxError:
+            continue
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+                if node.module == "victron_mqtt" or node.module.startswith("victron_mqtt."):
+                    errors.append(
+                        f"{rel_path}:{node.lineno}: `from {node.module} import ...` — use a relative import instead"
+                    )
+            elif isinstance(node, ast.Import):
+                errors.extend(
+                    f"{rel_path}:{node.lineno}: `import {alias.name}` — use a relative import instead"
+                    for alias in node.names
+                    if alias.name == "victron_mqtt" or alias.name.startswith("victron_mqtt.")
+                )
+
+    if errors:
+        pytest.fail(
+            f"Found {len(errors)} absolute self-import(s) in the library "
+            f"(these break vendored deployments):\n" + "\n".join(errors)
+        )
