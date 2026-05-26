@@ -15,9 +15,9 @@ from paho.mqtt.client import ConnectFlags
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.reasoncodes import ReasonCode
 
-from victron_mqtt._victron_enums import DeviceType
-from victron_mqtt.constants import TOPIC_INSTALLATION_ID, OperationMode
-from victron_mqtt.hub import Hub
+from .._victron_enums import DeviceType
+from ..constants import TOPIC_INSTALLATION_ID, OperationMode
+from ..hub import Hub
 
 logger = logging.getLogger(__name__)
 

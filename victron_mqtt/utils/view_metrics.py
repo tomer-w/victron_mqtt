@@ -18,9 +18,9 @@ import tkinter as tk
 from logging import getLogger
 from tkinter import messagebox, simpledialog, ttk
 
-from victron_mqtt import Device, Hub, Metric
-from victron_mqtt.constants import MetricKind, OperationMode
-from victron_mqtt.writable_metric import WritableMetric
+from .. import Device, Hub, Metric
+from ..constants import MetricKind, OperationMode
+from ..writable_metric import WritableMetric
 
 DEFAULT_HOST = "venus.local."
 DEFAULT_PORT = 1883
