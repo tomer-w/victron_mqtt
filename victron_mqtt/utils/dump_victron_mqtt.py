@@ -74,11 +74,7 @@ def get_all_enums(module: ModuleType) -> list[EnumDump]:
     enums: list[EnumDump] = []
     for name in dir(module):
         obj: object = getattr(module, name)
-        if (
-            isinstance(obj, type)
-            and issubclass(obj, VictronEnum)
-            and obj is not VictronEnum
-        ):
+        if isinstance(obj, type) and issubclass(obj, VictronEnum) and obj is not VictronEnum:
             enums.append(enum_to_dict(obj))
     return enums
 
@@ -111,8 +107,9 @@ def main() -> None:
         "enums": get_all_enums(_victron_enums),
     }
 
-    with args.output_file.open("w", encoding="utf-8") as output_file:
+    with args.output_file.open("w", encoding="utf-8", newline="\n") as output_file:
         json.dump(data, output_file, indent=2, default=str)
+        output_file.write("\n")
 
 
 if __name__ == "__main__":
