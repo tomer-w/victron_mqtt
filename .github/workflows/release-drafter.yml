@@ -99,13 +99,23 @@ jobs:
 
           BODY=$(gh release view "$DRAFT_TAG" --json body -q .body)
 
-          # Append commit history
+          # Insert commits into the Changes section using Python for reliability
           if [ -n "$COMMITS" ]; then
-            BODY="${BODY}
-
-          ## Commits
-
-          ${COMMITS}"
+            BODY=$(python3 -c "
+          import os, sys
+          body = os.environ['BODY']
+          commits = os.environ['COMMITS']
+          marker = '## Changes'
+          if marker in body:
+              # Find end of Changes section (next ## heading or end of text)
+              idx = body.index(marker) + len(marker)
+              rest = body[idx:]
+              # Insert commits after the ## Changes heading
+              body = body[:idx] + '\n\n' + commits + rest
+          else:
+              body += '\n\n## Changes\n\n' + commits
+          print(body)
+          ")
           fi
 
           # Prepend breaking changes
