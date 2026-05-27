@@ -52,6 +52,25 @@ jobs:
           echo "$COMMITS" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
+          # Collect unique commit authors as GitHub usernames
+          AUTHORS=$(git log "$prev_tag"..HEAD --pretty=format:"%an" | sort -u | while read -r name; do
+            # Try to resolve GitHub username from commit email
+            email=$(git log --author="$name" --pretty=format:"%ae" -1)
+            username=$(echo "$email" | sed -n 's/.*+\(.*\)@users.noreply.github.com/\1/p')
+            if [ -n "$username" ]; then
+              echo "@$username"
+            else
+              # Use gh api to find username by email
+              username=$(gh api "/search/users?q=$email+in:email" --jq '.items[0].login' 2>/dev/null || true)
+              if [ -n "$username" ] && [ "$username" != "null" ]; then
+                echo "@$username"
+              else
+                echo "@$name"
+              fi
+            fi
+          done | sort -u | tr '\n' ' ')
+          echo "AUTHORS=$AUTHORS" >> $GITHUB_ENV
+
       - name: Detect breaking changes
         id: breaking
         run: |
@@ -106,14 +125,25 @@ jobs:
           import os
           body = os.environ['BODY']
           commits = os.environ['COMMITS']
+          authors = os.environ.get('AUTHORS', '').strip()
+          # Remove release-drafter's 'No changes' placeholder
+          body = body.replace('No changes\n', '').replace('No changes', '')
           marker = '## Changes'
           if marker in body:
               idx = body.index(marker) + len(marker)
               rest = body[idx:]
-              body = body[:idx] + '\n\n' + commits + rest
+              body = body[:idx] + '\n\n' + commits + rest.rstrip()
           else:
-              body += '\n\n## Changes\n\n' + commits
-          print(body)
+              body = body.rstrip() + '\n\n## Changes\n\n' + commits
+          # Add contributors if the section is empty
+          if '## Contributors' in body and authors:
+              idx = body.index('## Contributors') + len('## Contributors')
+              rest = body[idx:].strip()
+              if not rest:
+                  body = body[:idx] + '\n\n' + authors
+          elif '## Contributors' not in body and authors:
+              body = body.rstrip() + '\n\n## Contributors\n\n' + authors
+          print(body.rstrip())
           ")
           fi
 
