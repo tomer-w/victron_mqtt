@@ -22,6 +22,9 @@ jobs:
         with:
           python-version: '3.14'
 
+      - name: Install library
+        run: pip install -e .
+
       - name: Get version from pyproject.toml
         id: version
         run: |
@@ -47,27 +50,19 @@ jobs:
             exit 0
           fi
 
-          # Generate current JSON from live code
-          python -m victron_mqtt.utils.dump_victron_mqtt current.json
-
-          # Generate old JSON from the previous tag
-          git stash -q 2>/dev/null || true
-          git checkout -q "$prev_tag"
-          python -m victron_mqtt.utils.dump_victron_mqtt old.json 2>/dev/null || true
-          git checkout -q -
-          git stash pop -q 2>/dev/null || true
-
-          if [ ! -f old.json ]; then
+          # Extract old victron_mqtt.json from previous tag
+          git show "${prev_tag}:victron_mqtt.json" > old.json 2>/dev/null || true
+          if [ ! -f old.json ] || [ ! -s old.json ]; then
             echo "found=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
           set +e
-          breaking_output=$(python -m victron_mqtt.utils.detect_breaking_changes old.json current.json 2>/dev/null)
+          breaking_output=$(python -m victron_mqtt.utils.detect_breaking_changes old.json victron_mqtt.json 2>/dev/null)
           exit_code=$?
           set -e
 
-          rm -f old.json current.json
+          rm -f old.json
 
           if [ $exit_code -eq 1 ] && [ -n "$breaking_output" ]; then
             echo "found=true" >> $GITHUB_OUTPUT
