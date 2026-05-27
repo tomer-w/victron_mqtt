@@ -1,99 +1,106 @@
-name: Release Drafter
+name: Draft Release
 
 on:
   push:
     branches:
       - main
-  # pull_request event is required only for autolabeler
-  pull_request:
-    # Only following types are handled by the action, but one can default to all as well
-    types: [opened, reopened, synchronize]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  update_release_draft:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    permissions:
-      # write permission is required to create a github release
-      contents: write
-      # write permission is required for autolabeler
-      # otherwise, read permission is required at least
-      pull-requests: write
+  draft_release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          fetch-tags: true
 
-      - name: Get previous tag and commit messages
-        id: get_changes
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Get version from pyproject.toml
+        id: version
         run: |
-          # Get the most recent tag
-          PREVIOUS_TAG=$(git tag --sort=-creatordate | head -1)
-          
-          if [ -z "$PREVIOUS_TAG" ]; then
-            echo "No previous tag found, using initial commit"
-            PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
-          fi
-          
-          echo "Previous tag: $PREVIOUS_TAG"
-          
-          # Get commit messages since the previous tag
-          COMMITS=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s" | head -20)
-          
-          # Save commits to environment variable
-          echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_ENV
-          echo "COMMITS<<EOF" >> $GITHUB_ENV
-          echo "$COMMITS" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          echo "version=$version" >> $GITHUB_OUTPUT
 
-      # Drafts your next Release notes as Pull Requests are merged into "main"
-      - uses: release-drafter/release-drafter@v7
-        id: release_drafter
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Append commit history to draft release
+      - name: Find previous release tag
+        id: prev_tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get the latest draft release
-          DRAFT_RELEASE=$(gh release list --limit 50 --json isDraft,tagName | jq -r '.[] | select(.isDraft == true) | .tagName' | head -1)
-          
-          if [ -n "$DRAFT_RELEASE" ] && [ "$DRAFT_RELEASE" != "null" ]; then
-            echo "Found draft release: $DRAFT_RELEASE"
-            
-            # Get current release notes
-            CURRENT_NOTES=$(gh release view "$DRAFT_RELEASE" --json body -q .body)
-            
-            # Create enhanced release notes by merging commits into the Changes section
-            if echo "$CURRENT_NOTES" | grep -q "## Changes"; then
-              # Split the notes at the Changes section and insert commits
-              echo "$CURRENT_NOTES" | sed '/## Changes/,$!d' | sed '1!d' > enhanced_notes.md  # Header line
-              echo "" >> enhanced_notes.md
-              echo "$CURRENT_NOTES" | sed -n '/## Changes/,/## Contributors/p' | sed '1d;$d' >> enhanced_notes.md
-              echo "$COMMITS" >> enhanced_notes.md
-              echo "" >> enhanced_notes.md
-              # Add the rest of the notes (Contributors section onwards)
-              echo "$CURRENT_NOTES" | sed -n '/## Contributors/,$p' >> enhanced_notes.md
-            else
-              # Fallback if no Changes section found
-              echo "$CURRENT_NOTES" > enhanced_notes.md
-              echo "" >> enhanced_notes.md
-              echo "## Changes" >> enhanced_notes.md
-              echo "" >> enhanced_notes.md
-              echo "$COMMITS" >> enhanced_notes.md
-            fi
-            echo "" >> enhanced_notes.md
-            
-            # Update the draft release with enhanced notes
-            gh release edit "$DRAFT_RELEASE" --notes-file enhanced_notes.md
-            echo "Updated draft release with commit history"
-          else
-            echo "No draft release found to update"
+          prev=$(gh release list --json tagName,isDraft -q '[.[] | select(.isDraft | not)] | .[0].tagName')
+          echo "Previous release tag: $prev"
+          echo "tag=$prev" >> $GITHUB_OUTPUT
+
+      - name: Detect breaking changes
+        id: breaking
+        run: |
+          prev_tag="${{ steps.prev_tag.outputs.tag }}"
+          if [ -z "$prev_tag" ]; then
+            echo "No previous release found, skipping breaking change detection"
+            echo "found=false" >> $GITHUB_OUTPUT
+            exit 0
           fi
+
+          # Generate current JSON from live code
+          python -m victron_mqtt.utils.dump_victron_mqtt current.json
+
+          # Generate old JSON from the previous tag
+          git stash -q 2>/dev/null || true
+          git checkout -q "$prev_tag"
+          python -m victron_mqtt.utils.dump_victron_mqtt old.json 2>/dev/null || true
+          git checkout -q -
+          git stash pop -q 2>/dev/null || true
+
+          if [ ! -f old.json ]; then
+            echo "found=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          set +e
+          breaking_output=$(python -m victron_mqtt.utils.detect_breaking_changes old.json current.json 2>/dev/null)
+          exit_code=$?
+          set -e
+
+          rm -f old.json current.json
+
+          if [ $exit_code -eq 1 ] && [ -n "$breaking_output" ]; then
+            echo "found=true" >> $GITHUB_OUTPUT
+            echo "content<<EOF" >> $GITHUB_OUTPUT
+            echo "$breaking_output" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create or update draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ steps.version.outputs.version }}"
+          existing=$(gh release list --json tagName,isDraft -q ".[] | select(.tagName == \"$tag\" and .isDraft) | .tagName")
+          if [ -n "$existing" ]; then
+            gh release edit "$tag" --draft --generate-notes
+          else
+            gh release create "$tag" --draft --generate-notes --title "$tag"
+          fi
+
+      - name: Prepend breaking changes to release notes
+        if: steps.breaking.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ steps.version.outputs.version }}"
+          current_body=$(gh release view "$tag" --json body -q .body)
+
+          breaking_section="${{ steps.breaking.outputs.content }}"
+          new_body="${breaking_section}
+
+          ${current_body}"
+
+          gh release edit "$tag" --notes "$new_body"
