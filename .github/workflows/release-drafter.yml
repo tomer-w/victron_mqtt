@@ -1,15 +1,21 @@
-name: Draft Release
+name: Release Drafter
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    types: [opened, reopened, synchronize]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  draft_release:
+  update_release_draft:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -25,12 +31,6 @@ jobs:
       - name: Install library
         run: pip install -e .
 
-      - name: Get version from pyproject.toml
-        id: version
-        run: |
-          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
-          echo "version=$version" >> $GITHUB_OUTPUT
-
       - name: Find previous release tag
         id: prev_tag
         env:
@@ -40,17 +40,27 @@ jobs:
           echo "Previous release tag: $prev"
           echo "tag=$prev" >> $GITHUB_OUTPUT
 
+      - name: Get commit messages since previous tag
+        id: commits
+        run: |
+          prev_tag="${{ steps.prev_tag.outputs.tag }}"
+          if [ -z "$prev_tag" ]; then
+            prev_tag=$(git rev-list --max-parents=0 HEAD)
+          fi
+          COMMITS=$(git log "$prev_tag"..HEAD --pretty=format:"- %s" | head -20)
+          echo "COMMITS<<EOF" >> $GITHUB_ENV
+          echo "$COMMITS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Detect breaking changes
         id: breaking
         run: |
           prev_tag="${{ steps.prev_tag.outputs.tag }}"
           if [ -z "$prev_tag" ]; then
-            echo "No previous release found, skipping breaking change detection"
             echo "found=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          # Extract old victron_mqtt.json from previous tag
           git show "${prev_tag}:victron_mqtt.json" > old.json 2>/dev/null || true
           if [ ! -f old.json ] || [ ! -s old.json ]; then
             echo "found=false" >> $GITHUB_OUTPUT
@@ -73,29 +83,48 @@ jobs:
             echo "found=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create or update draft release
+      - uses: release-drafter/release-drafter@v7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enhance draft release notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          tag="v${{ steps.version.outputs.version }}"
-          existing=$(gh release list --json tagName,isDraft -q ".[] | select(.tagName == \"$tag\" and .isDraft) | .tagName")
-          if [ -n "$existing" ]; then
-            gh release edit "$tag" --draft --generate-notes
-          else
-            gh release create "$tag" --draft --generate-notes --title "$tag"
+          DRAFT_TAG=$(gh release list --limit 50 --json isDraft,tagName -q '[.[] | select(.isDraft)] | .[0].tagName')
+          if [ -z "$DRAFT_TAG" ] || [ "$DRAFT_TAG" = "null" ]; then
+            echo "No draft release found"
+            exit 0
           fi
 
-      - name: Prepend breaking changes to release notes
-        if: steps.breaking.outputs.found == 'true'
+          BODY=$(gh release view "$DRAFT_TAG" --json body -q .body)
+
+          # Append commit history
+          if [ -n "$COMMITS" ]; then
+            BODY="${BODY}
+
+          ## Commits
+
+          ${COMMITS}"
+          fi
+
+          # Prepend breaking changes
+          if [ "${{ steps.breaking.outputs.found }}" = "true" ]; then
+            breaking_section="${{ steps.breaking.outputs.content }}"
+            BODY="${breaking_section}
+
+          ${BODY}"
+          fi
+
+          gh release edit "$DRAFT_TAG" --notes "$BODY"
+
+  autolabeler:
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@v7
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          tag="v${{ steps.version.outputs.version }}"
-          current_body=$(gh release view "$tag" --json body -q .body)
-
-          breaking_section="${{ steps.breaking.outputs.content }}"
-          new_body="${breaking_section}
-
-          ${current_body}"
-
-          gh release edit "$tag" --notes "$new_body"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
