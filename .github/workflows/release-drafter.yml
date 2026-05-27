@@ -101,16 +101,15 @@ jobs:
 
           # Insert commits into the Changes section using Python for reliability
           if [ -n "$COMMITS" ]; then
+            export BODY
             BODY=$(python3 -c "
-          import os, sys
+          import os
           body = os.environ['BODY']
           commits = os.environ['COMMITS']
           marker = '## Changes'
           if marker in body:
-              # Find end of Changes section (next ## heading or end of text)
               idx = body.index(marker) + len(marker)
               rest = body[idx:]
-              # Insert commits after the ## Changes heading
               body = body[:idx] + '\n\n' + commits + rest
           else:
               body += '\n\n## Changes\n\n' + commits
