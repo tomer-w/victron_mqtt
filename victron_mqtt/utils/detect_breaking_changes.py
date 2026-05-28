@@ -31,16 +31,22 @@ def load_surface(path: Path) -> dict[str, Any]:
         data = json.load(f)
 
     short_ids: dict[str, str] = {}
+    topic_enums: dict[str, str] = {}
     for topic in data.get("topics", []):
         sid = topic.get("short_id", "")
         short_ids[sid] = topic.get("topic", "")
+        enum_name = topic.get("enum")
+        if enum_name:
+            topic_enums[sid] = enum_name
 
     enum_ids: dict[str, dict[str, str]] = {}
+    enum_values: dict[str, dict[str, int]] = {}
     for enum_def in data.get("enums", []):
         name = enum_def.get("name", "")
         enum_ids[name] = {ev.get("id", ""): ev.get("name", "") for ev in enum_def.get("EnumValues", [])}
+        enum_values[name] = {ev.get("id", ""): ev.get("value", 0) for ev in enum_def.get("EnumValues", [])}
 
-    return {"short_ids": short_ids, "enum_ids": enum_ids}
+    return {"short_ids": short_ids, "enum_ids": enum_ids, "enum_values": enum_values, "topic_enums": topic_enums}
 
 
 def load_surface_from_current() -> dict[str, Any]:
@@ -56,13 +62,20 @@ def load_surface_from_current() -> dict[str, Any]:
 
     short_ids: dict[str, str] = {t.short_id: t.topic for t in topics}
 
+    topic_enums: dict[str, str] = {}
+    for t in topics:
+        if t.enum is not None:
+            topic_enums[t.short_id] = type(t.enum).__name__
+
     enum_ids: dict[str, dict[str, str]] = {}
+    enum_values: dict[str, dict[str, int]] = {}
     for name in dir(_victron_enums):
         obj = getattr(_victron_enums, name)
         if isinstance(obj, type) and issubclass(obj, VictronEnum) and obj is not VictronEnum:
             enum_ids[name] = {m.id: m.string for m in obj}
+            enum_values[name] = {m.id: m.value for m in obj}
 
-    return {"short_ids": short_ids, "enum_ids": enum_ids}
+    return {"short_ids": short_ids, "enum_ids": enum_ids, "enum_values": enum_values, "topic_enums": topic_enums}
 
 
 def compare_surfaces(old: dict[str, Any], new: dict[str, Any]) -> list[str]:
@@ -89,6 +102,31 @@ def compare_surfaces(old: dict[str, Any], new: dict[str, Any]) -> list[str]:
         f"- Enum `{enum_name}` was entirely removed"
         for enum_name in sorted(set(old["enum_ids"]) - set(new["enum_ids"]))
     )
+
+    # Changed enum type on a topic — only breaking if value mappings differ
+    old_te = old.get("topic_enums", {})
+    new_te = new.get("topic_enums", {})
+    old_ev = old.get("enum_values", {})
+    new_ev = new.get("enum_values", {})
+    for sid in sorted(set(old_te) & set(new_te)):
+        if old_te[sid] != new_te[sid]:
+            old_mapping = old_ev.get(old_te[sid], {})
+            new_mapping = new_ev.get(new_te[sid], {})
+            if old_mapping != new_mapping:
+                # Build a human-readable description of the value changes
+                old_ids = old.get("enum_ids", {}).get(old_te[sid], {})
+                new_ids = new.get("enum_ids", {}).get(new_te[sid], {})
+                old_desc = ", ".join(
+                    f"{v}={old_ids.get(eid, eid)}" for eid, v in sorted(old_mapping.items(), key=lambda x: x[1])
+                )
+                new_desc = ", ".join(
+                    f"{v}={new_ids.get(eid, eid)}" for eid, v in sorted(new_mapping.items(), key=lambda x: x[1])
+                )
+                changes.append(
+                    f"- Entity `{sid}` changed enum from `{old_te[sid]}` to `{new_te[sid]}` "
+                    f"— values are remapped ({old_desc} → {new_desc}). "
+                    f"Check automations using this entity."
+                )
 
     return changes
 
