@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.5.10 (2026-05-28)
+
+### Changes
+
+- Add breaking change detection and reporting in the release page
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.5.8 (2026-05-26)
 
 ### Changes
