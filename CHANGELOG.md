@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.5.11 (2026-05-28)
+
+### Changes
+
+- Imporve the breaking change detection logic to include more cases and better output for the user.
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.5.10 (2026-05-28)
 
 ### Changes
