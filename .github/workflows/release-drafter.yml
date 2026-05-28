@@ -127,8 +127,9 @@ jobs:
           commits = os.environ['COMMITS']
           authors = os.environ.get('AUTHORS', '').strip()
 
-          # Remove release-drafter's 'No changes' placeholder
+          # Remove release-drafter's empty placeholders
           body = body.replace('No changes\n', '').replace('No changes', '')
+          body = body.replace('No contributors\n', '').replace('No contributors', '')
 
           # Split body into sections: ['', '## Changes', '\n\ncontent\n\n', '## Contributors', '\n\n']
           parts = re.split(r'(## [^\n]+)', body)
@@ -137,6 +138,9 @@ jobs:
           for i, part in enumerate(parts):
               if part.strip() == '## Changes' and i + 1 < len(parts):
                   existing = parts[i + 1].strip()
+                  # Remove lone asterisk (release-drafter empty placeholder)
+                  if existing == '*':
+                      existing = ''
                   items = []
                   if existing:
                       items.append(existing)
