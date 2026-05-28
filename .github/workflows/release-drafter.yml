@@ -122,27 +122,36 @@ jobs:
           if [ -n "$COMMITS" ]; then
             export BODY
             BODY=$(python3 -c "
-          import os
+          import os, re
           body = os.environ['BODY']
           commits = os.environ['COMMITS']
           authors = os.environ.get('AUTHORS', '').strip()
+
           # Remove release-drafter's 'No changes' placeholder
           body = body.replace('No changes\n', '').replace('No changes', '')
-          marker = '## Changes'
-          if marker in body:
-              idx = body.index(marker) + len(marker)
-              rest = body[idx:]
-              body = body[:idx] + '\n\n' + commits + rest.rstrip()
-          else:
-              body = body.rstrip() + '\n\n## Changes\n\n' + commits
-          # Add contributors if the section is empty
-          if '## Contributors' in body and authors:
-              idx = body.index('## Contributors') + len('## Contributors')
-              rest = body[idx:].strip()
-              if not rest:
-                  body = body[:idx] + '\n\n' + authors
-          elif '## Contributors' not in body and authors:
+
+          # Split body into sections: ['', '## Changes', '\n\ncontent\n\n', '## Contributors', '\n\n']
+          parts = re.split(r'(## [^\n]+)', body)
+
+          # Modify section contents
+          for i, part in enumerate(parts):
+              if part.strip() == '## Changes' and i + 1 < len(parts):
+                  existing = parts[i + 1].strip()
+                  items = []
+                  if existing:
+                      items.append(existing)
+                  items.append(commits)
+                  parts[i + 1] = '\n\n' + '\n'.join(items) + '\n\n'
+              elif part.strip() == '## Contributors' and i + 1 < len(parts):
+                  existing = parts[i + 1].strip()
+                  if not existing and authors:
+                      parts[i + 1] = '\n\n' + authors + '\n'
+
+          body = ''.join(parts)
+
+          if '## Contributors' not in body and authors:
               body = body.rstrip() + '\n\n## Contributors\n\n' + authors
+
           print(body.rstrip())
           ")
           fi
