@@ -8285,7 +8285,7 @@
       "short_id": "switch_{output}_dimming",
       "name": "Dimming",
       "unit_of_measurement": "switch_{output}_unit:%",
-      "metric_type": "MetricType.PERCENTAGE",
+      "metric_type": "MetricType.DYNAMIC",
       "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.FLOAT",
       "precision": null,
