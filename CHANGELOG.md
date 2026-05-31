@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.5.13 (2026-05-31)
+
+### Changes
+
+- Fix wrong metric type: https://github.com/tomer-w/ha-victron-mqtt/issues/422
+- Add dynamic MetricType for when the units should be taken from the library directly in runtime
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.5.12 (2026-05-29)
 
 ### Changes
