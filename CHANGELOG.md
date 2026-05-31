@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.5.12 (2026-05-29)
+
+### Changes
+
+- Add derived PV current formula metrics
+
+### Contributors
+
+@Copilot and @tomer-w 
+
+
 ## 2026.5.11 (2026-05-28)
 
 ### Changes
