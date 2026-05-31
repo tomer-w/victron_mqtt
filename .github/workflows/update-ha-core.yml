@@ -62,12 +62,11 @@ jobs:
           cd core
           sed -i 's/victron-mqtt==${{ steps.current_version.outputs.version }}/victron-mqtt==${{ steps.new_version.outputs.version }}/g' homeassistant/components/victron_gx/manifest.json
 
-      - name: Update requirements_all.txt and requirements_test_all.txt
+      - name: Update requirements files
         if: steps.check.outputs.skip != 'true'
         run: |
           cd core
           sed -i 's/victron-mqtt==${{ steps.current_version.outputs.version }}/victron-mqtt==${{ steps.new_version.outputs.version }}/g' requirements_all.txt
-          sed -i 's/victron-mqtt==${{ steps.current_version.outputs.version }}/victron-mqtt==${{ steps.new_version.outputs.version }}/g' requirements_test_all.txt
 
       - name: Update strings.json
         if: steps.check.outputs.skip != 'true'
@@ -95,7 +94,7 @@ jobs:
             Bump `victron-mqtt` library from `${{ steps.current_version.outputs.version }}` to `${{ steps.new_version.outputs.version }}` for the `victron_gx` integration.
 
             Changes include:
-            - Update `victron-mqtt` dependency version in `manifest.json`, `requirements_all.txt`, and `requirements_test_all.txt`
+            - Update `victron-mqtt` dependency version in `manifest.json` and requirements files
             - Update entity translations (`strings.json`) from latest topic definitions
 
             Changelog: https://github.com/tomer-w/victron_mqtt/compare/v${{ steps.current_version.outputs.version }}...v${{ steps.new_version.outputs.version }}
