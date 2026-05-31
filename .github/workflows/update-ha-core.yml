@@ -67,13 +67,6 @@ jobs:
         run: |
           cd core
           sed -i 's/victron-mqtt==${{ steps.current_version.outputs.version }}/victron-mqtt==${{ steps.new_version.outputs.version }}/g' requirements_all.txt
-          if [ -f requirements_test_all.txt ]; then
-            sed -i 's/victron-mqtt==${{ steps.current_version.outputs.version }}/victron-mqtt==${{ steps.new_version.outputs.version }}/g' requirements_test_all.txt
-          elif [ -f requirements_all_test.txt ]; then
-            sed -i 's/victron-mqtt==${{ steps.current_version.outputs.version }}/victron-mqtt==${{ steps.new_version.outputs.version }}/g' requirements_all_test.txt
-          else
-            echo "No test requirements file found, skipping."
-          fi
 
       - name: Update strings.json
         if: steps.check.outputs.skip != 'true'
