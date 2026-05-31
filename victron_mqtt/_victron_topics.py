@@ -409,7 +409,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="battery_average_discharge",
         name="Average discharge",
-        metric_type=MetricType.ENERGY,
+        metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/History/ChargeCycles",
@@ -432,7 +432,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="battery_deepest_discharge",
         name="Deepest discharge",
-        metric_type=MetricType.ENERGY,
+        metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/History/DischargedEnergy",
@@ -446,7 +446,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="battery_last_discharge",
         name="Last discharge",
-        metric_type=MetricType.ENERGY,
+        metric_type=MetricType.ELECTRIC_STORAGE_CAPACITY,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/History/MaximumVoltage",
