@@ -6508,7 +6508,7 @@
       "sub_device_key": null
     },
     {
-      "topic": "N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/State",
+      "topic": "$$func/system/ess_batterylife_state",
       "message_type": "MetricKind.SENSOR",
       "short_id": "system_ess_batterylife_state_sensor",
       "name": "ESS BatteryLife state",
@@ -6527,9 +6527,11 @@
       "labels": null,
       "key_values": {},
       "experimental": false,
-      "depends_on": [],
+      "depends_on": [
+        "system_ess_batterylife_state_full"
+      ],
       "generic_name": "ESS BatteryLife state",
-      "is_formula": false,
+      "is_formula": true,
       "main_topic": false,
       "hidden": false,
       "sub_device_key": null

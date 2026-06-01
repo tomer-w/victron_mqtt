@@ -863,3 +863,29 @@ def test_no_absolute_self_imports():
             f"Found {len(errors)} absolute self-import(s) in the library "
             f"(these break vendored deployments):\n" + "\n".join(errors)
         )
+
+
+def test_no_duplicate_mqtt_topics():
+    """Verify that no two non-formula descriptors share the same MQTT topic.
+
+    When multiple TopicDescriptors have the same MQTT topic string,
+    match_from_list returns only the first match, making all subsequent
+    descriptors unreachable dead code that never produces a metric.
+    Formula topics ($$func/...) are excluded since they don't subscribe
+    to MQTT and are resolved separately.
+    """
+    topics = get_topics()
+    seen: dict[str, str] = {}  # topic -> short_id of first occurrence
+    duplicates: list[str] = []
+    for descriptor in topics:
+        if descriptor.topic.startswith("$$func"):
+            continue
+        if descriptor.topic in seen:
+            duplicates.append(
+                f"Topic '{descriptor.topic}' is used by both '{seen[descriptor.topic]}' and '{descriptor.short_id}'"
+            )
+        else:
+            seen[descriptor.topic] = descriptor.short_id
+    assert not duplicates, "Duplicate MQTT topics found (only the first descriptor will ever match):\n" + "\n".join(
+        duplicates
+    )

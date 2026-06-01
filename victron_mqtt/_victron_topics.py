@@ -2021,7 +2021,8 @@ topics: list[TopicDescriptor] = [
         hidden=True,
     ),
     TopicDescriptor(
-        topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/BatteryLife/State",
+        topic="$$func/system/ess_batterylife_state",
+        depends_on=["system_ess_batterylife_state_full"],
         message_type=MetricKind.SENSOR,
         short_id="system_ess_batterylife_state_sensor",
         name="ESS BatteryLife state",
