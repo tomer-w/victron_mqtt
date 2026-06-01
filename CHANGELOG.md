@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.5.14 (2026-06-01)
+
+### Changes
+
+- Fixing battery_last_discharge units as well and aligning mppt_id moniker
+- Remove dead test requirements file update from HA core workflow (#97)
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.5.13 (2026-05-31)
 
 ### Changes
