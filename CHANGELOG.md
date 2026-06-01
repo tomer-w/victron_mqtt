@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.5.15 (2026-06-01)
+
+### Changes
+
+- Revert "Fixing battery_last_discharge units as well and aligning mppt_id moniker"
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.5.14 (2026-06-01)
 
 ### Changes
