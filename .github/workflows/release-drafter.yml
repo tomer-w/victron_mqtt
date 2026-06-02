@@ -103,7 +103,8 @@ jobs:
             echo "found=false" >> $GITHUB_OUTPUT
           fi
 
-      - uses: release-drafter/release-drafter@v7
+      - id: release_drafter
+        uses: release-drafter/release-drafter@v7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -111,7 +112,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          DRAFT_TAG=$(gh release list --limit 50 --json isDraft,tagName -q '[.[] | select(.isDraft)] | .[0].tagName')
+          DRAFT_TAG="${{ steps.release_drafter.outputs.tag_name }}"
+
+          # Fallback for safety if action output is unavailable.
+          if [ -z "$DRAFT_TAG" ] || [ "$DRAFT_TAG" = "null" ]; then
+            DRAFT_TAG=$(gh api repos/${{ github.repository }}/releases --paginate --jq '[.[] | select(.draft == true)] | sort_by(.created_at) | last | .tag_name')
+          fi
+
           if [ -z "$DRAFT_TAG" ] || [ "$DRAFT_TAG" = "null" ]; then
             echo "No draft release found"
             exit 0
