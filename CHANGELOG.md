@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.6.1 (2026-06-02)
+
+### Changes
+
+- use LOW_BATTERY device class
+- skip Ah unit for translation file
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.6.0 (2026-06-01)
 
 **Full Changelog**: https://github.com/tomer-w/victron_mqtt/compare/v2026.5.15...v2026.6.0
