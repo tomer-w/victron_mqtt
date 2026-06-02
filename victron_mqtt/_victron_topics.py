@@ -1496,7 +1496,7 @@ topics: list[TopicDescriptor] = [
         name="Low battery alarm",
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
-        metric_type=MetricType.PROBLEM,
+        metric_type=MetricType.LOW_BATTERY,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/meteo/{device_id}/BatteryVoltage",
