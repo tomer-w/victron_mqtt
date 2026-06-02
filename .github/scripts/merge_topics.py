@@ -20,6 +20,9 @@ DEDUPE_STRINGS = True
 # INCLUDED_ENTITY_TYPES: set[str] | None = {"sensor", "binary_sensor", "select", "switch"}
 INCLUDED_ENTITY_TYPES: set[str] | None = None
 
+# Units that must be provided directly instead of via localization.
+SPECIAL_NATIVE_UNITS = {"%", "Ah"}
+
 
 def build_common_lookup(data: dict[str, Any], prefix: str = "") -> dict[str, list[str]]:
     """Build reverse lookup: value -> list of key paths from strings_common.json."""
@@ -141,7 +144,12 @@ def main():
         entity_entry = {} if is_main_topic else {"name": topic_name}
         has_device_class = topic_metric_type in DEVICE_CLASS_METRIC_TYPES
         is_dynamic_unit = topic_unit is not None and "{" in topic_unit
-        if topic_unit is not None and topic_unit != "%" and not has_device_class and not is_dynamic_unit:
+        if (
+            topic_unit is not None
+            and topic_unit not in SPECIAL_NATIVE_UNITS
+            and not has_device_class
+            and not is_dynamic_unit
+        ):
             entity_entry["unit_of_measurement"] = topic_unit
         if enum_name and enum_name in enum_lookup:
             entity_entry["state"] = dict(enum_lookup[enum_name])
