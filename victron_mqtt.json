@@ -7448,6 +7448,91 @@
       "sub_device_key": null
     },
     {
+      "topic": "N/{installation_id}/settings/{device_id}/Settings/Services/Bol",
+      "message_type": "MetricKind.SELECT",
+      "short_id": "system_dvcc_raw",
+      "name": "DVCC (raw)",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.ENUM",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.ENUM",
+      "precision": null,
+      "enum": "DVCCMode",
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "output_type": null,
+      "labels": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [],
+      "generic_name": "DVCC (raw)",
+      "is_formula": false,
+      "main_topic": false,
+      "hidden": true,
+      "sub_device_key": null
+    },
+    {
+      "topic": "$$func/system/dvcc_enabled:dvcc_enabled_set",
+      "message_type": "MetricKind.SWITCH",
+      "short_id": "system_dvcc",
+      "name": "DVCC",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.ENUM",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.ENUM",
+      "precision": null,
+      "enum": "GenericOnOff",
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "output_type": null,
+      "labels": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [
+        "system_dvcc_raw"
+      ],
+      "generic_name": "DVCC",
+      "is_formula": true,
+      "main_topic": false,
+      "hidden": false,
+      "sub_device_key": null
+    },
+    {
+      "topic": "$$func/system/dvcc_state",
+      "message_type": "MetricKind.SENSOR",
+      "short_id": "system_dvcc_state",
+      "name": "DVCC state",
+      "unit_of_measurement": null,
+      "metric_type": "MetricType.ENUM",
+      "metric_nature": "MetricNature.NONE",
+      "value_type": "ValueType.ENUM",
+      "precision": null,
+      "enum": "DVCCMode",
+      "min_max_range": "RangeType.STATIC",
+      "min": null,
+      "max": null,
+      "step": null,
+      "is_adjustable_suffix": null,
+      "output_type": null,
+      "labels": null,
+      "key_values": {},
+      "experimental": false,
+      "depends_on": [
+        "system_dvcc_raw"
+      ],
+      "generic_name": "DVCC state",
+      "is_formula": true,
+      "main_topic": false,
+      "hidden": false,
+      "sub_device_key": null
+    },
+    {
       "topic": "N/{installation_id}/settings/{device_id}/Settings/SystemSetup/AcInput1",
       "message_type": "MetricKind.SELECT",
       "short_id": "system_ac_input_1_type",
@@ -12203,6 +12288,31 @@
       ]
     },
     {
+      "name": "DVCCMode",
+      "EnumValues": [
+        {
+          "id": "off",
+          "name": "Off",
+          "value": 0
+        },
+        {
+          "id": "on",
+          "name": "On",
+          "value": 1
+        },
+        {
+          "id": "forced_off",
+          "name": "Forced off",
+          "value": 2
+        },
+        {
+          "id": "forced_on",
+          "name": "Forced on",
+          "value": 3
+        }
+      ]
+    },
+    {
       "name": "DeviceType",
       "EnumValues": [
         {
@@ -12304,6 +12414,11 @@
           "id": "system_setup",
           "name": "System setup",
           "value": "SystemSetup"
+        },
+        {
+          "id": "services",
+          "name": "<Not used>",
+          "value": "Services"
         },
         {
           "id": "transfer_switch",

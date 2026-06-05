@@ -11,7 +11,7 @@ from paho.mqtt.client import Client, ConnectFlags, PayloadType
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.reasoncodes import ReasonCode
 
-from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, GenericOnOff
+from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, DVCCMode, GenericOnOff
 from victron_mqtt._victron_formulas import (
     left_riemann_sum,
     schedule_charge_enabled,
@@ -2912,3 +2912,89 @@ async def test_state_read_only_toggle_becomes_binary_sensor():
     assert metric is not None
     assert not isinstance(metric, WritableMetric), "In READ_ONLY mode the metric should NOT be a WritableMetric"
     assert metric.metric_kind == MetricKind.BINARY_SENSOR
+
+
+@pytest.mark.asyncio
+async def test_dvcc_bol_creates_switch_and_sensor():
+    """Settings/Services/Bol should create a writable SWITCH and a read-only SENSOR via formula metrics."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/settings/0/Settings/Services/Bol", '{"value": 1}')
+    await finalize_injection(hub)
+
+    device = next(iter(hub.devices.values()))
+
+    # SWITCH metric (writable, GenericOnOff via formula)
+    switch_metric = device.get_metric("system_dvcc")
+    assert switch_metric is not None, "SWITCH metric system_dvcc should exist"
+    assert isinstance(switch_metric, WritableMetric), "system_dvcc should be writable"
+    assert switch_metric.metric_kind == MetricKind.SWITCH
+    assert switch_metric.value == GenericOnOff.ON
+
+    # SENSOR metric (read-only, DVCCMode via formula)
+    sensor_metric = device.get_metric("system_dvcc_state")
+    assert sensor_metric is not None, "SENSOR metric system_dvcc_state should exist"
+    assert not isinstance(sensor_metric, WritableMetric), "system_dvcc_state should be read-only"
+    assert sensor_metric.metric_kind == MetricKind.SENSOR
+    assert sensor_metric.value == DVCCMode.ON
+
+
+@pytest.mark.asyncio
+async def test_dvcc_bol_forced_on():
+    """When DVCC is forced on (value=3), SWITCH shows ON and SENSOR shows FORCED_ON."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/settings/0/Settings/Services/Bol", '{"value": 3}')
+    await finalize_injection(hub)
+
+    device = next(iter(hub.devices.values()))
+
+    # SWITCH should show ON (bit 0 is set)
+    switch_metric = device.get_metric("system_dvcc")
+    assert switch_metric is not None
+    assert switch_metric.value == GenericOnOff.ON
+
+    # SENSOR should show FORCED_ON
+    sensor_metric = device.get_metric("system_dvcc_state")
+    assert sensor_metric is not None
+    assert sensor_metric.value == DVCCMode.FORCED_ON
+
+
+@pytest.mark.asyncio
+async def test_dvcc_bol_forced_off():
+    """When DVCC is forced off (value=2), SWITCH shows OFF and SENSOR shows FORCED_OFF."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/settings/0/Settings/Services/Bol", '{"value": 2}')
+    await finalize_injection(hub)
+
+    device = next(iter(hub.devices.values()))
+
+    # SWITCH should show OFF (bit 0 is not set)
+    switch_metric = device.get_metric("system_dvcc")
+    assert switch_metric is not None
+    assert switch_metric.value == GenericOnOff.OFF
+
+    # SENSOR should show FORCED_OFF
+    sensor_metric = device.get_metric("system_dvcc_state")
+    assert sensor_metric is not None
+    assert sensor_metric.value == DVCCMode.FORCED_OFF
+
+
+@pytest.mark.asyncio
+async def test_dvcc_bol_off():
+    """When DVCC is off (value=0), both SWITCH and SENSOR show OFF."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/settings/0/Settings/Services/Bol", '{"value": 0}')
+    await finalize_injection(hub)
+
+    device = next(iter(hub.devices.values()))
+
+    switch_metric = device.get_metric("system_dvcc")
+    assert switch_metric is not None
+    assert switch_metric.value == GenericOnOff.OFF
+
+    sensor_metric = device.get_metric("system_dvcc_state")
+    assert sensor_metric is not None
+    assert sensor_metric.value == DVCCMode.OFF

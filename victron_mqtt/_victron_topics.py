@@ -18,6 +18,7 @@ from ._victron_enums import (
     DigitalInputInputState,
     DigitalInputState,
     DigitalInputType,
+    DVCCMode,
     ErrorCode,
     ESSMode,
     ESSModeHub4,
@@ -2343,6 +2344,36 @@ topics: list[TopicDescriptor] = [
         short_id="system_relay_{relay}_custom_name",
         name="Relay {relay} custom name",
         value_type=ValueType.STRING,
+    ),
+    # DVCC (Distributed Voltage and Current Control)
+    # Hidden SELECT receives the raw Settings/Services/Bol value (0-3).
+    # Two formula metrics expose it as a writable SWITCH (on/off) and a read-only SENSOR (all 4 states).
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/Services/Bol",
+        message_type=MetricKind.SELECT,
+        short_id="system_dvcc_raw",
+        name="DVCC (raw)",
+        value_type=ValueType.ENUM,
+        enum=DVCCMode,
+        hidden=True,
+    ),
+    TopicDescriptor(
+        topic="$$func/system/dvcc_enabled:dvcc_enabled_set",
+        depends_on=["system_dvcc_raw"],
+        message_type=MetricKind.SWITCH,
+        short_id="system_dvcc",
+        name="DVCC",
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    TopicDescriptor(
+        topic="$$func/system/dvcc_state",
+        depends_on=["system_dvcc_raw"],
+        message_type=MetricKind.SENSOR,
+        short_id="system_dvcc_state",
+        name="DVCC state",
+        value_type=ValueType.ENUM,
+        enum=DVCCMode,
     ),
     # System Setup topics
     TopicDescriptor(
