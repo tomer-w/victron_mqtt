@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.6.1.1 (2026-06-06)
+
+Hotfix: Fix dimmable SwitchableOutput State resolving as NUMBER instead of SWITCH (#173105)
+
+
 ## 2026.6.0 (2026-06-01)
 
 **Full Changelog**: https://github.com/tomer-w/victron_mqtt/compare/v2026.5.15...v2026.6.0
