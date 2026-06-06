@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026.6.2 (2026-06-06)
+
+### Changes
+
+- Fix dimmable SwitchableOutput State resolving as NUMBER instead of SWITCH (#173105)
+- Add missing battery alarms (#98)
+- Add DVCC control via Settings/Services/Bol (#408)
+- Fix internal debouncing to skip bool metrics
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.6.1 (2026-06-02)
 
 ### Changes
