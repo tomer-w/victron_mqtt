@@ -2794,20 +2794,28 @@ async def test_state_type_dropdown_becomes_select():
 
 
 @pytest.mark.asyncio
-async def test_state_type_dimmable_becomes_number():
-    """When Settings/Type is 2 (dimmable), State metric_kind should be NUMBER."""
+async def test_dimmable_output_state_switch_and_dimming_number():
+    """Dimmable output should have State as SWITCH and Dimming as NUMBER on the same device."""
     hub: Hub = await create_mocked_hub()
 
     await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/Settings/Type", '{"value": 2}')
     await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/State", '{"value": 1}')
+    await inject_message(hub, "N/123/switch/170/SwitchableOutput/0/Dimming", '{"value": 52}')
     await finalize_injection(hub)
 
     device = hub.devices["switch_170_output_0"]
-    metric = device.get_metric("switch_0_state")
 
-    assert metric is not None
-    assert isinstance(metric, WritableMetric)
-    assert metric.metric_kind == MetricKind.NUMBER
+    state_metric = device.get_metric("switch_0_state")
+    assert state_metric is not None
+    assert isinstance(state_metric, WritableMetric)
+    assert state_metric.metric_kind == MetricKind.SWITCH
+    assert state_metric.value == GenericOnOff.ON
+
+    dimming_metric = device.get_metric("switch_0_dimming")
+    assert dimming_metric is not None
+    assert isinstance(dimming_metric, WritableMetric)
+    assert dimming_metric.metric_kind == MetricKind.NUMBER
+    assert dimming_metric.value == 52.0
 
 
 @pytest.mark.asyncio
