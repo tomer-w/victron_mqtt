@@ -9,7 +9,7 @@ To add new metrics, you first need to discover the MQTT topics published by your
 ### Using MQTT Explorer
 
 1. Download [MQTT Explorer](https://mqtt-explorer.com/) (Windows, macOS, Linux)
-2. Connect to your Venus OS device (usually `venus.local:1883`)
+2. Connect to your Venus OS device using its **IP address** and port `1883` (e.g., `192.168.1.100:1883`). Using `venus.local` may not work on all networks.
 3. Expand the `N` node to see all topics
 4. Click on topics to see their values and history
 

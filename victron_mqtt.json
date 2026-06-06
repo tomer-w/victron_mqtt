@@ -8627,7 +8627,7 @@
       "metric_type": "MetricType.ENERGY",
       "metric_nature": "MetricNature.TOTAL",
       "value_type": "ValueType.FLOAT",
-      "precision": 1,
+      "precision": 2,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
       "min": null,

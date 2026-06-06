@@ -2705,6 +2705,7 @@ topics: list[TopicDescriptor] = [
         short_id="solarcharger_yield_total",
         name="Total yield",
         metric_type=MetricType.ENERGY,
+        precision=2,
     ),
     # Switch topics based on SwitchableOutput
     TopicDescriptor(
