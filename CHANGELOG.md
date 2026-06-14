@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.6.3 (2026-06-06)
+
+### Changes
+
+- Rename multi AC Input sensors to distinguish from AC Output (#423)
+- Set precision=2 on solarcharger total yield and clarify MQTT Explorer docs (#431)
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.6.2 (2026-06-06)
 
 ### Changes
