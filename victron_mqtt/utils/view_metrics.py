@@ -55,6 +55,7 @@ DEVICE_TYPE_ICONS = {
     "tank": "🪣",
     "temperature": "🌡️",
     "evcharger": "🚗",
+    "ev": "🔋🚗",
 }
 
 
