@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.6.4 (2026-06-14)
+
+### Changes
+
+- Adding support for the new EV device type: https://github.com/tomer-w/ha-victron-mqtt/issues/430
+- Add missing battery alerts: https://github.com/tomer-w/victron_mqtt/issues/98
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.6.3 (2026-06-06)
 
 ### Changes
