@@ -1476,8 +1476,6 @@ topics: list[TopicDescriptor] = [
         short_id="grid_power_factor",
         name="Power factor",
         metric_type=MetricType.POWER_FACTOR,
-        value_type=ValueType.FLOAT,
-        precision=3,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/grid/{device_id}/Ac/Voltage",
@@ -1520,8 +1518,6 @@ topics: list[TopicDescriptor] = [
         short_id="grid_power_factor_{phase}",
         name="Power factor on {phase}",
         metric_type=MetricType.POWER_FACTOR,
-        value_type=ValueType.FLOAT,
-        precision=3,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/grid/{device_id}/Ac/{phase}/Voltage",
