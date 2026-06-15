@@ -3767,7 +3767,7 @@
       "message_type": "MetricKind.SENSOR",
       "short_id": "evcharger_session_cost",
       "name": "Last session cost",
-      "unit_of_measurement": "$",
+      "unit_of_measurement": null,
       "metric_type": "MetricType.COST",
       "metric_nature": "MetricNature.MEASUREMENT",
       "value_type": "ValueType.FLOAT",

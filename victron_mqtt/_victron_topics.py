@@ -1213,7 +1213,6 @@ topics: list[TopicDescriptor] = [
         short_id="evcharger_session_cost",
         name="Last session cost",
         metric_type=MetricType.COST,
-        unit_of_measurement="$",
     ),
     TopicDescriptor(
         topic="N/{installation_id}/evcharger/{device_id}/Session/Energy",
