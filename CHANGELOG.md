@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.6.5 (2026-06-15)
+
+### Changes
+
+- Remove hardcoded dollar sign from session cost (#173718)
+- Fix grid power factor not graphable in HA (#435)
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.6.4 (2026-06-14)
 
 ### Changes
