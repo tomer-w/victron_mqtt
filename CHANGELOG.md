@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.6.6 (2026-06-17)
+
+### Changes
+
+- Add battery AllowToCharge/AllowToDischarge binary sensors (#99)
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.6.5 (2026-06-15)
 
 ### Changes
