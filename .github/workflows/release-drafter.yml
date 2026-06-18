@@ -47,7 +47,11 @@ jobs:
           if [ -z "$prev_tag" ]; then
             prev_tag=$(git rev-list --max-parents=0 HEAD)
           fi
-          COMMITS=$(git log "$prev_tag"..HEAD --pretty=format:"- %s" | head -20)
+          COMMITS=$(
+            git log "$prev_tag"..HEAD --pretty=format:"- %s" \
+              | grep -Ev '^- chore: bump version to .+ \[skip ci\]$' \
+              | head -20 || true
+          )
           echo "COMMITS<<EOF" >> $GITHUB_ENV
           echo "$COMMITS" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
