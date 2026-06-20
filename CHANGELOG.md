@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.6.7 (2026-06-20)
+
+### Changes
+
+- Add timestamp metric type
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.6.6 (2026-06-17)
 
 ### Changes
