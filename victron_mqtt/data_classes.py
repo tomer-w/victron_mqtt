@@ -85,6 +85,7 @@ class TopicDescriptor:
     is_formula: bool = False  # True if this topic is calculated from other topics
     main_topic: bool = False  # True if this topic is the main topic for the dvice. Not all devices has to have main entity, but if it has, it should be the one with main_topic = True.
     hidden: bool = False  # When True, the metric is excluded from on_new_metric callbacks
+    disabled_by_default: bool = False  # When True, entity is created but disabled in HA by default
     sub_device_key: str | None = (
         None  # When set, topics with this field create a separate sub-device per unique placeholder value (e.g., "output" creates sub-devices per output ID)
     )
