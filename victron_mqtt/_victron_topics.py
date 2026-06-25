@@ -2044,6 +2044,7 @@ topics: list[TopicDescriptor] = [
         short_id="multi_mppt_{mppt_id}_yield_today",
         name="MPPT {mppt_id} yield today",
         metric_type=MetricType.ENERGY,
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/History/Daily/0/Yield",
@@ -2065,6 +2066,7 @@ topics: list[TopicDescriptor] = [
         short_id="multi_mppt_{mppt_id}_yield_yesterday",
         name="MPPT {mppt_id} yield yesterday",
         metric_type=MetricType.ENERGY,
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/History/Daily/1/Yield",
@@ -2081,6 +2083,7 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=MppOperationMode,
         main_topic=True,
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Pv/{mpptnumber}/P",
@@ -2088,6 +2091,7 @@ topics: list[TopicDescriptor] = [
         short_id="multi_mppt_{mpptnumber}_power",
         name="MPPT {mpptnumber} power",
         metric_type=MetricType.POWER,
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Pv/{mpptnumber}/V",
@@ -2095,6 +2099,7 @@ topics: list[TopicDescriptor] = [
         short_id="multi_mppt_{mpptnumber}_voltage",
         name="MPPT {mpptnumber} PV voltage",
         metric_type=MetricType.VOLTAGE,
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="$$func/multi/pv_current",
@@ -2104,6 +2109,7 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.CURRENT,
         precision=2,
         depends_on=["multi_mppt_{mpptnumber}_power", "multi_mppt_{mpptnumber}_voltage"],
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Relay/0/State",
@@ -2777,6 +2783,7 @@ topics: list[TopicDescriptor] = [
         short_id="solarcharger_tracker_{tracker}_max_power_today",
         name="Tracker {tracker:solarcharger_tracker_{tracker}_name} max power today",
         metric_type=MetricType.POWER,
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/Pv/{tracker}/MaxVoltage",
@@ -2784,6 +2791,7 @@ topics: list[TopicDescriptor] = [
         short_id="solarcharger_tracker_{tracker}_max_voltage_today",
         name="Tracker {tracker:solarcharger_tracker_{tracker}_name} max voltage today",
         metric_type=MetricType.VOLTAGE,
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/Pv/{tracker}/Yield",
@@ -2791,6 +2799,7 @@ topics: list[TopicDescriptor] = [
         short_id="solarcharger_tracker_{tracker}_yield_today",
         name="Tracker {tracker:solarcharger_tracker_{tracker}_name} yield today",
         metric_type=MetricType.ENERGY,
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/TimeInAbsorption",
@@ -2888,6 +2897,7 @@ topics: list[TopicDescriptor] = [
         name="PV tracker {tracker:solarcharger_tracker_{tracker}_name} operation mode",
         value_type=ValueType.ENUM,
         enum=MppOperationMode,
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/Pv/{tracker}/Name",
@@ -2895,6 +2905,7 @@ topics: list[TopicDescriptor] = [
         short_id="solarcharger_tracker_{tracker}_name",
         name="PV tracker {tracker} name",
         value_type=ValueType.STRING,
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/Pv/{tracker}/P",
@@ -2902,6 +2913,7 @@ topics: list[TopicDescriptor] = [
         short_id="solarcharger_tracker_{tracker}_power",
         name="PV tracker {tracker:solarcharger_tracker_{tracker}_name} power",
         metric_type=MetricType.POWER,
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/Pv/{tracker}/V",
@@ -2909,6 +2921,7 @@ topics: list[TopicDescriptor] = [
         short_id="solarcharger_tracker_{tracker}_voltage",
         name="PV tracker {tracker:solarcharger_tracker_{tracker}_name} voltage",
         metric_type=MetricType.VOLTAGE,
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="$$func/solarcharger/pv_current",
@@ -2918,6 +2931,7 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.CURRENT,
         precision=2,
         depends_on=["solarcharger_tracker_{tracker}_power", "solarcharger_tracker_{tracker}_voltage"],
+        disabled_by_default=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/Relay/0/State",
