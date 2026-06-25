@@ -457,6 +457,22 @@ class ParsedTopic:
         return self._unique_id
 
     @property
+    def display_id(self) -> str:
+        """Get a de-duplicated id for use as the HA entity_id default.
+
+        When the short_id starts with the device type prefix (e.g. ``solarcharger_`` in
+        ``solarcharger_3_solarcharger_total_pv_yield``), that prefix is stripped so the
+        resulting entity_id reads ``solarcharger_3_total_pv_yield`` instead of repeating
+        the device type.  The ``unique_id`` (registry identity) is never touched.
+        """
+        assert self._short_id is not None, f"short_id is None for topic: {self.full_topic}"
+        device_prefix = f"{self.device_type.code}_"
+        short = self._short_id
+        if short.startswith(device_prefix):
+            short = short[len(device_prefix):]
+        return ParsedTopic.make_unique_id(self.get_device_unique_id(), short)
+
+    @property
     def key_values(self) -> dict[str, str]:
         """Get the key values of the ParsedTopic."""
         assert self._key_values is not None, f"key_values is None for topic: {self.full_topic}"
