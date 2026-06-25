@@ -193,6 +193,11 @@ class Metric:
         return self._descriptor.main_topic
 
     @property
+    def disabled_by_default(self) -> bool:
+        """Returns whether the entity should be disabled by default in HA."""
+        return self._descriptor.disabled_by_default
+
+    @property
     def unique_id(self) -> str:
         """Return the unique id of the metric."""
         return self._unique_id
