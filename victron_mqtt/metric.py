@@ -201,11 +201,12 @@ class Metric:
 
     @property
     def display_id(self) -> str:
-        """Return a de-duplicated id for use as the HA entity_id default.
+        """Return the display identifier with the device-type prefix de-duplicated.
 
-        Identical to unique_id except that a repeated device-type prefix in the
-        short_id is stripped (e.g. ``solarcharger_3_solarcharger_foo`` becomes
-        ``solarcharger_3_foo``).  The unique_id is never changed.
+        Equal to ``unique_id`` for most metrics.  Where ``short_id`` starts with
+        the device-type prefix, the redundant copy is stripped, giving a cleaner
+        identifier.  See :attr:`ParsedTopic.display_id` for details.
+        The ``unique_id`` is never modified.
         """
         return self._display_id
 
