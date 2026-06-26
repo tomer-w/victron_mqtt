@@ -42,6 +42,7 @@ from ._victron_enums import (
     SwitchableOutputType,
     TemperatureStatus,
     TemperatureType,
+    VrmPortalMode,
 )
 from .constants import MetricKind, MetricNature, MetricType, RangeType, ValueType
 from .data_classes import TopicDependency, TopicDescriptor
@@ -2640,6 +2641,15 @@ topics: list[TopicDescriptor] = [
         max=1800,
         depends_on=["generator_{gen_id}_generator_autorun"],
     ),
+    # Network settings
+    TopicDescriptor(
+        topic="N/{installation_id}/settings/{device_id}/Settings/Network/VrmPortal",
+        message_type=MetricKind.SELECT,
+        short_id="system_vrm_portal_mode",
+        name="VRM portal access level",
+        value_type=ValueType.ENUM,
+        enum=VrmPortalMode,
+    ),
     # Relay Custom Name topics
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/Relay/{relay}/CustomName",
@@ -2660,6 +2670,7 @@ topics: list[TopicDescriptor] = [
         enum=DVCCMode,
         hidden=True,
     ),
+
     TopicDescriptor(
         topic="$$func/system/dvcc_enabled:dvcc_enabled_set",
         depends_on=["system_dvcc_raw"],
