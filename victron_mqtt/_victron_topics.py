@@ -2001,12 +2001,10 @@ topics: list[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ess/AcPowerSetpoint",
-        message_type=MetricKind.NUMBER,
+        message_type=MetricKind.SENSOR,
         short_id="multi_ess_ac_power_setpoint",
         name="ESS AC power setpoint",
         metric_type=MetricType.POWER,
-        min=-12500,
-        max=12500,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ess/DisableCharge",
@@ -3932,5 +3930,14 @@ topics: list[TopicDescriptor] = [
         name="Generator service counter reset",
         unit_of_measurement="resets",
         value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
+        topic="W/{installation_id}/multi/{device_id}/Ess/AcPowerSetpoint",
+        message_type=MetricKind.SERVICE,
+        short_id="multi_service_ess_ac_power_setpoint",
+        name="Set ESS AC power setpoint",
+        metric_type=MetricType.POWER,
+        min=-12500,
+        max=12500,
     ),
 ]
