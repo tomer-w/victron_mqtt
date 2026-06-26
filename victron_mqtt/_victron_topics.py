@@ -2670,7 +2670,6 @@ topics: list[TopicDescriptor] = [
         enum=DVCCMode,
         hidden=True,
     ),
-
     TopicDescriptor(
         topic="$$func/system/dvcc_enabled:dvcc_enabled_set",
         depends_on=["system_dvcc_raw"],
