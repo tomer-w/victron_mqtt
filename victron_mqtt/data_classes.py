@@ -458,12 +458,17 @@ class ParsedTopic:
 
     @property
     def display_id(self) -> str:
-        """Get a de-duplicated id for use as the HA entity_id default.
+        """Get a display identifier with the device-type prefix de-duplicated.
 
-        When the short_id starts with the device type prefix (e.g. ``solarcharger_`` in
-        ``solarcharger_3_solarcharger_total_pv_yield``), that prefix is stripped so the
-        resulting entity_id reads ``solarcharger_3_total_pv_yield`` instead of repeating
-        the device type.  The ``unique_id`` (registry identity) is never touched.
+        The ``unique_id`` has a known formatting quirk: when ``short_id`` already
+        starts with the device-type prefix (e.g. ``solarcharger_total_pv_yield``
+        under device ``solarcharger_3``), the resulting id contains the prefix
+        twice — ``solarcharger_3_solarcharger_total_pv_yield``.  ``display_id``
+        strips the redundant leading prefix, yielding ``solarcharger_3_total_pv_yield``.
+
+        ``unique_id`` is intentionally left unchanged for backward compatibility
+        with existing consumers.  ``display_id`` is provided for new consumers
+        that can adopt the cleaner form going forward.
         """
         assert self._short_id is not None, f"short_id is None for topic: {self.full_topic}"
         device_prefix = f"{self.device_type.code}_"
