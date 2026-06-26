@@ -1,5 +1,5 @@
 """
-Maps all the MQTT topics to either attributes or metrics.
+Defines the TopicDescriptor mappings for Victron MQTT topics and derived formula topics.
 """
 
 from ._victron_enums import (
