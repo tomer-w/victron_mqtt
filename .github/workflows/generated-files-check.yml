@@ -1,0 +1,101 @@
+name: Generated Files Check
+
+# Verifies that committed generated artifacts are up to date and that every
+# user-facing entity descriptor has a name. The dump is normally produced by the
+# `dump-victron-mqtt` pre-commit hook; contributors without the hook installed
+# would otherwise ship a stale victron_mqtt.json (see PR #102 discussion).
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, reopened, synchronize]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generated-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install library
+        run: pip install -e .
+
+      - name: Regenerate victron_mqtt.json
+        run: python -m victron_mqtt.utils.dump_victron_mqtt victron_mqtt.json
+
+      - name: Fail if victron_mqtt.json is out of date
+        run: |
+          if ! git diff --quiet victron_mqtt.json; then
+            echo "::error file=victron_mqtt.json::victron_mqtt.json is out of date. Run the 'dump-victron-mqtt' pre-commit hook (or: python -m victron_mqtt.utils.dump_victron_mqtt victron_mqtt.json) and commit the result."
+            git --no-pager diff victron_mqtt.json
+            exit 1
+          fi
+          echo "victron_mqtt.json is up to date."
+
+      - name: Every entity descriptor must have a name
+        run: |
+          python - <<'PY'
+          import sys
+          from victron_mqtt._victron_topics import topics
+
+          def is_attribute(t):
+              return "ATTRIBUTE" in str(getattr(t, "message_type", ""))
+
+          missing = [
+              getattr(t, "short_id", None) or getattr(t, "topic", "?")
+              for t in topics
+              if getattr(t, "name", None) in (None, "")
+              and not bool(getattr(t, "hidden", False))
+              and not is_attribute(t)
+          ]
+          if missing:
+              print("::error::Entity descriptors without a name — HA would show only the "
+                    "device name (no entity-name suffix). Add a name= to each:")
+              for short_id in missing:
+                  print(f"  - {short_id}")
+              sys.exit(1)
+          print(f"OK - checked {len(topics)} descriptors; "
+                "every non-hidden, non-attribute entity has a name.")
+          PY
+
+      - name: Descriptor field sanity
+        run: |
+          python - <<'PY'
+          import sys
+          from victron_mqtt._victron_topics import topics
+
+          def kind(t):
+              return str(getattr(t, "message_type", "")).split(".")[-1]
+
+          def has(t, attr):
+              return getattr(t, attr, None) not in (None, "", [], {})
+
+          ENUM_KINDS = {"SWITCH", "SELECT", "BINARY_SENSOR"}
+          errors = []
+          for t in topics:
+              short_id = getattr(t, "short_id", None) or getattr(t, "topic", "?")
+              k = kind(t)
+              if not has(t, "metric_type"):
+                  errors.append(f"{short_id} ({k}): no metric_type - set metric_type=MetricType.<...>")
+              if k in ENUM_KINDS and not has(t, "enum"):
+                  errors.append(f"{short_id} ({k}): no enum - a {k} needs enum=<EnumClass> "
+                                "(e.g. GenericOnOff for a plain on/off control)")
+          if errors:
+              print("::error::Descriptor field problems - fix each before merging:")
+              for e in errors:
+                  print(f"  - {e}")
+              sys.exit(1)
+          print(f"OK - {len(topics)} descriptors: all have metric_type, "
+                "every SWITCH/SELECT/BINARY_SENSOR has an enum.")
+          PY
