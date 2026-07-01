@@ -2744,6 +2744,13 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.CURRENT,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/solarcharger/{device_id}/Dc/0/Temperature",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_temperature",
+        name="Temperature",
+        metric_type=MetricType.TEMPERATURE,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/Dc/0/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_dc_voltage",
@@ -2975,6 +2982,14 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.CURRENT,
         precision=2,
         depends_on=["solarcharger_yield_power", "solarcharger_voltage"],
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/solarcharger/{device_id}/Yield/System",
+        message_type=MetricKind.SENSOR,
+        short_id="solarcharger_total_pv_yield_system",
+        name="Total PV yield system",
+        metric_type=MetricType.ENERGY,
+        precision=2,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/Yield/User",
