@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026.6.8 (2026-06-27)
+
+### Changes
+
+- feat: add display\_id to decouple entity\_id default from unique\_id @pos-ei-don (#106)
+- Add writable ESS / Hub4 switches @pos-ei-don (#102)
+- Serialize integer settings as int, not float @pos-ei-don (#101)
+- feat: Add VRM portal access level settings support
+- Create a service for W/{installation_id}/multi/{device_id}/Ess/AcPowerSetpoint:
+
+### Contributors
+
+@pos-ei-don, @tomer-w
+
+
+## 2026.6.7 (2026-06-20)
+
+### Changes
+
+- Add timestamp metric type
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.6.6 (2026-06-17)
 
 ### Changes

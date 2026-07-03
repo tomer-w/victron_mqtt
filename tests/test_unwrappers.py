@@ -402,3 +402,14 @@ class TestVictronEnumFunctions:
         assert GenericOnOff.from_id_or_string("On") is GenericOnOff.ON
         with pytest.raises(ValueError, match="No enum member found with id or string=does-not-exist"):
             GenericOnOff.from_id_or_string("does-not-exist")
+
+
+def test_wrap_int_coerces_float_to_int():
+    """wrap_int* must serialize integers, even when given a float (HA NumberEntity passes float)."""
+    assert wrap_int(10.0) == '{"value": 10}'
+    assert wrap_int(11) == '{"value": 11}'
+    assert wrap_int(None) == '{"value": null}'
+    assert wrap_int_default_0(3.0) == '{"value": 3}'
+    assert wrap_int_default_0(None) == '{"value": 0}'
+    assert wrap_int_hours_to_seconds(2.0) == '{"value": 7200}'
+    assert wrap_int_minutes_to_seconds(5.0) == '{"value": 300}'
