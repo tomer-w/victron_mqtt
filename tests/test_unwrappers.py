@@ -12,6 +12,7 @@ from victron_mqtt._unwrappers import (
     unwrap_bool,
     unwrap_enum,
     unwrap_epoch,
+    unwrap_epoch_default_na,
     unwrap_float,
     unwrap_float_m3_to_liters,
     unwrap_int,
@@ -94,6 +95,15 @@ def test_unwrap_enum_and_epoch():
     res_dt = unwrap_epoch(json.dumps({"value": ts}))
     assert isinstance(res_dt, datetime)
     assert res_dt == dt
+
+    # epoch default zero
+    ts = 1609459200  # 2021-01-01 00:00:00 UTC
+    dt = datetime.fromtimestamp(ts, tz=UTC)
+    res_dt = unwrap_epoch_default_na(json.dumps({"value": ts}))
+    assert isinstance(res_dt, datetime)
+    assert res_dt == dt
+    res_dt = unwrap_epoch_default_na(json.dumps({"value": None}))
+    assert res_dt == "N/A"
 
 
 def test_unwrap_bitmask():

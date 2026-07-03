@@ -1033,10 +1033,14 @@ topics: list[TopicDescriptor] = [
     ),
     TopicDescriptor(
         topic="N/{installation_id}/ev/{device_id}/ChargingStarted",
+        depends_on=[
+            "ev_charging_state"
+        ],  # This is just so this topic will not show up with the default value if there is no EV charger at all
         message_type=MetricKind.SENSOR,
         short_id="ev_charging_started",
         name="Charging started",
         metric_type=MetricType.TIMESTAMP,
+        value_type=ValueType.EPOCH_DEFAULT_NA,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/ev/{device_id}/ChargingState",

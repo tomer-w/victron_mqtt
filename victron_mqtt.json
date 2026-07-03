@@ -3173,7 +3173,7 @@
       "unit_of_measurement": null,
       "metric_type": "MetricType.TIMESTAMP",
       "metric_nature": "MetricNature.NONE",
-      "value_type": "ValueType.EPOCH",
+      "value_type": "ValueType.EPOCH_DEFAULT_NA",
       "precision": null,
       "enum": null,
       "min_max_range": "RangeType.STATIC",
@@ -3185,7 +3185,9 @@
       "labels": null,
       "key_values": {},
       "experimental": false,
-      "depends_on": [],
+      "depends_on": [
+        "ev_charging_state"
+      ],
       "generic_name": "Charging started",
       "is_formula": false,
       "main_topic": false,
