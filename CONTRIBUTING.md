@@ -10,8 +10,9 @@ To add new metrics, you first need to discover the MQTT topics published by your
 
 1. Download [MQTT Explorer](https://mqtt-explorer.com/) (Windows, macOS, Linux)
 2. Connect to your Venus OS device using its **IP address** and port `1883` (e.g., `192.168.1.100:1883`). Using `venus.local` may not work on all networks.
-3. Expand the `N` node to see all topics
-4. Click on topics to see their values and history
+3. Publish empty payload to `R/{your installation id}/keepalive`. This will push the GX device to publish all supported topics.
+4. Expand the `N` node to see all topics.
+5. Click on topics to see their values and history.
 
 **Tip:** Change a value on your Victron dashboard (e.g., turn a load on/off) and watch for updates in MQTT Explorer to identify which topic corresponds to which value.
 
