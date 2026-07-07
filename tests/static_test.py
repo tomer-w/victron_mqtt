@@ -2,6 +2,7 @@
 
 import ast
 import inspect
+import re
 from pathlib import Path
 
 import pytest
@@ -826,6 +827,70 @@ def test_formula_functions_reference_valid_dependencies():
 
     if errors:
         pytest.fail(f"Found {len(errors)} formula dependency mismatches:\n" + "\n".join(errors))
+
+
+def _simplify_placeholder_constraints(value: str) -> str:
+    """Convert constrained placeholders like {gen_id(0-1)} to {gen_id}."""
+    return re.sub(r"\{([a-z_][a-z0-9_]*)(?:\([^{}]+\))?\}", r"{\1}", value)
+
+
+def _normalize_dependency_shape(value: str) -> str:
+    """Normalize placeholders so equivalent dependency templates compare equal."""
+    simplified = _simplify_placeholder_constraints(value)
+    return re.sub(r"\{[a-z_][a-z0-9_]*\}", "{}", simplified)
+
+
+def _regular_metric_unique_id_template(descriptor) -> str | None:
+    """Build the generic unique-id template for a regular topic descriptor."""
+    from victron_mqtt.data_classes import topic_to_device_type
+
+    if descriptor.topic.startswith("$$func"):
+        return None
+
+    topic_parts = descriptor.topic.split("/")
+    if len(topic_parts) == 3 and topic_parts[2] == "heartbeat":
+        return f"system_0_{descriptor.short_id}"
+
+    if len(topic_parts) < 4:
+        return None
+
+    device_type = topic_to_device_type(topic_parts)
+    if device_type is None:
+        return None
+
+    device_id_template = topic_parts[3]
+    return f"{device_type.code}_{_simplify_placeholder_constraints(device_id_template)}_{descriptor.short_id}"
+
+
+def test_regular_depends_on_reference_valid_metric_templates():
+    """Ensure regular-topic depends_on entries target a valid metric unique-id template shape."""
+    topics = get_topics()
+    MetricKind = get_metric_kind()
+
+    valid_templates = {
+        _normalize_dependency_shape(template)
+        for descriptor in topics
+        if descriptor.message_type != MetricKind.ATTRIBUTE
+        for template in [_regular_metric_unique_id_template(descriptor)]
+        if template is not None
+    }
+
+    errors = []
+    for descriptor in topics:
+        if descriptor.is_formula or not descriptor.depends_on:
+            continue
+
+        for dep in descriptor.depends_on:
+            dep_id = dep.short_id if hasattr(dep, "short_id") else str(dep)
+            normalized_dep = _normalize_dependency_shape(dep_id)
+            if normalized_dep not in valid_templates:
+                errors.append(
+                    f"Regular topic '{descriptor.topic}' has depends_on '{dep_id}' which does not match any "
+                    f"valid metric unique-id template"
+                )
+
+    if errors:
+        pytest.fail(f"Found {len(errors)} invalid regular depends_on entries:\n" + "\n".join(errors))
 
 
 def test_no_absolute_self_imports():

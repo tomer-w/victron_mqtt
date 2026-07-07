@@ -3186,7 +3186,7 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [
-        "ev_charging_state"
+        "ev_{device_id}_ev_charging_state"
       ],
       "generic_name": "Charging started",
       "is_formula": false,

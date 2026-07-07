@@ -1771,6 +1771,27 @@ async def test_depends_on_regular_dont_exists():
 
 
 @pytest.mark.asyncio
+async def test_ev_charging_started_depends_on_charging_state_same_round():
+    """Test that EV ChargingStarted resolves when ChargingState is present in the same publish round."""
+    hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
+
+    await inject_message(hub, "N/123/ev/40/ChargingState", '{"value": 3}')
+    await inject_message(hub, "N/123/ev/40/ChargingStarted", '{"value": 1780575127}')
+    await finalize_injection(hub)
+
+    assert len(hub.devices) == 1, f"Expected 1 EV device, got {len(hub.devices)}"
+    device = hub.devices["ev_40"]
+
+    charging_state = device.get_metric("ev_charging_state")
+    assert charging_state is not None, "Charging state metric should exist"
+
+    charging_started = device.get_metric("ev_charging_started")
+    assert charging_started is not None, "Charging started metric should exist when ChargingState is present"
+
+    await hub_disconnect(hub)
+
+
+@pytest.mark.asyncio
 @patch("victron_mqtt.hub.time.monotonic")
 async def test_old_cerbo(mock_time: MagicMock) -> None:
     """Test that the Hub correctly updates its internal state based on MQTT messages."""

@@ -1035,7 +1035,7 @@ topics: list[TopicDescriptor] = [
     TopicDescriptor(
         topic="N/{installation_id}/ev/{device_id}/ChargingStarted",
         depends_on=[
-            "ev_charging_state"
+            "ev_{device_id}_ev_charging_state"
         ],  # This is just so this topic will not show up with the default value if there is no EV charger at all
         message_type=MetricKind.SENSOR,
         short_id="ev_charging_started",
