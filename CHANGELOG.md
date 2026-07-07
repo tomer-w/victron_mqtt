@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026.7.0 (2026-07-03)
+
+### Changes
+
+- Add solarcharger lifetime yield and temperature sensors @pos-ei-don (#108)
+- Add vebus DisableCharge: https://github.com/tomer-w/ha-victron-mqtt/issues/451
+- Fix blocking call issue: https://github.com/home-assistant/core/issues/175390
+- Improve ev_charging_started to show NA when charger is disconnected instead of losing the metric: https://github.com/tomer-w/ha-victron-mqtt/issues/430
+
+### Contributors
+
+@tomer-w, @pos-ei-don
+
+
 ## 2026.6.8 (2026-06-27)
 
 ### Changes
