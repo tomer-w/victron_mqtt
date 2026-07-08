@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.7.2 (2026-07-08)
+
+### Changes
+
+- Add BMS mode metric: https://github.com/tomer-w/ha-victron-mqtt/issues/455
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.7.1 (2026-07-07)
 
 ### Changes
