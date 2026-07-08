@@ -8,6 +8,7 @@ from ._victron_enums import (
     ACSystemMode,
     ActiveInputEnum,
     BatteryState,
+    BMSMode,
     ChargerMode,
     ChargeSchedule,
     DESSErrorCode,
@@ -624,6 +625,15 @@ topics: list[TopicDescriptor] = [
         name="Allow to discharge",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Mode",
+        message_type=MetricKind.SELECT,
+        short_id="battery_bms_mode",
+        name="BMS mode",
+        value_type=ValueType.ENUM,
+        enum=BMSMode,
+        main_topic=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Soc",
