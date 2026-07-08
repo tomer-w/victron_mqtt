@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.7.1 (2026-07-07)
+
+### Changes
+
+- revert: remove display\_id (added in #106, no longer needed) @pos-ei-don (#110)
+- Fix ChargingStarted dependecy and added tests: https://github.com/tomer-w/ha-victron-mqtt/issues/430
+
+### Contributors
+
+@tomer-w and @pos-ei-don
+
+
 ## 2026.7.0 (2026-07-03)
 
 ### Changes
