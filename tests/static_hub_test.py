@@ -2,6 +2,7 @@
 # pyright: reportPrivateUsage=false
 
 import asyncio
+import datetime
 import json
 import logging
 from unittest.mock import MagicMock, patch
@@ -1787,6 +1788,31 @@ async def test_ev_charging_started_depends_on_charging_state_same_round():
 
     charging_started = device.get_metric("ev_charging_started")
     assert charging_started is not None, "Charging started metric should exist when ChargingState is present"
+    assert charging_started.value == datetime.datetime(2026, 6, 4, 12, 12, 7, tzinfo=datetime.UTC), (
+        "Charging started metric should be 2026-06-04 12:12:07 UTC"
+    )
+
+    await hub_disconnect(hub)
+
+
+@pytest.mark.asyncio
+async def test_ev_charging_started_depends_on_charging_state_na():
+    """Test that EV ChargingStarted resolves when ChargingState is present in the same publish round."""
+    hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
+
+    await inject_message(hub, "N/123/ev/40/ChargingState", '{"value": 3}')
+    await inject_message(hub, "N/123/ev/40/ChargingStarted", '{"value": null}')
+    await finalize_injection(hub)
+
+    assert len(hub.devices) == 1, f"Expected 1 EV device, got {len(hub.devices)}"
+    device = hub.devices["ev_40"]
+
+    charging_state = device.get_metric("ev_charging_state")
+    assert charging_state is not None, "Charging state metric should exist"
+
+    charging_started = device.get_metric("ev_charging_started")
+    assert charging_started is not None, "Charging started metric should exist when ChargingState is present"
+    assert charging_started.value == "N/A", "Charging started metric should be N/A value is null"
 
     await hub_disconnect(hub)
 
