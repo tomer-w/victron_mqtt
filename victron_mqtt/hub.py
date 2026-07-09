@@ -96,6 +96,7 @@ class Hub:
         operation_mode: OperationMode = OperationMode.FULL,
         device_type_exclude_filter: list[DeviceType] | None = None,
         update_frequency_seconds: int | None = None,
+        ssl_context: ssl.SSLContext | None = None,
     ) -> None:
         """
         Initialize a Hub instance for communicating with a Venus OS MQTT broker.
@@ -112,6 +113,14 @@ class Hub:
             Password for MQTT authentication, or None.
         use_ssl: bool
             If True, an SSL/TLS context will be configured when connecting.
+            WARNING: without `ssl_context`, certificates are NOT verified
+            (GX devices ship with self-signed certificates).
+        ssl_context: ssl.SSLContext | None
+            Custom SSL context for the TLS connection. Provide a context with
+            your CA loaded (e.g. `ssl.create_default_context(cafile=...)`) to
+            enable real certificate verification. When None and `use_ssl` is
+            True, a default context without certificate verification is used.
+            Providing a context enables TLS even if `use_ssl` is False.
         installation_id: str | None
             If provided, used to replace `{installation_id}` placeholders in topics.
             If None, the installation id will be discovered from the broker when
@@ -188,6 +197,7 @@ class Hub:
         self.password = password
         self.serial = serial
         self.use_ssl = use_ssl
+        self._ssl_context = ssl_context
         self.port = port
         self._expected_installation_id = installation_id
         self._topic_prefix = topic_prefix
@@ -346,12 +356,7 @@ class Hub:
             _LOGGER.info("Setting auth credentials for user: %s", self.username)
             self._client.username_pw_set(username, self.password)
 
-        if self.use_ssl:
-            _LOGGER.info("Setting up SSL context")
-            ssl_context = await asyncio.to_thread(ssl.create_default_context)
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.VerifyMode.CERT_NONE
-            self._client.tls_set_context(ssl_context)  # type: ignore[arg-type]
+        await self._setup_tls()
 
         self._client.on_connect = self._on_connect
         self._client.on_disconnect = self._on_disconnect
@@ -387,6 +392,26 @@ class Hub:
         self._setup_subscriptions()
         self._start_keep_alive_loop()
         _LOGGER.info("Connected. Installation ID: %s", self._installation_id)
+
+    async def _setup_tls(self) -> None:
+        """Configure TLS on the MQTT client if enabled.
+
+        Uses the caller-provided ssl_context when available; otherwise falls
+        back to an unverified context, as GX devices ship with self-signed
+        certificates.
+        """
+        if not self.use_ssl and self._ssl_context is None:
+            return
+        context = self._ssl_context
+        if context is None:
+            _LOGGER.info(
+                "TLS enabled without certificate verification (GX devices use self-signed certificates). "
+                "Pass ssl_context to Hub() to enable verification."
+            )
+            context = await asyncio.to_thread(ssl.create_default_context)
+            context.check_hostname = False
+            context.verify_mode = ssl.VerifyMode.CERT_NONE
+        self._client.tls_set_context(context)  # type: ignore[arg-type]
 
     def publish(self, topic_short_id: str, device_id: str, value: str | float | int | None) -> None:
         """Publish a message to the MQTT broker."""

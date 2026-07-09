@@ -5,6 +5,7 @@ import asyncio
 import datetime
 import json
 import logging
+import ssl
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -3159,3 +3160,44 @@ async def test_dvcc_bol_off():
     sensor_metric = device.get_metric("system_dvcc_state")
     assert sensor_metric is not None
     assert sensor_metric.value == DVCCMode.OFF
+
+
+@pytest.mark.asyncio
+async def test_setup_tls_disabled():
+    """No TLS setup when use_ssl is False and no ssl_context is given."""
+    hub = Hub("localhost", 1883, None, None, use_ssl=False)
+    hub._client = MagicMock()
+    await hub._setup_tls()
+    hub._client.tls_set_context.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_setup_tls_default_is_unverified():
+    """use_ssl without ssl_context keeps the legacy unverified context."""
+    hub = Hub("localhost", 1883, None, None, use_ssl=True)
+    hub._client = MagicMock()
+    await hub._setup_tls()
+    context = hub._client.tls_set_context.call_args[0][0]
+    assert context.verify_mode == ssl.CERT_NONE
+    assert context.check_hostname is False
+
+
+@pytest.mark.asyncio
+async def test_setup_tls_custom_context_used_verbatim():
+    """A caller-provided ssl_context is passed through untouched."""
+    custom = ssl.create_default_context()
+    hub = Hub("localhost", 1883, None, None, use_ssl=True, ssl_context=custom)
+    hub._client = MagicMock()
+    await hub._setup_tls()
+    hub._client.tls_set_context.assert_called_once_with(custom)
+    assert custom.verify_mode == ssl.CERT_REQUIRED
+
+
+@pytest.mark.asyncio
+async def test_setup_tls_context_implies_tls():
+    """Providing ssl_context enables TLS even with use_ssl=False."""
+    custom = ssl.create_default_context()
+    hub = Hub("localhost", 1883, None, None, use_ssl=False, ssl_context=custom)
+    hub._client = MagicMock()
+    await hub._setup_tls()
+    hub._client.tls_set_context.assert_called_once_with(custom)
