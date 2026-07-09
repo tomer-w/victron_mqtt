@@ -17,6 +17,22 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install tools
+        run: pip install hatch "virtualenv<20.29" ruff
+      - name: Run ruff
+        run: ruff check .
+      - name: Run mypy (package only)
+        run: hatch run types:check victron_mqtt
+
   static_tests:
     runs-on: ubuntu-latest
     steps:
@@ -33,7 +49,7 @@ jobs:
         shell: bash
         run: |
           EXIT_CODE=0
-          hatch run test:pytest tests/static_test.py tests/static_hub_test.py tests/parsed_topics_test.py --tb=no --no-header 2>&1 | tee /tmp/test_output.txt || EXIT_CODE=${PIPESTATUS[0]}
+          hatch run test:pytest tests/static_test.py tests/static_hub_test.py tests/parsed_topics_test.py tests/test_unwrappers.py --cov=victron_mqtt --tb=no --no-header 2>&1 | tee /tmp/test_output.txt || EXIT_CODE=${PIPESTATUS[0]}
           OUTPUT=$(cat /tmp/test_output.txt)
           SUMMARY=$(echo "$OUTPUT" | sed -n '/short test summary info/,$ p')
           if [ -z "$SUMMARY" ]; then

@@ -476,8 +476,8 @@ class App:
         ttk.Separator(self.status_frame, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=5)
         ttk.Label(self.status_frame, textvariable=self._status_installation).pack(side=tk.LEFT, padx=10)
 
-        self._client = None
-        self._metric_containers = []
+        self._client: Hub | None = None
+        self._metric_containers: list[MetricContainer] = []
         self._selected_device_id: str | None = None
 
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
