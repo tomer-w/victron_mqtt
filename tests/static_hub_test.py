@@ -243,16 +243,24 @@ async def test_number_message():
     hub._publish = mock__publish
 
     # Set the value, which should trigger a publish
-    writable_metric.value = 42
+    writable_metric.value = 16
 
     # Validate that publish was called with the correct topic and value
     assert published, "Expected publish to be called after setting value"
     assert published["topic"] == "W/123/evcharger/170/SetCurrent", (
         f"Expected topic 'W/123/evcharger/170/SetCurrent', got {published['topic']}"
     )
-    assert published["value"] == '{"value": 42}', (
-        f"Expected published value to be {'{value: 42}'}, got {published['value']}"
+    assert published["value"] == '{"value": 16}', (
+        f"Expected published value to be {'{value: 16}'}, got {published['value']}"
     )
+
+    # Values outside the metric's min/max range must be rejected without publishing
+    published.clear()
+    with pytest.raises(ValueError, match="above the maximum"):
+        writable_metric.set(42)  # default max for evcharger_set_current is 32
+    with pytest.raises(ValueError, match="below the minimum"):
+        writable_metric.set(-1)  # default min is 0
+    assert not published, "Expected no publish for out-of-range values"
 
     # Restore the original publish method
     hub._publish = orig__publish

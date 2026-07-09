@@ -181,10 +181,25 @@ class WritableMetric(Metric):
         return super().enum_values
 
     def set(self, value: str | float | int | bool | VictronEnum) -> None:
-        """Set the value of this metric by publishing to the write topic."""
+        """Set the value of this metric by publishing to the write topic.
+
+        Raises
+        ------
+        ValueError
+            If a numeric value is outside the metric's min/max range, or if a
+            dropdown value is not one of the available labels.
+        """
         assert self._write_topic is not None
+        if isinstance(value, float | int) and not isinstance(value, bool):
+            if self._min_value is not None and value < self._min_value:
+                raise ValueError(f"Value {value} is below the minimum {self._min_value} for {self.unique_id}")
+            if self._max_value is not None and value > self._max_value:
+                raise ValueError(f"Value {value} is above the maximum {self._max_value} for {self.unique_id}")
         if self._is_dynamic_dropdown and isinstance(value, str):
-            payload = json.dumps({"value": self._labels.index(value)})  # type: ignore[union-attr]
+            assert self._labels is not None
+            if value not in self._labels:
+                raise ValueError(f"Invalid value '{value}' for {self.unique_id}; valid options: {self._labels}")
+            payload = json.dumps({"value": self._labels.index(value)})
         else:
             payload = WritableMetric._wrap_payload(self._descriptor, value)
         self._hub._publish(self._write_topic, payload)  # pylint: disable=protected-access

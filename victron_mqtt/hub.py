@@ -34,7 +34,8 @@ CONNECT_MAX_FAILED_ATTEMPTS = 3
 FORCE_INVALIDATE_AFTER_NOT_CONNECTED_SECONDS = 120
 FULL_PUBLISH_MIN_INTERVAL_SECONDS = 180
 FIRST_FULL_PUBLISH_MIN_INTERVAL_SECONDS = 30
-MINIMUM_FULLY_SUPPORTED_VERSION = 3.5
+# Venus OS versions use a two-digit minor ("v3.50", "v3.54"), compared as integer tuples
+MINIMUM_FULLY_SUPPORTED_VERSION = (3, 50)
 # The keepalive loop ticks every 30s. Every Nth tick we send a forced full republish so the
 # broker re-sends every current value, refreshing last_seen for otherwise-constant metrics.
 FULL_REPUBLISH_STALENESS_INTERVAL_CYCLES = 6
@@ -219,7 +220,7 @@ class Hub:
         # Use monotonic time to avoid issues with system clock changes
         self._last_full_publish_called: float = 0.0
         self._periodic_full_publish_triggered_once = False
-        self._firmware_version: float = 0.0
+        self._firmware_version: tuple[int, ...] = ()
         self._connect_failed_since: float = 0.0
         self._installation_id: str | None = None
 
@@ -341,9 +342,9 @@ class Hub:
         # Based on https://community.victronenergy.com/t/cerbo-mqtt-webui-network-security-profile-configuration/34112
         # it seems that Cerbos will not allow you to configure username, only passwords.
         # still, you do need to put in some username to get the MQTT client work.
-        if self.password is not None:
+        if self.username is not None or self.password is not None:
             username = "victron_mqtt" if self.username is None else self.username
-            _LOGGER.info("Setting auth credentials for user: %s", self.username)
+            _LOGGER.info("Setting auth credentials for user: %s", username)
             self._client.username_pw_set(username, self.password)
 
         if self.use_ssl:
@@ -397,8 +398,10 @@ class Hub:
         if topic_desc is None:
             _LOGGER.error("No active topic found for topic_short_id: %s", topic_short_id)
             raise TopicNotFoundError(f"No active topic found for topic_short_id: {topic_short_id}")
-        assert self._installation_id is not None, "Installation ID must be set before publishing"
-        assert device_id is not None, "Device ID must be provided"
+        if self._installation_id is None:
+            raise NotConnectedError("Cannot publish before connect(): installation ID is not known yet")
+        if not device_id:
+            raise ValueError("device_id must be provided")
         topic = topic_desc.topic.replace("{installation_id}", self._installation_id).replace("{device_id}", device_id)
         payload = WritableMetric._wrap_payload(topic_desc, value) if value is not None else ""
         self._publish(topic, payload)
@@ -725,16 +728,16 @@ class Hub:
                         ver_str = version_metric.value[1:]
                         if "~" in ver_str:
                             ver_str = ver_str.split("~", 1)[0]
-                        self._firmware_version = float(ver_str)
+                        self._firmware_version = tuple(int(part) for part in ver_str.split("."))
                         if self._firmware_version < MINIMUM_FULLY_SUPPORTED_VERSION:
                             _LOGGER.warning(
-                                "Firmware version is below v3.5: %s. Reduced functionality may occur.",
+                                "Firmware version is below v3.50: %s. Reduced functionality may occur.",
                                 version_metric.value,
                             )
                         else:
                             _LOGGER.info("Firmware version is good enough: %s", version_metric.value)
                     except (ValueError, TypeError):
-                        _LOGGER.error("Firmware version format not float: %s", version_metric.value)
+                        _LOGGER.error("Firmware version format not recognized: %s", version_metric.value)
                 else:
                     _LOGGER.error("Firmware version format not supported: %s", version_metric.value)
             else:
