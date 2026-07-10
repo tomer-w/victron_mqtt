@@ -21,7 +21,7 @@ from paho.mqtt.reasoncodes import ReasonCode
 
 from ._victron_enums import DeviceType
 from ._victron_topics import topics
-from .constants import TOPIC_INSTALLATION_ID, UPDATE_FREQUENCY_AUTO, MetricKind, OperationMode
+from .constants import AUTO_UPDATE_INTERVALS, TOPIC_INSTALLATION_ID, MetricKind, OperationMode
 from .data_classes import ParsedTopic, TopicDescriptor, topic_to_device_type
 from .device import Device, FallbackPlaceholder, MetricPlaceholder
 from .formula_metric import FormulaMetric
@@ -96,7 +96,7 @@ class Hub:
         topic_log_info: str | None = None,
         operation_mode: OperationMode = OperationMode.FULL,
         device_type_exclude_filter: list[DeviceType] | None = None,
-        update_frequency_seconds: int | Literal["auto"] | None = None,
+        update_frequency_seconds: int | Literal["auto", "auto_power_none"] | None = None,
         ssl_context: ssl.SSLContext | None = None,
     ) -> None:
         """
@@ -133,7 +133,7 @@ class Hub:
             EXPERIMENTAL).
         device_type_exclude_filter: list[DeviceType] | None
             Optional list of device types to exclude from subscriptions.
-        update_frequency_seconds: int | "auto" | None
+        update_frequency_seconds: int | "auto" | "auto_power_none" | None
             Optional update frequency used by metrics.
             if None = Update only when source data change
             if 0 = Update as new mqtt data received
@@ -141,6 +141,8 @@ class Hub:
             if "auto" = Per-metric interval chosen by the library based on the
             metric type (see AUTO_UPDATE_INTERVALS): fast-changing metrics such
             as power and current update more often than the rest.
+            if "auto_power_none" = Like "auto", but fast-changing metrics update
+            on every value change with no time limit.
         ssl_context: ssl.SSLContext | None
             Custom SSL context for the TLS connection. Provide a context with
             your CA loaded (e.g. `ssl.create_default_context(cafile=...)`) to
@@ -187,9 +189,9 @@ class Hub:
         if (
             update_frequency_seconds is not None
             and not isinstance(update_frequency_seconds, int)
-            and update_frequency_seconds != UPDATE_FREQUENCY_AUTO
+            and update_frequency_seconds not in AUTO_UPDATE_INTERVALS
         ):
-            raise ValueError(f'update_frequency_seconds must be an int, None or "{UPDATE_FREQUENCY_AUTO}"')
+            raise ValueError(f"update_frequency_seconds must be an int, None or one of {sorted(AUTO_UPDATE_INTERVALS)}")
         _LOGGER.info(
             "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, topic_log_info=%s)",
             self._instance_id,

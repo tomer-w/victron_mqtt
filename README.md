@@ -84,6 +84,7 @@ hub = victron_mqtt.Hub(
 - `0` — deliver on every MQTT message, even if the value is unchanged
 - `N > 0` — deliver at most one update per `N` seconds per metric
 - `"auto"` — per-metric interval chosen by the library based on the metric type: fast-changing metrics users watch live (power, current) update every few seconds, while the rest use a longer interval. See `AUTO_UPDATE_INTERVALS` in `victron_mqtt.constants`.
+- `"auto_power_none"` — like `"auto"`, but fast-changing metrics update on every value change with no time limit.
 
 **Key properties:**
 - `hub.devices` — dict of all devices with visible metrics

@@ -218,9 +218,9 @@ class Metric:
     def update_interval_seconds(self) -> int | None:
         """Effective update interval for this metric, resolved from the hub setting."""
         frequency = self._hub._update_frequency_seconds
-        # The only string value Hub accepts is UPDATE_FREQUENCY_AUTO.
+        # The only string values Hub accepts are the auto profiles.
         if isinstance(frequency, str):
-            return AUTO_UPDATE_INTERVALS.get(self._descriptor.metric_type, AUTO_UPDATE_INTERVAL_DEFAULT)
+            return AUTO_UPDATE_INTERVALS[frequency].get(self._descriptor.metric_type, AUTO_UPDATE_INTERVAL_DEFAULT)
         return frequency
 
     @property
