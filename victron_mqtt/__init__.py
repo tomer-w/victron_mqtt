@@ -49,7 +49,16 @@ from ._victron_enums import (
     VrmPortalMode,
 )
 from ._victron_products import ProductCapabilities, get_product_capabilities
-from .constants import MetricKind, MetricNature, MetricType, OperationMode, RangeType, VictronEnum
+from .constants import (
+    AUTO_UPDATE_INTERVALS,
+    UPDATE_FREQUENCY_AUTO,
+    MetricKind,
+    MetricNature,
+    MetricType,
+    OperationMode,
+    RangeType,
+    VictronEnum,
+)
 from .data_classes import GpsLocation, ProductCapabilityRef
 from .device import Device
 from .formula_metric import FormulaMetric
@@ -66,6 +75,8 @@ from .metric import Metric
 from .writable_metric import WritableMetric
 
 __all__ = [
+    "AUTO_UPDATE_INTERVALS",
+    "UPDATE_FREQUENCY_AUTO",
     "ACActiveInputSource",
     "ACSystemMode",
     "AcInputTypeEnum",

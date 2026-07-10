@@ -569,6 +569,73 @@ async def test_same_message_events_five(mock_time: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @patch("victron_mqtt.metric.time.monotonic")
+async def test_same_message_events_auto(mock_time: MagicMock) -> None:
+    """Test per-metric-type update intervals when update_frequency_seconds is "auto"."""
+
+    mock_time.return_value = 0.0
+    hub: Hub = await create_mocked_hub(update_frequency_seconds="auto")
+
+    mock_time.return_value = 10
+
+    # Inject messages after the event is set
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Power", '{"value": 100}', mock_time)
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 42}', mock_time)
+    await finalize_injection(hub, False, mock_time)
+
+    # Validate that the device has the metrics we published
+    device = hub.devices["grid_30"]
+    power_metric = device.get_metric("grid_power_l1")
+    energy_metric = device.get_metric("grid_energy_forward_l1")
+    assert power_metric is not None, "Power metric should exist in the device"
+    assert energy_metric is not None, "Energy metric should exist in the device"
+    assert power_metric.update_interval_seconds == 5, "Power metrics should use the fast auto interval"
+    assert energy_metric.update_interval_seconds == 30, "Energy metrics should use the default auto interval"
+    power_metric.on_update = MagicMock()
+    energy_metric.on_update = MagicMock()
+
+    mock_time.return_value = 11
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Power", '{"value": 101}', mock_time)
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 43}', mock_time)
+    assert power_metric.on_update.call_count == 1, "on_update should be called for the first notification"
+    assert energy_metric.on_update.call_count == 1, "on_update should be called for the first notification"
+
+    mock_time.return_value = 13
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Power", '{"value": 102}', mock_time)
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 44}', mock_time)
+    assert power_metric.on_update.call_count == 1, "on_update should not be called before the power interval elapsed"
+    assert energy_metric.on_update.call_count == 1, "on_update should not be called before the energy interval elapsed"
+
+    mock_time.return_value = 17
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Power", '{"value": 103}', mock_time)
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 45}', mock_time)
+    assert power_metric.on_update.call_count == 2, "on_update should be called after the power interval elapsed"
+    assert energy_metric.on_update.call_count == 1, "on_update should not be called before the energy interval elapsed"
+
+    mock_time.return_value = 45
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Power", '{"value": 104}', mock_time)
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 46}', mock_time)
+    assert power_metric.on_update.call_count == 3, "on_update should be called after the power interval elapsed"
+    assert energy_metric.on_update.call_count == 2, "on_update should be called after the energy interval elapsed"
+
+    await hub_disconnect(hub, mock_time)
+
+
+@pytest.mark.asyncio
+async def test_invalid_update_frequency():
+    """Test that the Hub rejects invalid update_frequency_seconds values."""
+    with pytest.raises(ValueError, match="update_frequency_seconds"):
+        Hub(
+            host="localhost",
+            port=1883,
+            username=None,
+            password=None,
+            use_ssl=False,
+            update_frequency_seconds="fast",  # type: ignore[arg-type]
+        )
+
+
+@pytest.mark.asyncio
+@patch("victron_mqtt.metric.time.monotonic")
 async def test_metric_keepalive_update_frequency_5(mock_time: MagicMock) -> None:
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
     mock_time.return_value = 0

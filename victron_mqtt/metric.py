@@ -10,7 +10,14 @@ import time
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from .constants import MetricKind, MetricNature, MetricType, VictronEnum  # noqa: TC001
+from .constants import (
+    AUTO_UPDATE_INTERVAL_DEFAULT,
+    AUTO_UPDATE_INTERVALS,
+    MetricKind,
+    MetricNature,
+    MetricType,
+    VictronEnum,
+)
 from .data_classes import ParsedTopic, TopicDescriptor
 from .id_utils import replace_complex_ids
 
@@ -208,6 +215,15 @@ class Metric:
         return [e.id for e in self._descriptor.enum] if self._descriptor.enum else None
 
     @property
+    def update_interval_seconds(self) -> int | None:
+        """Effective update interval for this metric, resolved from the hub setting."""
+        frequency = self._hub._update_frequency_seconds
+        # The only string value Hub accepts is UPDATE_FREQUENCY_AUTO.
+        if isinstance(frequency, str):
+            return AUTO_UPDATE_INTERVALS.get(self._descriptor.metric_type, AUTO_UPDATE_INTERVAL_DEFAULT)
+        return frequency
+
+    @property
     def on_update(self) -> CallbackOnUpdate | None:
         """Returns the on_update callback."""
         return self._on_update
@@ -268,10 +284,11 @@ class Metric:
         if update_last_seen:
             self._last_seen = now
         should_notify = False
+        update_interval = self.update_interval_seconds
 
         # In case of zero update frequency, always consider changed when MQTT message is received
         # also if this is the first time the metric is being notified
-        if force or self._hub._update_frequency_seconds == 0 or self._last_notified == 0:
+        if force or update_interval == 0 or self._last_notified == 0:
             should_notify = True
             force = True
         elif value != self._value:
@@ -295,17 +312,17 @@ class Metric:
         # In case of non-zero update frequency, respect the update frequency limit only for numerical values
         if (
             not force
-            and self._hub._update_frequency_seconds is not None
+            and update_interval is not None
             and isinstance(value, float | int)
             and not isinstance(value, bool)  # bool is a subclass of int, but we only want real numeric sensor values.
         ):
             elapsed = now - self._last_notified
-            if elapsed < self._hub._update_frequency_seconds:
+            if elapsed < update_interval:
                 _LOGGER.debug(
                     "Update for %s skipped due to frequency limit (%.2fs < %ds)",
                     self.unique_id,
                     elapsed,
-                    self._hub._update_frequency_seconds,
+                    update_interval,
                 )
                 should_notify = False
             else:
