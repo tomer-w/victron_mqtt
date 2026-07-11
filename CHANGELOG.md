@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026.7.3 (2026-07-11)
+
+### Changes
+
+- Fix paho-mqtt minimum version and relax Python requirement @frbuceta (#112)
+- Add lint, type-check and coverage enforcement to CI @frbuceta (#113)
+- Lot of lint fixes.
+- Add PvOnGrid metrics (phases, current, power) @frbuceta (#111)
+- Mark metrics unavailable when their source stops publishing
+- Add EV ChargingStarted test
+
+### Contributors
+
+@tomer-w, @frbuceta
+
+
 ## 2026.7.2 (2026-07-08)
 
 ### Changes
