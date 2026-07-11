@@ -26,6 +26,10 @@
     "python.testing.pytestArgs": [
         "tests"
     ],
+    // Run pylint from each file's own directory so pylint auto-discovers the
+    // nearest config: tests/ uses tests/.pylintrc (relaxed), while library
+    // files walk up to the root pyproject.toml [tool.pylint] (strict).
+    "pylint.cwd": "${fileDirname}",
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true
 }

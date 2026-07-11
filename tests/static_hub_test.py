@@ -1,6 +1,5 @@
 """Unit tests for the Victron MQTT Hub functionality."""
 # pyright: reportPrivateUsage=none
-# pylint: disable=protected-access
 
 import asyncio
 import datetime

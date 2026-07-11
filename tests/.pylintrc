@@ -1,0 +1,31 @@
+[MAIN]
+# Central pylint config for test files only.
+
+[FORMAT]
+max-line-length = 120
+
+[MESSAGES CONTROL]
+disable =
+    line-too-long,
+    too-many-lines,
+    import-outside-toplevel,
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    too-few-public-methods,
+    too-many-instance-attributes,
+    too-many-arguments,
+    too-many-positional-arguments,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    too-many-nested-blocks,
+    protected-access,
+    broad-exception-caught,
+    global-statement,
+    invalid-name,
+    attribute-defined-outside-init,
+    duplicate-code,
+    redefined-outer-name,
+    reimported,
+    too-many-boolean-expressions
