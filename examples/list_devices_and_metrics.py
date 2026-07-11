@@ -3,7 +3,6 @@ import logging
 
 import victron_mqtt
 
-
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG,

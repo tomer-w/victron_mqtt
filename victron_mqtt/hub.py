@@ -187,7 +187,7 @@ class Hub:
         self._first_refresh_event: asyncio.Event = asyncio.Event()
         self._installation_id_event: asyncio.Event = asyncio.Event()
         self._snapshot: dict[str, Any] = {}
-        self._keepalive_task = None
+        self._keepalive_task: asyncio.Task[None] | None = None
         self._connected_event = asyncio.Event()
         self._on_new_metric: CallbackOnNewMetric | None = None
         self._on_new_device: CallbackOnNewDevice | None = None
@@ -786,13 +786,10 @@ class Hub:
         if desc_list is None:
             log_debug("Ignoring message - no descriptor found for topic: %s", topic)
             return
-        if len(desc_list) == 1:
-            desc = desc_list[0]
-        else:
-            desc = parsed_topic.match_from_list(desc_list)
-            if desc is None:
-                log_debug("Ignoring message - no matching descriptor found for list of topic: %s", topic)
-                return
+        desc = desc_list[0] if len(desc_list) == 1 else parsed_topic.match_from_list(desc_list)
+        if desc is None:
+            log_debug("Ignoring message - no matching descriptor found for list of topic: %s", topic)
+            return
 
         device = self._get_or_create_device(parsed_topic, desc)
         placeholder = device.handle_message(fallback_to_metric_topic, topic, parsed_topic, desc, payload, log_debug)
@@ -802,9 +799,9 @@ class Hub:
                 log_debug("Replacing existing metric placeholder: %s", existing_placeholder)
             self._metrics_placeholders[placeholder.parsed_topic.unique_id] = placeholder
         elif isinstance(placeholder, FallbackPlaceholder):
-            existing_placeholder = self._fallback_placeholders.get(placeholder.parsed_topic.unique_id)
-            if existing_placeholder:
-                log_debug("Replacing existing fallback placeholder: %s", existing_placeholder)
+            existing_fallback = self._fallback_placeholders.get(placeholder.parsed_topic.unique_id)
+            if existing_fallback:
+                log_debug("Replacing existing fallback placeholder: %s", existing_fallback)
             self._fallback_placeholders[placeholder.parsed_topic.unique_id] = placeholder
 
     async def disconnect(self) -> None:
