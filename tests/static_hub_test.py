@@ -1,10 +1,12 @@
 """Unit tests for the Victron MQTT Hub functionality."""
-# pyright: reportPrivateUsage=false
+# pyright: reportPrivateUsage=none
+# pylint: disable=protected-access
 
 import asyncio
 import datetime
 import json
 import logging
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -818,7 +820,7 @@ async def test_new_metric_system_callbacks_first():
 
     callback_device_ids: list[str] = []
 
-    def on_new_metric_mock(_hub: Hub, device: object, _metric: Metric) -> None:
+    def on_new_metric_mock(_hub: Hub, device: Device, _metric: Metric) -> None:
         callback_device_ids.append(str(device.unique_id))
 
     hub.on_new_metric = MagicMock(side_effect=on_new_metric_mock)
@@ -967,7 +969,7 @@ async def test_gps_location_formula():
     assert gps_callbacks[0].latitude == 51.5074
 
     # Register on_update to track subsequent value changes
-    update_values: list[object] = []
+    update_values: list[GpsLocation] = []
     location_metric.on_update = lambda metric, value: update_values.append(value)
 
     # Update latitude only — formula should recalculate with new lat + old lon
@@ -1175,7 +1177,7 @@ async def test_empty_devices_not_notified():
 
     notified_device_ids: list[str] = []
 
-    def on_new_device_mock(_hub: Hub, device: object) -> None:
+    def on_new_device_mock(_hub: Hub, device: Device) -> None:
         notified_device_ids.append(str(device.unique_id))
 
     hub.on_new_device = MagicMock(side_effect=on_new_device_mock)
@@ -1207,7 +1209,7 @@ async def test_empty_parent_device_skipped_in_notifications():
 
     notified_device_ids: list[str] = []
 
-    def on_new_device_mock(_hub: Hub, device: object) -> None:
+    def on_new_device_mock(_hub: Hub, device: Device) -> None:
         notified_device_ids.append(str(device.unique_id))
 
     hub.on_new_device = MagicMock(side_effect=on_new_device_mock)
@@ -2137,8 +2139,8 @@ async def test_suppress_republish_still_creates_new_metrics():
 # ═══════════════════════════════════════════════════════════════════════════
 
 
-def _make_descriptor(**overrides) -> TopicDescriptor:
-    defaults = {
+def _make_descriptor(**overrides: Any) -> TopicDescriptor:
+    defaults: dict[str, Any] = {
         "topic": "N/{installation_id}/battery/{device_id}/Soc",
         "message_type": MetricKind.SENSOR,
         "short_id": "test_metric",
@@ -2150,7 +2152,11 @@ def _make_descriptor(**overrides) -> TopicDescriptor:
     return TopicDescriptor(**defaults)
 
 
-def _make_metric(descriptor=None, hub=None, **overrides) -> Metric:
+def _make_metric(
+    descriptor: TopicDescriptor | None = None,
+    hub: Hub | MagicMock | None = None,
+    **overrides: Any,
+) -> Metric:
     if descriptor is None:
         descriptor = _make_descriptor(**overrides)
     if hub is None:
@@ -2332,7 +2338,7 @@ class TestHubOnLog:
         with patch("victron_mqtt.hub.mqtt.Client"):
             hub = Hub("localhost", 1883, None, None, False)
         # Should not raise
-        hub._on_log(None, None, logging.DEBUG, "test message")
+        hub._on_log(MagicMock(spec=Client), None, logging.DEBUG, "test message")
 
 
 @pytest.mark.asyncio
@@ -2364,12 +2370,12 @@ class TestHubConnectionErrors:
             hub = Hub("localhost", 1883, None, None, False, installation_id="123")
             hub._client = mock_client
             hub._first_full_publish = False
-            with pytest.raises(CannotConnectError, match="Timeout"):
+            with (
+                pytest.raises(CannotConnectError, match="Timeout"),
+                patch.object(hub._first_refresh_event, "wait", side_effect=asyncio.TimeoutError),
+            ):
                 # Patch the event wait to timeout
-                import asyncio
-
-                with patch.object(hub._first_refresh_event, "wait", side_effect=asyncio.TimeoutError):
-                    await hub.wait_for_first_refresh()
+                await hub.wait_for_first_refresh()
 
 
 class TestHubOnConnectFail:
@@ -2649,7 +2655,7 @@ class TestWritableFormulaMetricSet:
 
         desc = _make_descriptor(is_formula=True)
 
-        def write_func(value, depends_on, state):
+        def write_func(_value: object, _depends_on: dict[str, object], _state: object) -> None:
             return None
 
         wfm = WritableFormulaMetric.__new__(WritableFormulaMetric)
@@ -2692,7 +2698,7 @@ class TestFormulaMetricNoneReturn:
         desc = _make_descriptor(is_formula=True)
         log = MagicMock()
 
-        def formula_none(depends_on, state):
+        def formula_none(_depends_on: dict[str, object], _state: object) -> None:
             return None
 
         fm = FormulaMetric.__new__(FormulaMetric)

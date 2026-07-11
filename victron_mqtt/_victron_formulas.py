@@ -73,7 +73,7 @@ def schedule_charge_enabled(
 
 
 def schedule_charge_enabled_set(
-    value: str, depends_on: dict[str, Metric], _transient_state: FormulaTransientState | None
+    value: str | GenericOnOff, depends_on: dict[str, Metric], _transient_state: FormulaTransientState | None
 ) -> tuple[GenericOnOff, None]:
     """Set schedule charge enabled state."""
 
