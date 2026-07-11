@@ -35,6 +35,14 @@ FORCE_INVALIDATE_AFTER_NOT_CONNECTED_SECONDS = 120
 FULL_PUBLISH_MIN_INTERVAL_SECONDS = 180
 FIRST_FULL_PUBLISH_MIN_INTERVAL_SECONDS = 30
 MINIMUM_FULLY_SUPPORTED_VERSION = 3.5
+# The keepalive loop ticks every 30s. Every Nth tick we send a forced full republish so the
+# broker re-sends every current value, refreshing last_seen for otherwise-constant metrics.
+FULL_REPUBLISH_STALENESS_INTERVAL_CYCLES = 6
+# A metric not seen for this long is considered stale (its source stopped publishing) and is
+# marked unavailable. Must be larger than the forced full republish interval
+# (FULL_REPUBLISH_STALENESS_INTERVAL_CYCLES * 30s) so healthy but constant metrics are not
+# wrongly invalidated between republishes.
+STALE_METRIC_TIMEOUT_SECONDS = 360
 
 # Modify the logger to include instance_id without changing the tracing level
 # class InstanceIDFilter(logging.Filter):
@@ -849,8 +857,14 @@ class Hub:
                 # We should keep alive all metrics every 60 seconds
                 count += 1
                 # Old firmwars dont resend values after the keepalive message so we cant use this logic of invalidation if there is no new value
-                if self._firmware_version >= MINIMUM_FULLY_SUPPORTED_VERSION and count % 2 == 0:
-                    self._keepalive_metrics()
+                if self._firmware_version >= MINIMUM_FULLY_SUPPORTED_VERSION:
+                    if count % 2 == 0:
+                        # Republish throttled values and mark long-silent sources unavailable (issue #454).
+                        self._keepalive_metrics(stale_timeout=STALE_METRIC_TIMEOUT_SECONDS)
+                    # Periodically force a full republish so the broker re-sends every current
+                    # value, refreshing last_seen for constant metrics that would otherwise look stale.
+                    if count % FULL_REPUBLISH_STALENESS_INTERVAL_CYCLES == 0:
+                        self._keepalive(force=True)
             except asyncio.CancelledError:
                 _LOGGER.info("Keepalive loop canceled")
                 raise
@@ -858,7 +872,7 @@ class Hub:
                 _LOGGER.exception("Error in keepalive loop: %s", exc)
                 await asyncio.sleep(5)  # Short delay before retrying
 
-    def _keepalive_metrics(self, force_invalidate: bool = False) -> None:
+    def _keepalive_metrics(self, force_invalidate: bool = False, stale_timeout: float | None = None) -> None:
         """Keep alive all metrics."""
         _LOGGER.debug("Keeping alive all metrics")
         for metric in self._all_metrics.values():
@@ -866,7 +880,7 @@ class Hub:
             is_info_level = self._topic_log_info and self._topic_log_info in metric._descriptor.topic
             log_debug = _LOGGER.info if is_info_level else _LOGGER.debug
 
-            metric._keepalive(force_invalidate, log_debug)
+            metric._keepalive(force_invalidate, log_debug, stale_timeout=stale_timeout)
 
     def _start_keep_alive_loop(self) -> None:
         """Start the keep_alive loop."""

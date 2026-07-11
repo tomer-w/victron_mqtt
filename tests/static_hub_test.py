@@ -27,6 +27,8 @@ from victron_mqtt.formula_common import LRSLastReading
 from victron_mqtt.formula_metric import FormulaMetric
 from victron_mqtt.hub import (
     CONNECT_MAX_FAILED_ATTEMPTS,
+    MINIMUM_FULLY_SUPPORTED_VERSION,
+    STALE_METRIC_TIMEOUT_SECONDS,
     AuthenticationError,
     CannotConnectError,
     Hub,
@@ -668,6 +670,73 @@ async def test_metric_keepalive_update_frequency_none(mock_time: MagicMock) -> N
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 77}', mock_time)
     assert metric.on_update.call_count == 4, "on_update should be called as metric updates back to value"
     magic_mock.assert_called_with(metric, 77)
+
+    await hub_disconnect(hub, mock_time)
+
+
+@pytest.mark.asyncio
+@patch("victron_mqtt.metric.time.monotonic")
+async def test_metric_goes_unavailable_when_source_stops_publishing(mock_time: MagicMock) -> None:
+    """Issue #454: a metric that stops being published while the broker stays connected
+    must become unavailable once it has been silent for longer than the stale timeout."""
+    mock_time.return_value = 0
+    hub: Hub = await create_mocked_hub()
+
+    mock_time.return_value = 10
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 10}', mock_time)
+    await finalize_injection(hub, disconnect=False, mock_time=mock_time)
+    # Staleness detection is only enabled on fully supported firmware.
+    hub._firmware_version = MINIMUM_FULLY_SUPPORTED_VERSION
+
+    device = hub.devices["grid_30"]
+    metric = device.get_metric("grid_energy_forward_l1")
+    assert metric is not None, "Metric should exist in the device"
+    assert metric.value == 10, f"Expected metric value to be 10, got {metric.value}"
+
+    magic_mock = MagicMock()
+    metric.on_update = magic_mock
+
+    # Well within the stale timeout -> metric stays available.
+    mock_time.return_value = 100
+    hub._keepalive_metrics(stale_timeout=STALE_METRIC_TIMEOUT_SECONDS)
+    await sleep_short(mock_time)
+    assert metric.value == 10, "Metric should remain available before the stale timeout elapses"
+
+    # Beyond the stale timeout with no new data and no broker disconnect -> unavailable.
+    mock_time.return_value = 10 + STALE_METRIC_TIMEOUT_SECONDS + 1
+    hub._keepalive_metrics(stale_timeout=STALE_METRIC_TIMEOUT_SECONDS)
+    await sleep_short(mock_time)
+    assert metric.value is None, "Metric should become unavailable when the source stops publishing"
+    magic_mock.assert_called_with(metric, None)
+
+    await hub_disconnect(hub, mock_time)
+
+
+@pytest.mark.asyncio
+@patch("victron_mqtt.metric.time.monotonic")
+async def test_metric_stays_available_when_source_keeps_publishing(mock_time: MagicMock) -> None:
+    """A metric that keeps being refreshed within the stale timeout stays available."""
+    mock_time.return_value = 0
+    hub: Hub = await create_mocked_hub()
+
+    mock_time.return_value = 10
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 10}', mock_time)
+    await finalize_injection(hub, disconnect=False, mock_time=mock_time)
+    hub._firmware_version = MINIMUM_FULLY_SUPPORTED_VERSION
+
+    device = hub.devices["grid_30"]
+    metric = device.get_metric("grid_energy_forward_l1")
+    assert metric is not None, "Metric should exist in the device"
+
+    # Source republishes its value, refreshing last_seen.
+    mock_time.return_value = 300
+    await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 11}', mock_time)
+
+    # A stale check just under the timeout since the last update -> metric stays available.
+    mock_time.return_value = 300 + STALE_METRIC_TIMEOUT_SECONDS - 1
+    hub._keepalive_metrics(stale_timeout=STALE_METRIC_TIMEOUT_SECONDS)
+    await sleep_short(mock_time)
+    assert metric.value == 11, "Metric should stay available while the source keeps publishing"
 
     await hub_disconnect(hub, mock_time)
 
@@ -2475,6 +2544,38 @@ class TestMetricKeepalive:
         log = MagicMock()
         m._keepalive(force_invalidate=False, log_debug=log)
         log.assert_called()
+
+    def test_keepalive_invalidates_stale_metric(self):
+        """A metric not seen for longer than the timeout is reset to None (unavailable)."""
+        m = _make_metric()
+        m._value = 42.0
+        m._last_seen = 5.0
+        m._last_notified = 5.0
+        log = MagicMock()
+        with patch("victron_mqtt.metric.time.monotonic", return_value=100.0):
+            m._keepalive(force_invalidate=False, log_debug=log, stale_timeout=50.0)
+        assert m._value is None
+
+    def test_keepalive_keeps_fresh_metric(self):
+        """A metric seen within the timeout keeps its value."""
+        m = _make_metric()
+        m._value = 42.0
+        m._last_seen = 90.0
+        m._last_notified = 90.0
+        log = MagicMock()
+        with patch("victron_mqtt.metric.time.monotonic", return_value=100.0):
+            m._keepalive(force_invalidate=False, log_debug=log, stale_timeout=50.0)
+        assert m._value == 42.0
+
+    def test_keepalive_no_timeout_keeps_value(self):
+        """Without a timeout, an up-to-date metric is untouched (back-compat)."""
+        m = _make_metric()
+        m._value = 42.0
+        m._last_seen = 5.0
+        m._last_notified = 10.0
+        log = MagicMock()
+        m._keepalive(force_invalidate=False, log_debug=log)
+        assert m._value == 42.0
 
 
 # ═══════════════════════════════════════════════════════════════════════════
