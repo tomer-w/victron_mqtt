@@ -158,5 +158,29 @@ ignore = [
 [tool.pylint.format]
 max-line-length = 120
 
+[tool.pylint.main]
+# Centrally accepted design/complexity/formatting trade-offs for the core library.
+# These mirror decisions already encoded in the Ruff config (e.g. SLF001, E501,
+# PLW0603) or reflect deliberate architecture (intra-package access, defensive
+# callback exception handling, large generated topic tables).
+disable = [
+    "protected-access",          # intra-package access; mirrors Ruff SLF001 ignore
+    "line-too-long",             # formatter's responsibility; mirrors Ruff E501 ignore
+    "broad-exception-caught",    # deliberate defensive handling in MQTT/callback code
+    "global-statement",          # intentional module-level client-id counter
+    "invalid-name",              # module-level mutable globals are not constants
+    "attribute-defined-outside-init",  # Tkinter Dialog.body() framework pattern / lazy task handles
+    "too-many-lines",
+    "too-many-branches",
+    "too-many-statements",
+    "too-many-locals",
+    "too-many-arguments",
+    "too-many-positional-arguments",
+    "too-many-instance-attributes",
+    "too-many-nested-blocks",
+    "too-few-public-methods",
+    "duplicate-code",
+]
+
 [project.scripts]
 victron_mqtt-dump-mqtt = "victron_mqtt.utils.dump_mqtt:main"

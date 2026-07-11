@@ -19,6 +19,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .. import _victron_enums
+from .._victron_topics import topics
+from ..constants import VictronEnum
+
 
 def load_surface(path: Path) -> dict[str, Any]:
     """Load a victron_mqtt.json and extract the API surface.
@@ -55,10 +59,6 @@ def load_surface_from_current() -> dict[str, Any]:
     This avoids needing a pre-generated JSON file for the *new* side of the
     comparison.
     """
-
-    from .. import _victron_enums
-    from .._victron_topics import topics
-    from ..constants import VictronEnum
 
     short_ids: dict[str, str] = {t.short_id: t.topic for t in topics}
 

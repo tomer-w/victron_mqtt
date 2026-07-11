@@ -9,6 +9,13 @@ Features:
 - Status bar with connection info, device count, installation ID
 """
 
+# tkinter's typeshed stubs leave several method parameters untyped (e.g. Scale.set,
+# Treeview.xview/yview, Panedwindow.add), which trips strict "unknown type" reports
+# even though this module's own code is fully annotated.
+# pyright: reportUnknownMemberType=false, reportUnknownArgumentType=false
+
+from __future__ import annotations
+
 import argparse
 import asyncio
 import inspect
@@ -17,10 +24,14 @@ import os
 import tkinter as tk
 from logging import getLogger
 from tkinter import messagebox, simpledialog, ttk
+from typing import TYPE_CHECKING, Any
 
 from .. import Device, Hub, Metric
 from ..constants import MetricKind, OperationMode
 from ..writable_metric import WritableMetric
+
+if TYPE_CHECKING:
+    from ..data_classes import TopicDescriptor
 
 DEFAULT_HOST = "venus.local."
 DEFAULT_PORT = 1883
@@ -62,7 +73,7 @@ DEVICE_TYPE_ICONS = {
 class ConnectionDialog(simpledialog.Dialog):
     """Dialog to prompt for connection information."""
 
-    def body(self, master):
+    def body(self, master: tk.Misc) -> tk.Entry:
         tk.Label(master, text="Server:").grid(row=0, sticky=tk.W, padx=5, pady=3)
         tk.Label(master, text="Port:").grid(row=1, sticky=tk.W, padx=5, pady=3)
         tk.Label(master, text="Username:").grid(row=2, sticky=tk.W, padx=5, pady=3)
@@ -98,7 +109,7 @@ class ConnectionDialog(simpledialog.Dialog):
 
         return self.server_entry
 
-    def apply(self):
+    def apply(self) -> None:
         server = self.server_entry.get()
         port = int(self.port_entry.get())
         username = self.username_entry.get()
@@ -111,9 +122,9 @@ class AttributeViewerDialog(simpledialog.Dialog):
     """Dialog to display properties and edit writable metrics with appropriate controls.
     Changes are applied immediately without needing to press OK."""
 
-    def __init__(self, parent, instance):
-        self.instance = instance
-        self._writable_var = None
+    def __init__(self, parent: tk.Misc, instance: Device | Metric) -> None:
+        self.instance: Device | Metric = instance
+        self._writable_var = tk.StringVar()
         self._applying = False
         title = f"Properties: {getattr(instance, 'name', str(instance))}"
         super().__init__(parent, title=title)
@@ -124,7 +135,7 @@ class AttributeViewerDialog(simpledialog.Dialog):
         ttk.Button(box, text="Close", command=self.cancel, width=10).pack(padx=5, pady=5)
         box.pack()
 
-    def body(self, master):
+    def body(self, master: tk.Misc) -> tk.Misc:
         # Properties section
         props_frame = ttk.LabelFrame(master, text="Properties", padding=5)
         props_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
@@ -167,7 +178,7 @@ class AttributeViewerDialog(simpledialog.Dialog):
 
         return master
 
-    def _apply_value(self, value):
+    def _apply_value(self, value: str | float) -> None:
         """Apply a value change immediately to the writable metric."""
         if self._applying:
             return
@@ -184,7 +195,7 @@ class AttributeViewerDialog(simpledialog.Dialog):
         finally:
             self._applying = False
 
-    def _build_switch_control(self, parent, metric: WritableMetric):
+    def _build_switch_control(self, parent: tk.Misc, metric: WritableMetric) -> None:
         """Build an on/off toggle for switch metrics."""
         assert metric.enum_values is not None
 
@@ -221,13 +232,13 @@ class AttributeViewerDialog(simpledialog.Dialog):
         )
         self._off_btn.pack(side=tk.LEFT)
 
-    def _set_switch(self, value: str):
+    def _set_switch(self, value: str) -> None:
         is_on = value == "on"
         self._on_btn.config(state=tk.DISABLED if is_on else tk.NORMAL)
         self._off_btn.config(state=tk.DISABLED if not is_on else tk.NORMAL)
         self._apply_value(value)
 
-    def _build_select_control(self, parent, metric: WritableMetric):
+    def _build_select_control(self, parent: tk.Misc, metric: WritableMetric) -> None:
         """Build a dropdown for select metrics. Shows display strings, sends enum ids."""
         assert metric.enum_values is not None
         assert metric._descriptor.enum is not None
@@ -252,13 +263,13 @@ class AttributeViewerDialog(simpledialog.Dialog):
         dropdown.grid(row=0, column=1, sticky=tk.W, padx=5, pady=3)
         dropdown.bind("<<ComboboxSelected>>", self._on_select_change)
 
-    def _on_select_change(self, _event):
+    def _on_select_change(self, _event: tk.Event[tk.Misc]) -> None:
         """Send the enum id when a display string is selected."""
         display = self._writable_var.get()
         enum_id = self._select_string_to_id.get(display, display)
         self._apply_value(enum_id)
 
-    def _build_number_control(self, parent, metric: WritableMetric, descriptor):
+    def _build_number_control(self, parent: tk.Misc, metric: WritableMetric, descriptor: TopicDescriptor) -> None:
         """Build a slider + entry for number metrics with min/max/step."""
         current_value = float(metric.value) if metric.value is not None else 0.0
         min_val = float(metric.min_value) if metric.min_value is not None else 0.0
@@ -320,15 +331,15 @@ class AttributeViewerDialog(simpledialog.Dialog):
         ).pack(side=tk.LEFT)
 
         # Sync entry → slider (visual only, no apply)
-        self._writable_var.trace_add("write", lambda *_: self._sync_entry_to_slider(min_val, max_val))
+        self._writable_var.trace_add("write", lambda _name, _index, _mode: self._sync_entry_to_slider(min_val, max_val))
 
-    def _on_slider_change(self, value, precision, unit):
+    def _on_slider_change(self, value: str, precision: int, unit: str) -> None:
         val = round(float(value), precision)
         self._writable_var.set(str(val))
         self._value_display.config(text=f"{val} {unit}")
         self._apply_value(val)
 
-    def _sync_entry_to_slider(self, min_val, max_val):
+    def _sync_entry_to_slider(self, min_val: float, max_val: float) -> None:
         try:
             val = float(self._writable_var.get())
             if min_val <= val <= max_val:
@@ -346,7 +357,7 @@ class MetricContainer:
         self._tree_view = tree_view
         self._parent_item = parent_item
 
-    def _update(self, metric: Metric, value):
+    def _update(self, _metric: Metric, value: Any) -> None:
         formatted = self._metric.format_value(value)
         if self._tree_view.exists(self._parent_item):
             self._tree_view.item(
@@ -360,7 +371,9 @@ class MetricContainer:
 
 
 class App:
-    def __init__(self, log_topic: str | None):
+    """Main Tkinter application window for browsing Victron devices and metrics."""
+
+    def __init__(self, log_topic: str | None) -> None:
         self._log_topic = log_topic
         self.root = tk.Tk()
         self.root.resizable(True, True)
@@ -484,13 +497,16 @@ class App:
         self._to_quit = False
 
     def update(self):
+        """Pump the Tkinter event loop once."""
         self.root.update()
 
     def _on_close(self):
+        """Flag the app to quit when the window is closed."""
         self._to_quit = True
 
     @property
     def to_quit(self):
+        """Return True when the user has requested to close the window."""
         return self._to_quit
 
     def _refresh_info_button_state(self):
@@ -498,7 +514,7 @@ class App:
         has_metric_selection = len(self.metric_tree.selection()) > 0
         self.info_button.config(state=tk.NORMAL if (has_device_selection or has_metric_selection) else tk.DISABLED)
 
-    def _on_device_select(self, _event):
+    def _on_device_select(self, _event: tk.Event[tk.Misc]) -> None:
         if self._client is None:
             return
         selection = self.device_tree.selection()
@@ -506,10 +522,10 @@ class App:
         self._refill_metric_pane()
         self._refresh_info_button_state()
 
-    def _on_metric_select(self, _event):
+    def _on_metric_select(self, _event: tk.Event[tk.Misc]) -> None:
         self._refresh_info_button_state()
 
-    def _on_device_double_click(self, event):
+    def _on_device_double_click(self, event: tk.Event[tk.Misc]) -> None:
         """Handle double-click on a device node."""
         item = self.device_tree.identify_row(event.y)
         if not item or self._client is None:
@@ -518,7 +534,7 @@ class App:
         if device is not None:
             AttributeViewerDialog(self.root, device)
 
-    def _on_metric_double_click(self, event):
+    def _on_metric_double_click(self, event: tk.Event[tk.Misc]) -> None:
         """Handle double-click on a metric row."""
         item = self.metric_tree.identify_row(event.y)
         if not item or self._client is None:
@@ -546,7 +562,7 @@ class App:
         self._expand_all_recursive()
 
     def _expand_all_recursive(self):
-        def _expand(item):
+        def _expand(item: str) -> None:
             self.device_tree.item(item, open=True)
             for child in self.device_tree.get_children(item):
                 _expand(child)
@@ -561,7 +577,7 @@ class App:
     def _clear_search(self):
         self._search_var.set("")
 
-    def _on_search(self, *_args):
+    def _on_search(self, *_args: object) -> None:
         query = self._search_var.get().lower().strip()
         self._refill_tree_filtered(query)
 
@@ -611,7 +627,7 @@ class App:
         self._refill_metric_pane()
         self._refresh_info_button_state()
 
-    def _device_matches(self, device: Device, query: str, all_devices: dict) -> bool:
+    def _device_matches(self, device: Device, query: str, all_devices: dict[str, Device]) -> bool:
         """Check if device or any of its children/metrics match the query."""
         if not query:
             return True
@@ -627,7 +643,7 @@ class App:
         children = [d for d in all_devices.values() if d.parent_device is device]
         return any(self._device_matches(child, query, all_devices) for child in children)
 
-    def _insert_device_tree(self, device: Device, parent_iid: str, all_devices: dict, query: str):
+    def _insert_device_tree(self, device: Device, parent_iid: str, all_devices: dict[str, Device], query: str) -> None:
         """Insert a device and its children into the tree."""
         if not self._device_matches(device, query, all_devices):
             return
@@ -770,7 +786,7 @@ class App:
         if password == "":
             password = None
 
-        async def connect():
+        async def connect() -> None:
             success = await self._async_connect(server, port, username, password, use_ssl)
             if not success:
                 self.connect_button.config(state=tk.NORMAL)
@@ -798,7 +814,8 @@ class App:
         self.connect_button.config(state=tk.NORMAL)
 
 
-async def run_app(log_topic: str | None):
+async def run_app(log_topic: str | None) -> None:
+    """Create the app and run its update loop until the window is closed."""
     app = App(log_topic)
     global asyncio_loop  # noqa: PLW0603
     asyncio_loop = asyncio.get_running_loop()
@@ -807,7 +824,8 @@ async def run_app(log_topic: str | None):
         await asyncio.sleep(0.01)
 
 
-def main():
+def main() -> None:
+    """Parse CLI arguments and start the metric viewer application."""
     parser = argparse.ArgumentParser(description="Victron Venus Metric Viewer")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
     parser.add_argument("--log-file", "-l", type=str, help="Log to a specified file")
@@ -815,7 +833,10 @@ def main():
     args = parser.parse_args()
 
     log_level = logging.INFO if args.verbose else logging.WARNING
-    log_config = {"level": log_level, "format": "%(asctime)s - %(name)s - %(levelname)s - [%(thread)d] - %(message)s"}
+    log_config: dict[str, Any] = {
+        "level": log_level,
+        "format": "%(asctime)s - %(name)s - %(levelname)s - [%(thread)d] - %(message)s",
+    }
 
     if args.log_file:
         log_config["filename"] = args.log_file
