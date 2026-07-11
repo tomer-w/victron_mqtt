@@ -7,7 +7,7 @@ name = "victron_mqtt"
 version = "2026.7.2"
 description = "Python library for communicating with Victron Venus OS MQTT interface"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 license = "MIT"
 keywords = ["victron", "mqtt", "venus os"]
 authors = [
@@ -16,12 +16,14 @@ authors = [
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "paho-mqtt>=1.6.1",
+  "paho-mqtt>=2.0",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -95,7 +97,7 @@ exclude_lines = [
 [tool.ruff]
 exclude = [".git", "__pycache__", "node_modules", "public", "venv"]
 line-length = 120
-target-version = "py313"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [
