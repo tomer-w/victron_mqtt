@@ -1,4 +1,5 @@
 """Unit tests for the ParsedTopic class and its interaction with TopicDescriptor, including handling of topics with placeholders and device type mapping."""
+
 import pytest
 
 from victron_mqtt._victron_enums import DeviceType, GenericOnOff
@@ -10,7 +11,9 @@ from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor, topic_to_dev
 def test_parsed_topic_with_pattern():
     """Test parsing a topic that includes a placeholder and ensure it is correctly extracted and matched to the TopicDescriptor."""
     # Find the TopicDescriptor with the desired topic
-    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/system/{device_id}/Relay/{relay}/State"), None)
+    descriptor = next(
+        (t for t in topics if t.topic == "N/{installation_id}/system/{device_id}/Relay/{relay}/State"), None
+    )
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     # Create a ParsedTopic instance
@@ -32,7 +35,9 @@ def test_parsed_topic_with_pattern():
 def test_parsed_topic_with_phase():
     """Test parsing a topic that includes a phase placeholder and ensure it is correctly extracted and matched to the TopicDescriptor."""
     # Find the TopicDescriptor with the desired topic
-    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/system/{device_id}/Ac/Genset/{phase}/Power"), None)
+    descriptor = next(
+        (t for t in topics if t.topic == "N/{installation_id}/system/{device_id}/Ac/Genset/{phase}/Power"), None
+    )
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     # Create a ParsedTopic instance
@@ -50,10 +55,13 @@ def test_parsed_topic_with_phase():
     assert parsed_topic.key_values["phase"] == "L1", "Phase should match"
     assert parsed_topic.short_id == "system_generator_load_l1", "Short ID should match"
 
+
 def test_parsed_topic_with_next_phase():
     """Test parsing a topic that includes a phase placeholder and ensure it is correctly extracted and matched to the TopicDescriptor."""
     # Find the TopicDescriptor with the desired topic
-    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/grid/{device_id}/Ac/{phase}/VoltageLineToLine"), None)
+    descriptor = next(
+        (t for t in topics if t.topic == "N/{installation_id}/grid/{device_id}/Ac/{phase}/VoltageLineToLine"), None
+    )
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     # Create a ParsedTopic instance
@@ -71,10 +79,13 @@ def test_parsed_topic_with_next_phase():
     assert parsed_topic.key_values["phase"] == "L3", "Phase should match"
     assert parsed_topic.short_id == "grid_voltage_l3_l1", "Short ID should match"
 
+
 def test_parsed_topic_with_phase_and_placeholder():
     """Test parsing a topic that includes a phase placeholder and another placeholder, and ensure they are correctly extracted and matched to the TopicDescriptor."""
     # Find the TopicDescriptor with the desired topic
-    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/multi/{device_id}/Ac/Out/{output}/{phase}/I"), None)
+    descriptor = next(
+        (t for t in topics if t.topic == "N/{installation_id}/multi/{device_id}/Ac/Out/{output}/{phase}/I"), None
+    )
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     # Create a ParsedTopic instance
@@ -92,10 +103,14 @@ def test_parsed_topic_with_phase_and_placeholder():
     assert parsed_topic.key_values["phase"] == "L1", "Phase should match"
     assert parsed_topic.short_id == "multi_acout_1_current_l1", "Short ID should match"
 
+
 def test_settings_parsed_topic():
     """Test parsing a settings topic and ensure it is correctly extracted and matched to the TopicDescriptor, including handling of device type mapping."""
     # Find the TopicDescriptor with the desired topic
-    descriptor = next((t for t in topics if t.topic == "N/{installation_id}/settings/{device_id}/Settings/CGwacs/AcPowerSetPoint"), None)
+    descriptor = next(
+        (t for t in topics if t.topic == "N/{installation_id}/settings/{device_id}/Settings/CGwacs/AcPowerSetPoint"),
+        None,
+    )
     assert descriptor is not None, "TopicDescriptor with the specified topic not found"
 
     # Create a ParsedTopic instance
@@ -106,11 +121,12 @@ def test_settings_parsed_topic():
     # Validate the ParsedTopic instance
     assert parsed_topic.installation_id == "123", "Installation ID should match"
     assert parsed_topic.device_id == "0", "Device ID should match"
-    assert parsed_topic.device_type == DeviceType.SYSTEM # We decided to map CGwacs to SYSTEM
+    assert parsed_topic.device_type == DeviceType.SYSTEM  # We decided to map CGwacs to SYSTEM
 
     parsed_topic.finalize_topic_fields(descriptor)
     # Validate the ParsedTopic instance additional fields after matching description
     assert parsed_topic.short_id == "system_ac_power_set_point", "Short ID should match"
+
 
 def test_parsed_root_topic():
     """Test parsing a root topic that does not include a device_id placeholder and ensure it is correctly extracted and matched to the TopicDescriptor, including handling of device type mapping."""

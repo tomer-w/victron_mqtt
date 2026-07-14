@@ -4,6 +4,7 @@ import ast
 import inspect
 import re
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -508,6 +509,7 @@ def test_min_max_values_aligned_with_range_type():
     mock_metric._key_values = {}
     mock_descriptor = TopicDescriptor(topic="mock", message_type=MetricKind.SENSOR, short_id="mock", name="mock")
     mock_metric._descriptor = mock_descriptor
+    mock_metric._device = SimpleNamespace(product_id=None)  # type: ignore[assignment]
 
     for descriptor in topics:
         # Test min value

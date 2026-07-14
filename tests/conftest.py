@@ -17,16 +17,19 @@ import pytest
 
 orig_close = asyncio.BaseEventLoop.close
 
+
 def debug_close(self):
     print("Event loop is being closed. Call stack:")
-    #traceback.print_stack()
+    # traceback.print_stack()
     orig_close(self)
+
 
 asyncio.BaseEventLoop.close = debug_close
 
+
 @pytest.fixture
 def config_host():
-    return os.getenv("VICTRON_MQTT_SERVER", "127.0.0.1") #venus.local.
+    return os.getenv("VICTRON_MQTT_SERVER", "127.0.0.1")  # venus.local.
 
 
 @pytest.fixture
@@ -43,12 +46,14 @@ def config_username():
 def config_password():
     return os.getenv("VICTRON_TEST_PASSWORD", None)
 
+
 @pytest.fixture
 def config_root_prefix():
     prefix = os.getenv("VICTRON_TEST_ROOT_PREFIX", None)
     if prefix and prefix != "":
         return prefix
     return None
+
 
 @pytest.fixture
 def config_use_ssl() -> bool:

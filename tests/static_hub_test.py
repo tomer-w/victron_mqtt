@@ -2044,6 +2044,70 @@ async def test_dynamic_min_max_resolved_metric():
 
 
 @pytest.mark.asyncio
+async def test_charge_current_limit_max_from_product_table():
+    """E2E: max charge current is resolved from the product table when the GX omits it."""
+    hub: Hub = await create_mocked_hub()
+
+    # SmartSolar MPPT 100/50 (0xA057) -> rated 50 A. Payload carries no max.
+    await inject_message(hub, "N/123/solarcharger/170/ProductId", f'{{"value": {0xA057}}}')
+    await inject_message(hub, "N/123/solarcharger/170/Settings/ChargeCurrentLimit", '{"value": 30}')
+    await finalize_injection(hub)
+
+    device = hub.devices["solarcharger_170"]
+    assert device.product_id == 0xA057
+    metric = device.get_metric("solarcharger_charge_current_limit")
+    assert isinstance(metric, WritableMetric), "Metric should exist in the device"
+    assert metric.value == 30, f"Expected value 30, got {metric.value}"
+    assert metric.max_value == 50, f"Expected max to resolve to 50 from product table, got {metric.max_value}"
+
+
+@pytest.mark.asyncio
+async def test_charge_current_limit_max_gx_reported_wins():
+    """E2E: a GX-reported max in the payload takes precedence over the product table."""
+    hub: Hub = await create_mocked_hub()
+
+    # Known product (table -> 50), but the payload also reports its own max of 40.
+    await inject_message(hub, "N/123/solarcharger/170/ProductId", f'{{"value": {0xA057}}}')
+    await inject_message(hub, "N/123/solarcharger/170/Settings/ChargeCurrentLimit", '{"value": 30, "max": 40}')
+    await finalize_injection(hub)
+
+    device = hub.devices["solarcharger_170"]
+    metric = device.get_metric("solarcharger_charge_current_limit")
+    assert isinstance(metric, WritableMetric), "Metric should exist in the device"
+    assert metric.max_value == 40, f"Expected GX-reported max 40 to win, got {metric.max_value}"
+
+
+@pytest.mark.asyncio
+async def test_charge_current_limit_max_unknown_product_falls_back():
+    """E2E: an unknown product ID falls back to the descriptor default (200)."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/solarcharger/170/ProductId", '{"value": 65535}')
+    await inject_message(hub, "N/123/solarcharger/170/Settings/ChargeCurrentLimit", '{"value": 30}')
+    await finalize_injection(hub)
+
+    device = hub.devices["solarcharger_170"]
+    metric = device.get_metric("solarcharger_charge_current_limit")
+    assert isinstance(metric, WritableMetric), "Metric should exist in the device"
+    assert metric.max_value == 200, f"Expected fallback max 200, got {metric.max_value}"
+
+
+@pytest.mark.asyncio
+async def test_charge_current_limit_max_no_product_id_falls_back():
+    """E2E: when no ProductId is published, the max falls back to the descriptor default (200)."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/solarcharger/170/Settings/ChargeCurrentLimit", '{"value": 30}')
+    await finalize_injection(hub)
+
+    device = hub.devices["solarcharger_170"]
+    assert device.product_id is None
+    metric = device.get_metric("solarcharger_charge_current_limit")
+    assert isinstance(metric, WritableMetric), "Metric should exist in the device"
+    assert metric.max_value == 200, f"Expected fallback max 200, got {metric.max_value}"
+
+
+@pytest.mark.asyncio
 async def test_on_connect_fail_before_first_connect():
     """Test that connection failures before first connect raise CannotConnectError."""
     hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False, installation_id="test123")
@@ -2630,15 +2694,20 @@ class TestDeviceProperties:
         dev._set_device_property_from_topic(desc, '{"value": "MyBattery"}')
         assert dev.custom_name == "MyBattery"
 
-    def test_ignore_product_id(self):
+    def test_store_product_id(self):
         dev = _make_device()
         desc = _make_descriptor(
             short_id="victron_productid",
             message_type=MetricKind.ATTRIBUTE,
-            value_type=ValueType.STRING,
+            value_type=ValueType.INT,
             metric_type=MetricType.NONE,
         )
-        dev._set_device_property_from_topic(desc, '{"value": "0x1234"}')
+        dev._set_device_property_from_topic(desc, '{"value": 4660}')
+        assert dev.product_id == 0x1234
+
+    def test_product_id_unknown_when_absent(self):
+        dev = _make_device()
+        assert dev.product_id is None
 
     def test_none_payload_ignored(self):
         dev = _make_device()
