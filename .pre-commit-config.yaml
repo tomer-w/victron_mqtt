@@ -8,6 +8,20 @@ repos:
       - id: ruff-format
   - repo: local
     hooks:
+      - id: mypy
+        name: Run mypy (package only)
+        entry: hatch run types:check victron_mqtt
+        language: system
+        pass_filenames: false
+        files: ^victron_mqtt/
+        stages: [pre-commit]
+      - id: pyright
+        name: Run pyright (package + tests)
+        entry: hatch run types:pyright
+        language: system
+        pass_filenames: false
+        files: ^(victron_mqtt|tests)/
+        stages: [pre-commit]
       - id: dump-victron-mqtt
         name: Dump Victron MQTT data
         entry: python -m victron_mqtt.utils.dump_victron_mqtt victron_mqtt.json

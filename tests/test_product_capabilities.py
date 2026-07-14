@@ -87,7 +87,7 @@ class TestGetProductCapabilities:
 
     def test_every_table_entry_has_positive_current(self):
         for member in VictronProductId:
-            caps = get_product_capabilities(member.code)
+            caps = get_product_capabilities(int(member.code))
             if caps is not None and caps.max_charge_current is not None:
                 assert caps.max_charge_current > 0
 
