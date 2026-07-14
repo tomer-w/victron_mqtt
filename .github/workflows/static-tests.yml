@@ -32,6 +32,8 @@ jobs:
         run: ruff check .
       - name: Run mypy (package only)
         run: hatch run types:check victron_mqtt
+      - name: Run pyright (package + tests)
+        run: hatch run types:pyright
 
   static_tests:
     runs-on: ubuntu-latest

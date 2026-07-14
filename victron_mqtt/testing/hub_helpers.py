@@ -126,7 +126,7 @@ async def create_mocked_hub(
                 try:
                     options: dict[str, list[dict[str, str]]] = json.loads(json_string)
                     keepalive_options = options.get("keepalive-options", [])
-                    if keepalive_options and isinstance(keepalive_options, list):
+                    if keepalive_options:
                         return keepalive_options[0].get("full-publish-completed-echo", "")
                     return ""
                 except (json.JSONDecodeError, AttributeError, IndexError):

@@ -1,4 +1,15 @@
 {
   "typeCheckingMode": "strict",
-  "reportPrivateUsage": false
+  "reportPrivateUsage": false,
+  "executionEnvironments": [
+    {
+      "root": "tests",
+      "extraPaths": ["."],
+      "reportUnknownMemberType": false,
+      "reportUnknownArgumentType": false,
+      "reportUnknownVariableType": false,
+      "reportUnknownParameterType": false,
+      "reportMissingParameterType": false
+    }
+  ]
 }

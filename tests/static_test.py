@@ -7,40 +7,16 @@ from pathlib import Path
 
 import pytest
 
-
-def get_topics():
-    from victron_mqtt._victron_topics import topics
-
-    return topics
-
-
-def get_metric_kind():
-    from victron_mqtt.constants import MetricKind
-
-    return MetricKind
-
-
-def get_value_type():
-    from victron_mqtt.constants import ValueType
-
-    return ValueType
-
-
-def get_metric_type():
-    from victron_mqtt.constants import MetricType
-
-    return MetricType
-
-
-def get_metric_nature():
-    from victron_mqtt.constants import MetricNature
-
-    return MetricNature
+import victron_mqtt._victron_formulas as formulas
+from victron_mqtt import __all__ as victron_all
+from victron_mqtt._victron_enums import DeviceType, GenericOnOff
+from victron_mqtt._victron_topics import topics
+from victron_mqtt.constants import MetricKind, MetricNature, MetricType, ValueType, VictronEnum
+from victron_mqtt.data_classes import TopicDescriptor, topic_to_device_type
+from victron_mqtt.writable_metric import WritableMetric
 
 
 def test_no_duplicate_short_ids():
-    topics = get_topics()
-    MetricKind = get_metric_kind()
     short_ids = {}
     errors = []
     for descriptor in topics:
@@ -56,10 +32,6 @@ def test_no_duplicate_short_ids():
 
 
 def test_no_duplicate_device_type_and_name():
-    topics = get_topics()
-    MetricKind = get_metric_kind()
-    from victron_mqtt.data_classes import topic_to_device_type
-
     names = {}
     errors = []
     for descriptor in topics:
@@ -73,8 +45,6 @@ def test_no_duplicate_device_type_and_name():
 
 
 def test_naming_unit_consistency():
-    topics = get_topics()
-    MetricType = get_metric_type()
     errors = []
     for descriptor in topics:
         if descriptor.name and descriptor.unit_of_measurement:
@@ -95,10 +65,6 @@ def test_naming_unit_consistency():
 
 
 def test_required_fields_for_sensor():
-    topics = get_topics()
-    MetricKind = get_metric_kind()
-    ValueType = get_value_type()
-    MetricNature = get_metric_nature()
     errors = []
     for descriptor in topics:
         if descriptor.message_type == MetricKind.SENSOR:
@@ -150,7 +116,6 @@ def test_required_fields_for_sensor():
 
 
 def test_name_starts_with_capital_letter():
-    topics = get_topics()
     errors = []
 
     for descriptor in topics:
@@ -171,10 +136,6 @@ def test_name_starts_with_capital_letter():
 
 
 def test_enum_message_type():
-    topics = get_topics()
-    MetricKind = get_metric_kind()
-    from victron_mqtt._victron_enums import GenericOnOff
-
     errors = []
     for descriptor in topics:
         if descriptor.enum is not None:
@@ -195,9 +156,6 @@ def test_enum_message_type():
 
 
 def test_short_id_format():
-    topics = get_topics()
-    import re
-
     short_id_pattern = re.compile(r"^[a-z0-9_-]+(?:\{[a-z_]+\}[a-z0-9_-]*)*$")
     errors = []
     for descriptor in topics:
@@ -220,8 +178,6 @@ def test_short_id_format():
 
 
 def test_metric_type_vs_unit():
-    topics = get_topics()
-    MetricType = get_metric_type()
     errors = []
     for descriptor in topics:
         if descriptor.unit_of_measurement == "°C" and descriptor.metric_type != MetricType.TEMPERATURE:
@@ -258,9 +214,6 @@ def test_metric_type_vs_unit():
 
 
 def test_metric_nature_for_energy_and_power():
-    topics = get_topics()
-    MetricType = get_metric_type()
-    MetricNature = get_metric_nature()
     errors = []
     for descriptor in topics:
         if descriptor.metric_type == MetricType.ENERGY and descriptor.metric_nature != MetricNature.TOTAL:
@@ -279,8 +232,6 @@ def test_metric_nature_for_energy_and_power():
 
 
 def test_topic_pattern_structure():
-    topics = get_topics()
-    MetricKind = get_metric_kind()
     errors = []
     for descriptor in topics:
         topic = descriptor.topic
@@ -306,8 +257,6 @@ def test_topic_pattern_structure():
 
 
 def test_phase_placeholder_for_plus_topics():
-    topics = get_topics()
-    MetricKind = get_metric_kind()
     errors = []
     for descriptor in topics:
         topic = descriptor.topic
@@ -326,7 +275,6 @@ def test_phase_placeholder_for_plus_topics():
 
 
 def test_no_literal_phase_identifiers():
-    topics = get_topics()
     errors = []
     for descriptor in topics:
         topic = descriptor.topic
@@ -342,8 +290,6 @@ def test_no_literal_phase_identifiers():
 
 def test_problem_and_connectivity_have_on_off_enum():
     """Ensure PROBLEM and CONNECTIVITY topics have an enum with exactly two states: id='on' and id='off'."""
-    topics = get_topics()
-    MetricType = get_metric_type()
     errors = []
     for descriptor in topics:
         if descriptor.metric_type not in (MetricType.PROBLEM, MetricType.CONNECTIVITY):
@@ -366,7 +312,6 @@ def test_problem_and_connectivity_have_on_off_enum():
 
 
 def test_no_invalid_double_slash():
-    topics = get_topics()
     errors = []
     errors.extend(
         f"Topic '{descriptor.topic}' contains invalid '//' sequence"
@@ -378,10 +323,6 @@ def test_no_invalid_double_slash():
 
 
 def test_valid_device_type_in_topic():
-    topics = get_topics()
-    MetricKind = get_metric_kind()
-    from victron_mqtt._victron_enums import DeviceType
-
     valid_device_types = {member.code for member in DeviceType}
     valid_device_types.add("Generator{gen_id(0-1)}")
     errors = []
@@ -417,7 +358,6 @@ def test_valid_device_type_in_topic():
 
 
 def test_no_installation_id_or_device_id_in_short_id_or_name():
-    topics = get_topics()
     errors = []
     for descriptor in topics:
         if descriptor.short_id and ("{installation_id}" in descriptor.short_id or "{device_id}" in descriptor.short_id):
@@ -434,9 +374,6 @@ def test_no_installation_id_or_device_id_in_short_id_or_name():
 
 def test_switch_topics_are_binary_enums():
     """Ensure SWITCH topics use ENUM value_type with exactly two members: id='on' and id='off'."""
-    topics = get_topics()
-    MetricKind = get_metric_kind()
-    ValueType = get_value_type()
     errors = []
     for descriptor in topics:
         if descriptor.message_type != MetricKind.SWITCH:
@@ -467,14 +404,11 @@ def test_switch_topics_are_binary_enums():
 
 def test_victron_enum_in_init():
     """Ensure all VictronEnum-derived enums are included in __init__.py's __all__."""
-    from victron_mqtt import __all__
-    from victron_mqtt.constants import VictronEnum
-
     # Collect all subclasses of VictronEnum
     victron_enum_classes = [cls.__name__ for cls in VictronEnum.__subclasses__()]
 
     # Check if all subclasses are in __all__
-    missing_enums = [enum for enum in victron_enum_classes if enum not in __all__]
+    missing_enums = [enum for enum in victron_enum_classes if enum not in victron_all]
 
     assert not missing_enums, (
         f"The following VictronEnum-derived enums are missing in __init__.py's __all__: {missing_enums}"
@@ -483,8 +417,6 @@ def test_victron_enum_in_init():
 
 def test_topics_are_sorted_alphabetically():
     """Ensure TopicDescriptor entries are sorted alphabetically by topic field."""
-    topics = get_topics()
-    MetricKind = get_metric_kind()
 
     # Separate attributes from other topics
     attributes = [topic for topic in topics if topic.message_type == MetricKind.ATTRIBUTE]
@@ -522,7 +454,6 @@ def test_topics_are_sorted_alphabetically():
 
 def test_name_references_exist():
     """Test that when a topic name contains a reference like {key:short_id}, the referenced short_id exists."""
-    topics = get_topics()
     errors = []
 
     # First collect all short_ids
@@ -532,8 +463,6 @@ def test_name_references_exist():
     for descriptor in topics:
         if descriptor.name:
             # Look for patterns like {key:short_id}
-            import re
-
             references = re.findall(r"\{(?P<moniker>[^:]+:(?:[^{}]|{[^{}]*})+)\}", descriptor.name)
             for ref_short_id in references:
                 ref = ref_short_id.split(":", 1)[1]
@@ -548,9 +477,6 @@ def test_name_references_exist():
 
 def test_no_more_than_one_main_topic_per_device_type():
     """Ensure each device type has at most one topic with main_topic=True."""
-    topics = get_topics()
-    from victron_mqtt.data_classes import topic_to_device_type
-
     main_topics: dict[str, str] = {}
     errors = []
     for descriptor in topics:
@@ -575,16 +501,12 @@ def test_min_max_values_aligned_with_range_type():
     - Numeric (int or float) - static values
     - String in format "metric_id:default_value" - dynamic references to other metrics
     """
-    topics = get_topics()
-    from victron_mqtt.data_classes import TopicDescriptor
-    from victron_mqtt.writable_metric import WritableMetric
-
     errors = []
 
     # Create a mock WritableMetric instance to access _resolve_range_value
     mock_metric = WritableMetric.__new__(WritableMetric)
     mock_metric._key_values = {}
-    mock_descriptor = TopicDescriptor(topic="mock", message_type=get_metric_kind().SENSOR, short_id="mock", name="mock")
+    mock_descriptor = TopicDescriptor(topic="mock", message_type=MetricKind.SENSOR, short_id="mock", name="mock")
     mock_metric._descriptor = mock_descriptor
 
     for descriptor in topics:
@@ -727,7 +649,6 @@ def _check_sentence_case(text: str) -> str | None:
 
 def test_topic_names_are_sentence_case():
     """Ensure TopicDescriptor name fields use sentence case (only first word capitalized)."""
-    topics = get_topics()
     errors = []
     for descriptor in topics:
         if not descriptor.name:
@@ -743,8 +664,6 @@ def test_topic_names_are_sentence_case():
 
 def test_enum_strings_are_sentence_case():
     """Ensure all VictronEnum display strings use sentence case."""
-    from victron_mqtt.constants import VictronEnum
-
     errors = []
     for enum_cls in VictronEnum.__subclasses__():
         for member in enum_cls:
@@ -766,10 +685,6 @@ def test_formula_functions_reference_valid_dependencies():
     This catches bugs where a topic's short_id is renamed in the descriptor but
     the formula function still looks up the old name via generic_short_id.
     """
-    import victron_mqtt._victron_formulas as formulas
-
-    topics = get_topics()
-
     # Build a set of all known short_ids (dependency targets)
     all_short_ids = {t.short_id for t in topics}
 
@@ -787,7 +702,7 @@ def test_formula_functions_reference_valid_dependencies():
         # Resolve depends_on short_ids (stripping TopicDependency wrappers)
         dep_short_ids = set()
         for dep in topic.depends_on:
-            dep_id = dep.short_id if hasattr(dep, "short_id") else str(dep)
+            dep_id = str(dep) if isinstance(dep, str) else dep.short_id
             dep_short_ids.add(dep_id)
 
         for func_name in func_names:
@@ -842,8 +757,6 @@ def _normalize_dependency_shape(value: str) -> str:
 
 def _regular_metric_unique_id_template(descriptor) -> str | None:
     """Build the generic unique-id template for a regular topic descriptor."""
-    from victron_mqtt.data_classes import topic_to_device_type
-
     if descriptor.topic.startswith("$$func"):
         return None
 
@@ -864,9 +777,6 @@ def _regular_metric_unique_id_template(descriptor) -> str | None:
 
 def test_regular_depends_on_reference_valid_metric_templates():
     """Ensure regular-topic depends_on entries target a valid metric unique-id template shape."""
-    topics = get_topics()
-    MetricKind = get_metric_kind()
-
     valid_templates = {
         _normalize_dependency_shape(template)
         for descriptor in topics
@@ -881,7 +791,7 @@ def test_regular_depends_on_reference_valid_metric_templates():
             continue
 
         for dep in descriptor.depends_on:
-            dep_id = dep.short_id if hasattr(dep, "short_id") else str(dep)
+            dep_id = str(dep) if isinstance(dep, str) else dep.short_id
             normalized_dep = _normalize_dependency_shape(dep_id)
             if normalized_dep not in valid_templates:
                 errors.append(
@@ -939,7 +849,6 @@ def test_no_duplicate_mqtt_topics():
     Formula topics ($$func/...) are excluded since they don't subscribe
     to MQTT and are resolved separately.
     """
-    topics = get_topics()
     seen: dict[str, str] = {}  # topic -> short_id of first occurrence
     duplicates: list[str] = []
     for descriptor in topics:

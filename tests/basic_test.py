@@ -11,11 +11,16 @@ from victron_mqtt.hub import AuthenticationError
 # Configure logging
 logger = logging.getLogger(__name__)
 
+
 @pytest.mark.asyncio
-async def test_connect(config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix):
+async def test_connect(
+    config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix
+):
     """Tests whether the client can connect to a Venus device. Disconnects after passing the test."""
     logger.debug("Starting test_connect")
-    hub = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix)
+    hub = victron_mqtt.Hub(
+        config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix
+    )
     await hub.connect()
     logger.debug("Connected to hub")
     assert hub.connected
@@ -24,7 +29,10 @@ async def test_connect(config_host, config_port, config_username, config_passwor
 
     # Check that no error logs were emitted
     error_logs = [record for record in caplog.records if record.levelno >= logging.ERROR]
-    assert len(error_logs) == 0, f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"
+    assert len(error_logs) == 0, (
+        f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"
+    )
+
 
 @pytest.mark.asyncio
 async def test_connect_auth_failure():
@@ -36,14 +44,19 @@ async def test_connect_auth_failure():
     with pytest.raises(AuthenticationError):
         await hub.connect()
 
+
 @pytest.mark.asyncio
-async def test_create_full_raw_snapshot(config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix):
+async def test_create_full_raw_snapshot(
+    config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix
+):
     """
     Tests whether the client can connect to a Venus device and verify the connection details by
     checking whether a serial number could be obtained.
     """
     logger.debug("Starting test_create_full_raw_snapshot")
-    hub = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix)
+    hub = victron_mqtt.Hub(
+        config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix
+    )
     await hub.connect()
     logger.debug("Connected to hub")
     snapshot = await hub.create_full_raw_snapshot()
@@ -52,18 +65,25 @@ async def test_create_full_raw_snapshot(config_host, config_port, config_usernam
 
     # Check that no error logs were emitted
     error_logs = [record for record in caplog.records if record.levelno >= logging.ERROR]
-    assert len(error_logs) == 0, f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"
+    assert len(error_logs) == 0, (
+        f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"
+    )
+
 
 @pytest.mark.asyncio
-async def test_devices_and_metrics(config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix):
-    hub = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix)
+async def test_devices_and_metrics(
+    config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix
+):
+    hub = victron_mqtt.Hub(
+        config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix
+    )
     await hub.connect()
     await hub.wait_for_first_refresh()
     assert len(hub.devices) > 0
 
     for device in hub.devices.values():
         assert device.device_type is not None
-        if device.device_type is None or device.device_type == DeviceType.GENERATOR:
+        if device.device_type == DeviceType.GENERATOR:
             continue
         assert len(device.metrics) > 0
 
@@ -75,15 +95,23 @@ async def test_devices_and_metrics(config_host, config_port, config_username, co
 
     # Check that no error logs were emitted
     error_logs = [record for record in caplog.records if record.levelno >= logging.ERROR]
-    assert len(error_logs) == 0, f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"
+    assert len(error_logs) == 0, (
+        f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"
+    )
 
 
 @pytest.mark.asyncio
-async def test_two_hubs_connect(config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix):
+async def test_two_hubs_connect(
+    config_host, config_port, config_username, config_password, config_use_ssl, caplog, config_root_prefix
+):
     """Tests whether the client can connect to two Venus devices. Disconnects after passing the test."""
     logger.debug("Starting test_two_hubs_connect")
-    hub1 = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix)
-    hub2 = victron_mqtt.Hub(config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix)
+    hub1 = victron_mqtt.Hub(
+        config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix
+    )
+    hub2 = victron_mqtt.Hub(
+        config_host, config_port, config_username, config_password, config_use_ssl, topic_prefix=config_root_prefix
+    )
     await hub1.connect()
     assert hub1.connected
     await hub2.connect()
@@ -95,4 +123,6 @@ async def test_two_hubs_connect(config_host, config_port, config_username, confi
 
     # Check that no error logs were emitted
     error_logs = [record for record in caplog.records if record.levelno >= logging.ERROR]
-    assert len(error_logs) == 0, f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"
+    assert len(error_logs) == 0, (
+        f"Test emitted {len(error_logs)} error log(s): {[record.message for record in error_logs]}"
+    )

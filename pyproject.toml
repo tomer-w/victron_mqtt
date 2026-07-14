@@ -38,9 +38,15 @@ Source = "https://github.com/tomer-w/victron_mqtt"
 [tool.hatch.envs.types]
 extra-dependencies = [
   "mypy>=1.0.0",
+  "pyright==1.1.408",
+  "pytest",
+  "pytest-asyncio",
+  "pytest-mock",
+  "pytest-cov",
 ]
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:victron_mqtt tests}"
+pyright = "python -m pyright {args:victron_mqtt tests}"
 
 [tool.hatch.envs.test]
 dependencies = [

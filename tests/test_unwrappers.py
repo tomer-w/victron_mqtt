@@ -233,22 +233,22 @@ def test_wrap_functions_and_mappings():
             SolarChargerDeviceOffReason,
         )
     ) == {
-        "value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code
-        + SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.code
+        "value": int(SolarChargerDeviceOffReason.NO_INPUT_POWER.code)
+        + int(SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.code)
     }
     # wrap_bitmask with string name(s)
     assert json.loads(wrap_bitmask("No/low input power", SolarChargerDeviceOffReason)) == {
         "value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code
     }
     assert json.loads(wrap_bitmask("No/low input power,Switched off (power switch)", SolarChargerDeviceOffReason)) == {
-        "value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code
-        + SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.code
+        "value": int(SolarChargerDeviceOffReason.NO_INPUT_POWER.code)
+        + int(SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.code)
     }
     assert json.loads(
         wrap_bitmask(["No/low input power", "Switched off (power switch)"], SolarChargerDeviceOffReason)
     ) == {
-        "value": SolarChargerDeviceOffReason.NO_INPUT_POWER.code
-        + SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.code
+        "value": int(SolarChargerDeviceOffReason.NO_INPUT_POWER.code)
+        + int(SolarChargerDeviceOffReason.SWITCHED_OFF_POWER_SWITCH.code)
     }
 
     # wrap_epoch
