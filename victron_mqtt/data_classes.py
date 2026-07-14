@@ -75,7 +75,7 @@ class TopicDescriptor:
         None  # SwitchableOutput type (static or metric reference). When 6 (dropdown), labels are used.
     )
     labels: str | None = None  # JSON labels metric reference (format: 'metric_id:default')
-    key_values: dict[str, str] = field(default_factory=dict)
+    key_values: dict[str, str] = field(default_factory=dict[str, str])
     experimental: bool = False
     # Depends on format is different for regular and formula topics:
     # For regular topics, the depends_on list contains the {device_id}_{metric_short_id} of the metric it depends on
