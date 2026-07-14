@@ -317,6 +317,9 @@ class Metric:
             try:
                 # If the event loop is running, schedule the callback
                 self._hub._loop.call_soon_threadsafe(self._on_update, self, self.value)
+            except RuntimeError as exc:
+                # The loop can close between the is_running() check above and this call during shutdown
+                _LOGGER.debug("Skipping on_update callback for %s: %s", self.unique_id, exc)
             except Exception as exc:
                 _LOGGER.exception("Error scheduling on_update callback for %s: %s", self.unique_id, exc)
 

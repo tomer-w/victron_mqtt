@@ -394,14 +394,14 @@ class Hub:
         _LOGGER.info(
             "Publishing message to topic_short_id: %s, device_id: %s, value: %s", topic_short_id, device_id, value
         )
+        if not device_id:
+            raise ValueError("device_id must be provided")
+        if self._installation_id is None:
+            raise NotConnectedError("Cannot publish before connect(): installation ID is not known yet")
         topic_desc = self._service_active_topics.get(topic_short_id)
         if topic_desc is None:
             _LOGGER.error("No active topic found for topic_short_id: %s", topic_short_id)
             raise TopicNotFoundError(f"No active topic found for topic_short_id: {topic_short_id}")
-        if self._installation_id is None:
-            raise NotConnectedError("Cannot publish before connect(): installation ID is not known yet")
-        if not device_id:
-            raise ValueError("device_id must be provided")
         topic = topic_desc.topic.replace("{installation_id}", self._installation_id).replace("{device_id}", device_id)
         payload = WritableMetric._wrap_payload(topic_desc, value) if value is not None else ""
         self._publish(topic, payload)
