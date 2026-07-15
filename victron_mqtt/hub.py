@@ -115,13 +115,6 @@ class Hub:
             If True, an SSL/TLS context will be configured when connecting.
             WARNING: without `ssl_context`, certificates are NOT verified
             (GX devices ship with self-signed certificates).
-        ssl_context: ssl.SSLContext | None
-            Custom SSL context for the TLS connection. Provide a context with
-            your CA loaded (e.g. `ssl.create_default_context(cafile=...)`) to
-            enable real certificate verification. When None and `use_ssl` is
-            True, a default context without certificate verification is used.
-            Only valid together with `use_ssl=True`; otherwise `ValueError`
-            is raised.
         installation_id: str | None
             If provided, used to replace `{installation_id}` placeholders in topics.
             If None, the installation id will be discovered from the broker when
@@ -144,6 +137,13 @@ class Hub:
             if None = Update only when source data change
             if 0 = Update as new mqtt data received
             if > 0 = Update no more than specified interval (in seconds)
+        ssl_context: ssl.SSLContext | None
+            Custom SSL context for the TLS connection. Provide a context with
+            your CA loaded (e.g. `ssl.create_default_context(cafile=...)`) to
+            enable real certificate verification. When None and `use_ssl` is
+            True, a default context without certificate verification is used.
+            Only valid together with `use_ssl=True`; otherwise `ValueError`
+            is raised.
 
         Behavior
         --------
@@ -405,6 +405,7 @@ class Hub:
         certificates.
         """
         if not self.use_ssl:
+            assert self._ssl_context is None, "ssl_context without use_ssl should have been rejected in __init__"
             return
         context = self._ssl_context
         if context is None:
@@ -415,6 +416,8 @@ class Hub:
             context = await asyncio.to_thread(ssl.create_default_context)
             context.check_hostname = False
             context.verify_mode = ssl.VerifyMode.CERT_NONE
+        else:
+            _LOGGER.info("TLS enabled with caller-provided SSL context")
         self._client.tls_set_context(context)  # type: ignore[arg-type]
 
     def publish(self, topic_short_id: str, device_id: str, value: str | float | int | None) -> None:

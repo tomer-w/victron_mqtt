@@ -3198,3 +3198,17 @@ def test_ssl_context_requires_use_ssl():
     custom = ssl.create_default_context()
     with pytest.raises(ValueError, match="ssl_context requires use_ssl=True"):
         Hub("localhost", 1883, None, None, use_ssl=False, ssl_context=custom)
+
+
+@pytest.mark.asyncio
+async def test_connect_sets_up_tls():
+    """connect() with use_ssl=True routes through _setup_tls and configures the client."""
+    hub = Hub("localhost", 8883, None, None, use_ssl=True)
+    hub._client = MagicMock()
+    with (
+        pytest.raises(CannotConnectError, match="Timeout"),
+        patch.object(hub, "_wait_for_connect", side_effect=CannotConnectError("Timeout waiting for first connection")),
+    ):
+        await hub.connect()
+    context = hub._client.tls_set_context.call_args[0][0]
+    assert context.verify_mode == ssl.CERT_NONE
