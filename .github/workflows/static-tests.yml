@@ -35,6 +35,28 @@ jobs:
       - name: Run pyright (package + tests)
         run: hatch run types:pyright
 
+  generated_files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install library
+        run: pip install -e .
+      - name: Regenerate victron_mqtt.json
+        run: python -m victron_mqtt.utils.dump_victron_mqtt victron_mqtt.json
+      - name: Fail if victron_mqtt.json is out of date
+        run: |
+          if ! git diff --quiet victron_mqtt.json; then
+            echo "::error file=victron_mqtt.json::victron_mqtt.json is out of date. Run the 'dump-victron-mqtt' pre-commit hook (or: python -m victron_mqtt.utils.dump_victron_mqtt victron_mqtt.json) and commit the result."
+            git --no-pager diff victron_mqtt.json
+            exit 1
+          fi
+          echo "victron_mqtt.json is up to date."
+
   static_tests:
     runs-on: ubuntu-latest
     steps:
