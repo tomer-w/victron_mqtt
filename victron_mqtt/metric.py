@@ -317,8 +317,11 @@ class Metric:
             try:
                 # If the event loop is running, schedule the callback
                 self._hub._loop.call_soon_threadsafe(self._on_update, self, self.value)
+            except RuntimeError as exc:
+                # The loop can close between the is_running() check above and this call during shutdown
+                _LOGGER.debug("Skipping on_update callback for %s: %s", self.unique_id, exc)
             except Exception as exc:
-                log_debug("Error calling callback %s", exc, exc_info=True)
+                _LOGGER.exception("Error scheduling on_update callback for %s: %s", self.unique_id, exc)
 
         for dependency in self._depend_on_me:
             assert self != dependency, f"Circular dependency detected: {self}"
