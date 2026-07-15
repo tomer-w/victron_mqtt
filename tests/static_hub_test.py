@@ -1625,7 +1625,7 @@ async def test_on_connect_sets_up_subscriptions():
     # Set required properties
     hub._client = mocked_client
     hub._installation_id = "test123"  # Would have been set during first connect()
-    hub._subscription_list = [t.replace("{installation_id}", "test123") for t in hub._subscription_list]
+    hub._resolved_subscription_list = [t.replace("{installation_id}", "test123") for t in hub._subscription_list]
     hub._first_connect = False  # Mark as not first connect to allow subscriptions
     hub._loop = asyncio.get_running_loop()  # Set the event loop
 
@@ -1635,7 +1635,7 @@ async def test_on_connect_sets_up_subscriptions():
     )
 
     # Get expected number of subscriptions
-    expected_calls = len(hub._subscription_list) + 1  # +1 for full_publish_completed
+    expected_calls = len(hub._resolved_subscription_list) + 1  # +1 for full_publish_completed
 
     # Get the actual subscription calls
     actual_calls = mocked_client.subscribe.call_count

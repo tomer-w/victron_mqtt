@@ -317,6 +317,9 @@ class Hub:
             if topic.is_adjustable_suffix and not topic.is_formula
         ]
         self._subscription_list = subscription_list1 + subscription_list2
+        # Populated on each connect() with {installation_id} resolved; _subscription_list stays
+        # as the unresolved template so the Hub can be reconnected cleanly.
+        self._resolved_subscription_list: list[str] = []
         self._pending_formula_topics: list[TopicDescriptor] = [topic for topic in expanded_topics if topic.is_formula]
         for topic in self._pending_formula_topics:
             _LOGGER.info("Formula topic detected: %s", topic.topic)
@@ -333,7 +336,17 @@ class Hub:
             _LOGGER.debug("Event loop closed, callback %s not scheduled", callback.__name__)
 
     async def connect(self) -> None:
-        """Connect to the hub."""
+        """Connect to the hub.
+
+        Raises
+        ------
+        AuthenticationError
+            If the broker rejects the supplied credentials.
+        CannotConnectError
+            For any other failure (connection timeout, dropped connection, missing installation
+            id, etc.). Every non-authentication error is surfaced as CannotConnectError so callers
+            only need to handle these two exception types.
+        """
         _LOGGER.info("Connecting to MQTT broker at %s:%d", self.host, self.port)
         assert self._client is not None
         self._loop = asyncio.get_running_loop()
@@ -361,31 +374,51 @@ class Hub:
         self._connect_failed_attempts = 0
         self._connect_failed_since = 0.0
         self._connect_failed_reason = None
+        # Reset per-connection state so the Hub can be reconnected cleanly after a failed attempt.
+        self._first_connect = True
+        self._installation_id = None
+        self._connected_event.clear()
+        self._installation_id_event.clear()
+        self._first_refresh_event.clear()
         # self._loop.set_task_factory(lambda loop, coro: TracedTask(coro, loop=loop, name=name))
         self._last_full_publish_called = time.monotonic()  # Initialize last full publish time
         self._periodic_full_publish_triggered_once = False
 
         _LOGGER.info("Starting paho mqtt")
         self._client.loop_start()
-        _LOGGER.info("Connecting")
-        self._client.connect_async(self.host, self.port)
-        _LOGGER.info("Waiting for connection event")
-        await self._wait_for_connect()
-        if self._connect_failed_reason is not None:
-            reraise_same_exception(self._connect_failed_reason)
-        _LOGGER.info("Successfully connected to MQTT broker at %s:%d", self.host, self.port)
-        await self._wait_for_installation_id(expected_id=self._expected_installation_id)
-        assert self._installation_id is not None
-        # First we need to replace the installation ID in the subscription topics
-        new_list: list[str] = []
-        for topic in self._subscription_list:
-            new_topic = topic.replace("{installation_id}", self._installation_id)
-            new_list.append(new_topic)
-        self._subscription_list = new_list
-        # First setup subscriptions will happen here as we need the installation ID.
-        # Later we will do it from the connect callback
-        self._setup_subscriptions()
-        self._start_keep_alive_loop()
+        try:
+            _LOGGER.info("Connecting")
+            self._client.connect_async(self.host, self.port)
+            _LOGGER.info("Waiting for connection event")
+            await self._wait_for_connect()
+            if self._connect_failed_reason is not None:
+                reraise_same_exception(self._connect_failed_reason)
+            _LOGGER.info("Successfully connected to MQTT broker at %s:%d", self.host, self.port)
+            await self._wait_for_installation_id(expected_id=self._expected_installation_id)
+            assert self._installation_id is not None
+            # Resolve the installation ID in the subscription topics. Keep _subscription_list as
+            # the unresolved template so the Hub can be reconnected cleanly.
+            self._resolved_subscription_list = [
+                topic.replace("{installation_id}", self._installation_id) for topic in self._subscription_list
+            ]
+            # First setup subscriptions will happen here as we need the installation ID.
+            # Later we will do it from the connect callback
+            self._setup_subscriptions()
+            self._start_keep_alive_loop()
+        except Exception as exc:
+            # If anything fails after loop_start(), fully clean up (keepalive task, client
+            # disconnect, paho thread) so nothing is leaked. On HA retry a new Hub is created.
+            _LOGGER.info("Connection setup failed, cleaning up")
+            try:
+                await self.disconnect()
+            except Exception as cleanup_exc:
+                _LOGGER.warning("Error during connect() cleanup, ignoring: %s", cleanup_exc)
+            # Exception contract: surface every non-authentication failure as CannotConnectError so
+            # callers only need to catch AuthenticationError / CannotConnectError. AuthenticationError
+            # and InvalidInstallationIdError are CannotConnectError subclasses and pass through as-is.
+            if isinstance(exc, CannotConnectError):
+                raise
+            raise CannotConnectError(f"Failed to connect to MQTT broker at {self.host}:{self.port}: {exc}") from exc
         _LOGGER.info("Connected. Installation ID: %s", self._installation_id)
 
     def publish(self, topic_short_id: str, device_id: str, value: str | float | int | None) -> None:
@@ -817,7 +850,8 @@ class Hub:
         _LOGGER.info("Disconnecting from MQTT broker")
         self._stop_keepalive_loop()
         await asyncio.sleep(0.1)
-        self._client.disconnect()  # need to call disconnect so the paho thread will terminate
+        self._client.disconnect()
+        self._client.loop_stop()  # stop the background thread started by loop_start()
         _LOGGER.info("Disconnected from MQTT broker")
         # Give a small delay to allow any pending MQTT messages to be processed
         await asyncio.sleep(0.1)
@@ -1035,7 +1069,7 @@ class Hub:
         if not self._client.is_connected():
             raise NotConnectedError
         # topic_list = [(topic, 0) for topic in topic_map]
-        for topic in self._subscription_list:
+        for topic in self._resolved_subscription_list:
             self._subscribe(topic)
         assert self.installation_id is not None
         self._subscribe(f"N/{self.installation_id}/full_publish_completed")
