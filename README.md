@@ -67,8 +67,17 @@ hub = victron_mqtt.Hub(
     operation_mode=OperationMode.FULL,  # FULL, READ_ONLY, or EXPERIMENTAL
     device_type_exclude_filter=None,    # Exclude specific device types
     update_frequency_seconds=None,      # Throttle update frequency
+    ssl_context=None,          # Custom SSL context for certificate verification
 )
 ```
+
+> **Security note:** with `use_ssl=True` and no `ssl_context`, the TLS connection does **not** verify the broker's certificate, because GX devices ship with self-signed certificates. To verify, pass a context with your CA loaded:
+>
+> ```python
+> import ssl
+> context = ssl.create_default_context(cafile="/path/to/venus-ca.crt")
+> hub = victron_mqtt.Hub("venus.local.", 8883, None, "password", True, ssl_context=context)
+> ```
 
 **Key properties:**
 - `hub.devices` — dict of all devices with visible metrics

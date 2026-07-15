@@ -96,6 +96,7 @@ class Hub:
         operation_mode: OperationMode = OperationMode.FULL,
         device_type_exclude_filter: list[DeviceType] | None = None,
         update_frequency_seconds: int | None = None,
+        ssl_context: ssl.SSLContext | None = None,
     ) -> None:
         """
         Initialize a Hub instance for communicating with a Venus OS MQTT broker.
@@ -112,6 +113,8 @@ class Hub:
             Password for MQTT authentication, or None.
         use_ssl: bool
             If True, an SSL/TLS context will be configured when connecting.
+            WARNING: without `ssl_context`, certificates are NOT verified
+            (GX devices ship with self-signed certificates).
         installation_id: str | None
             If provided, used to replace `{installation_id}` placeholders in topics.
             If None, the installation id will be discovered from the broker when
@@ -134,6 +137,13 @@ class Hub:
             if None = Update only when source data change
             if 0 = Update as new mqtt data received
             if > 0 = Update no more than specified interval (in seconds)
+        ssl_context: ssl.SSLContext | None
+            Custom SSL context for the TLS connection. Provide a context with
+            your CA loaded (e.g. `ssl.create_default_context(cafile=...)`) to
+            enable real certificate verification. When None and `use_ssl` is
+            True, a default context without certificate verification is used.
+            Only valid together with `use_ssl=True`; otherwise `ValueError`
+            is raised.
 
         Behavior
         --------
@@ -148,7 +158,8 @@ class Hub:
         Raises
         ------
         ValueError
-            If `host` is empty or `port` is out of the valid range.
+            If `host` is empty, `port` is out of the valid range, or
+            `ssl_context` is provided without `use_ssl=True`.
         TypeError
             If an argument has an incorrect type.
         """
@@ -167,6 +178,8 @@ class Hub:
             raise ValueError("host must be a non-empty string")
         if not 0 < port < 65536:
             raise ValueError("port must be an integer between 1 and 65535")
+        if ssl_context is not None and not use_ssl:
+            raise ValueError("ssl_context requires use_ssl=True")
         _LOGGER.info(
             "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, topic_log_info=%s)",
             self._instance_id,
@@ -188,6 +201,7 @@ class Hub:
         self.password = password
         self.serial = serial
         self.use_ssl = use_ssl
+        self._ssl_context = ssl_context
         self.port = port
         self._expected_installation_id = installation_id
         self._topic_prefix = topic_prefix
@@ -359,12 +373,7 @@ class Hub:
             _LOGGER.info("Setting auth credentials for user: %s", self.username)
             self._client.username_pw_set(username, self.password)
 
-        if self.use_ssl:
-            _LOGGER.info("Setting up SSL context")
-            ssl_context = await asyncio.to_thread(ssl.create_default_context)
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.VerifyMode.CERT_NONE
-            self._client.tls_set_context(ssl_context)  # type: ignore[arg-type]
+        await self._setup_tls()
 
         self._client.on_connect = self._on_connect
         self._client.on_disconnect = self._on_disconnect
@@ -420,6 +429,29 @@ class Hub:
                 raise
             raise CannotConnectError(f"Failed to connect to MQTT broker at {self.host}:{self.port}: {exc}") from exc
         _LOGGER.info("Connected. Installation ID: %s", self._installation_id)
+
+    async def _setup_tls(self) -> None:
+        """Configure TLS on the MQTT client if enabled.
+
+        Uses the caller-provided ssl_context when available; otherwise falls
+        back to an unverified context, as GX devices ship with self-signed
+        certificates.
+        """
+        if not self.use_ssl:
+            assert self._ssl_context is None, "ssl_context without use_ssl should have been rejected in __init__"
+            return
+        context = self._ssl_context
+        if context is None:
+            _LOGGER.info(
+                "TLS enabled without certificate verification (GX devices use self-signed certificates). "
+                "Pass ssl_context to Hub() to enable verification."
+            )
+            context = await asyncio.to_thread(ssl.create_default_context)
+            context.check_hostname = False
+            context.verify_mode = ssl.VerifyMode.CERT_NONE
+        else:
+            _LOGGER.info("TLS enabled with caller-provided SSL context")
+        self._client.tls_set_context(context)  # type: ignore[arg-type]
 
     def publish(self, topic_short_id: str, device_id: str, value: str | float | int | None) -> None:
         """Publish a message to the MQTT broker."""
