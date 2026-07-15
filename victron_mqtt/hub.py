@@ -120,7 +120,8 @@ class Hub:
             your CA loaded (e.g. `ssl.create_default_context(cafile=...)`) to
             enable real certificate verification. When None and `use_ssl` is
             True, a default context without certificate verification is used.
-            Providing a context enables TLS even if `use_ssl` is False.
+            Only valid together with `use_ssl=True`; otherwise `ValueError`
+            is raised.
         installation_id: str | None
             If provided, used to replace `{installation_id}` placeholders in topics.
             If None, the installation id will be discovered from the broker when
@@ -157,7 +158,8 @@ class Hub:
         Raises
         ------
         ValueError
-            If `host` is empty or `port` is out of the valid range.
+            If `host` is empty, `port` is out of the valid range, or
+            `ssl_context` is provided without `use_ssl=True`.
         TypeError
             If an argument has an incorrect type.
         """
@@ -176,6 +178,8 @@ class Hub:
             raise ValueError("host must be a non-empty string")
         if not 0 < port < 65536:
             raise ValueError("port must be an integer between 1 and 65535")
+        if ssl_context is not None and not use_ssl:
+            raise ValueError("ssl_context requires use_ssl=True")
         _LOGGER.info(
             "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, topic_log_info=%s)",
             self._instance_id,
@@ -400,7 +404,7 @@ class Hub:
         back to an unverified context, as GX devices ship with self-signed
         certificates.
         """
-        if not self.use_ssl and self._ssl_context is None:
+        if not self.use_ssl:
             return
         context = self._ssl_context
         if context is None:

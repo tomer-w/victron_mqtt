@@ -3193,11 +3193,8 @@ async def test_setup_tls_custom_context_used_verbatim():
     assert custom.verify_mode == ssl.CERT_REQUIRED
 
 
-@pytest.mark.asyncio
-async def test_setup_tls_context_implies_tls():
-    """Providing ssl_context enables TLS even with use_ssl=False."""
+def test_ssl_context_requires_use_ssl():
+    """Providing ssl_context with use_ssl=False is rejected."""
     custom = ssl.create_default_context()
-    hub = Hub("localhost", 1883, None, None, use_ssl=False, ssl_context=custom)
-    hub._client = MagicMock()
-    await hub._setup_tls()
-    hub._client.tls_set_context.assert_called_once_with(custom)
+    with pytest.raises(ValueError, match="ssl_context requires use_ssl=True"):
+        Hub("localhost", 1883, None, None, use_ssl=False, ssl_context=custom)
