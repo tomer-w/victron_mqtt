@@ -21,7 +21,15 @@ from victron_mqtt._victron_formulas import (
     schedule_charge_enabled_set,
 )
 from victron_mqtt._victron_topics import topics
-from victron_mqtt.constants import MetricKind, MetricNature, MetricType, OperationMode, ValueType
+from victron_mqtt.constants import (
+    AUTO_UPDATE_INTERVAL_DEFAULT,
+    AUTO_UPDATE_INTERVALS,
+    MetricKind,
+    MetricNature,
+    MetricType,
+    OperationMode,
+    ValueType,
+)
 from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor
 from victron_mqtt.device import Device, FallbackPlaceholder
 from victron_mqtt.formula_common import LRSLastReading
@@ -2434,6 +2442,13 @@ def _make_metric(
     m._last_seen = 0.0
     m._last_notified = 0.0
     m._depend_on_me = []
+    frequency = hub._update_frequency_seconds
+    if isinstance(frequency, str):
+        m._update_interval_seconds = AUTO_UPDATE_INTERVALS[frequency].get(
+            descriptor.metric_type, AUTO_UPDATE_INTERVAL_DEFAULT
+        )
+    else:
+        m._update_interval_seconds = frequency
     return m
 
 
@@ -2932,6 +2947,7 @@ class TestWritableFormulaMetricKeepalive:
         wfm._last_seen = 0.0
         wfm._last_notified = 0.0
         wfm._depend_on_me = []
+        wfm._update_interval_seconds = 0
 
         wfm._keepalive(force_invalidate=False, log_debug=log)
         log.assert_called()
@@ -2964,6 +2980,7 @@ class TestWritableFormulaMetricSet:
         wfm._last_seen = 0.0
         wfm._last_notified = 0.0
         wfm._depend_on_me = []
+        wfm._update_interval_seconds = 0
         wfm._func = MagicMock()
         wfm._write_func = write_func
         wfm._depends_on = {}
@@ -3007,6 +3024,7 @@ class TestFormulaMetricNoneReturn:
         fm._last_seen = 0.0
         fm._last_notified = 0.0
         fm._depend_on_me = []
+        fm._update_interval_seconds = 0
         fm._func = formula_none
         fm._depends_on = {}
         fm.transient_state = None

@@ -76,6 +76,14 @@ class Metric:
         self._last_seen: float = 0
         self._generic_short_id = self._descriptor.short_id
         self._generic_name = self._descriptor.generic_name
+        frequency = hub._update_frequency_seconds
+        if isinstance(frequency, str):
+            # The only string values Hub accepts are the auto profiles.
+            self._update_interval_seconds: int | None = AUTO_UPDATE_INTERVALS[frequency].get(
+                descriptor.metric_type, AUTO_UPDATE_INTERVAL_DEFAULT
+            )
+        else:
+            self._update_interval_seconds = frequency
 
         _LOGGER.debug("Metric %s initialized", repr(self))
 
@@ -216,12 +224,8 @@ class Metric:
 
     @property
     def update_interval_seconds(self) -> int | None:
-        """Effective update interval for this metric, resolved from the hub setting."""
-        frequency = self._hub._update_frequency_seconds
-        # The only string values Hub accepts are the auto profiles.
-        if isinstance(frequency, str):
-            return AUTO_UPDATE_INTERVALS[frequency].get(self._descriptor.metric_type, AUTO_UPDATE_INTERVAL_DEFAULT)
-        return frequency
+        """Effective update interval for this metric, resolved once from the hub setting."""
+        return self._update_interval_seconds
 
     @property
     def on_update(self) -> CallbackOnUpdate | None:
@@ -284,7 +288,7 @@ class Metric:
         if update_last_seen:
             self._last_seen = now
         should_notify = False
-        update_interval = self.update_interval_seconds
+        update_interval = self._update_interval_seconds
 
         # In case of zero update frequency, always consider changed when MQTT message is received
         # also if this is the first time the metric is being notified
