@@ -30,6 +30,8 @@ jobs:
         run: pip install hatch "virtualenv<20.29" ruff
       - name: Run ruff
         run: ruff check .
+      - name: Run pylint (package + examples)
+        run: hatch run lint:pylint
       - name: Run mypy (package only)
         run: hatch run types:check victron_mqtt
       - name: Run pyright (package + tests)

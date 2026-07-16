@@ -48,6 +48,15 @@ extra-dependencies = [
 check = "mypy --install-types --non-interactive {args:victron_mqtt tests}"
 pyright = "python -m pyright {args:victron_mqtt tests}"
 
+[tool.hatch.envs.lint]
+extra-dependencies = [
+  "pylint>=3.0",
+]
+[tool.hatch.envs.lint.scripts]
+# Scoped to shippable code; the package installed in this env resolves imports
+# (avoids pylint import-error). Tests are covered by ruff + pyright.
+pylint = "python -m pylint {args:victron_mqtt examples}"
+
 [tool.hatch.envs.test]
 dependencies = [
     "pytest",

@@ -1,3 +1,5 @@
+"""Example: connect to a Victron hub and list all devices and their metrics."""
+
 import asyncio
 import logging
 
@@ -5,12 +7,12 @@ import victron_mqtt
 
 # Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - [Thread %(thread)d] - %(message)s'
+    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - [Thread %(thread)d] - %(message)s"
 )
 
 
 async def main():
+    """Connect to the hub, print every device and metric, then disconnect."""
     # Create a hub connection
     hub = victron_mqtt.Hub("venus.local.", 1883, None, None, False)
 
