@@ -79,6 +79,13 @@ hub = victron_mqtt.Hub(
 > hub = victron_mqtt.Hub("venus.local.", 8883, None, "password", True, ssl_context=context)
 > ```
 
+**Update frequency:** `update_frequency_seconds` controls how often metric updates are delivered to `on_update` callbacks. Throttling only applies to numeric values; non-numeric changes are always delivered.
+- `None` (default) — deliver on every value change
+- `0` — deliver on every MQTT message, even if the value is unchanged
+- `N > 0` — deliver at most one update per `N` seconds per metric
+- `"auto"` — per-metric interval chosen by the library based on the metric type: fast-changing metrics users watch live (power, current) update every few seconds, while the rest use a longer interval. See `AUTO_UPDATE_INTERVALS` in `victron_mqtt.constants`.
+- `"auto_power_none"` — like `"auto"`, but fast-changing metrics update on every value change with no time limit.
+
 **Key properties:**
 - `hub.devices` — dict of all devices with visible metrics
 - `hub.installation_id` — the Venus OS installation identifier
