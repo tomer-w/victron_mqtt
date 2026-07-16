@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026.7.4 (2026-07-16)
+
+So many improvments in this release!!
+
+### Changes
+
+- Add "auto" update frequency with per-metric-type intervals @frbuceta (#114)
+- Robustness fixes: version parsing, payload handling, and input validation @frbuceta (#115)
+- Add ssl\_context parameter to Hub for TLS certificate verification @frbuceta (#116)
+- validate victron_mqtt.json file is up to date in CI pipeline
+- Make multi Ess/AcPowerSetpoint default to zero: https://github.com/tomer-w/ha-victron-mqtt/issues/262
+- Harden connect for better cleanup on errors and exposing only CannotConnectError and inherited exceptions: https://github.com/tomer-w/ha-victron-mqtt/issues/461
+- fix pyright issue and add it as a hook
+- feat: resolve device-specific max charge current from product table
+
+### Contributors
+
+@frbuceta, @tomer-w 
+
+
 ## 2026.7.3 (2026-07-11)
 
 ### Changes
