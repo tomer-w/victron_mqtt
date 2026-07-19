@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.7.5 (2026-07-19)
+
+### Changes
+
+- feat: add Orion XS and MPPT 150/45 rev2/rev3 to product capability table
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.7.4 (2026-07-16)
 
 So many improvments in this release!!
