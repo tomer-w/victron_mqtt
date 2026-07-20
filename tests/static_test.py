@@ -594,6 +594,7 @@ _ALLOWED_CAPITALIZED = frozenset(
         "Ok",
         "No",
         "VE.Bus",
+        "VE.Can",
         "AC1",
         "AC2",
         # Day names are proper nouns
