@@ -2407,7 +2407,7 @@ topics: list[TopicDescriptor] = [
         min_max_range=RangeType.DYNAMIC,
         min=-1,
         max=1000000,
-        step=100,
+        step=1,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/settings/{device_id}/Settings/CGwacs/OvervoltageFeedIn",
