@@ -15291,6 +15291,11 @@
           "id": "orion_xs_12v_12v_50a",
           "name": "Orion XS 12V/12V-50A",
           "value": 41968
+        },
+        {
+          "id": "orion_xs_12v_24v_50a",
+          "name": "Orion XS 12V/24V-50A",
+          "value": 41969
         }
       ]
     },

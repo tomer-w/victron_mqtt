@@ -108,10 +108,16 @@ class VictronProductId(VictronEnum):
     SMARTSOLAR_MPPT_150_60 = (0xA062, "smartsolar_mppt_150_60", "SmartSolar MPPT 150/60")
     SMARTSOLAR_MPPT_150_70 = (0xA063, "smartsolar_mppt_150_70", "SmartSolar MPPT 150/70")
     # SmartSolar MPPT VE.Can and RS series (CAN-bus interface variants).
-    SMARTSOLAR_MPPT_VECAN_150_85_REV2 = (0xA10D, "smartsolar_mppt_vecan_150_85_rev2", "SmartSolar MPPT VE.Can 150/85 rev2")
+    SMARTSOLAR_MPPT_VECAN_150_85_REV2 = (
+        0xA10D,
+        "smartsolar_mppt_vecan_150_85_rev2",
+        "SmartSolar MPPT VE.Can 150/85 rev2",
+    )
     SMARTSOLAR_MPPT_RS_450_100 = (0xA110, "smartsolar_mppt_rs_450_100", "SmartSolar MPPT RS 450/100")
-    # Orion XS DC-DC charger (VE.Direct); reported under the alternator/dcdc device types.
+    # Orion XS 1400 DC-DC charger (VE.Direct); reported under the alternator/dcdc device types.
+    # Output current is settable up to 50 A across all output-voltage configs (1400 W ceiling at 28 V).
     ORION_XS_12V_12V_50A = (0xA3F0, "orion_xs_12v_12v_50a", "Orion XS 12V/12V-50A")
+    ORION_XS_12V_24V_50A = (0xA3F1, "orion_xs_12v_24v_50a", "Orion XS 12V/24V-50A")
 
 
 class DVCCMode(VictronEnum):
