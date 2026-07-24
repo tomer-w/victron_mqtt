@@ -45,6 +45,12 @@ def test_no_duplicate_device_type_and_name():
         pytest.fail("\n".join(errors))
 
 
+def test_ess_max_feed_in_power_uses_single_watt_steps():
+    descriptor = next(topic for topic in topics if topic.short_id == "system_ess_max_feed_in_power")
+
+    assert descriptor.step == 1
+
+
 def test_naming_unit_consistency():
     errors = []
     for descriptor in topics:
