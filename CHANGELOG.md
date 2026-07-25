@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.7.6 (2026-07-24)
+
+### Changes
+
+- Add missing MPPT product IDs and charge current capabilities (0xA067, 0xA068, 0xA10D, 0xA110) @pos-ei-don (#117)
+- Add max charge current to Orion xs1400: https://github.com/tomer-w/ha-victron-mqtt/issues/459
+
+### Contributors
+
+@pos-ei-don and @tomer-w
+
+
 ## 2026.7.5 (2026-07-19)
 
 ### Changes
