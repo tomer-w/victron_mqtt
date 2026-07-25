@@ -143,6 +143,7 @@ ignore = [
     "E501",    # line-too-long (formatter responsibility)
     "PLR2004", # magic-value-comparison
     "PLR0913", # too-many-arguments
+    "PLR0917", # too-many-positional-arguments
     "PLR0912", # too-many-branches
     "PLR0915", # too-many-statements
     "RET504",  # unnecessary-assign (readable intermediate vars)
