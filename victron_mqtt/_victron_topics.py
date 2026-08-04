@@ -2059,6 +2059,8 @@ topics: list[TopicDescriptor] = [
         short_id="multi_mppt_{mppt_id}_yield_today",
         name="MPPT {mppt_id} yield today",
         metric_type=MetricType.ENERGY,
+        metric_nature=MetricNature.TOTAL_INCREASING,
+        precision=3,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/History/Daily/0/Yield",
@@ -2066,6 +2068,8 @@ topics: list[TopicDescriptor] = [
         short_id="multi_yield_today",
         name="Yield today",
         metric_type=MetricType.ENERGY,
+        metric_nature=MetricNature.TOTAL_INCREASING,
+        precision=3,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/History/Daily/1/MaxPower",
@@ -2830,6 +2834,8 @@ topics: list[TopicDescriptor] = [
         short_id="solarcharger_tracker_{tracker}_yield_today",
         name="Tracker {tracker:solarcharger_tracker_{tracker}_name} yield today",
         metric_type=MetricType.ENERGY,
+        metric_nature=MetricNature.TOTAL_INCREASING,
+        precision=3,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/0/TimeInAbsorption",
@@ -2864,7 +2870,8 @@ topics: list[TopicDescriptor] = [
         short_id="solarcharger_yield_today",
         name="Yield today",
         metric_type=MetricType.ENERGY,
-        precision=2,
+        precision=3,
+        metric_nature=MetricNature.TOTAL_INCREASING,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/1/MaxPower",
