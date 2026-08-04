@@ -763,7 +763,20 @@ topics: list[TopicDescriptor] = [
         name="Cell voltage deviation",
         metric_type=MetricType.VOLTAGE,
     ),
-    # Charger topics (AC chargers such as Blue Smart IP22 and IP43)
+    # Charger topics (AC chargers such as Blue Smart IP22/IP43 and Skylla-i)
+    TopicDescriptor(
+        topic="N/{installation_id}/charger/{device_id}/Ac/In/CurrentLimit",
+        message_type=MetricKind.NUMBER,
+        short_id="charger_ac_in_current_limit",
+        name="AC input current limit",
+        metric_type=MetricType.CURRENT,
+        value_type=ValueType.FLOAT,
+        min_max_range=RangeType.DYNAMIC,  # GX publishes min/max (e.g. Skylla-i: 0–20 A)
+        min=0,
+        max=32,
+        precision=1,
+        step=0.1,
+    ),
     TopicDescriptor(
         topic="N/{installation_id}/charger/{device_id}/Ac/In/{phase}/I",
         message_type=MetricKind.SENSOR,
@@ -792,6 +805,15 @@ topics: list[TopicDescriptor] = [
         name="Error code",
         value_type=ValueType.ENUM,
         enum=ErrorCode,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/charger/{device_id}/Mode",
+        message_type=MetricKind.SWITCH,
+        short_id="charger_mode",
+        name="Mode",
+        value_type=ValueType.ENUM,
+        enum=ChargerMode,
+        main_topic=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/charger/{device_id}/NrOfOutputs",
