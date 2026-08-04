@@ -1,11 +1,5 @@
 # Changelog
 
-## Unreleased
-
-### Changes
-
-- Add charger (Skylla-i) Mode and AC input current limit topics
-
 ## 2026.7.6 (2026-07-24)
 
 ### Changes
