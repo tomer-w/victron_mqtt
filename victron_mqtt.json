@@ -7749,7 +7749,7 @@
       "min_max_range": "RangeType.DYNAMIC",
       "min": -1,
       "max": 1000000,
-      "step": 100,
+      "step": 1,
       "is_adjustable_suffix": null,
       "output_type": null,
       "labels": null,
