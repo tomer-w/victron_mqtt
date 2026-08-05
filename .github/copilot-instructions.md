@@ -8,6 +8,9 @@ The victron_mqtt project maps Victron Energy MQTT topics to Python objects. User
 ## Workflow: Review Before Commit
 After implementing changes, stop and let the user review them. Do not commit or push until the user explicitly approves. You may run linting and tests to validate the changes, but wait for the user's go-ahead before running `git commit` or `git push`.
 
+## Commit Messages
+When a commit resolves a GitHub issue, include a link to that issue in the commit message (e.g., `Add DC system topics: https://github.com/tomer-w/ha-victron-mqtt/issues/111`).
+
 ## File Structure
 - `victron_mqtt/_victron_enums.py` - Contains all enum definitions
 - `victron_mqtt/_victron_topics.py` - Contains all topic descriptors  
