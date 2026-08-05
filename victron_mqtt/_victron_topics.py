@@ -3986,6 +3986,14 @@ topics: list[TopicDescriptor] = [
         enum=GenericOnOff,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/vebus/{device_id}/Hub4/DisableFeedIn",
+        message_type=MetricKind.SWITCH,
+        short_id="vebus_hub4_disable_feed_in",
+        name="Hub4 disable feed-in",
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Hub4/DoNotFeedInOvervoltage",
         message_type=MetricKind.SWITCH,
         short_id="vebus_hub4_do_not_feed_in_overvoltage",
