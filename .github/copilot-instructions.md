@@ -5,6 +5,9 @@ This file provides instructions for GitHub Copilot on how to add new MQTT topics
 ## Context
 The victron_mqtt project maps Victron Energy MQTT topics to Python objects. Users submit GitHub issues requesting new topics (usually for specific devices or features they want to monitor).
 
+## Workflow: Review Before Commit
+After implementing changes, stop and let the user review them. Do not commit or push until the user explicitly approves. You may run linting and tests to validate the changes, but wait for the user's go-ahead before running `git commit` or `git push`.
+
 ## File Structure
 - `victron_mqtt/_victron_enums.py` - Contains all enum definitions
 - `victron_mqtt/_victron_topics.py` - Contains all topic descriptors  
