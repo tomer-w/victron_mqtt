@@ -218,11 +218,12 @@ def test_metric_nature_for_energy_and_power():
     errors = []
     for descriptor in topics:
         if descriptor.metric_type == MetricType.ENERGY and descriptor.metric_nature not in (
+            MetricNature.MEASUREMENT,
             MetricNature.TOTAL,
             MetricNature.TOTAL_INCREASING,
         ):
             errors.append(
-                f"Topic '{descriptor.topic}' has metric_type ENERGY but metric_nature is {descriptor.metric_nature} (should be TOTAL or TOTAL_INCREASING)"
+                f"Topic '{descriptor.topic}' has metric_type ENERGY but metric_nature is {descriptor.metric_nature} (should be MEASUREMENT, TOTAL, or TOTAL_INCREASING)"
             )
         if descriptor.metric_type == MetricType.POWER and descriptor.metric_nature not in [
             MetricNature.MEASUREMENT,
