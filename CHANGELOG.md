@@ -23,6 +23,29 @@
 @tomer-w and @luclu
 
 
+## 2026.8.0 (2026-08-05)
+
+### Changes
+
+- Add Skylla-i charger mode and AC input current limit @luclu (#123)
+- Make EV Charger Min/Max charging current settable: https://github.com/tomer-w/ha-victron-mqtt/issues/473
+- Add Hub4 disable feed-in switch topic: https://github.com/tomer-w/ha-victron-mqtt/issues/474
+- Add Orion XS 12/12-70A: https://github.com/tomer-w/ha-victron-mqtt/issues/459
+- Fix MinCurrent and MaxCurrent names: https://github.com/tomer-w/ha-victron-mqtt/issues/473
+- Fix yield today state class and precision: https://github.com/tomer-w/ha-victron-mqtt/issues/471
+- Revert step to be 1 for MaxFeedInPower: https://github.com/tomer-w/victron_mqtt/issues/118
+- Make sure keepalive loop is not skipping steps.
+
+### 🧰 Maintenance
+
+- Bump release-drafter/release-drafter from 7 to 7.6.0 @[dependabot[bot]](https://github.com/apps/dependabot) (#122)
+- Bump actions/setup-python from 6 to 7 @[dependabot[bot]](https://github.com/apps/dependabot) (#121)
+
+### Contributors
+
+@tomer-w and @luclu
+
+
 ## 2026.7.6 (2026-07-24)
 
 ### Changes
