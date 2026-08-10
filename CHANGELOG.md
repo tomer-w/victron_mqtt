@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026.8.1 (2026-08-10)
+
+### Changes
+
+- Improve energy metric_nature: https://github.com/tomer-w/ha-victron-mqtt/issues/478
+
+### 🧰 Maintenance
+
+- Bump release-drafter/release-drafter from 7.6.0 to 7.7.0 @[dependabot[bot]](https://github.com/apps/dependabot) (#124)
+
+### Contributors
+
+@tomer-w 
+
+
 ## 2026.8.0 (2026-08-05)
 
 ### Changes
