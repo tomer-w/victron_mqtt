@@ -73,7 +73,7 @@ from .hub import (
     TopicNotFoundError,
 )
 from .metric import Metric
-from .pairing import PairingError, request_pairing_token
+from .pairing import PairingError, PairingToken, request_pairing_token
 from .writable_metric import WritableMetric
 
 __all__ = [
@@ -128,6 +128,7 @@ __all__ = [
     "NotConnectedError",
     "OperationMode",
     "PairingError",
+    "PairingToken",
     "PhoenixInverterMode",
     "PreferRenewableEnergyEnum",
     "ProductCapabilities",

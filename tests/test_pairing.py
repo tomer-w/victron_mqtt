@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 import aiohttp
 import pytest
 
-from victron_mqtt.pairing import PairingError, request_pairing_token
+from victron_mqtt.pairing import PairingError, PairingToken, request_pairing_token
 
 
 def _mock_session(*, status: int = 200, json_data: dict | None = None, text: str = ""):
@@ -25,68 +25,83 @@ def _mock_session(*, status: int = 200, json_data: dict | None = None, text: str
 
 @pytest.mark.asyncio
 async def test_successful_pairing_returns_credentials():
-    """A 200 response with token_name + password is returned as-is."""
+    """A 200 response with token_name + password is returned as a PairingToken."""
     payload = {
-        "token_name": "homeassistant_abc123",
-        "password": "s3cret-mqtt-p4ss",
+        "token_name": "token/homeassistant/ab4c9ab6b98a",
+        "password": "Km7rPx4QjW9vBn2sYdLe6TfHc8gAoU3Z",
     }
     session = _mock_session(status=200, json_data=payload)
 
-    result = await request_pairing_token("192.168.1.10", "abc123", session)
+    result = await request_pairing_token("192.168.1.10", "ab4c9ab6b98a", session)
 
-    assert result == payload
-    assert result["token_name"] == "homeassistant_abc123"
-    assert result["password"] == "s3cret-mqtt-p4ss"
+    assert isinstance(result, PairingToken)
+    assert result.token_name == "token/homeassistant/ab4c9ab6b98a"
+    assert result.password == "Km7rPx4QjW9vBn2sYdLe6TfHc8gAoU3Z"
 
 
 @pytest.mark.asyncio
 async def test_successful_pairing_posts_to_correct_url():
     """The request targets https://<host>/auth/generate-token/."""
-    session = _mock_session(status=200, json_data={"token_name": "t", "password": "p"})
+    session = _mock_session(status=200, json_data={
+        "token_name": "token/homeassistant/c7e2f03d81a5",
+        "password": "Rn5tGx8WqJ3vKm7ePd2sYfLb6HcAoU9Z"
+    })
 
-    await request_pairing_token("venus.local", "device42", session)
+    await request_pairing_token("venus.local", "c7e2f03d81a5", session)
 
     session.post.assert_called_once_with(
         "https://venus.local/auth/generate-token/",
-        data={"role": "homeassistant", "device_id": "device42"},
+        data={"role": "homeassistant", "device_id": "c7e2f03d81a5"},
     )
 
 
 @pytest.mark.asyncio
 async def test_successful_pairing_with_custom_role():
     """A custom role is forwarded in the POST data."""
-    session = _mock_session(status=200, json_data={"token_name": "t", "password": "p"})
+    session = _mock_session(status=200, json_data={
+        "token_name": "token/custom_role/d9f1a47e52b3",
+        "password": "Vc3nFx7WqJ9tKm2ePd5sYgLb8HcAoU6Z"
+    })
 
-    await request_pairing_token("10.0.0.1", "dev1", session, role="custom_role")
+    await request_pairing_token("10.0.0.1", "d9f1a47e52b3", session, role="custom_role")
 
     session.post.assert_called_once_with(
         "https://10.0.0.1/auth/generate-token/",
-        data={"role": "custom_role", "device_id": "dev1"},
+        data={"role": "custom_role", "device_id": "d9f1a47e52b3"},
     )
 
 
 @pytest.mark.asyncio
 async def test_successful_pairing_extended_response():
-    """The GX device may return extra fields; they are passed through."""
+    """Extra fields in the GX response are ignored; only token_name and password are kept."""
     payload = {
-        "token_name": "homeassistant_xyz",
-        "password": "p@ssw0rd",
+        "token_name": "token/homeassistant/e8b3d2f71a06",
+        "password": "Ht4nQx9WrJ2vKm7ePd3sYfLb5GcAoU8Z",
         "mqtt_host": "192.168.1.10",
         "mqtt_port": 8883,
         "mqtt_ssl": True,
     }
     session = _mock_session(status=200, json_data=payload)
 
-    result = await request_pairing_token("192.168.1.10", "xyz", session)
+    result = await request_pairing_token("192.168.1.10", "e8b3d2f71a06", session)
 
-    assert result["token_name"] == "homeassistant_xyz"
-    assert result["password"] == "p@ssw0rd"
-    assert result["mqtt_host"] == "192.168.1.10"
-    assert result["mqtt_port"] == 8883
-    assert result["mqtt_ssl"] is True
+    assert isinstance(result, PairingToken)
+    assert result.token_name == "token/homeassistant/e8b3d2f71a06"
+    assert result.password == "Ht4nQx9WrJ2vKm7ePd3sYfLb5GcAoU8Z"
 
 
 # -- failure cases -----------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_non_alphanumeric_device_id_raises_value_error():
+    """A device_id with non-alphanumeric characters is rejected before any HTTP call."""
+    session = _mock_session(status=200, json_data={"token_name": "t", "password": "p"})
+
+    with pytest.raises(ValueError, match="alphanumeric"):
+        await request_pairing_token("192.168.1.10", "bad-id!", session)
+
+    session.post.assert_not_called()
 
 
 @pytest.mark.asyncio
