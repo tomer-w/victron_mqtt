@@ -247,6 +247,59 @@ hub = victron_mqtt.Hub(
 | `DCDC` | `dcdc` | DC/DC chargers |
 | `TRANSFER_SWITCH` | `TransferSwitch` | Transfer switches |
 
+## MQTT Token Pairing
+
+GX devices running Venus OS v3.80 or newer support token-based MQTT authentication. When pairing mode is enabled on the device, you can request credentials programmatically using `request_pairing_token`. The GX device returns a `token_name` (used as MQTT username) and a `password`:
+
+```python
+import asyncio
+import ssl
+
+import aiohttp
+
+from victron_mqtt import Hub, PairingError, request_pairing_token
+
+
+async def main():
+    host = "venus.local."
+
+    # Disable certificate verification for self-signed GX certificates
+    ssl_ctx = ssl.create_default_context()
+    ssl_ctx.check_hostname = False
+    ssl_ctx.verify_mode = ssl.CERT_NONE
+
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=ssl_ctx)) as session:
+        try:
+            credentials = await request_pairing_token(host, "my_device_id", session)
+        except PairingError as exc:
+            print(f"Pairing failed: {exc}")
+            return
+
+    # Example response from the GX device:
+    # {
+    #     "token_name": "token/homeassistant/my_device_id",
+    #     "password": "randomly-generated-password"
+    # }
+
+    print(f"Username: {credentials['token_name']}")
+    print(f"Password: {credentials['password']}")
+
+    # Use the credentials to connect via MQTT
+    hub = Hub(host, 8883, credentials["token_name"], credentials["password"], True)
+    await hub.connect()
+    await hub.wait_for_first_refresh()
+
+    for device in hub.devices.values():
+        print(f"Device: {device.name}")
+
+    await hub.disconnect()
+
+
+asyncio.run(main())
+```
+
+> **Note:** The GX device must have pairing mode enabled. If MQTT Access was turned off, it will automatically change to "Paired devices only" after a successful pairing.
+
 ## Tools
 
 ### Metric Viewer
