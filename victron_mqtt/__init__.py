@@ -73,6 +73,7 @@ from .hub import (
     TopicNotFoundError,
 )
 from .metric import Metric
+from .pairing import PairingError, request_pairing_token
 from .writable_metric import WritableMetric
 
 __all__ = [
@@ -126,6 +127,7 @@ __all__ = [
     "MppOperationMode",
     "NotConnectedError",
     "OperationMode",
+    "PairingError",
     "PhoenixInverterMode",
     "PreferRenewableEnergyEnum",
     "ProductCapabilities",
@@ -144,4 +146,5 @@ __all__ = [
     "VrmPortalMode",
     "WritableMetric",
     "get_product_capabilities",
+    "request_pairing_token",
 ]
