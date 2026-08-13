@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.8.2 (2026-08-13)
+
+### Changes
+
+- Add MQTT token pairing for GX device @philipptrenz (#126)
+
+### Contributors
+
+@philipptrenz
+
+
 ## 2026.8.1 (2026-08-10)
 
 ### Changes
