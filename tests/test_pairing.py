@@ -1,5 +1,6 @@
 """Tests for the GX device MQTT token pairing function."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
@@ -8,7 +9,7 @@ import pytest
 from victron_mqtt.pairing import PairingError, PairingToken, request_pairing_token
 
 
-def _mock_session(*, status: int = 200, json_data: dict | None = None, text: str = ""):
+def _mock_session(*, status: int = 200, json_data: dict[str, Any] | None = None, text: str = ""):
     """Build a mock aiohttp.ClientSession whose .post() returns a fake response."""
     resp = AsyncMock()
     resp.status = status
@@ -118,7 +119,7 @@ async def test_500_raises_pairing_error():
     """A server error raises PairingError with status and body."""
     session = _mock_session(status=500, text="Internal Server Error")
 
-    with pytest.raises(PairingError, match="HTTP 500.*Internal Server Error"):
+    with pytest.raises(PairingError, match=r"HTTP 500.*Internal Server Error"):
         await request_pairing_token("192.168.1.10", "abc", session)
 
 
