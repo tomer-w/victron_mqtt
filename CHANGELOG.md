@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.8.3 (2026-08-14)
+
+### Changes
+
+- Internalize aiohttp session in request\_pairing\_token @philipptrenz (#127)
+
+### Contributors
+
+@philipptrenz
+
+
 ## 2026.8.2 (2026-08-13)
 
 ### Changes
