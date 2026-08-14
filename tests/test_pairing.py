@@ -1,7 +1,7 @@
 """Tests for the GX device MQTT token pairing function."""
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
@@ -21,6 +21,14 @@ def _mock_session(*, status: int = 200, json_data: dict[str, Any] | None = None,
     return session
 
 
+def _patch_client_session(session: MagicMock):
+    """Patch aiohttp.ClientSession to return *session* as an async context manager."""
+    ctx = AsyncMock()
+    ctx.__aenter__ = AsyncMock(return_value=session)
+    ctx.__aexit__ = AsyncMock(return_value=False)
+    return patch("victron_mqtt.pairing.aiohttp.ClientSession", return_value=ctx)
+
+
 # -- successful pairing ------------------------------------------------
 
 
@@ -33,7 +41,8 @@ async def test_successful_pairing_returns_credentials():
     }
     session = _mock_session(status=200, json_data=payload)
 
-    result = await request_pairing_token("192.168.1.10", "ab4c9ab6b98a", session)
+    with _patch_client_session(session):
+        result = await request_pairing_token("192.168.1.10", "ab4c9ab6b98a")
 
     assert isinstance(result, PairingToken)
     assert result.token_name == "token/homeassistant/ab4c9ab6b98a"
@@ -48,7 +57,8 @@ async def test_successful_pairing_posts_to_correct_url():
         "password": "Rn5tGx8WqJ3vKm7ePd2sYfLb6HcAoU9Z"
     })
 
-    await request_pairing_token("venus.local", "c7e2f03d81a5", session)
+    with _patch_client_session(session):
+        await request_pairing_token("venus.local", "c7e2f03d81a5")
 
     session.post.assert_called_once_with(
         "https://venus.local/auth/generate-token/",
@@ -64,7 +74,8 @@ async def test_successful_pairing_with_custom_role():
         "password": "Vc3nFx7WqJ9tKm2ePd5sYgLb8HcAoU6Z"
     })
 
-    await request_pairing_token("10.0.0.1", "d9f1a47e52b3", session, role="custom_role")
+    with _patch_client_session(session):
+        await request_pairing_token("10.0.0.1", "d9f1a47e52b3", role="custom_role")
 
     session.post.assert_called_once_with(
         "https://10.0.0.1/auth/generate-token/",
@@ -84,7 +95,8 @@ async def test_successful_pairing_extended_response():
     }
     session = _mock_session(status=200, json_data=payload)
 
-    result = await request_pairing_token("192.168.1.10", "e8b3d2f71a06", session)
+    with _patch_client_session(session):
+        result = await request_pairing_token("192.168.1.10", "e8b3d2f71a06")
 
     assert isinstance(result, PairingToken)
     assert result.token_name == "token/homeassistant/e8b3d2f71a06"
@@ -97,12 +109,8 @@ async def test_successful_pairing_extended_response():
 @pytest.mark.asyncio
 async def test_non_alphanumeric_device_id_raises_value_error():
     """A device_id with non-alphanumeric characters is rejected before any HTTP call."""
-    session = _mock_session(status=200, json_data={"token_name": "t", "password": "p"})
-
     with pytest.raises(ValueError, match="alphanumeric"):
-        await request_pairing_token("192.168.1.10", "bad-id!", session)
-
-    session.post.assert_not_called()
+        await request_pairing_token("192.168.1.10", "bad-id!")
 
 
 @pytest.mark.asyncio
@@ -110,8 +118,8 @@ async def test_403_raises_pairing_error():
     """A 403 (pairing mode not enabled) raises PairingError."""
     session = _mock_session(status=403, text="Pairing mode not enabled")
 
-    with pytest.raises(PairingError, match="HTTP 403"):
-        await request_pairing_token("192.168.1.10", "abc", session)
+    with _patch_client_session(session), pytest.raises(PairingError, match="HTTP 403"):
+        await request_pairing_token("192.168.1.10", "abc")
 
 
 @pytest.mark.asyncio
@@ -119,8 +127,8 @@ async def test_500_raises_pairing_error():
     """A server error raises PairingError with status and body."""
     session = _mock_session(status=500, text="Internal Server Error")
 
-    with pytest.raises(PairingError, match=r"HTTP 500.*Internal Server Error"):
-        await request_pairing_token("192.168.1.10", "abc", session)
+    with _patch_client_session(session), pytest.raises(PairingError, match=r"HTTP 500.*Internal Server Error"):
+        await request_pairing_token("192.168.1.10", "abc")
 
 
 @pytest.mark.asyncio
@@ -128,8 +136,8 @@ async def test_401_raises_pairing_error():
     """An unauthorized response raises PairingError."""
     session = _mock_session(status=401, text="Unauthorized")
 
-    with pytest.raises(PairingError, match="HTTP 401"):
-        await request_pairing_token("192.168.1.10", "abc", session)
+    with _patch_client_session(session), pytest.raises(PairingError, match="HTTP 401"):
+        await request_pairing_token("192.168.1.10", "abc")
 
 
 @pytest.mark.asyncio
@@ -140,5 +148,5 @@ async def test_network_error_propagates():
         connection_key=MagicMock(), os_error=OSError("Connection refused"),
     ))
 
-    with pytest.raises(aiohttp.ClientError):
-        await request_pairing_token("192.168.1.10", "abc", session)
+    with _patch_client_session(session), pytest.raises(aiohttp.ClientError):
+        await request_pairing_token("192.168.1.10", "abc")
