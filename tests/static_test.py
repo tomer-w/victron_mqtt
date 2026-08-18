@@ -218,12 +218,13 @@ def test_metric_nature_for_energy_and_power():
     errors = []
     for descriptor in topics:
         if descriptor.metric_type == MetricType.ENERGY and descriptor.metric_nature not in (
+            MetricNature.NONE,
             MetricNature.MEASUREMENT,
             MetricNature.TOTAL,
             MetricNature.TOTAL_INCREASING,
         ):
             errors.append(
-                f"Topic '{descriptor.topic}' has metric_type ENERGY but metric_nature is {descriptor.metric_nature} (should be MEASUREMENT, TOTAL, or TOTAL_INCREASING)"
+                f"Topic '{descriptor.topic}' has metric_type ENERGY but metric_nature is {descriptor.metric_nature} (should be NONE, MEASUREMENT, TOTAL, or TOTAL_INCREASING)"
             )
         if descriptor.metric_type == MetricType.POWER and descriptor.metric_nature not in [
             MetricNature.MEASUREMENT,
@@ -232,6 +233,17 @@ def test_metric_nature_for_energy_and_power():
             errors.append(
                 f"Topic '{descriptor.topic}' has metric_type POWER but metric_nature is {descriptor.metric_nature} (should be MEASUREMENT)"
             )
+    if errors:
+        pytest.fail("\n".join(errors))
+
+
+def test_all_descriptors_expose_concrete_metric_nature():
+    errors = [
+        f"Topic '{descriptor.topic}' exposes metric_nature=None"
+        for descriptor in topics
+        if descriptor.metric_nature is None
+    ]
+
     if errors:
         pytest.fail("\n".join(errors))
 
