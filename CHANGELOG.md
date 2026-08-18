@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.8.4 (2026-08-18)
+
+### Changes
+
+- minor tweak for state classes for energy metrics of yesterday data: https://github.com/tomer-w/ha-victron-mqtt/issues/471
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.8.3 (2026-08-14)
 
 ### Changes
