@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.8.5 (2026-08-25)
+
+### Changes
+
+- Add nullable Hub4 override topics: https://github.com/tomer-w/victron_mqtt/issues/129
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.8.4 (2026-08-18)
 
 ### Changes
