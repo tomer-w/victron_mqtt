@@ -10,7 +10,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from paho.mqtt.client import Client, ConnectFlags, PayloadType
+from paho.mqtt.client import Client, ConnectFlags, DisconnectFlags, PayloadType
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.reasoncodes import ReasonCode
 
@@ -1790,6 +1790,71 @@ async def test_null_message():
 
     # Validate the Hub's state - only system device exists, evcharger message was filtered
     assert len(hub.devices) == 0, f"Expected no devices, got {len(hub.devices)}"
+
+
+@pytest.mark.asyncio
+async def test_nullable_messages_create_metrics():
+    """Test that nullable Hub4 descriptors create metrics from null values."""
+    hub: Hub = await create_mocked_hub()
+
+    nullable_metrics = {
+        "MaxChargePower": "hub4_max_charge_power",
+        "MaxDischargePower": "hub4_max_discharge_power",
+        "Setpoint": "hub4_ac_grid_setpoint",
+    }
+    for topic_suffix in nullable_metrics:
+        await inject_message(hub, f"N/123/hub4/0/Overrides/{topic_suffix}", '{"value": null}')
+    await finalize_injection(hub)
+
+    for short_id in nullable_metrics.values():
+        metric = hub.devices["hub4_0"].get_metric(short_id)
+        assert isinstance(metric, WritableMetric)
+        assert metric.value is None
+
+
+@pytest.mark.asyncio
+async def test_nullable_metrics_update_to_none_after_reconnect():
+    """Test that existing nullable metrics become unavailable after reconnect."""
+    hub: Hub = await create_mocked_hub()
+    override_values = {
+        "MaxChargePower": ("hub4_max_charge_power", 1200.5),
+        "MaxDischargePower": ("hub4_max_discharge_power", 2300.0),
+        "Setpoint": ("hub4_ac_grid_setpoint", 50),
+    }
+
+    for topic_suffix, (_, value) in override_values.items():
+        await inject_message(hub, f"N/123/hub4/0/Overrides/{topic_suffix}", json.dumps({"value": value}))
+    await finalize_injection(hub, disconnect=False)
+
+    metrics = {}
+    for short_id, expected_value in override_values.values():
+        metric = hub.devices["hub4_0"].get_metric(short_id)
+        assert isinstance(metric, WritableMetric)
+        assert metric.value == expected_value
+        metrics[short_id] = metric
+
+    hub._on_disconnect(
+        hub._client,
+        None,
+        DisconnectFlags(False),
+        ReasonCode(PacketTypes.DISCONNECT, identifier=128),
+        None,
+    )
+    hub._on_connect_internal(
+        hub._client,
+        None,
+        ConnectFlags(False),
+        ReasonCode(PacketTypes.CONNACK, identifier=0),
+        None,
+    )
+
+    for topic_suffix in override_values:
+        await inject_message(hub, f"N/123/hub4/0/Overrides/{topic_suffix}", '{"value": null}')
+    await finalize_injection(hub)
+
+    for short_id, metric in metrics.items():
+        assert hub.devices["hub4_0"].get_metric(short_id) is metric
+        assert metric.value is None
 
 
 @pytest.mark.asyncio
