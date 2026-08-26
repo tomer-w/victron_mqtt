@@ -196,6 +196,7 @@ disable = [
     "too-many-instance-attributes",
     "too-many-nested-blocks",
     "too-few-public-methods",
+    "too-many-public-methods",
     "duplicate-code",
 ]
 

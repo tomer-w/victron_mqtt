@@ -8,6 +8,13 @@ repos:
       - id: ruff-format
   - repo: local
     hooks:
+      - id: pylint
+        name: Run pylint (package + examples)
+        entry: hatch run lint:pylint
+        language: system
+        pass_filenames: false
+        files: ^(victron_mqtt|examples)/|^pyproject\.toml$
+        stages: [pre-commit]
       - id: mypy
         name: Run mypy (package only)
         entry: hatch run types:check victron_mqtt
