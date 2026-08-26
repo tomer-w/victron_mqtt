@@ -2263,6 +2263,15 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/pvinverter/{device_id}/Ac/PowerLimit",
+        message_type=MetricKind.NUMBER,
+        short_id="pvinverter_power_limit",
+        name="Power limit",
+        metric_type=MetricType.POWER,
+        min=0,
+        max=10000,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/pvinverter/{device_id}/Ac/{phase}/Current",
         message_type=MetricKind.SENSOR,
         short_id="pvinverter_current_{phase}",
