@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.8.6 (2026-08-26)
+
+### Changes
+
+- Track metric availability separately: https://github.com/tomer-w/victron_mqtt/issues/129
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.8.5 (2026-08-25)
 
 ### Changes
