@@ -737,8 +737,9 @@ async def test_metric_keepalive_update_frequency_5(mock_time: MagicMock) -> None
     hub._on_connect_fail(hub._client, None)
 
     await sleep_short(mock_time)
-    assert metric.on_update.call_count == 2, "on_update should be called as metric updated to None"
-    magic_mock.assert_called_with(metric, None)
+    assert metric.on_update.call_count == 2, "on_update should be called as metric becomes unavailable"
+    magic_mock.assert_called_with(metric, 12)
+    assert metric.available is False
 
     mock_time.return_value = 77
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 77}', mock_time)
@@ -796,8 +797,9 @@ async def test_metric_keepalive_update_frequency_none(mock_time: MagicMock) -> N
     hub._on_connect_fail(hub._client, None)
 
     await sleep_short(mock_time)
-    assert metric.on_update.call_count == 3, "on_update should be called as metric updated to None"
-    magic_mock.assert_called_with(metric, None)
+    assert metric.on_update.call_count == 3, "on_update should be called as metric becomes unavailable"
+    magic_mock.assert_called_with(metric, 12)
+    assert metric.available is False
 
     mock_time.return_value = 77
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 77}', mock_time)
@@ -839,8 +841,9 @@ async def test_metric_goes_unavailable_when_source_stops_publishing(mock_time: M
     mock_time.return_value = 10 + STALE_METRIC_TIMEOUT_SECONDS + 1
     hub._keepalive_metrics(stale_timeout=STALE_METRIC_TIMEOUT_SECONDS)
     await sleep_short(mock_time)
-    assert metric.value is None, "Metric should become unavailable when the source stops publishing"
-    magic_mock.assert_called_with(metric, None)
+    assert metric.value == 10, "Metric should retain its last value when its source stops publishing"
+    assert metric.available is False
+    magic_mock.assert_called_with(metric, 10)
 
     await hub_disconnect(hub, mock_time)
 
@@ -1248,6 +1251,42 @@ async def test_gps_location_formula_optional_dependency_arrives_late():
 
     assert location_metric.value is not None
     assert location_metric.value.course == 123.0
+
+    await hub_disconnect(hub)
+
+
+@pytest.mark.asyncio
+async def test_formula_propagates_required_dependency_availability():
+    """Test required stale dependencies invalidate formulas while optional ones do not."""
+    hub: Hub = await create_mocked_hub()
+
+    await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 51.5074}')
+    await inject_message(hub, "N/123/gps/5/Position/Longitude", '{"value": -0.1278}')
+    await inject_message(hub, "N/123/gps/5/Fix", '{"value": 1}')
+    await inject_message(hub, "N/123/gps/5/Course", '{"value": 123.0}')
+    await finalize_injection(hub, disconnect=False)
+
+    location_metric = hub.devices["gps_5"].get_metric("gps_location")
+    latitude_metric = hub._all_metrics["gps_5_gps_latitude"]
+    course_metric = hub._all_metrics["gps_5_gps_course"]
+    assert location_metric is not None
+    assert location_metric.available is True
+    original_location = location_metric.value
+
+    latitude_metric._keepalive(force_invalidate=True, log_debug=MagicMock())
+    assert latitude_metric.value == 51.5074
+    assert latitude_metric.available is False
+    assert location_metric.value is original_location
+    assert location_metric.available is False
+
+    await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 51.5074}')
+    assert location_metric.available is True
+
+    course_metric._keepalive(force_invalidate=True, log_debug=MagicMock())
+    assert course_metric.value == 123.0
+    assert course_metric.available is False
+    assert location_metric.available is True
+    assert location_metric.value.course is None
 
     await hub_disconnect(hub)
 
@@ -1810,11 +1849,13 @@ async def test_nullable_messages_create_metrics():
         metric = hub.devices["hub4_0"].get_metric(short_id)
         assert isinstance(metric, WritableMetric)
         assert metric.value is None
+        assert metric.available is True
+        assert metric.nullable is True
 
 
 @pytest.mark.asyncio
 async def test_nullable_metrics_update_to_none_after_reconnect():
-    """Test that existing nullable metrics become unavailable after reconnect."""
+    """Test that existing nullable metrics accept null after reconnect."""
     hub: Hub = await create_mocked_hub()
     override_values = {
         "MaxChargePower": ("hub4_max_charge_power", 1200.5),
@@ -1855,6 +1896,7 @@ async def test_nullable_metrics_update_to_none_after_reconnect():
     for short_id, metric in metrics.items():
         assert hub.devices["hub4_0"].get_metric(short_id) is metric
         assert metric.value is None
+        assert metric.available is True
 
 
 @pytest.mark.asyncio
@@ -2797,6 +2839,7 @@ class TestMetricKeepalive:
         """Line 201-202: Metric updated but not yet published."""
         m = _make_metric()
         m._value = 42.0
+        m._available = True
         m._last_seen = 10.0
         m._last_notified = 5.0
         log = MagicMock()
@@ -2815,20 +2858,35 @@ class TestMetricKeepalive:
         log.assert_called()
 
     def test_keepalive_invalidates_stale_metric(self):
-        """A metric not seen for longer than the timeout is reset to None (unavailable)."""
+        """A stale metric retains its last value while becoming unavailable."""
         m = _make_metric()
         m._value = 42.0
+        m._available = True
         m._last_seen = 5.0
         m._last_notified = 5.0
         log = MagicMock()
         with patch("victron_mqtt.metric.time.monotonic", return_value=100.0):
             m._keepalive(force_invalidate=False, log_debug=log, stale_timeout=50.0)
-        assert m._value is None
+        assert m._value == 42.0
+        assert m.available is False
+
+    def test_keepalive_invalidates_stale_nullable_metric(self):
+        """A nullable metric with a current null value can still become unavailable."""
+        m = _make_metric(descriptor=_make_descriptor(nullable=True))
+        m._available = True
+        m._last_seen = 5.0
+        m._last_notified = 5.0
+        log = MagicMock()
+        with patch("victron_mqtt.metric.time.monotonic", return_value=100.0):
+            m._keepalive(force_invalidate=False, log_debug=log, stale_timeout=50.0)
+        assert m.value is None
+        assert m.available is False
 
     def test_keepalive_keeps_fresh_metric(self):
         """A metric seen within the timeout keeps its value."""
         m = _make_metric()
         m._value = 42.0
+        m._available = True
         m._last_seen = 90.0
         m._last_notified = 90.0
         log = MagicMock()
@@ -3039,6 +3097,7 @@ class TestWritableFormulaMetricSet:
         wfm._generic_short_id = desc.short_id
         wfm._unique_id = "dev_test_metric"
         wfm._value = 42
+        wfm._available = True
         wfm._hub = hub
         wfm._on_update = None
         wfm._key_values = {}
@@ -3083,6 +3142,7 @@ class TestFormulaMetricNoneReturn:
         fm._generic_short_id = desc.short_id
         fm._unique_id = "dev_test_metric"
         fm._value = None
+        fm._available = False
         fm._hub = hub
         fm._on_update = None
         fm._key_values = {}
@@ -3092,6 +3152,7 @@ class TestFormulaMetricNoneReturn:
         fm._update_interval_seconds = 0
         fm._func = formula_none
         fm._depends_on = {}
+        fm._required_dependency_short_ids = set()
         fm.transient_state = None
 
         fm._handle_formula(log)
