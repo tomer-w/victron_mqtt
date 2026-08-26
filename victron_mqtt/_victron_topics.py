@@ -914,6 +914,36 @@ topics: list[TopicDescriptor] = [
         name="Voltage",
         metric_type=MetricType.VOLTAGE,
     ),
+    # DC Source topics
+    TopicDescriptor(
+        topic="N/{installation_id}/dcsource/{device_id}/Dc/0/Current",
+        message_type=MetricKind.SENSOR,
+        short_id="dcsource_current",
+        name="Current",
+        metric_type=MetricType.CURRENT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/dcsource/{device_id}/Dc/0/Power",
+        message_type=MetricKind.SENSOR,
+        short_id="dcsource_power",
+        name="Power",
+        metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/dcsource/{device_id}/Dc/0/Temperature",
+        message_type=MetricKind.SENSOR,
+        short_id="dcsource_temperature",
+        name="Temperature",
+        metric_type=MetricType.TEMPERATURE,
+        nullable=True,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/dcsource/{device_id}/Dc/0/Voltage",
+        message_type=MetricKind.SENSOR,
+        short_id="dcsource_voltage",
+        name="Voltage",
+        metric_type=MetricType.VOLTAGE,
+    ),
     TopicDescriptor(
         topic="N/{installation_id}/dcsystem/{device_id}/Dc/0/Current",
         message_type=MetricKind.SENSOR,
