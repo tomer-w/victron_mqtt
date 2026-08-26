@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.8.7 (2026-08-26)
+
+### Changes
+
+- Add DC source topics
+- Add PV inverter power limit topic
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.8.6 (2026-08-26)
 
 ### Changes
