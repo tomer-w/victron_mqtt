@@ -588,16 +588,22 @@ async def test_same_message_events_auto(mock_time: MagicMock) -> None:
     # Inject messages after the event is set
     await inject_message(hub, "N/123/grid/30/Ac/L1/Power", '{"value": 100}', mock_time)
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 42}', mock_time)
+    await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 51.5074}', mock_time)
+    await inject_message(hub, "N/123/gps/5/Position/Longitude", '{"value": -0.1278}', mock_time)
+    await inject_message(hub, "N/123/gps/5/Fix", '{"value": 1}', mock_time)
     await finalize_injection(hub, False, mock_time)
 
     # Validate that the device has the metrics we published
     device = hub.devices["grid_30"]
     power_metric = device.get_metric("grid_power_l1")
     energy_metric = device.get_metric("grid_energy_forward_l1")
+    location_metric = hub.devices["gps_5"].get_metric("gps_location")
     assert power_metric is not None, "Power metric should exist in the device"
     assert energy_metric is not None, "Energy metric should exist in the device"
+    assert location_metric is not None, "Location metric should exist in the GPS device"
     assert power_metric.update_interval_seconds == 5, "Power metrics should use the fast auto interval"
     assert energy_metric.update_interval_seconds == 30, "Energy metrics should use the default auto interval"
+    assert location_metric.update_interval_seconds == 5, "Device trackers should use the fast auto interval"
     power_metric.on_update = MagicMock()
     energy_metric.on_update = MagicMock()
 
@@ -630,27 +636,33 @@ async def test_same_message_events_auto(mock_time: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @patch("victron_mqtt.metric.time.monotonic")
-async def test_same_message_events_auto_power_none(mock_time: MagicMock) -> None:
-    """Test that "auto_power_none" removes the time limit for fast-changing metrics."""
+async def test_same_message_events_auto_unthrottled(mock_time: MagicMock) -> None:
+    """Test that "auto_unthrottled" removes the time limit for fast-changing metrics."""
 
     mock_time.return_value = 0.0
-    hub: Hub = await create_mocked_hub(update_frequency_seconds="auto_power_none")
+    hub: Hub = await create_mocked_hub(update_frequency_seconds="auto_unthrottled")
 
     mock_time.return_value = 10
 
     # Inject messages after the event is set
     await inject_message(hub, "N/123/grid/30/Ac/L1/Power", '{"value": 100}', mock_time)
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 42}', mock_time)
+    await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 51.5074}', mock_time)
+    await inject_message(hub, "N/123/gps/5/Position/Longitude", '{"value": -0.1278}', mock_time)
+    await inject_message(hub, "N/123/gps/5/Fix", '{"value": 1}', mock_time)
     await finalize_injection(hub, False, mock_time)
 
     # Validate that the device has the metrics we published
     device = hub.devices["grid_30"]
     power_metric = device.get_metric("grid_power_l1")
     energy_metric = device.get_metric("grid_energy_forward_l1")
+    location_metric = hub.devices["gps_5"].get_metric("gps_location")
     assert power_metric is not None, "Power metric should exist in the device"
     assert energy_metric is not None, "Energy metric should exist in the device"
+    assert location_metric is not None, "Location metric should exist in the GPS device"
     assert power_metric.update_interval_seconds is None, "Power metrics should have no time limit"
     assert energy_metric.update_interval_seconds == 30, "Energy metrics should use the default auto interval"
+    assert location_metric.update_interval_seconds is None, "Device trackers should have no time limit"
     power_metric.on_update = MagicMock()
     energy_metric.on_update = MagicMock()
 
