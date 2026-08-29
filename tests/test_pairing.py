@@ -150,3 +150,26 @@ async def test_network_error_propagates():
 
     with _patch_client_session(session), pytest.raises(aiohttp.ClientError):
         await request_pairing_token("192.168.1.10", "abc")
+
+
+# -- injected session --------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_injected_session_is_used_directly():
+    """When a session is passed, it is used without creating a new one."""
+    payload = {
+        "token_name": "token/homeassistant/f1a2b3c4d5e6",
+        "password": "Qw8rTx3YjN9vBm2sZdKe6UfHc7gAoP1L",
+    }
+    session = _mock_session(status=200, json_data=payload)
+
+    with patch("victron_mqtt.pairing.aiohttp.ClientSession") as mock_cls:
+        result = await request_pairing_token(
+            "192.168.1.10", "f1a2b3c4d5e6", session=session
+        )
+
+    mock_cls.assert_not_called()
+    assert isinstance(result, PairingToken)
+    assert result.token_name == "token/homeassistant/f1a2b3c4d5e6"
+    session.post.assert_called_once()
