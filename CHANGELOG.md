@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026.8.8 (2026-08-30)
+
+### Changes
+
+- Accept optional aiohttp session in request\_pairing\_token @philipptrenz (#130)
+- Increase energy metric precision
+- Improve automatic location update frequency
+- declare Python 3.14 support
+
+### Contributors
+
+@tomer-w and @philipptrenz
+
+
 ## 2026.8.7 (2026-08-26)
 
 ### Changes
