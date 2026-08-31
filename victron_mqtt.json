@@ -4165,7 +4165,7 @@
       "name": "Last session cost",
       "unit_of_measurement": null,
       "metric_type": "MetricType.COST",
-      "metric_nature": "MetricNature.MEASUREMENT",
+      "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.FLOAT",
       "precision": 2,
       "enum": null,
