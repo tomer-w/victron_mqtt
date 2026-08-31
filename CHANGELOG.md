@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.8.9 (2026-08-31)
+
+### Changes
+
+- Fixing cost sensor device class: https://github.com/tomer-w/ha-victron-mqtt/issues/499
+- MaxChargePower small fix to support -1 (https://github.com/tomer-w/victron_mqtt/issues/129)
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.8.8 (2026-08-30)
 
 ### Changes
