@@ -30,7 +30,7 @@ from victron_mqtt.constants import (
     OperationMode,
     ValueType,
 )
-from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor
+from victron_mqtt.data_classes import GpsLocation, MetricValue, ParsedTopic, TopicDescriptor
 from victron_mqtt.device import Device, FallbackPlaceholder
 from victron_mqtt.formula_common import LRSLastReading
 from victron_mqtt.formula_metric import FormulaMetric
@@ -1146,8 +1146,6 @@ async def test_new_metric_duplicate_formula_messages():
 async def test_gps_location_formula():
     """Test that the GPS location formula combines latitude and longitude into a GpsLocation,
     and updates correctly when new coordinates arrive."""
-    from victron_mqtt.data_classes import GpsLocation
-
     hub: Hub = await create_mocked_hub()
 
     callback_values: list[object] = []
@@ -1186,14 +1184,21 @@ async def test_gps_location_formula():
 
     # Register on_update to track subsequent value changes
     update_values: list[GpsLocation] = []
-    location_metric.on_update = lambda metric, value: update_values.append(value)
+
+    def track_location_update(_metric: Metric, value: MetricValue) -> None:
+        assert isinstance(value, GpsLocation)
+        update_values.append(value)
+
+    location_metric.on_update = track_location_update
 
     # Update latitude only — formula should recalculate with new lat + old lon
     await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 48.8566}')
     await sleep_short()
 
-    assert location_metric.value.latitude == 48.8566, f"Expected updated latitude, got {location_metric.value.latitude}"
-    assert location_metric.value.longitude == -0.1278, "Longitude should remain unchanged"
+    updated_location = location_metric.value
+    assert isinstance(updated_location, GpsLocation)
+    assert updated_location.latitude == 48.8566, f"Expected updated latitude, got {updated_location.latitude}"
+    assert updated_location.longitude == -0.1278, "Longitude should remain unchanged"
     assert len(update_values) == 1, f"Expected 1 on_update call, got {len(update_values)}"
     assert isinstance(update_values[0], GpsLocation)
     assert update_values[0].latitude == 48.8566
@@ -1202,10 +1207,10 @@ async def test_gps_location_formula():
     await inject_message(hub, "N/123/gps/5/Position/Longitude", '{"value": 2.3522}')
     await sleep_short()
 
-    assert location_metric.value.latitude == 48.8566
-    assert location_metric.value.longitude == 2.3522, (
-        f"Expected updated longitude, got {location_metric.value.longitude}"
-    )
+    updated_location = location_metric.value
+    assert isinstance(updated_location, GpsLocation)
+    assert updated_location.latitude == 48.8566
+    assert updated_location.longitude == 2.3522, f"Expected updated longitude, got {updated_location.longitude}"
     assert len(update_values) == 2, f"Expected 2 on_update calls, got {len(update_values)}"
     assert update_values[1].longitude == 2.3522
 
@@ -1215,8 +1220,6 @@ async def test_gps_location_formula():
 @pytest.mark.asyncio
 async def test_gps_location_formula_with_null_course():
     """Test that gps_location still resolves when Course is null."""
-    from victron_mqtt.data_classes import GpsLocation
-
     hub: Hub = await create_mocked_hub()
 
     await inject_message(hub, "N/123/gps/5/Position/Latitude", '{"value": 51.5074}')
@@ -1230,12 +1233,13 @@ async def test_gps_location_formula_with_null_course():
     device = hub.devices["gps_5"]
     location_metric = device.get_metric("gps_location")
     assert location_metric is not None, "GPS location formula metric should exist even when Course is null"
-    assert isinstance(location_metric.value, GpsLocation)
-    assert location_metric.value.latitude == 51.5074
-    assert location_metric.value.longitude == -0.1278
-    assert location_metric.value.altitude == 260.5
-    assert location_metric.value.course is None
-    assert location_metric.value.speed == 12.5
+    location = location_metric.value
+    assert isinstance(location, GpsLocation)
+    assert location.latitude == 51.5074
+    assert location.longitude == -0.1278
+    assert location.altitude == 260.5
+    assert location.course is None
+    assert location.speed == 12.5
 
     await hub_disconnect(hub)
 
@@ -1254,15 +1258,17 @@ async def test_gps_location_formula_optional_dependency_arrives_late():
     device = hub.devices["gps_5"]
     location_metric = device.get_metric("gps_location")
     assert location_metric is not None
-    assert location_metric.value is not None
-    assert location_metric.value.course is None
+    location = location_metric.value
+    assert isinstance(location, GpsLocation)
+    assert location.course is None
 
     # Later optional dependency should be attached and recalculate the formula.
     await inject_message(hub, "N/123/gps/5/Course", '{"value": 123.0}')
     await finalize_injection(hub, disconnect=False)
 
-    assert location_metric.value is not None
-    assert location_metric.value.course == 123.0
+    location = location_metric.value
+    assert isinstance(location, GpsLocation)
+    assert location.course == 123.0
 
     await hub_disconnect(hub)
 
@@ -1298,7 +1304,9 @@ async def test_formula_propagates_required_dependency_availability():
     assert course_metric.value == 123.0
     assert course_metric.available is False
     assert location_metric.available is True
-    assert location_metric.value.course is None
+    location = location_metric.value
+    assert isinstance(location, GpsLocation)
+    assert location.course is None
 
     await hub_disconnect(hub)
 
@@ -1322,8 +1330,6 @@ async def test_gps_location_formula_partial():
 @pytest.mark.asyncio
 async def test_gps_location_no_fix():
     """Test that the GPS location formula returns None when Fix=0 (no GPS fix)."""
-    from victron_mqtt.data_classes import GpsLocation
-
     hub: Hub = await create_mocked_hub()
 
     # Inject all GPS fields but with Fix=0 (no fix)
@@ -3057,6 +3063,20 @@ class TestWritableMetricBitmask:
         assert data["value"] == 0
 
 
+def test_writable_metric_wraps_epoch_datetime():
+    """Test EPOCH values are writable through the generic payload dispatcher."""
+    desc = _make_descriptor(
+        value_type=ValueType.EPOCH,
+        metric_type=MetricType.TIMESTAMP,
+        message_type=MetricKind.TIME,
+    )
+    value = datetime.datetime(2026, 9, 1, tzinfo=datetime.UTC)
+
+    payload = WritableMetric._wrap_payload(desc, value)
+
+    assert json.loads(payload) == {"value": value.timestamp()}
+
+
 class TestWritableFormulaMetricKeepalive:
     """Test WritableFormulaMetric _keepalive (line 43)."""
 
@@ -3183,15 +3203,13 @@ class TestScheduleChargeFormulas:
 
     def test_schedule_charge_enabled_on(self):
         metric = MagicMock()
-        metric.value = MagicMock()
-        metric.value.code = 1
+        metric.value = ChargeSchedule.MONDAY
         result = schedule_charge_enabled({"m": metric}, None)
         assert result[0] == GenericOnOff.ON
 
     def test_schedule_charge_enabled_off(self):
         metric = MagicMock()
-        metric.value = MagicMock()
-        metric.value.code = -1
+        metric.value = ChargeSchedule.DISABLED_MONDAY
         result = schedule_charge_enabled({"m": metric}, None)
         assert result[0] == GenericOnOff.OFF
 

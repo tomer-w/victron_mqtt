@@ -129,7 +129,7 @@ class AttributeViewerDialog(simpledialog.Dialog):
         title = f"Properties: {getattr(instance, 'name', str(instance))}"
         super().__init__(parent, title=title)
 
-    def buttonbox(self):
+    def buttonbox(self) -> None:
         """Override to show only a Close button instead of OK/Cancel."""
         box = ttk.Frame(self)
         ttk.Button(box, text="Close", command=self.cancel, width=10).pack(padx=5, pady=5)
@@ -271,7 +271,9 @@ class AttributeViewerDialog(simpledialog.Dialog):
 
     def _build_number_control(self, parent: tk.Misc, metric: WritableMetric, descriptor: TopicDescriptor) -> None:
         """Build a slider + entry for number metrics with min/max/step."""
-        current_value = float(metric.value) if metric.value is not None else 0.0
+        metric_value = metric.value
+        assert metric_value is None or isinstance(metric_value, str | float | int)
+        current_value = float(metric_value) if metric_value is not None else 0.0
         min_val = float(metric.min_value) if metric.min_value is not None else 0.0
         max_val = float(metric.max_value) if metric.max_value is not None else 100.0
         step = float(metric.step) if metric.step is not None else 1.0
@@ -496,20 +498,20 @@ class App:
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self._to_quit = False
 
-    def update(self):
+    def update(self) -> None:
         """Pump the Tkinter event loop once."""
         self.root.update()
 
-    def _on_close(self):
+    def _on_close(self) -> None:
         """Flag the app to quit when the window is closed."""
         self._to_quit = True
 
     @property
-    def to_quit(self):
+    def to_quit(self) -> bool:
         """Return True when the user has requested to close the window."""
         return self._to_quit
 
-    def _refresh_info_button_state(self):
+    def _refresh_info_button_state(self) -> None:
         has_device_selection = len(self.device_tree.selection()) > 0
         has_metric_selection = len(self.metric_tree.selection()) > 0
         self.info_button.config(state=tk.NORMAL if (has_device_selection or has_metric_selection) else tk.DISABLED)
@@ -558,10 +560,10 @@ class App:
                     ),
                 )
 
-    def _expand_all(self):
+    def _expand_all(self) -> None:
         self._expand_all_recursive()
 
-    def _expand_all_recursive(self):
+    def _expand_all_recursive(self) -> None:
         def _expand(item: str) -> None:
             self.device_tree.item(item, open=True)
             for child in self.device_tree.get_children(item):
@@ -570,18 +572,18 @@ class App:
         for item in self.device_tree.get_children():
             _expand(item)
 
-    def _collapse_all(self):
+    def _collapse_all(self) -> None:
         for item in self.device_tree.get_children():
             self.device_tree.item(item, open=False)
 
-    def _clear_search(self):
+    def _clear_search(self) -> None:
         self._search_var.set("")
 
     def _on_search(self, *_args: object) -> None:
         query = self._search_var.get().lower().strip()
         self._refill_tree_filtered(query)
 
-    def _refill_tree_filtered(self, query: str):
+    def _refill_tree_filtered(self, query: str) -> None:
         """Rebuild tree showing only items matching query."""
         if self._client is None:
             return
@@ -668,7 +670,7 @@ class App:
         for child in children:
             self._insert_device_tree(child, device_iid, all_devices, query)
 
-    def _refill_metric_pane(self):
+    def _refill_metric_pane(self) -> None:
         """Refresh metrics pane for the currently selected device."""
         self.metric_tree.delete(*self.metric_tree.get_children())
         self._metric_containers.clear()
@@ -743,11 +745,11 @@ class App:
             self.connect_button.config(state=tk.NORMAL)
             return False
 
-    def _fill_tree(self):
+    def _fill_tree(self) -> None:
         """Legacy fill - use _refill_tree_filtered instead."""
         self._refill_tree_filtered("")
 
-    def _info(self):
+    def _info(self) -> None:
         if not self._client:
             return
 
@@ -764,7 +766,7 @@ class App:
             if device is not None:
                 AttributeViewerDialog(self.root, device)
 
-    def _connect(self):
+    def _connect(self) -> None:
         self.connect_button.config(state=tk.DISABLED)
 
         if self._client is not None:
@@ -781,19 +783,17 @@ class App:
             server = DEFAULT_HOST
         if port == 0:
             port = DEFAULT_PORT
-        if username == "":
-            username = None
-        if password == "":
-            password = None
+        optional_username: str | None = username or None
+        optional_password: str | None = password or None
 
         async def connect() -> None:
-            success = await self._async_connect(server, port, username, password, use_ssl)
+            success = await self._async_connect(server, port, optional_username, optional_password, use_ssl)
             if not success:
                 self.connect_button.config(state=tk.NORMAL)
 
         self._task = asyncio.create_task(connect())
 
-    def _disconnect(self):
+    def _disconnect(self) -> None:
         self.disconnect_button.config(state=tk.DISABLED)
         self.info_button.config(state=tk.DISABLED)
         self.expand_button.config(state=tk.DISABLED)

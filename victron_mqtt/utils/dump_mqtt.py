@@ -9,7 +9,7 @@ from pathlib import Path
 from ..hub import Hub
 
 
-def setup_arguments():
+def setup_arguments() -> argparse.Namespace:
     """Setup the arguments for the script."""
     parser = argparse.ArgumentParser(description="Dump MQTT messages from a Venus OS hub")
     parser.add_argument("--host", default="venus.local.", help="Hostname of the Venus OS hub")
@@ -37,7 +37,7 @@ async def async_main(args: argparse.Namespace) -> None:
         print(json_output)
 
 
-def main():
+def main() -> None:
     """Wrapper for async main function."""
     args = setup_arguments()
     # Configure logging

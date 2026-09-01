@@ -44,7 +44,6 @@ from ._victron_enums import (
     SwitchableOutputType,
     TemperatureStatus,
     TemperatureType,
-    VictronDeviceEnum,
     VictronProductId,
     VrmPortalMode,
 )
@@ -58,9 +57,10 @@ from .constants import (
     MetricType,
     OperationMode,
     RangeType,
+    VictronDeviceEnum,
     VictronEnum,
 )
-from .data_classes import GpsLocation, ProductCapabilityRef
+from .data_classes import GpsLocation, MetricValue, ProductCapabilityRef
 from .device import Device
 from .formula_metric import FormulaMetric
 from .hub import (
@@ -124,6 +124,7 @@ __all__ = [
     "MetricKind",
     "MetricNature",
     "MetricType",
+    "MetricValue",
     "MppOperationMode",
     "NotConnectedError",
     "OperationMode",

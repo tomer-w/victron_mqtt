@@ -49,6 +49,13 @@ extra-dependencies = [
 check = "mypy --install-types --non-interactive {args:victron_mqtt tests}"
 pyright = "python -m pyright {args:victron_mqtt tests}"
 
+[tool.mypy]
+strict = true
+
+[[tool.mypy.overrides]]
+module = "victron_mqtt.testing.*"
+ignore_errors = true
+
 [tool.hatch.envs.lint]
 extra-dependencies = [
   "pylint>=3.0",
