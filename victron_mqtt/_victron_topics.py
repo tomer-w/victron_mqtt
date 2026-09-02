@@ -2156,6 +2156,8 @@ topics: list[TopicDescriptor] = [
         short_id="multi_max_power_yesterday",
         name="Max power yesterday",
         metric_type=MetricType.POWER,
+        # This is a completed historical aggregate, not a present-time measurement, and it can decrease when the previous-day window advances.
+        metric_nature=MetricNature.NONE,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/History/Daily/1/Pv/{mppt_id}/Yield",
@@ -2969,6 +2971,8 @@ topics: list[TopicDescriptor] = [
         short_id="solarcharger_max_power_yesterday",
         name="Max power yesterday",
         metric_type=MetricType.POWER,
+        # This is a completed historical aggregate, not a present-time measurement, and it can decrease when the previous-day window advances.
+        metric_nature=MetricNature.NONE,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/History/Daily/1/Yield",
