@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026.9.0 (2026-09-03)
+
+### Changes
+
+- Add firmware update related topics
+- Another state class cleanup from yesterday metrics: https://github.com/tomer-w/ha-victron-mqtt/issues/502
+- Strengthen metric value typing
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.8.9 (2026-08-31)
 
 ### Changes
