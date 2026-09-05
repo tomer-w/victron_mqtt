@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.9.1 (2026-09-05)
+
+### Changes
+
+- Make percentage notify immeidelty. Also fix firmware percentage to create always so it is not waiting for next full_publish_completed when it shows up.
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.9.0 (2026-09-03)
 
 ### Changes
