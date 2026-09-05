@@ -24,6 +24,7 @@ from victron_mqtt._victron_topics import topics
 from victron_mqtt.constants import (
     AUTO_UPDATE_INTERVAL_DEFAULT,
     AUTO_UPDATE_INTERVALS,
+    UNTHROTTLED_METRIC_TYPES,
     MetricKind,
     MetricNature,
     MetricType,
@@ -2561,6 +2562,7 @@ def _make_metric(
     m._generic_short_id = descriptor.short_id
     m._unique_id = f"device_0_{descriptor.short_id}"
     m._value = None
+    m._available = False
     m._hub = hub
     m._on_update = None
     m._key_values = {}
@@ -2568,13 +2570,39 @@ def _make_metric(
     m._last_notified = 0.0
     m._depend_on_me = []
     frequency = hub._update_frequency_seconds
-    if isinstance(frequency, str):
+    if descriptor.metric_type in UNTHROTTLED_METRIC_TYPES:
+        m._update_interval_seconds = None
+    elif isinstance(frequency, str):
         m._update_interval_seconds = AUTO_UPDATE_INTERVALS[frequency].get(
             descriptor.metric_type, AUTO_UPDATE_INTERVAL_DEFAULT
         )
     else:
         m._update_interval_seconds = frequency
     return m
+
+
+@pytest.mark.parametrize(
+    "metric_type",
+    [MetricType.PERCENTAGE, MetricType.ELECTRIC_STORAGE_PERCENTAGE, MetricType.HUMIDITY],
+)
+@pytest.mark.parametrize("update_frequency", [None, "auto", "auto_unthrottled", 0, 5, 30])
+def test_percentage_metrics_are_always_unthrottled(metric_type: MetricType, update_frequency: str | int | None) -> None:
+    """Percentage-family metrics should publish every changed value regardless of frequency."""
+    hub = MagicMock()
+    hub._update_frequency_seconds = update_frequency
+    hub._loop = MagicMock()
+    hub._loop.is_running.return_value = True
+    metric = _make_metric(descriptor=_make_descriptor(metric_type=metric_type), hub=hub)
+    metric.on_update = MagicMock()
+
+    assert metric.update_interval_seconds is None
+
+    with patch("victron_mqtt.metric.time.monotonic", side_effect=[10, 11, 12]):
+        metric._handle_message(10, MagicMock())
+        metric._handle_message(20, MagicMock())
+        metric._handle_message(30, MagicMock())
+
+    assert hub._loop.call_soon_threadsafe.call_count == 3
 
 
 def _make_parsed_topic(device_type: DeviceType, device_id: str, installation_id: str) -> ParsedTopic:
