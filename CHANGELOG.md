@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.9.3 (2026-09-08)
+
+### Changes
+
+- Add GX firmware update lifecycle
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.9.2 (2026-09-06)
 
 ### Changes
