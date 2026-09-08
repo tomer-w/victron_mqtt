@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.9.2 (2026-09-06)
+
+### Changes
+
+- Set default unit for percentage metrics
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.9.1 (2026-09-05)
 
 ### Changes
