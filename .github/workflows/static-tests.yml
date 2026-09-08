@@ -75,7 +75,7 @@ jobs:
         shell: bash
         run: |
           EXIT_CODE=0
-          hatch run test:pytest tests/static_test.py tests/static_hub_test.py tests/parsed_topics_test.py tests/test_unwrappers.py --cov=victron_mqtt --tb=no --no-header 2>&1 | tee /tmp/test_output.txt || EXIT_CODE=${PIPESTATUS[0]}
+          hatch run test:pytest tests/static_test.py tests/static_hub_test.py tests/parsed_topics_test.py tests/test_unwrappers.py tests/test_firmware_update.py --cov=victron_mqtt --tb=no --no-header 2>&1 | tee /tmp/test_output.txt || EXIT_CODE=${PIPESTATUS[0]}
           OUTPUT=$(cat /tmp/test_output.txt)
           SUMMARY=$(echo "$OUTPUT" | sed -n '/short test summary info/,$ p')
           if [ -z "$SUMMARY" ]; then

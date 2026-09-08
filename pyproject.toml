@@ -74,7 +74,7 @@ dependencies = [
 ]
 
 [tool.hatch.envs.test.scripts]
-cov = "pytest --cov=victron_mqtt {args:tests/static_test.py tests/static_hub_test.py tests/parsed_topics_test.py tests/test_unwrappers.py}"
+cov = "pytest --cov=victron_mqtt {args:tests/static_test.py tests/static_hub_test.py tests/parsed_topics_test.py tests/test_unwrappers.py tests/test_firmware_update.py}"
 
 [tool.hatch.envs.hatch-test]
 extra-dependencies = [
