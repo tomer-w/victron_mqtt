@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.9.4 (2026-09-09)
+
+### Changes
+
+- Add periodic GX firmware update checks
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.9.3 (2026-09-08)
 
 ### Changes
