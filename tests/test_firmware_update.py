@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
 INSTALL_TOPIC_SUFFIX = "/platform/0/Firmware/Online/Install"
+CHECK_TOPIC_SUFFIX = "/platform/0/Firmware/Online/Check"
 
 
 async def _inject_value(hub: Hub, topic: str, value: object) -> None:
@@ -47,6 +48,71 @@ async def test_firmware_update_info_normalizes_progress() -> None:
     assert info.progress == 100
     assert info.in_progress
     assert info.update_available
+
+
+@pytest.mark.asyncio
+async def test_check_firmware_update_publishes_periodically() -> None:
+    hub = await create_mocked_hub(installation_id="123")
+    hub.check_firmware_update(poll_interval=0.01)
+    await asyncio.sleep(0.025)
+    hub._stop_firmware_update_checks()
+
+    publish = cast("MagicMock", hub._client.publish)
+    checks = [
+        call
+        for call in publish.call_args_list
+        if call.args[0].endswith(CHECK_TOPIC_SUFFIX) and call.args[1] == '{"value": 1}'
+    ]
+    assert len(checks) >= 2
+
+
+@pytest.mark.asyncio
+async def test_check_firmware_update_replaces_existing_schedule() -> None:
+    hub = await create_mocked_hub(installation_id="123")
+    hub.check_firmware_update(poll_interval=60)
+    first_task = hub._firmware_check_task
+
+    hub.check_firmware_update(poll_interval=60)
+    await asyncio.sleep(0)
+
+    assert first_task is not None
+    assert first_task.cancelled()
+    assert hub._firmware_check_task is not first_task
+    hub._stop_firmware_update_checks()
+
+
+@pytest.mark.asyncio
+async def test_disconnect_stops_firmware_update_checks() -> None:
+    hub = await create_mocked_hub(installation_id="123")
+    hub.check_firmware_update()
+    task = hub._firmware_check_task
+
+    await hub.disconnect()
+
+    assert task is not None
+    assert task.cancelled()
+    assert hub._firmware_check_task is None
+
+
+@pytest.mark.asyncio
+async def test_check_firmware_update_rejects_invalid_interval() -> None:
+    hub = await create_mocked_hub(installation_id="123")
+
+    with pytest.raises(ValueError, match="poll_interval must be greater than zero"):
+        hub.check_firmware_update(0)
+
+
+@pytest.mark.asyncio
+async def test_check_firmware_update_publishes_immediately() -> None:
+    hub = await create_mocked_hub(installation_id="123")
+    hub.check_firmware_update()
+    await asyncio.sleep(0)
+    hub._stop_firmware_update_checks()
+
+    publish = cast("MagicMock", hub._client.publish)
+    assert any(
+        call.args[0].endswith(CHECK_TOPIC_SUFFIX) and call.args[1] == '{"value": 1}' for call in publish.call_args_list
+    )
 
 
 @pytest.mark.asyncio
