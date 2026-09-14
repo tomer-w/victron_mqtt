@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from victron_mqtt import FirmwareUpdateError, FirmwareUpdateErrorReason, FirmwareUpdateState, Hub
+from victron_mqtt import FirmwareUpdateError, FirmwareUpdateErrorReason, FirmwareUpdateInfo, FirmwareUpdateState, Hub
 from victron_mqtt.testing import create_mocked_hub, inject_message
 
 if TYPE_CHECKING:
@@ -48,6 +48,44 @@ async def test_firmware_update_info_normalizes_progress() -> None:
     assert info.progress == 100
     assert info.in_progress
     assert info.update_available
+
+
+@pytest.mark.asyncio
+async def test_on_firmware_update_reports_changed_info_once() -> None:
+    hub = await create_mocked_hub(installation_id="123")
+    updates: list[FirmwareUpdateInfo] = []
+
+    def on_firmware_update(callback_hub: Hub, info: FirmwareUpdateInfo) -> None:
+        assert callback_hub is hub
+        updates.append(info)
+
+    hub.on_firmware_update = on_firmware_update
+
+    await _inject_firmware_info(hub)
+    await asyncio.sleep(0)
+
+    assert updates == [hub.firmware_update_info]
+
+    await _inject_value(hub, "N/123/platform/0/Firmware/Online/AvailableVersion", "v3.70")
+    await asyncio.sleep(0)
+    assert updates == [hub.firmware_update_info]
+
+    await _inject_value(hub, "N/123/platform/0/Firmware/Online/AvailableVersion", "v3.71")
+    await asyncio.sleep(0)
+    assert updates[-1].available_version == "v3.71"
+    assert len(updates) == 2
+
+
+@pytest.mark.asyncio
+async def test_on_firmware_update_property() -> None:
+    hub = await create_mocked_hub(installation_id="123")
+
+    def callback(_hub: Hub, _info: FirmwareUpdateInfo) -> None:
+        pass
+
+    assert hub.on_firmware_update is None
+    hub.on_firmware_update = callback
+    assert hub.on_firmware_update is callback
 
 
 @pytest.mark.asyncio
