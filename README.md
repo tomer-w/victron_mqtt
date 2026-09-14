@@ -306,6 +306,22 @@ Dump the raw MQTT structure from your device:
 python -m victron_mqtt.utils.dump_mqtt --host venus.local. --port 1883
 ```
 
+### MQTT Listener
+
+Print raw MQTT messages as they arrive from a broker:
+
+```bash
+python -m victron_mqtt.utils.dumb_mqtt_listener --host venus.local. --port 1883
+```
+
+Use `--only_supported_victron` to subscribe only to topics recognized by this library. Use `--seed_victron` to discover the installation ID and, after subscribing, publish a keepalive request that makes the GX device send all its current values:
+
+```bash
+python -m victron_mqtt.utils.dumb_mqtt_listener --host venus.local. --seed_victron
+```
+
+`--seed_victron` works independently of `--only_supported_victron`. Both options can also be used together.
+
 ### Topic Definitions
 
 Browse all supported MQTT topic definitions on the [documentation page](https://tomer-w.github.io/victron_mqtt/).
