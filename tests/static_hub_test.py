@@ -2646,10 +2646,15 @@ class TestHubValidation:
 class TestHubProperties:
     """Test Hub property accessors (lines 888, 893, 898, 954)."""
 
-    def test_model_name(self):
-        with patch("victron_mqtt.hub.mqtt.Client"):
-            hub = Hub("localhost", 1883, None, None, False, model_name="TestModel")
-        assert hub.model_name == "TestModel"
+    @pytest.mark.asyncio
+    async def test_model_name(self):
+        hub = await create_mocked_hub()
+        assert hub.model_name is None
+
+        await inject_message(hub, "N/123/system/0/ProductName", '{"value": "Cerbo GX"}')
+        await finalize_injection(hub)
+
+        assert hub.model_name == "Cerbo GX"
 
     def test_topic_prefix(self):
         with patch("victron_mqtt.hub.mqtt.Client"):

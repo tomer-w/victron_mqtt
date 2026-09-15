@@ -93,8 +93,6 @@ class Hub:
         password: str | None,
         use_ssl: bool,
         installation_id: str | None = None,
-        model_name: str | None = None,
-        serial: str | None = "noserial",
         topic_prefix: str | None = None,
         topic_log_info: str | None = None,
         operation_mode: OperationMode = OperationMode.FULL,
@@ -123,10 +121,6 @@ class Hub:
             If provided, used to replace `{installation_id}` placeholders in topics.
             If None, the installation id will be discovered from the broker when
             `connect()` is called.
-        model_name: str | None
-            Optional device model name used for informational purposes.
-        serial: str | None
-            Optional device serial identifier (defaults to "noserial").
         topic_prefix: str | None
             Optional prefix that is prepended to every subscribe/publish topic.
         topic_log_info: str | None
@@ -196,25 +190,22 @@ class Hub:
         ):
             raise ValueError(f"update_frequency_seconds must be an int, None or one of {sorted(AUTO_UPDATE_INTERVALS)}")
         _LOGGER.info(
-            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, model_name=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, topic_log_info=%s)",
+            "Initializing Hub[ID: %d](host=%s, port=%d, username=%s, use_ssl=%s, installation_id=%s, topic_prefix=%s, operation_mode=%s, device_type_exclude_filter=%s, update_frequency_seconds=%s, topic_log_info=%s)",
             self._instance_id,
             host,
             port,
             username,
             use_ssl,
             installation_id,
-            model_name,
             topic_prefix,
             operation_mode,
             device_type_exclude_filter,
             update_frequency_seconds,
             topic_log_info,
         )
-        self._model_name = model_name
         self.host = host
         self.username = username
         self.password = password
-        self.serial = serial
         self.use_ssl = use_ssl
         self._ssl_context = ssl_context
         self.port = port
@@ -1308,7 +1299,8 @@ class Hub:
     @property
     def model_name(self) -> str | None:
         """Return the model name."""
-        return self._model_name
+        system_device = self._devices.get("system_0")
+        return system_device.model if system_device is not None else None
 
     @property
     def topic_prefix(self) -> str | None:
