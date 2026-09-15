@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.9.5 (2026-09-14)
+
+### Changes
+
+- Add firmware update callback
+- Improve the dumb_mqtt_listener utility
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.9.4 (2026-09-09)
 
 ### Changes
