@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.9.6 (2026-09-15)
+
+### Changes
+
+- Wait for MQTT subscription acknowledgements
+- Remove unused parameters. This might be breaking change.
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.9.5 (2026-09-14)
 
 ### Changes
