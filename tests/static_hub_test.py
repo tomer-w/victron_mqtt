@@ -893,12 +893,13 @@ async def test_metric_stays_available_when_source_keeps_publishing(mock_time: Ma
 @pytest.mark.asyncio
 async def test_existing_installation_id():
     """Test that the Hub correctly updates its internal state based on MQTT messages."""
-    hub: Hub = await create_mocked_hub(installation_id="123")
+    hub: Hub = await create_mocked_hub(installation_id="custom-id")
 
     # Inject messages after the event is set
-    await inject_message(hub, "N/123/switch/170/SwitchableOutput/2/State", '{"value": 1}')
+    await inject_message(hub, "N/custom-id/switch/170/SwitchableOutput/2/State", '{"value": 1}')
     await finalize_injection(hub)
 
+    assert hub.installation_id == "custom-id"
     # Validate that the sub-device has the metric we published
     device = hub.devices["switch_170_output_2"]
     metric = device.get_metric("switch_2_state")
@@ -1812,6 +1813,18 @@ async def test_on_connect_sets_up_subscriptions():
     # Create a MagicMock instance with proper method mocks
     mocked_client: MagicMock = MagicMock(spec=Client)
     mocked_client.is_connected.return_value = True
+    message_ids = iter(range(1, len(hub._subscription_list) + 2))
+
+    def subscribe_with_ack(_topic: str) -> tuple[int, int]:
+        message_id = next(message_ids)
+        asyncio.get_running_loop().call_soon(
+            hub._handle_subscription_ack,
+            message_id,
+            [ReasonCode(PacketTypes.SUBACK, identifier=0)],
+        )
+        return (0, message_id)
+
+    mocked_client.subscribe.side_effect = subscribe_with_ack
 
     # Set required properties
     hub._client = mocked_client
@@ -1824,6 +1837,9 @@ async def test_on_connect_sets_up_subscriptions():
     hub._on_connect_internal(
         mocked_client, None, ConnectFlags(False), ReasonCode(PacketTypes.CONNACK, identifier=0), None
     )
+    await asyncio.sleep(0)
+    assert hub._subscription_task is not None
+    await hub._subscription_task
 
     # Get expected number of subscriptions
     expected_calls = len(hub._resolved_subscription_list) + 1  # +1 for full_publish_completed
