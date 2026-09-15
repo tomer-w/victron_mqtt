@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.9.7 (2026-09-15)
+
+### Changes
+
+-  Mark Available version metric as optional
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.9.6 (2026-09-15)
 
 ### Changes
