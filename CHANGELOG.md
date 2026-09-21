@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.9.8 (2026-09-21)
+
+### Changes
+
+- Clarify firmware update initialization contract
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.9.7 (2026-09-15)
 
 ### Changes
