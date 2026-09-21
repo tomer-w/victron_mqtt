@@ -42,12 +42,25 @@ async def test_firmware_update_info_normalizes_progress() -> None:
 
     info = hub.firmware_update_info
 
+    assert info is not None
     assert info.installed_version == "v3.60"
     assert info.available_version == "v3.70"
     assert info.state is FirmwareUpdateState.REBOOTING
     assert info.progress == 100
     assert info.in_progress
     assert info.update_available
+
+
+def test_firmware_update_info_is_unavailable_before_first_refresh() -> None:
+    hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False)
+    updates: list[FirmwareUpdateInfo] = []
+    hub.on_firmware_update = lambda _hub, info: updates.append(info)
+
+    assert hub.firmware_update_info is None
+
+    hub._notify_firmware_update()
+
+    assert updates == []
 
 
 @pytest.mark.asyncio
@@ -64,11 +77,13 @@ async def test_on_firmware_update_reports_changed_info_once() -> None:
     await _inject_firmware_info(hub)
     await asyncio.sleep(0)
 
-    assert updates == [hub.firmware_update_info]
+    info = hub.firmware_update_info
+    assert info is not None
+    assert updates == [info]
 
     await _inject_value(hub, "N/123/platform/0/Firmware/Online/AvailableVersion", "v3.70")
     await asyncio.sleep(0)
-    assert updates == [hub.firmware_update_info]
+    assert updates == [info]
 
     await _inject_value(hub, "N/123/platform/0/Firmware/Online/AvailableVersion", "v3.71")
     await asyncio.sleep(0)
