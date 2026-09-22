@@ -35,6 +35,14 @@ async def _inject_firmware_info(
     hub._handle_full_publish_message(skip_validation=True)
 
 
+async def _complete_full_publish(hub: Hub) -> None:
+    await inject_message(
+        hub,
+        "N/123/full_publish_completed",
+        json.dumps({"full-publish-completed-echo": f"{hub._client_id}-test"}),
+    )
+
+
 @pytest.mark.asyncio
 async def test_firmware_update_info_normalizes_progress() -> None:
     hub = await create_mocked_hub(installation_id="123")
@@ -53,20 +61,70 @@ async def test_firmware_update_info_normalizes_progress() -> None:
 
 def test_firmware_update_info_is_unavailable_before_first_refresh() -> None:
     hub = Hub(host="localhost", port=1883, username=None, password=None, use_ssl=False)
-    updates: list[FirmwareUpdateInfo] = []
-    hub.on_firmware_update = lambda _hub, info: updates.append(info)
 
     assert hub.firmware_update_info is None
 
-    hub._notify_firmware_update()
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("payload", "skip_validation"),
+    [
+        (None, True),
+        ("{}", False),
+    ],
+)
+async def test_compatibility_full_publish_notifies_firmware_update(
+    payload: str | None,
+    skip_validation: bool,
+) -> None:
+    hub = await create_mocked_hub(installation_id="123")
+    await _inject_firmware_info(hub)
+    updates: list[FirmwareUpdateInfo] = []
+    hub.on_firmware_update = lambda _hub, info: updates.append(info)
+
+    await _inject_value(hub, "N/123/platform/0/Firmware/Online/AvailableVersion", "v3.71")
+    await asyncio.sleep(0)
+
+    info = hub.firmware_update_info
+    assert info is not None
+    assert info.available_version == "v3.71"
+    assert updates == []
+
+    hub._keepalive_metrics()
+    await asyncio.sleep(0)
 
     assert updates == []
 
+    hub._handle_full_publish_message(payload=payload, skip_validation=skip_validation)
+    await asyncio.sleep(0)
+
+    assert updates == [info]
+
 
 @pytest.mark.asyncio
-async def test_on_firmware_update_reports_changed_info_once() -> None:
+@pytest.mark.parametrize(
+    "updates_in_order",
+    [
+        [
+            ("N/123/platform/0/Firmware/State", 1001),
+            ("N/123/platform/0/Firmware/Online/AvailableVersion", None),
+            ("N/123/platform/0/Firmware/State", 1000),
+            ("N/123/platform/0/Firmware/Online/AvailableVersion", "v3.79"),
+        ],
+        [
+            ("N/123/platform/0/Firmware/Online/AvailableVersion", None),
+            ("N/123/platform/0/Firmware/State", 1001),
+            ("N/123/platform/0/Firmware/Online/AvailableVersion", "v3.79"),
+            ("N/123/platform/0/Firmware/State", 1000),
+        ],
+    ],
+)
+async def test_on_firmware_update_reports_only_coherent_full_publish_snapshots(
+    updates_in_order: list[tuple[str, object]],
+) -> None:
     hub = await create_mocked_hub(installation_id="123")
     updates: list[FirmwareUpdateInfo] = []
+    await _inject_firmware_info(hub)
 
     def on_firmware_update(callback_hub: Hub, info: FirmwareUpdateInfo) -> None:
         assert callback_hub is hub
@@ -74,21 +132,21 @@ async def test_on_firmware_update_reports_changed_info_once() -> None:
 
     hub.on_firmware_update = on_firmware_update
 
-    await _inject_firmware_info(hub)
+    for topic, value in updates_in_order:
+        await _inject_value(hub, topic, value)
+        assert updates == []
+
+    await _complete_full_publish(hub)
     await asyncio.sleep(0)
 
-    info = hub.firmware_update_info
-    assert info is not None
-    assert updates == [info]
+    expected = FirmwareUpdateInfo("v3.60", "v3.79", FirmwareUpdateState.IDLE, None)
+    assert hub.firmware_update_info == expected
+    assert updates == [expected]
 
-    await _inject_value(hub, "N/123/platform/0/Firmware/Online/AvailableVersion", "v3.70")
+    await _complete_full_publish(hub)
     await asyncio.sleep(0)
-    assert updates == [info]
 
-    await _inject_value(hub, "N/123/platform/0/Firmware/Online/AvailableVersion", "v3.71")
-    await asyncio.sleep(0)
-    assert updates[-1].available_version == "v3.71"
-    assert len(updates) == 2
+    assert updates == [expected]
 
 
 @pytest.mark.asyncio
