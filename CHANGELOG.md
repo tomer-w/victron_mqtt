@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.9.10 (2026-09-23)
+
+### Changes
+
+- Improve MQTT subscription setup
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.9.9 (2026-09-23)
 
 ### Changes
