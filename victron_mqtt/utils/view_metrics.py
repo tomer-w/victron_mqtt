@@ -37,6 +37,7 @@ DEFAULT_HOST = "venus.local."
 DEFAULT_PORT = 1883
 DEFAULT_USER = ""
 DEFAULT_PASSWORD = ""
+DEFAULT_INSTALLATION_ID = ""
 
 LOGGER = getLogger(__name__)
 
@@ -78,11 +79,13 @@ class ConnectionDialog(simpledialog.Dialog):
         tk.Label(master, text="Port:").grid(row=1, sticky=tk.W, padx=5, pady=3)
         tk.Label(master, text="Username:").grid(row=2, sticky=tk.W, padx=5, pady=3)
         tk.Label(master, text="Password:").grid(row=3, sticky=tk.W, padx=5, pady=3)
-        tk.Label(master, text="Use SSL:").grid(row=4, sticky=tk.W, padx=5, pady=3)
+        tk.Label(master, text="Installation/Portal ID:").grid(row=4, sticky=tk.W, padx=5, pady=3)
+        tk.Label(master, text="Use SSL:").grid(row=5, sticky=tk.W, padx=5, pady=3)
         host = os.environ.get("VICTRON_MQTT_SERVER", DEFAULT_HOST)
         port = os.environ.get("VICTRON_MQTT_PORT", DEFAULT_PORT)
         user = os.environ.get("VICTRON_MQTT_USER", DEFAULT_USER)
         password = os.environ.get("VICTRON_MQTT_PASSWORD", DEFAULT_PASSWORD)
+        installation_id = os.environ.get("VICTRON_MQTT_INSTALLATION_ID", DEFAULT_INSTALLATION_ID)
         ssl = os.environ.get("VICTRON_MQTT_SSL", "") not in ["", "0", "False", "false", "F", "f", "No", "no", "N", "n"]
 
         self.server_entry = tk.Entry(master, width=30)
@@ -97,6 +100,9 @@ class ConnectionDialog(simpledialog.Dialog):
         self.password_entry = tk.Entry(master, show="*", width=30)
         self.password_entry.insert(0, password)
 
+        self.installation_id_entry = tk.Entry(master, width=30)
+        self.installation_id_entry.insert(0, installation_id)
+
         self.use_ssl_var = tk.BooleanVar()
         self.use_ssl_check = tk.Checkbutton(master, variable=self.use_ssl_var)
         self.use_ssl_var.set(ssl)
@@ -105,7 +111,8 @@ class ConnectionDialog(simpledialog.Dialog):
         self.port_entry.grid(row=1, column=1, padx=5, pady=3)
         self.username_entry.grid(row=2, column=1, padx=5, pady=3)
         self.password_entry.grid(row=3, column=1, padx=5, pady=3)
-        self.use_ssl_check.grid(row=4, column=1, sticky=tk.W, padx=5, pady=3)
+        self.installation_id_entry.grid(row=4, column=1, padx=5, pady=3)
+        self.use_ssl_check.grid(row=5, column=1, sticky=tk.W, padx=5, pady=3)
 
         return self.server_entry
 
@@ -114,8 +121,9 @@ class ConnectionDialog(simpledialog.Dialog):
         port = int(self.port_entry.get())
         username = self.username_entry.get()
         password = self.password_entry.get()
+        installation_id = self.installation_id_entry.get()
         use_ssl = self.use_ssl_var.get()
-        self.result = (server, port, username, password, use_ssl)
+        self.result = (server, port, username, password, installation_id, use_ssl)
 
 
 class AttributeViewerDialog(simpledialog.Dialog):
@@ -708,7 +716,13 @@ class App:
             self._metric_containers.append(MetricContainer(metric, self.metric_tree, metric_item))
 
     async def _async_connect(
-        self, server: str, port: int, username: str | None, password: str | None, use_ssl: bool
+        self,
+        server: str,
+        port: int,
+        username: str | None,
+        password: str | None,
+        installation_id: str | None,
+        use_ssl: bool,
     ) -> bool:
         try:
             self._status_connection.set("🟡 Connecting...")
@@ -718,6 +732,7 @@ class App:
                 username,
                 password,
                 use_ssl,
+                installation_id=installation_id,
                 topic_log_info=self._log_topic,
                 operation_mode=OperationMode.EXPERIMENTAL,
                 update_frequency_seconds=3,
@@ -774,7 +789,7 @@ class App:
 
         dialog = ConnectionDialog(self.root)
         if dialog.result:
-            server, port, username, password, use_ssl = dialog.result
+            server, port, username, password, installation_id, use_ssl = dialog.result
         else:
             self.connect_button.config(state=tk.NORMAL)
             return
@@ -785,9 +800,17 @@ class App:
             port = DEFAULT_PORT
         optional_username: str | None = username or None
         optional_password: str | None = password or None
+        optional_installation_id: str | None = installation_id or None
 
         async def connect() -> None:
-            success = await self._async_connect(server, port, optional_username, optional_password, use_ssl)
+            success = await self._async_connect(
+                server,
+                port,
+                optional_username,
+                optional_password,
+                optional_installation_id,
+                use_ssl,
+            )
             if not success:
                 self.connect_button.config(state=tk.NORMAL)
 

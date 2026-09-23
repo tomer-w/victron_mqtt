@@ -1813,18 +1813,13 @@ async def test_on_connect_sets_up_subscriptions():
     # Create a MagicMock instance with proper method mocks
     mocked_client: MagicMock = MagicMock(spec=Client)
     mocked_client.is_connected.return_value = True
-    message_ids = iter(range(1, len(hub._subscription_list) + 2))
+    subscribed_requests: list[tuple[int, list[tuple[str, int]]]] = []
 
-    def subscribe_with_ack(_topic: str) -> tuple[int, int]:
-        message_id = next(message_ids)
-        asyncio.get_running_loop().call_soon(
-            hub._handle_subscription_ack,
-            message_id,
-            [ReasonCode(PacketTypes.SUBACK, identifier=0)],
-        )
-        return (0, message_id)
+    def subscribe_without_ack(topics: list[tuple[str, int]]) -> tuple[int, int]:
+        subscribed_requests.append((1, topics))
+        return (0, 1)
 
-    mocked_client.subscribe.side_effect = subscribe_with_ack
+    mocked_client.subscribe.side_effect = subscribe_without_ack
 
     # Set required properties
     hub._client = mocked_client
@@ -1839,18 +1834,219 @@ async def test_on_connect_sets_up_subscriptions():
     )
     await asyncio.sleep(0)
     assert hub._subscription_task is not None
+
+    async with asyncio.timeout(1):
+        while not subscribed_requests:
+            await asyncio.sleep(0)
+    message_id, subscribed_topics = subscribed_requests[0]
+    hub._handle_subscription_ack(
+        message_id,
+        [ReasonCode(PacketTypes.SUBACK, identifier=0) for _topic in subscribed_topics],
+    )
     await hub._subscription_task
 
-    # Get expected number of subscriptions
-    expected_calls = len(hub._resolved_subscription_list) + 1  # +1 for full_publish_completed
-
-    # Get the actual subscription calls
-    actual_calls = mocked_client.subscribe.call_count
-    assert actual_calls == expected_calls, f"Expected {expected_calls} subscribe calls, got {actual_calls}"
+    assert mocked_client.subscribe.call_count == 1
 
     # Verify the full_publish_completed subscription was made
     full_publish_topic = "N/test123/full_publish_completed"
-    mocked_client.subscribe.assert_any_call(full_publish_topic)
+    topic_filters = [
+        topic for call in mocked_client.subscribe.call_args_list for topic, qos in call.args[0] if qos == 0
+    ]
+    assert len(topic_filters) == len(hub._resolved_subscription_list) + 1
+    assert full_publish_topic in topic_filters
+
+
+@pytest.mark.asyncio
+async def test_subscription_setup_uses_one_multi_filter_request():
+    """Test subscription setup sends every topic in one MQTT packet."""
+    hub = Hub(
+        host="localhost",
+        port=1883,
+        username=None,
+        password=None,
+        use_ssl=False,
+        installation_id="test123",
+    )
+    mocked_client: MagicMock = MagicMock(spec=Client)
+    mocked_client.is_connected.return_value = True
+    subscribed_requests: list[list[tuple[str, int]]] = []
+
+    def subscribe_without_ack(topics: list[tuple[str, int]]) -> tuple[int, int]:
+        subscribed_requests.append(topics)
+        return (0, 1)
+
+    mocked_client.subscribe.side_effect = subscribe_without_ack
+    hub._client = mocked_client
+    hub._installation_id = "test123"
+    hub._resolved_subscription_list = [f"N/test123/system/0/Test/{i}" for i in range(51)]
+    hub._keepalive = MagicMock()
+
+    setup_task = asyncio.create_task(hub._setup_subscriptions())
+    async with asyncio.timeout(1):
+        while not subscribed_requests:
+            await asyncio.sleep(0)
+
+    assert mocked_client.subscribe.call_count == 1
+    assert len(subscribed_requests[0]) == 52
+    hub._handle_subscription_ack(
+        1,
+        [ReasonCode(PacketTypes.SUBACK, identifier=0) for _topic in subscribed_requests[0]],
+    )
+    await setup_task
+    assert mocked_client.subscribe.call_count == 1
+    assert hub._pending_subscription is None
+    hub._keepalive.assert_called_once_with(True)
+
+
+@pytest.mark.asyncio
+async def test_subscription_rejection_identifies_topic():
+    """Test an ordered batch SUBACK maps a rejection to its topic."""
+    hub = Hub("localhost", 1883, None, None, False, installation_id="test123")
+    mocked_client: MagicMock = MagicMock(spec=Client)
+    mocked_client.is_connected.return_value = True
+
+    def subscribe_with_rejection(_topics: list[tuple[str, int]]) -> tuple[int, int]:
+        asyncio.get_running_loop().call_soon(
+            hub._handle_subscription_ack,
+            1,
+            [
+                ReasonCode(PacketTypes.SUBACK, identifier=0),
+                ReasonCode(PacketTypes.SUBACK, identifier=128),
+                ReasonCode(PacketTypes.SUBACK, identifier=0),
+            ],
+        )
+        return (0, 1)
+
+    mocked_client.subscribe.side_effect = subscribe_with_rejection
+    hub._client = mocked_client
+    hub._installation_id = "test123"
+    hub._resolved_subscription_list = ["N/test123/system/0/Serial", "N/test123/battery/+/Dc/0/Voltage"]
+
+    with pytest.raises(CannotConnectError, match=r"N/test123/battery/\+/Dc/0/Voltage"):
+        await hub._setup_subscriptions()
+
+
+@pytest.mark.asyncio
+async def test_subscription_ack_result_count_must_match_topics():
+    """Test every requested topic has a corresponding SUBACK result."""
+    hub = Hub("localhost", 1883, None, None, False, installation_id="test123")
+    mocked_client: MagicMock = MagicMock(spec=Client)
+    mocked_client.is_connected.return_value = True
+
+    def subscribe_with_incomplete_ack(_topics: list[tuple[str, int]]) -> tuple[int, int]:
+        asyncio.get_running_loop().call_soon(
+            hub._handle_subscription_ack,
+            1,
+            [ReasonCode(PacketTypes.SUBACK, identifier=0)],
+        )
+        return (0, 1)
+
+    mocked_client.subscribe.side_effect = subscribe_with_incomplete_ack
+    hub._client = mocked_client
+    hub._installation_id = "test123"
+    hub._resolved_subscription_list = ["N/test123/system/0/Serial"]
+
+    with pytest.raises(CannotConnectError, match="1 != 2"):
+        await hub._setup_subscriptions()
+
+
+@pytest.mark.asyncio
+async def test_subscription_timeout_cleans_up_request():
+    """Test a missing acknowledgement clears its tracking state."""
+    hub = Hub("localhost", 1883, None, None, False, installation_id="test123")
+    mocked_client: MagicMock = MagicMock(spec=Client)
+    mocked_client.is_connected.return_value = True
+    mocked_client.subscribe.return_value = (0, 1)
+    hub._client = mocked_client
+    hub._installation_id = "test123"
+    hub._resolved_subscription_list = [f"N/test123/system/0/Test/{i}" for i in range(20)]
+
+    with (
+        patch("victron_mqtt.hub.SUBSCRIPTION_ACK_TIMEOUT_SECONDS", 0.01),
+        pytest.raises(CannotConnectError, match="21 topics"),
+    ):
+        await hub._setup_subscriptions()
+
+    assert mocked_client.subscribe.call_count == 1
+    assert hub._pending_subscription is None
+
+
+@pytest.mark.asyncio
+async def test_installation_discovery_surfaces_subscription_rejection():
+    """Test discovery reports a rejected wildcard subscription immediately."""
+    hub = Hub("localhost", 1883, None, None, False)
+    mocked_client: MagicMock = MagicMock(spec=Client)
+    mocked_client.is_connected.return_value = True
+
+    def subscribe_with_rejection(_topic: str) -> tuple[int, int]:
+        asyncio.get_running_loop().call_soon(
+            hub._handle_subscription_ack,
+            1,
+            [ReasonCode(PacketTypes.SUBACK, identifier=128)],
+        )
+        return (0, 1)
+
+    mocked_client.subscribe.side_effect = subscribe_with_rejection
+    hub._client = mocked_client
+
+    with pytest.raises(CannotConnectError, match=r"N/\+/system/0/Serial"):
+        await hub._wait_for_installation_id(expected_id=None)
+
+
+@pytest.mark.asyncio
+async def test_reconnect_replaces_incomplete_subscription_setup():
+    """Test reconnect replaces setup that was waiting on the previous connection."""
+    hub = Hub("localhost", 1883, None, None, False, installation_id="test123")
+    mocked_client: MagicMock = MagicMock(spec=Client)
+    mocked_client.is_connected.return_value = True
+    mocked_client.subscribe.side_effect = [(0, 1), (0, 2)]
+    hub._client = mocked_client
+    hub._installation_id = "test123"
+    hub._resolved_subscription_list = ["N/test123/system/0/Serial"]
+    hub._keepalive = MagicMock()
+    hub._loop = asyncio.get_running_loop()
+    hub._first_connect = False
+
+    hub._start_subscription_setup()
+    first_setup_task = hub._subscription_task
+    assert first_setup_task is not None
+    async with asyncio.timeout(1):
+        while mocked_client.subscribe.call_count < 1:
+            await asyncio.sleep(0)
+
+    hub._on_disconnect(
+        mocked_client,
+        None,
+        DisconnectFlags(False),
+        ReasonCode(PacketTypes.DISCONNECT, identifier=128),
+        None,
+    )
+    hub._on_connect_internal(
+        mocked_client,
+        None,
+        ConnectFlags(False),
+        ReasonCode(PacketTypes.CONNACK, identifier=0),
+        None,
+    )
+
+    async with asyncio.timeout(1):
+        while mocked_client.subscribe.call_count < 2:
+            await asyncio.sleep(0)
+    assert first_setup_task.cancelled()
+    second_setup_task = hub._subscription_task
+    assert second_setup_task is not None
+    assert second_setup_task is not first_setup_task
+
+    hub._handle_subscription_ack(
+        2,
+        [
+            ReasonCode(PacketTypes.SUBACK, identifier=0),
+            ReasonCode(PacketTypes.SUBACK, identifier=0),
+        ],
+    )
+    await second_setup_task
+    assert hub._pending_subscription is None
+    hub._keepalive.assert_called_once_with(True)
 
 
 @pytest.mark.asyncio
