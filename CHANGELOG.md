@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.9.9 (2026-09-23)
+
+### Changes
+
+- Emit coherent firmware update snapshots
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.9.8 (2026-09-21)
 
 ### Changes
