@@ -434,9 +434,7 @@ class Hub:
             self._start_keep_alive_loop()
         except asyncio.CancelledError:
             _LOGGER.info("Connection setup cancelled, cleaning up")
-            await self._cleanup_connection_setup(
-                "Error during cancelled connect() cleanup, ignoring: %s"
-            )
+            await self._cleanup_connection_setup("Error during cancelled connect() cleanup, ignoring: %s")
             raise
         except Exception as exc:
             # If anything fails after loop_start(), fully clean up (keepalive task, client
