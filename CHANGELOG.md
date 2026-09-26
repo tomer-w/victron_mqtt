@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026.9.11 (2026-09-26)
+
+### Changes
+
+- Document MQTT topics and enum values
+- Apply Ruff formatting
+- Clean up cancelled MQTT connections
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.9.10 (2026-09-23)
 
 ### Changes
