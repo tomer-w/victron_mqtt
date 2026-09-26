@@ -3,394 +3,1880 @@ layout: default
 title: Victron MQTT open source specification
 ---
 
+<script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("theme");
+    const theme =
+      param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
 <style>
-/* Override Jekyll default theme constraints */
-.main-content, .page-header + .main-content, .container-lg {
-  max-width: none !important;
-  width: 100% !important;
-  margin: 10px !important;
-  padding: 0 !important;
+:root {
+  color-scheme: light;
+  --cp-bg: #f7f4ef;
+  --cp-bg-elevated: #fcfbf8;
+  --cp-surface: #ffffff;
+  --cp-surface-soft: #f5f5f5;
+  --cp-border: #dedede;
+  --cp-border-strong: #919191;
+  --cp-text: #242424;
+  --cp-text-muted: #5c5c5c;
+  --cp-text-soft: #6f6f6f;
+  --cp-accent: #b11f4b;
+  --cp-accent-hover: #9a1a41;
+  --cp-accent-soft: rgba(177, 31, 75, 0.08);
+  --cp-accent-fg: #ffffff;
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-warning: #f59e0b;
+  --cp-link: #0078d4;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+  --cp-overlay: rgba(255, 255, 255, 0.8);
+  --cp-panel: rgba(255, 255, 255, 0.86);
+  --cp-panel-strong: rgba(255, 255, 255, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.55);
+  --cp-highlight: rgba(177, 31, 75, 0.12);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #3d3b3a;
+  --cp-bg-elevated: #343231;
+  --cp-surface: #292929;
+  --cp-surface-soft: #2e2e2e;
+  --cp-border: #474747;
+  --cp-border-strong: #5f5f5f;
+  --cp-text: #dedede;
+  --cp-text-muted: #919191;
+  --cp-text-soft: #b0b0b0;
+  --cp-accent: #fd8ea1;
+  --cp-accent-hover: #fb7b91;
+  --cp-accent-soft: rgba(253, 142, 161, 0.14);
+  --cp-accent-fg: #1a1a1a;
+  --cp-success: #4ade80;
+  --cp-danger: #f87171;
+  --cp-warning: #fbbf24;
+  --cp-link: #4da6ff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --cp-overlay: rgba(41, 41, 41, 0.88);
+  --cp-panel: rgba(41, 41, 41, 0.72);
+  --cp-panel-strong: rgba(41, 41, 41, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.04);
+  --cp-highlight: rgba(253, 142, 161, 0.12);
 }
 
-/* Reset any theme containers */
-body .container, body .container-fluid, body .wrapper {
-  max-width: none !important;
-  width: 100% !important;
-  margin: 10px !important;
-  padding: 0 !important;
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
 }
 
 body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: #f8f9fa;
+  min-width: 20rem;
+  margin: 0;
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.6;
+}
+
+body .main-content,
+body .page-header + .main-content,
+body .container-lg,
+body .container,
+body .container-fluid,
+body .wrapper {
+  width: 100%;
+  max-width: none;
   margin: 0;
   padding: 0;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
-}
-.navbar {
-  background: #003366;
-  color: #fff;
-  padding: 1rem 2rem;
-  font-size: 1.5rem;
-  letter-spacing: 1px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-/* Responsive container: uses full width with margins, centered, with padding */
-.container {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  padding: 2rem; /* Increased padding for better spacing */
-  overflow-x: hidden;
 }
 
-/* Add consistent padding to all sections */
-.container > * {
-  padding: 1rem; /* Ensure proper spacing for all child elements */
-  margin: 0; /* Remove unnecessary margins */
+a {
+  color: var(--cp-link);
+  text-underline-offset: 0.18em;
 }
 
-/* Update table container for better centering and spacing */
-.table-container {
-  margin: 0 auto; /* Center the table horizontally */
-  padding: 1rem; /* Add padding around the table */
-  max-width: 90%; /* Limit the container width to 90% of the viewport */
-  overflow-x: auto; /* Allow horizontal scrolling if necessary */
+a:hover {
+  color: var(--cp-accent-hover);
 }
 
-/* Update table styles for better width */
-table {
-  width: 100%; /* Set table width to fill the container */
-  max-width: 100%; /* Limit the table width to 90% of the viewport */
-  margin: 0 auto; /* Center the table within the container */
-  border-collapse: collapse;
-  table-layout: fixed; /* Ensure consistent column widths */
-  min-width: 1100px;
+button,
+input,
+select {
+  font: inherit;
 }
-th, td {
-  border: 1px solid #dee2e6;
-  padding: 1rem; /* Increased padding for better spacing */
-  text-align: left;
-  box-sizing: border-box;
-  word-break: break-word;
-}
-th {
-  background: #e9ecef;
-}
-tr:nth-child(even) {
-  background: #f2f6fa;
-}
-.collapsible {
-  background: #e9ecef;
-  color: #003366;
+
+button,
+select {
   cursor: pointer;
-  padding: 0.75rem 1rem;
-  width: 100%;
-  border: none;
-  text-align: left;
-  outline: none;
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-  border-radius: 4px;
 }
-.active, .collapsible:hover {
-  background: #d0d8e0;
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--cp-accent);
+  outline-offset: 2px;
 }
-.content {
-  padding: 0 1rem;
-  display: none;
-  overflow: hidden;
-  background: #f8f9fa;
-  border-radius: 0 0 4px 4px;
+
+code,
+.topic-code,
+.short-id {
+  font-family: Consolas, "Courier New", Courier, monospace;
+}
+
+code {
+  padding: 0.12rem 0.35rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.375rem;
+  background: var(--cp-surface-soft);
+  color: var(--cp-text);
+  font-size: 0.9em;
+}
+
+.site-header {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  border-bottom: 1px solid var(--cp-border);
+  background: var(--cp-panel-strong);
+}
+
+.site-nav {
+  display: flex;
+  width: min(100% - 2rem, 92rem);
+  min-height: 4rem;
+  margin: 0 auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand {
+  display: flex;
+  color: var(--cp-text);
+  font-weight: 700;
+  gap: 0.65rem;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.625rem;
+  background: var(--cp-accent);
+  color: var(--cp-accent-fg);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  place-items: center;
+}
+
+.nav-links {
+  display: flex;
+  margin-left: auto;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nav-link,
+.theme-toggle {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  background: var(--cp-surface);
+  color: var(--cp-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.nav-link {
+  border-color: var(--cp-surface);
+}
+
+.nav-link:hover,
+.theme-toggle:hover {
+  border-color: var(--cp-border-strong);
+  background: var(--cp-surface-soft);
+  color: var(--cp-text);
+}
+
+.page-shell {
+  width: min(100% - 2rem, 92rem);
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.hero {
+  display: grid;
+  padding: clamp(1.5rem, 4vw, 3.5rem);
+  border: 1px solid var(--cp-border);
+  border-radius: 16px;
+  background: var(--cp-surface);
+  grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 0.7fr);
+  gap: 2rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--cp-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  max-width: 16ch;
+  margin: 0;
+  color: var(--cp-text);
+  font-size: clamp(2.25rem, 6vw, 4.75rem);
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.hero-copy {
+  max-width: 47rem;
+  margin: 1.25rem 0 0;
+  color: var(--cp-text-muted);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+}
+
+.hero-actions {
+  display: flex;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  align-items: center;
+  justify-content: center;
+  color: var(--cp-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.button:hover {
+  border-color: var(--cp-border-strong);
+  background: var(--cp-surface-soft);
+  color: var(--cp-text);
+}
+
+.button-primary {
+  border-color: var(--cp-accent);
+  background: var(--cp-accent);
+  color: var(--cp-accent-fg);
+}
+
+.button-primary:hover {
+  border-color: var(--cp-accent-hover);
+  background: var(--cp-accent-hover);
+  color: var(--cp-accent-fg);
+}
+
+.stats {
+  display: grid;
+  align-self: end;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.stat {
+  padding: 1.25rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  background: var(--cp-bg-elevated);
+}
+
+.stat-value {
+  display: block;
+  color: var(--cp-text);
+  font-size: 1.75rem;
+  font-weight: 750;
+  line-height: 1.1;
+}
+
+.stat-label {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--cp-text-muted);
+  font-size: 0.82rem;
+}
+
+.section {
+  padding-top: 4rem;
+}
+
+.section-heading {
+  display: flex;
+  margin-bottom: 1.25rem;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.section-heading h2 {
+  margin: 0;
+  color: var(--cp-text);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  letter-spacing: -0.025em;
+}
+
+.section-heading p {
+  max-width: 45rem;
+  margin: 0.5rem 0 0;
+  color: var(--cp-text-muted);
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.info-card,
+.device-panel,
+.examples-panel,
+.catalogue-panel,
+.enum-card {
+  border: 1px solid var(--cp-border);
+  border-radius: 16px;
+  background: var(--cp-surface);
+}
+
+.info-card {
+  padding: 1.5rem;
+}
+
+.info-card-number {
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
   margin-bottom: 1rem;
+  border-radius: 0.625rem;
+  background: var(--cp-accent-soft);
+  color: var(--cp-accent);
+  font-size: 0.85rem;
+  font-weight: 800;
+  place-items: center;
 }
-.footer {
+
+.info-card h3 {
+  margin: 0;
+  color: var(--cp-text);
+  font-size: 1rem;
+}
+
+.info-card p {
+  margin: 0.5rem 0 0;
+  color: var(--cp-text-muted);
+  font-size: 0.92rem;
+}
+
+.device-panel {
+  margin-top: 1rem;
+}
+
+.device-panel summary {
+  padding: 1.25rem 1.5rem;
+  color: var(--cp-text);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.device-panel[open] summary {
+  border-bottom: 1px solid var(--cp-border);
+}
+
+.device-content {
+  padding: 1.5rem;
+}
+
+.device-note {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border-left: 4px solid var(--cp-warning);
+  border-radius: 0.625rem;
+  background: var(--cp-surface-soft);
+  color: var(--cp-text-muted);
+}
+
+.device-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  list-style: none;
+}
+
+.device-list li {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  color: var(--cp-text-muted);
+}
+
+.device-list strong {
+  display: block;
+  color: var(--cp-text);
+}
+
+.examples-panel {
+  display: grid;
+  margin-top: 1rem;
+  padding: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.topic-example {
+  padding: 1rem;
+  border-radius: 0.625rem;
+  background: var(--cp-surface-soft);
+}
+
+.topic-example code {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: var(--cp-surface-soft);
+  overflow-wrap: anywhere;
+}
+
+.topic-example span {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--cp-text-muted);
+  font-size: 0.85rem;
+}
+
+.catalogue-panel {
+  overflow: hidden;
+}
+
+.filter-toolbar {
+  padding: 1rem;
+  border-bottom: 1px solid var(--cp-border);
+  background: var(--cp-bg-elevated);
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: minmax(16rem, 2fr) repeat(2, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field label,
+.field-label {
+  color: var(--cp-text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.field input,
+.field select,
+.enum-search {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  background: var(--cp-surface);
+  color: var(--cp-text);
+}
+
+.field input:hover,
+.field select:hover,
+.enum-search:hover {
+  border-color: var(--cp-border-strong);
+}
+
+.filter-actions {
+  display: flex;
+  margin-top: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.advanced-filters {
+  position: relative;
+}
+
+.advanced-filters > summary,
+.clear-filters {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  background: var(--cp-surface);
+  color: var(--cp-text);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 650;
+  list-style: none;
+}
+
+.advanced-filters > summary::-webkit-details-marker {
+  display: none;
+}
+
+.advanced-filters > summary:hover,
+.clear-filters:hover {
+  border-color: var(--cp-border-strong);
+  background: var(--cp-surface-soft);
+}
+
+.advanced-panel {
+  display: grid;
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: min(42rem, calc(100vw - 3rem));
+  padding: 1rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  background: var(--cp-panel-strong);
+  box-shadow: var(--cp-shadow);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.column-picker {
+  position: relative;
+}
+
+.column-panel {
+  display: grid;
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: 18rem;
+  max-height: 22rem;
+  padding: 0.75rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  background: var(--cp-panel-strong);
+  box-shadow: var(--cp-shadow);
+  gap: 0.25rem;
+  overflow-y: auto;
+}
+
+.column-panel label {
+  display: flex;
+  padding: 0.45rem 0.5rem;
+  border-radius: 0.375rem;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--cp-text);
+  font-size: 0.88rem;
+}
+
+.column-panel label:hover {
+  background: var(--cp-surface-soft);
+}
+
+.result-summary {
+  margin-left: auto;
+  color: var(--cp-text-muted);
+  font-size: 0.88rem;
+}
+
+.result-summary strong {
+  color: var(--cp-text);
+}
+
+.table-scroll {
+  max-height: 68vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.topic-table,
+.enum-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.topic-table {
+  min-width: 88rem;
+  table-layout: fixed;
+}
+
+.topic-table th,
+.topic-table td,
+.enum-table th,
+.enum-table td {
+  padding: 0.8rem 0.75rem;
+  border-right: 1px solid var(--cp-border);
+  border-bottom: 1px solid var(--cp-border);
+  color: var(--cp-text);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.topic-table th:last-child,
+.topic-table td:last-child,
+.enum-table th:last-child,
+.enum-table td:last-child {
+  border-right: 0;
+}
+
+.topic-table thead th {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  background: var(--cp-panel-strong);
+  color: var(--cp-text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.topic-table tbody tr:hover td {
+  background: var(--cp-accent-soft);
+}
+
+.topic-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.topic-col {
+  width: 20rem;
+}
+
+.device-type-col {
+  width: 8rem;
+}
+
+.short-id-col {
+  width: 14rem;
+}
+
+.name-col {
+  width: 13rem;
+}
+
+.description-col {
+  width: 20rem;
+}
+
+.unit-col,
+.precision-col,
+.min-col,
+.max-col {
+  width: 6rem;
+  text-align: right;
+}
+
+.message-type-col,
+.metric-nature-col,
+.value-type-col {
+  width: 9rem;
+}
+
+.metric-type-col,
+.enum-col {
+  width: 12rem;
+}
+
+.topic-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.topic-code {
+  color: var(--cp-text);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.copy-topic,
+.row-details-toggle,
+.enum-values-button,
+.dialog-close {
+  flex: none;
+  min-height: 1.75rem;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.375rem;
+  background: var(--cp-surface);
+  color: var(--cp-text-muted);
+  font-size: 0.72rem;
+}
+
+.copy-topic:hover,
+.row-details-toggle:hover,
+.enum-values-button:hover,
+.dialog-close:hover {
+  border-color: var(--cp-border-strong);
+  color: var(--cp-text);
+}
+
+.unit-content {
+  display: grid;
+  justify-items: end;
+  gap: 0.35rem;
+}
+
+.enum-values-button {
+  color: var(--cp-accent);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.row-details-toggle {
+  display: none;
+}
+
+.short-id {
+  color: var(--cp-text-muted);
+  font-size: 0.8rem;
+}
+
+.badge {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  background: var(--cp-surface-soft);
+  color: var(--cp-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.badge-accent {
+  border-color: var(--cp-accent);
+  background: var(--cp-accent-soft);
+  color: var(--cp-accent);
+}
+
+.empty-value {
+  color: var(--cp-text-soft);
+}
+
+.is-column-hidden {
+  display: none;
+}
+
+.empty-state {
+  display: none;
+  padding: 3rem 1rem;
+  color: var(--cp-text-muted);
   text-align: center;
-  color: #888;
-  font-size: 0.95rem;
-  margin: 2rem 0 1rem 0;
-}
-.legal-notice {
-  font-size: 0.85em;
-  color: #666;
 }
 
-/* Ensure proper alignment for list items */
-.container ul, .container ol {
-  padding-left: 2rem; /* Add padding to align bullets within the container */
+.empty-state.is-visible {
+  display: block;
 }
 
-th.topic-col, td.topic-col {
-  width: 200px;
-  max-width: 200px;
+.topic-row[hidden],
+.enum-card[hidden] {
+  display: none !important;
+}
+
+.enum-toolbar {
+  display: flex;
+  margin-bottom: 1rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.enum-search {
+  max-width: 28rem;
+}
+
+.enum-count {
+  color: var(--cp-text-muted);
+  font-size: 0.88rem;
+}
+
+.enum-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.enum-card {
+  overflow: hidden;
+}
+
+.enum-card summary {
+  display: flex;
+  padding: 1rem 1.25rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.enum-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.enum-card summary::after {
+  color: var(--cp-accent);
+  content: "+";
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.enum-card[open] summary::after {
+  content: "-";
+}
+
+.enum-card[open] summary {
+  border-bottom: 1px solid var(--cp-border);
+}
+
+.enum-title {
+  color: var(--cp-text);
+  font-family: Consolas, "Courier New", Courier, monospace;
+  font-weight: 700;
+}
+
+.enum-value-count {
+  margin-left: auto;
+  color: var(--cp-text-muted);
+  font-size: 0.82rem;
+}
+
+.enum-table-wrap {
+  overflow-x: auto;
+}
+
+.enum-table {
+  min-width: 42rem;
+}
+
+.enum-table th {
+  background: var(--cp-bg-elevated);
+  color: var(--cp-text-muted);
+  font-size: 0.78rem;
+}
+
+.enum-empty-state {
+  display: none;
+  padding: 2rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 16px;
+  background: var(--cp-surface);
+  color: var(--cp-text-muted);
+  text-align: center;
+}
+
+.enum-empty-state.is-visible {
+  display: block;
+}
+
+.enum-dialog {
+  width: min(44rem, calc(100% - 2rem));
+  max-height: min(42rem, calc(100% - 2rem));
+  padding: 0;
+  border: 1px solid var(--cp-border);
+  border-radius: 16px;
+  background: var(--cp-surface);
+  box-shadow: var(--cp-shadow);
+  color: var(--cp-text);
+}
+
+.enum-dialog::backdrop {
+  background: var(--cp-overlay);
+}
+
+.dialog-header {
+  display: flex;
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--cp-border);
+  background: var(--cp-panel-strong);
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  color: var(--cp-text);
+  font-family: Consolas, "Courier New", Courier, monospace;
+  font-size: 1.15rem;
+}
+
+.dialog-close {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.75rem;
+  font-weight: 700;
+}
+
+.dialog-body {
+  padding: 1.25rem;
+  overflow: auto;
+}
+
+.dialog-summary {
+  margin: 0 0 1rem;
+  color: var(--cp-text-muted);
+  font-size: 0.9rem;
+}
+
+.enum-options-scroll {
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  overflow-x: auto;
+}
+
+.enum-options-table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.enum-options-table th,
+.enum-options-table td {
+  padding: 0.7rem 0.75rem;
+  border-right: 1px solid var(--cp-border);
+  border-bottom: 1px solid var(--cp-border);
+  color: var(--cp-text);
+  text-align: left;
+  vertical-align: top;
+}
+
+.enum-options-table th {
+  background: var(--cp-bg-elevated);
+  color: var(--cp-text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.enum-options-table th:last-child,
+.enum-options-table td:last-child {
+  border-right: 0;
+}
+
+.enum-options-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.site-footer {
+  padding: 2rem 1rem;
+  border-top: 1px solid var(--cp-border);
+  background: var(--cp-bg-elevated);
+  color: var(--cp-text-muted);
+  text-align: center;
+}
+
+.site-footer p {
+  margin: 0.35rem 0;
+}
+
+.license {
+  width: min(100% - 2rem, 72rem);
+  margin: 1rem auto 0;
   text-align: left;
 }
-th.short-id-col, td.short-id-col {
-  width: 250px;
-  max-width: 250px;
-  text-align: left;
+
+.license summary {
+  cursor: pointer;
+  font-weight: 650;
+  text-align: center;
 }
-th.name-col, td.name-col {
-  width: 250px;
-  max-width: 250px;
-  text-align: left;
+
+.license p {
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
 }
-th.description-col, td.description-col {
-  width: 380px;
-  max-width: 380px;
-  text-align: left;
+
+@media (max-width: 64rem) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .stats {
+    max-width: 36rem;
+  }
+
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
-th.precision-col, td.precision-col {
-  width: 90px;
-  max-width: 90px;
-  text-align: right;
+
+@media (max-width: 48rem) {
+  html {
+    scroll-padding-top: 4rem;
+  }
+
+  .site-nav {
+    width: min(100% - 1rem, 92rem);
+  }
+
+  .nav-links .nav-link {
+    display: none;
+  }
+
+  .page-shell {
+    width: min(100% - 1rem, 92rem);
+    padding-top: 1rem;
+  }
+
+  .hero {
+    padding: 1.5rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.25rem, 14vw, 3.5rem);
+  }
+
+  .overview-grid,
+  .device-list,
+  .examples-panel,
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section {
+    padding-top: 3rem;
+  }
+
+  .section-heading {
+    display: block;
+  }
+
+  .advanced-panel {
+    position: fixed;
+    top: 5rem;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .column-picker {
+    display: none;
+  }
+
+  .result-summary {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .table-scroll {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .topic-table {
+    display: block;
+    min-width: 0;
+  }
+
+  .topic-table thead {
+    display: none;
+  }
+
+  .topic-table tbody {
+    display: grid;
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .topic-table tbody tr {
+    display: grid;
+    padding: 1rem;
+    border: 1px solid var(--cp-border);
+    border-radius: 0.625rem;
+    background: var(--cp-surface);
+    gap: 0.75rem;
+  }
+
+  .topic-table tbody tr:hover td {
+    background: var(--cp-surface);
+  }
+
+  .topic-table tbody td {
+    display: grid;
+    width: auto;
+    padding: 0;
+    border: 0;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 0.75rem;
+    text-align: left;
+  }
+
+  .topic-table tbody td::before {
+    color: var(--cp-text-muted);
+    content: attr(data-label);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.035em;
+    text-transform: uppercase;
+  }
+
+  .topic-table tbody .topic-col {
+    display: block;
+  }
+
+  .topic-table tbody .topic-col::before {
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .unit-content {
+    justify-items: start;
+  }
+
+  .topic-table tbody .secondary-mobile,
+  .topic-table tbody .is-column-hidden {
+    display: none;
+  }
+
+  .topic-table tbody tr.is-expanded .secondary-mobile:not(.is-column-hidden) {
+    display: grid;
+  }
+
+  .row-details-toggle {
+    display: inline-flex;
+  }
 }
-th.unit-col, td.unit-col, th.min-col, td.min-col, th.max-col, td.max-col {
-  width: 60px;
-  max-width: 60px;
-  text-align: right;
+
+@media (max-width: 28rem) {
+  .brand-text {
+    display: none;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .topic-table tbody td {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
 }
-th.message-type-col, td.message-type-col {
-  width: 120px;
-  max-width: 120px;
-  text-align: left;
-}
-th.metric-type-col, td.metric-type-col {
-  width: 200px;
-  max-width: 200px;
-  text-align: left;
-}
-th.metric-nature-col, td.metric-nature-col, th.device-type-col, td.device-type-col {
-  width: 140px;
-  max-width: 140px;
-  text-align: left;
-}
-th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
-  width: 110px;
-  max-width: 110px;
-  text-align: left;
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 </style>
 
-<div class="navbar">Victron MQTT Documentation</div>
-<div class="container">
-  <p class="legal-notice">
-    victron_mqtt (C) 2025, tomer-w (https://github.com/tomer-w). For more information see https://github.com/tomer-w/victron_mqtt. This file is part of victron_mqtt. Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-  </p>
-  <h1>Victron MQTT Protocol Overview</h1>
-  <p>
-    The <strong>Victron MQTT protocol</strong> is used by Victron Energy devices to publish and subscribe to real-time data over an MQTT broker. This protocol enables seamless integration of Victron devices—including inverters, chargers, battery monitors, and solar controllers—into home automation, monitoring, and energy management systems.
-  </p>
-  <h2>How It Works</h2>
-  <ul>
-    <li><strong>MQTT Broker:</strong> Victron devices connect to a central MQTT broker (such as Venus OS MQTT or a third-party broker).</li>
-    <li><strong>Topics:</strong> Each device publishes its data (voltages, currents, states, alarms, etc.) to specific MQTT topics, usually under a common prefix (e.g., <code>victron/</code>).</li>
-    <li><strong>Payloads:</strong> Data is typically sent as simple values (numbers, strings) or JSON objects, depending on the topic.</li>
-    <li><strong>Discovery:</strong> Devices and their metrics can be discovered by subscribing to wildcard topics (e.g., <code>victron/+/+/...</code>).</li>
-  </ul>
-  <h2>Supported Victron Devices</h2>
-  <p>
-  <strong>Note:</strong> To use the Victron MQTT protocol, you must have a <strong>Cerbo GX</strong>, <strong>Venus GX</strong>, or <strong>Color Control GX</strong> device (collectively known as GX devices). These GX devices act as gateways, exposing data from connected Victron products via MQTT. Other Victron devices (such as inverters, solar controllers, and battery monitors) do <em>not</em> expose MQTT directly; they must be connected to a GX device, which publishes their data to the MQTT broker.
-  </p>
-  <ul>
-    <li><strong>Cerbo GX / Venus GX / Color Control GX</strong> <span style="color:#003366; font-size:0.95em;">(required for MQTT access)</span></li>
-    <li><strong>MultiPlus / MultiPlus-II / Quattro / Multi RS Solar inverter‑chargers</strong> <span style="color:#888; font-size:0.95em;">(e.g. MultiPlus, MultiPlus-II, Quattro families, Multi RS Solar 48/6000)</span></li>
-    <li><strong>EasySolar / EasySolar-II / Phoenix inverters</strong> <span style="color:#888; font-size:0.95em;">(inverter/charger & integrated solutions)</span></li>
-    <li><strong>SmartSolar & BlueSolar MPPT charge controllers</strong> <span style="color:#888; font-size:0.95em;">(e.g. MPPT 75/10, 75/15, 100/30, 150/35, 250/100 and other SmartSolar / BlueSolar models)</span></li>
-    <li><strong>BMV battery monitors</strong> <span style="color:#888; font-size:0.95em;">(BMV-600/700 series, BMV-702, BMV-712 and similar)</span></li>
-    <li><strong>SmartShunt</strong> <span style="color:#888; font-size:0.95em;">(SmartShunt 500A, 1000A and variants)</span></li>
-    <li><strong>Lynx power components</strong> <span style="color:#888; font-size:0.95em;">(Lynx Shunt, Lynx Distributor and related Lynx modules)</span></li>
-    <li><strong>VE.Direct / VE.Can connected devices</strong> <span style="color:#888; font-size:0.95em;">(VE.Direct MPPTs, VE.Can devices and other products connected over GX interfaces)</span></li>
-    <li><strong>GX accessories & connectivity modules</strong> <span style="color:#888; font-size:0.95em;">(GX Touch, Smart Battery Sense, GlobalLink / GX LTE, and other GX peripherals)</span></li>
-    <li><strong>Third‑party devices via GX</strong> <span style="color:#888; font-size:0.95em;">(devices bridged to MQTT by the GX using VE.Bus/VE.Can/VE.Direct)</span></li>
-  </ul>
-  <h2>Common MQTT Topics</h2>
-  <p>
-    Each device type publishes to standardized topics. Examples include:
-  </p>
-  <ul>
-    <li><code>victron/+/Dc/0/Voltage</code> – DC voltage readings</li>
-    <li><code>victron/+/Ac/ActiveIn/L1/Power</code> – AC input power</li>
-    <li><code>victron/+/Soc</code> – State of charge</li>
-    <li><code>victron/+/Alarms/LowVoltage</code> – Low voltage alarm status</li>
-    <li>...and many more, as detailed in the table below.</li>
-  </ul>
-  <h1>MQTT Topics</h1>
-  <div class="table-container">
-  <table>
-    <thead>
-      <tr>
-        <th class="topic-col">Topic</th>
-        <th class="device-type-col">Device Type</th>
-        <th class="short-id-col">Short ID</th>
-        <th class="name-col">Name</th>
-        <th class="description-col">Description</th>
-        <th class="unit-col">Unit</th>
-        <th class="message-type-col">Message Type</th>
-        <th class="metric-type-col">Metric Type</th>
-        <th class="metric-nature-col">Metric Nature</th>
-        <th class="value-type-col">Value Type</th>
-        <th class="precision-col">Precision</th>
-        <th class="enum-col">Enum</th>
-        <th class="min-col">Min</th>
-        <th class="max-col">Max</th>
-      </tr>
-      <tr>
-        <td class="topic-col"><input type="text" class="col-filter" data-col="0" placeholder="Filter Topic" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="device-type-col">
-          <select class="col-filter" data-col="1" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">&lt;ALL&gt;</option>
-            {% assign device_types = "" %}
-            {% for t in site.data.victron_mqtt.topics %}
-              {% assign dt = t.short_id | split: '_' | first %}
-              {% unless device_types contains dt %}
-                {% if device_types == "" %}{% assign device_types = dt %}{% else %}{% assign device_types = device_types | append: ',' | append: dt %}{% endif %}
-              {% endunless %}
-            {% endfor %}
-            {% assign device_type_list = device_types | split: ',' | sort %}
-            {% for val in device_type_list %}
-              <option value="{{ val }}">{{ val }}</option>
-            {% endfor %}
-          </select>
-        </td>
-        <td class="short-id-col"><input type="text" class="col-filter" data-col="2" placeholder="Short ID" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="name-col"><input type="text" class="col-filter" data-col="3" placeholder="Name" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="description-col"><input type="text" class="col-filter" data-col="4" placeholder="Description" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="unit-col"><input type="text" class="col-filter" data-col="5" placeholder="Unit" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="message-type-col">
-          <select class="col-filter" data-col="6" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">&lt;ALL&gt;</option>
-            {% assign message_type_values = site.data.victron_mqtt.topics | map: 'message_type' | compact | uniq | sort %}
-            {% for val in message_type_values %}
-              {% assign val_last = val | split: '.' | last %}
-              <option value="{{ val_last }}">{{ val_last }}</option>
-            {% endfor %}
-          </select>
-        </td>
-        <td class="metric-type-col">
-          <select class="col-filter" data-col="7" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">&lt;ALL&gt;</option>
-            {% assign metric_type_values = site.data.victron_mqtt.topics | map: 'metric_type' | compact | uniq | sort %}
-            {% for val in metric_type_values %}
-              {% assign val_last = val | split: '.' | last %}
-              <option value="{{ val_last }}">{{ val_last }}</option>
-            {% endfor %}
-          </select>
-        </td>
-        <td class="metric-nature-col">
-          <select class="col-filter" data-col="8" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">&lt;ALL&gt;</option>
-            {% assign metric_nature_values = site.data.victron_mqtt.topics | map: 'metric_nature' | compact | uniq | sort %}
-            {% for val in metric_nature_values %}
-              {% assign val_last = val | split: '.' | last %}
-              <option value="{{ val_last }}">{{ val_last }}</option>
-            {% endfor %}
-          </select>
-        </td>
-        <td class="value-type-col">
-          <select class="col-filter" data-col="9" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">&lt;ALL&gt;</option>
-            {% assign value_type_values = site.data.victron_mqtt.topics | map: 'value_type' | compact | uniq | sort %}
-            {% for val in value_type_values %}
-              {% assign val_last = val | split: '.' | last %}
-              <option value="{{ val_last }}">{{ val_last }}</option>
-            {% endfor %}
-          </select>
-        </td>
-        <td class="precision-col"><input type="text" class="col-filter" data-col="10" placeholder="Precision" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="enum-col">
-          <select class="col-filter" data-col="11" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
-            <option value="">&lt;ALL&gt;</option>
-            {% assign enum_values = site.data.victron_mqtt.topics | map: 'enum' | compact | uniq | sort %}
-            {% for val in enum_values %}
-              {% assign val_last = val | split: '.' | last %}
-              <option value="{{ val_last }}">{{ val_last }}</option>
-            {% endfor %}
-          </select>
-        </td>
-        <td class="min-col"><input type="text" class="col-filter" data-col="12" placeholder="Min" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="max-col"><input type="text" class="col-filter" data-col="13" placeholder="Max" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-      </tr>
-    </thead>
-  <tbody>
-  {% for topic in site.data.victron_mqtt.topics %}
-    <tr>
-      <td class="topic-col"><strong>{{ topic.topic }}</strong></td>
-      <td class="device-type-col">{{ topic.short_id | split: '_' | first }}</td>
-      <td class="short-id-col">{{ topic.short_id }}</td>
-      <td class="name-col">{{ topic.name }}</td>
-      <td class="description-col">{{ topic.description }}</td>
-      <td class="unit-col">{{ topic.unit_of_measurement }}</td>
-      <td class="message-type-col">{% if topic.message_type %}{{ topic.message_type | split: '.' | last }}{% endif %}</td>
-      <td class="metric-type-col">{% if topic.metric_type %}{{ topic.metric_type | split: '.' | last }}{% endif %}</td>
-      <td class="metric-nature-col">{% if topic.metric_nature %}{{ topic.metric_nature | split: '.' | last }}{% endif %}</td>
-      <td class="value-type-col">{% if topic.value_type %}{{ topic.value_type | split: '.' | last }}{% endif %}</td>
-      <td class="precision-col">{{ topic.precision }}</td>
-      <td class="enum-col">{% if topic.enum %}{{ topic.enum | split: '.' | last }}{% endif %}</td>
-      <td class="min-col">{% if topic.min != nil %}{{ topic.min }}{% endif %}</td>
-      <td class="max-col">{% if topic.max != nil %}{{ topic.max }}{% endif %}</td>
-    </tr>
-  {% endfor %}
-  </tbody>
-  </table>
-  </div>
-  <script>
-  // Per-column table filter for MQTT Topics, with dropdown for Enum
-  document.addEventListener('DOMContentLoaded', function() {
-    var filters = document.querySelectorAll('.col-filter');
-    var table = document.querySelector('table');
-    if (!filters.length || !table) return;
-    filters.forEach(function(input) {
-      var eventType = input.tagName === 'SELECT' ? 'change' : 'input';
-      input.addEventListener(eventType, filterTable);
-    });
-    function filterTable() {
-      var rows = table.querySelectorAll('tbody tr');
-      rows.forEach(function(row) {
-        var show = true;
-        filters.forEach(function(input) {
-          var col = parseInt(input.getAttribute('data-col'));
-          var val = (input.tagName === 'SELECT' ? input.value : input.value.trim()).toLowerCase();
-          var cell = row.cells[col];
-          if (val && cell && cell.innerText.toLowerCase().indexOf(val) === -1) {
-            show = false;
-          }
-        });
-        row.style.display = show ? '' : 'none';
-      });
-    }
-  });
-  </script>
+{% assign device_type_keys = "|" %}
+{% assign device_types = "" %}
+{% for topic in site.data.victron_mqtt.topics %}
+  {% assign device_type = topic.short_id | split: '_' | first %}
+  {% assign device_type_token = device_type | append: "|" | prepend: "|" %}
+  {% unless device_type_keys contains device_type_token %}
+    {% assign device_type_keys = device_type_keys | append: device_type | append: "|" %}
+    {% if device_types == "" %}
+      {% assign device_types = device_type %}
+    {% else %}
+      {% assign device_types = device_types | append: "," | append: device_type %}
+    {% endif %}
+  {% endunless %}
+{% endfor %}
+{% assign device_type_list = device_types | split: "," | sort %}
+{% assign device_type_enum = site.data.victron_mqtt.enums | where: "name", "DeviceType" | first %}
 
-  <h2>Enums</h2>
-  <p>
-    <strong>Enums</strong> represent the possible states or values for certain device properties, such as operational modes, alarm states, or relay statuses. Enums help interpret numeric codes in MQTT payloads.
-  </p>
-  {% for enum in site.data.victron_mqtt.enums %}
-    <h3 style="margin-bottom:0.5em; color:#003366;">{{ enum.name }}</h3>
-    <div style="overflow-x:auto; margin-bottom:1.5em;">
-      <table>
+<header class="site-header">
+  <nav class="site-nav" aria-label="Primary navigation">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true">VM</span>
+      <span class="brand-text">Victron MQTT</span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="#overview">Overview</a>
+      <a class="nav-link" href="#topics">Topics</a>
+      <a class="nav-link" href="#enums">Enums</a>
+      <a class="nav-link" href="https://github.com/tomer-w/victron_mqtt" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch color theme">Theme</button>
+    </div>
+  </nav>
+</header>
+
+<main class="page-shell" id="top">
+  <section class="hero" aria-labelledby="page-title">
+    <div>
+      <p class="eyebrow">Open source protocol reference</p>
+      <h1 id="page-title">Victron MQTT topics, clearly mapped.</h1>
+      <p class="hero-copy">
+        Explore the MQTT topics, measurements, value types, and enums published by Victron GX devices.
+        Search the complete specification and quickly find the data your integration needs.
+      </p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#topics">Explore topics</a>
+        <a class="button" href="https://github.com/tomer-w/victron_mqtt" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </div>
+    </div>
+    <div class="stats" aria-label="Specification statistics">
+      <div class="stat">
+        <span class="stat-value">{{ site.data.victron_mqtt.topics | size }}</span>
+        <span class="stat-label">Documented topics</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">{{ device_type_list | size }}</span>
+        <span class="stat-label">Device types</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">{{ site.data.victron_mqtt.enums | size }}</span>
+        <span class="stat-label">Value enums</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">GX</span>
+        <span class="stat-label">Gateway based</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="overview" aria-labelledby="overview-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Protocol overview</p>
+        <h2 id="overview-title">How it works</h2>
+        <p>Victron devices publish real-time energy data through an MQTT broker, making it available to automation, monitoring, and energy management systems.</p>
+      </div>
+    </div>
+
+    <div class="overview-grid">
+      <article class="info-card">
+        <span class="info-card-number" aria-hidden="true">01</span>
+        <h3>Connect through a broker</h3>
+        <p>GX devices connect to Venus OS MQTT or another compatible broker and act as the gateway for connected products.</p>
+      </article>
+      <article class="info-card">
+        <span class="info-card-number" aria-hidden="true">02</span>
+        <h3>Subscribe to topics</h3>
+        <p>Standard topic paths expose voltages, currents, operating states, alarms, and other measurements.</p>
+      </article>
+      <article class="info-card">
+        <span class="info-card-number" aria-hidden="true">03</span>
+        <h3>Interpret payloads</h3>
+        <p>Payloads contain numbers, strings, or JSON objects. Metric metadata and enums describe how each value should be handled.</p>
+      </article>
+    </div>
+
+    <details class="device-panel">
+      <summary>Supported Victron devices</summary>
+      <div class="device-content">
+        <p class="device-note">
+          <strong>A GX device is required.</strong> Cerbo GX, Venus GX, and Color Control GX devices expose data from connected Victron products through MQTT. Inverters, solar controllers, and battery monitors do not expose MQTT directly.
+        </p>
+        <ul class="device-list">
+          <li><strong>Cerbo GX / Venus GX / Color Control GX</strong>Required gateways for MQTT access.</li>
+          <li><strong>MultiPlus / MultiPlus-II / Quattro / Multi RS Solar</strong>Inverter-charger product families, including Multi RS Solar 48/6000.</li>
+          <li><strong>EasySolar / EasySolar-II / Phoenix</strong>Inverter and integrated power solutions.</li>
+          <li><strong>SmartSolar / BlueSolar MPPT</strong>Victron solar charge controllers, including MPPT 75/10 through 250/100 models.</li>
+          <li><strong>BMV battery monitors</strong>BMV-600/700 series, BMV-702, BMV-712, and similar models.</li>
+          <li><strong>SmartShunt</strong>SmartShunt 500A, 1000A, and related variants.</li>
+          <li><strong>Lynx power components</strong>Lynx Shunt, Lynx Distributor, and related Lynx modules.</li>
+          <li><strong>VE.Direct / VE.Can devices</strong>MPPTs and other products connected through supported GX interfaces.</li>
+          <li><strong>GX accessories and connectivity</strong>GX Touch, Smart Battery Sense, GlobalLink, GX LTE, and other peripherals.</li>
+          <li><strong>Third-party devices via GX</strong>Devices bridged through VE.Bus, VE.Can, or VE.Direct.</li>
+        </ul>
+      </div>
+    </details>
+
+    <div class="examples-panel" aria-label="Common MQTT topic examples">
+      <div class="topic-example">
+        <code>victron/+/Dc/0/Voltage</code>
+        <span>DC voltage readings</span>
+      </div>
+      <div class="topic-example">
+        <code>victron/+/Ac/ActiveIn/L1/Power</code>
+        <span>AC input power</span>
+      </div>
+      <div class="topic-example">
+        <code>victron/+/Soc</code>
+        <span>Battery state of charge</span>
+      </div>
+      <div class="topic-example">
+        <code>victron/+/Alarms/LowVoltage</code>
+        <span>Low voltage alarm status</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="topics" aria-labelledby="topics-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Data catalogue</p>
+        <h2 id="topics-title">MQTT topics</h2>
+        <p>Search every field or combine filters to narrow the specification. Your current search is stored in the page URL so it can be shared.</p>
+      </div>
+    </div>
+
+    <div class="catalogue-panel">
+      <div class="filter-toolbar">
+        <div class="filter-grid">
+          <div class="field">
+            <label for="topic-search">Search all topic fields</label>
+            <input id="topic-search" type="search" placeholder="Try voltage, alarm, battery..." autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="device-filter">Device type</label>
+            <select class="topic-filter" id="device-filter" data-col="1" data-param="device">
+              <option value="">All device types</option>
+              {% for value in device_type_list %}
+                {% assign device_type_member_name = device_type_enum.EnumValues | where: "value", value | map: "name" | first | default: "" %}
+                {% capture device_type_label %}
+                  {% if device_type_member_name != "" and device_type_member_name != "<Not used>" %}
+                    {{ device_type_member_name }}
+                  {% else %}
+                    {% case value %}
+                      {% when "acsystem" %}AC system
+                      {% when "auxiliary" %}Auxiliary battery
+                      {% when "charge" %}Battery charging
+                      {% when "multiplus" %}MultiPlus
+                      {% when "switchable" %}Switchable output
+                      {% when "transfer" %}Transfer switch
+                      {% else %}{{ value | replace: "_", " " | capitalize }}
+                    {% endcase %}
+                  {% endif %}
+                {% endcapture %}
+                <option value="{{ value }}">{{ device_type_label | strip }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="metric-filter">Metric type</label>
+            <select class="topic-filter" id="metric-filter" data-col="7" data-param="metric">
+              <option value="">All metric types</option>
+              {% assign metric_type_values = site.data.victron_mqtt.topics | map: "metric_type" | compact | uniq | sort %}
+              {% for value in metric_type_values %}
+                {% assign display_value = value | split: "." | last %}
+                <option value="{{ display_value }}">{{ display_value }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <details class="advanced-filters">
+            <summary>Advanced filters</summary>
+            <div class="advanced-panel">
+              <div class="field">
+                <label for="message-filter">Message type</label>
+                <select class="topic-filter" id="message-filter" data-col="6" data-param="message">
+                  <option value="">All message types</option>
+                  {% assign message_type_values = site.data.victron_mqtt.topics | map: "message_type" | compact | uniq | sort %}
+                  {% for value in message_type_values %}
+                    {% assign display_value = value | split: "." | last %}
+                    <option value="{{ display_value }}">{{ display_value }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="field">
+                <label for="unit-filter">Unit</label>
+                <select class="topic-filter" id="unit-filter" data-col="5" data-param="unit">
+                  <option value="">All units</option>
+                  {% assign unit_values = site.data.victron_mqtt.topics | map: "unit_of_measurement" | compact | uniq | sort %}
+                  {% for value in unit_values %}
+                    <option value="{{ value }}">{{ value }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="field">
+                <label for="value-filter">Value type</label>
+                <select class="topic-filter" id="value-filter" data-col="9" data-param="value">
+                  <option value="">All value types</option>
+                  {% assign value_type_values = site.data.victron_mqtt.topics | map: "value_type" | compact | uniq | sort %}
+                  {% for value in value_type_values %}
+                    {% assign display_value = value | split: "." | last %}
+                    <option value="{{ display_value }}">{{ display_value }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="field">
+                <label for="enum-filter">Enum</label>
+                <select class="topic-filter" id="enum-filter" data-col="11" data-param="enum">
+                  <option value="">All enums</option>
+                  {% assign enum_values = site.data.victron_mqtt.topics | map: "enum" | compact | uniq | sort %}
+                  {% for value in enum_values %}
+                    {% assign display_value = value | split: "." | last %}
+                    <option value="{{ display_value }}">{{ display_value }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </details>
+
+          <details class="advanced-filters column-picker">
+            <summary>Columns</summary>
+            <div class="column-panel">
+              <label><input type="checkbox" data-column-toggle="1" checked> Device type</label>
+              <label><input type="checkbox" data-column-toggle="2" checked> Short ID</label>
+              <label><input type="checkbox" data-column-toggle="3" checked> Name</label>
+              <label><input type="checkbox" data-column-toggle="4" checked> Description</label>
+              <label><input type="checkbox" data-column-toggle="5" checked> Unit</label>
+              <label><input type="checkbox" data-column-toggle="6" checked> Message type</label>
+              <label><input type="checkbox" data-column-toggle="7" checked> Metric type</label>
+              <label><input type="checkbox" data-column-toggle="8"> Metric nature</label>
+              <label><input type="checkbox" data-column-toggle="9" checked> Value type</label>
+              <label><input type="checkbox" data-column-toggle="10"> Precision</label>
+              <label><input type="checkbox" data-column-toggle="11"> Enum</label>
+              <label><input type="checkbox" data-column-toggle="12"> Minimum</label>
+              <label><input type="checkbox" data-column-toggle="13"> Maximum</label>
+            </div>
+          </details>
+
+          <button class="clear-filters" id="clear-filters" type="button">Clear filters</button>
+          <div class="result-summary" role="status" aria-live="polite">
+            Showing <strong id="visible-topic-count">{{ site.data.victron_mqtt.topics | size }}</strong>
+            of <strong>{{ site.data.victron_mqtt.topics | size }}</strong> topics
+          </div>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="topic-table" id="topic-table">
+          <thead>
+            <tr>
+              <th class="topic-col" scope="col">Topic</th>
+              <th class="device-type-col" scope="col">Device Type</th>
+              <th class="short-id-col" scope="col">Short ID</th>
+              <th class="name-col" scope="col">Name</th>
+              <th class="description-col" scope="col">Description</th>
+              <th class="unit-col" scope="col">Unit</th>
+              <th class="message-type-col" scope="col">Message Type</th>
+              <th class="metric-type-col" scope="col">Metric Type</th>
+              <th class="metric-nature-col is-column-hidden" scope="col">Metric Nature</th>
+              <th class="value-type-col" scope="col">Value Type</th>
+              <th class="precision-col is-column-hidden" scope="col">Precision</th>
+              <th class="enum-col is-column-hidden" scope="col">Enum</th>
+              <th class="min-col is-column-hidden" scope="col">Min</th>
+              <th class="max-col is-column-hidden" scope="col">Max</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for topic in site.data.victron_mqtt.topics %}
+            {% assign device_type_id = topic.short_id | split: "_" | first %}
+            {% assign device_type_member_name = device_type_enum.EnumValues | where: "value", device_type_id | map: "name" | first | default: "" %}
+            {% capture device_type_label %}
+              {% if device_type_member_name != "" and device_type_member_name != "<Not used>" %}
+                {{ device_type_member_name }}
+              {% else %}
+                {% case device_type_id %}
+                  {% when "acsystem" %}AC system
+                  {% when "auxiliary" %}Auxiliary battery
+                  {% when "charge" %}Battery charging
+                  {% when "multiplus" %}MultiPlus
+                  {% when "switchable" %}Switchable output
+                  {% when "transfer" %}Transfer switch
+                  {% else %}{{ device_type_id | replace: "_", " " | capitalize }}
+                {% endcase %}
+              {% endif %}
+            {% endcapture %}
+            <tr class="topic-row" data-search-terms="{{ device_type_id }}">
+              <td class="topic-col" data-label="Topic">
+                <div class="topic-cell">
+                  <span class="topic-code">{{ topic.topic }}</span>
+                  <button class="copy-topic" type="button" data-copy="{{ topic.topic | escape }}" aria-label="Copy topic {{ topic.topic | escape }}">Copy</button>
+                  <button class="row-details-toggle" type="button" aria-expanded="false">Details</button>
+                </div>
+              </td>
+              <td class="device-type-col" data-label="Device type" data-filter-value="{{ device_type_id }}"><span class="badge badge-accent" title="Device type ID: {{ device_type_id }}">{{ device_type_label | strip }}</span></td>
+              <td class="short-id-col secondary-mobile" data-label="Short ID"><span class="short-id">{{ topic.short_id }}</span></td>
+              <td class="name-col" data-label="Name">{{ topic.name }}</td>
+              <td class="description-col" data-label="Description">{% if topic.description %}{{ topic.description }}{% else %}<span class="empty-value">&mdash;</span>{% endif %}</td>
+              <td class="unit-col" data-label="Unit" data-filter-value="{{ topic.unit_of_measurement }}">
+                <div class="unit-content">
+                  {% if topic.unit_of_measurement %}<span>{{ topic.unit_of_measurement }}</span>{% endif %}
+                  {% if topic.enum %}
+                    {% assign topic_enum_name = topic.enum | split: "." | last %}
+                    <button
+                      class="enum-values-button"
+                      type="button"
+                      data-enum-template="enum-values-{{ topic_enum_name | slugify }}"
+                      data-enum-name="{{ topic_enum_name | escape }}"
+                      aria-haspopup="dialog"
+                    >View values</button>
+                  {% elsif topic.unit_of_measurement == nil or topic.unit_of_measurement == "" %}
+                    <span class="empty-value">&mdash;</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td class="message-type-col secondary-mobile" data-label="Message type">{% if topic.message_type %}<span class="badge">{{ topic.message_type | split: "." | last }}</span>{% else %}<span class="empty-value">&mdash;</span>{% endif %}</td>
+              <td class="metric-type-col secondary-mobile" data-label="Metric type">{% if topic.metric_type %}<span class="badge">{{ topic.metric_type | split: "." | last }}</span>{% else %}<span class="empty-value">&mdash;</span>{% endif %}</td>
+              <td class="metric-nature-col secondary-mobile is-column-hidden" data-label="Metric nature">{% if topic.metric_nature %}<span class="badge">{{ topic.metric_nature | split: "." | last }}</span>{% else %}<span class="empty-value">&mdash;</span>{% endif %}</td>
+              <td class="value-type-col secondary-mobile" data-label="Value type">{% if topic.value_type %}<span class="badge">{{ topic.value_type | split: "." | last }}</span>{% else %}<span class="empty-value">&mdash;</span>{% endif %}</td>
+              <td class="precision-col secondary-mobile is-column-hidden" data-label="Precision">{% if topic.precision != nil %}{{ topic.precision }}{% else %}<span class="empty-value">&mdash;</span>{% endif %}</td>
+              <td class="enum-col secondary-mobile is-column-hidden" data-label="Enum">{% if topic.enum %}<span class="badge">{{ topic.enum | split: "." | last }}</span>{% else %}<span class="empty-value">&mdash;</span>{% endif %}</td>
+              <td class="min-col secondary-mobile is-column-hidden" data-label="Minimum">{% if topic.min != nil %}{{ topic.min }}{% else %}<span class="empty-value">&mdash;</span>{% endif %}</td>
+              <td class="max-col secondary-mobile is-column-hidden" data-label="Maximum">{% if topic.max != nil %}{{ topic.max }}{% else %}<span class="empty-value">&mdash;</span>{% endif %}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        <div class="empty-state" id="topic-empty-state">
+          <strong>No topics match these filters.</strong><br>
+          Try a broader search or clear the active filters.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="enums" aria-labelledby="enums-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Value reference</p>
+        <h2 id="enums-title">Enums</h2>
+        <p>Enums translate numeric MQTT payloads into operating modes, alarm states, relay statuses, and other human-readable values.</p>
+      </div>
+    </div>
+
+    <div class="enum-toolbar">
+      <label class="field-label" for="enum-search">Find an enum</label>
+      <input class="enum-search" id="enum-search" type="search" placeholder="Search enum names..." autocomplete="off">
+      <span class="enum-count" role="status" aria-live="polite"><strong id="visible-enum-count">{{ site.data.victron_mqtt.enums | size }}</strong> enums</span>
+    </div>
+
+    <div class="enum-list" id="enum-list">
+      {% for enum in site.data.victron_mqtt.enums %}
+        <details class="enum-card" data-enum-name="{{ enum.name | downcase | escape }}" id="enum-{{ enum.name | slugify }}">
+          <summary>
+            <span class="enum-title">{{ enum.name }}</span>
+            <span class="enum-value-count">{{ enum.EnumValues | size }} values</span>
+          </summary>
+          <div class="enum-table-wrap">
+            <table class="enum-table">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Value</th>
+                  <th scope="col">Display Name</th>
+                  <th scope="col">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for member in enum.EnumValues %}
+                <tr>
+                  <td>{{ member.id }}</td>
+                  <td><code>{{ member.value }}</code></td>
+                  <td>{{ member.name }}</td>
+                  <td>{% if member.description %}{{ member.description }}{% else %}<span class="empty-value">&mdash;</span>{% endif %}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      {% endfor %}
+    </div>
+    <div class="enum-empty-state" id="enum-empty-state">No enums match that search.</div>
+  </section>
+</main>
+
+<dialog class="enum-dialog" id="enum-dialog" aria-labelledby="enum-dialog-title">
+  <div class="dialog-header">
+    <h2 id="enum-dialog-title">Enum values</h2>
+    <button class="dialog-close" id="enum-dialog-close" type="button">Close</button>
+  </div>
+  <div class="dialog-body" id="enum-dialog-body"></div>
+</dialog>
+
+{% for enum in site.data.victron_mqtt.enums %}
+  <template id="enum-values-{{ enum.name | slugify }}">
+    <p class="dialog-summary">{{ enum.EnumValues | size }} possible values for <code>{{ enum.name }}</code>.</p>
+    <div class="enum-options-scroll">
+      <table class="enum-options-table">
         <thead>
-          <tr><th>Id</th><th>Value</th><th>Display Name</th><th>Description</th></tr>
+          <tr>
+            <th scope="col">Value</th>
+            <th scope="col">Display name</th>
+            <th scope="col">Description</th>
+          </tr>
         </thead>
         <tbody>
         {% for member in enum.EnumValues %}
           <tr>
-            <td>{{ member.id }}</td>
-            <td>{{ member.value }}</td>
+            <td><code>{{ member.value }}</code></td>
             <td>{{ member.name }}</td>
-            <td>{{ member.description }}</td>
+            <td>{% if member.description %}{{ member.description }}{% else %}<span class="empty-value">&mdash;</span>{% endif %}</td>
           </tr>
         {% endfor %}
         </tbody>
       </table>
     </div>
-  {% endfor %}
-</div>
-<div class="footer">Generated by <a href="https://github.com/tomer-w/victron_mqtt" target="_blank">victron-mqtt project</a> &copy; {{ site.time | date: '%Y' }}<br>
-  <span style="font-size:0.9em;">This project is not affiliated with Victron Energy. For official documentation, visit <a href="https://www.victronenergy.com/live/" target="_blank">Victron Energy Live</a>.</span>
-</div>
+  </template>
+{% endfor %}
 
+<footer class="site-footer">
+  <p>Generated by the <a href="https://github.com/tomer-w/victron_mqtt" target="_blank" rel="noopener noreferrer">victron_mqtt project</a> &copy; {{ site.time | date: "%Y" }}</p>
+  <p>This project is not affiliated with Victron Energy. See the <a href="https://www.victronenergy.com/live/" target="_blank" rel="noopener noreferrer">official Victron Energy documentation</a>.</p>
+  <details class="license">
+    <summary>License and legal notice</summary>
+    <p>
+      victron_mqtt (C) 2025, tomer-w. This file is part of victron_mqtt and is licensed under the Apache License, Version 2.0.
+      You may obtain a copy of the License at <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer">apache.org/licenses/LICENSE-2.0</a>.
+      Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+    </p>
+  </details>
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const topicTable = document.getElementById("topic-table");
+  const topicSearch = document.getElementById("topic-search");
+  const topicFilters = Array.from(document.querySelectorAll(".topic-filter"));
+  const topicRows = topicTable ? Array.from(topicTable.tBodies[0].rows) : [];
+  const visibleTopicCount = document.getElementById("visible-topic-count");
+  const topicEmptyState = document.getElementById("topic-empty-state");
+  const clearFilters = document.getElementById("clear-filters");
+  const searchParams = new URLSearchParams(window.location.search);
+
+  function updateSearchParams() {
+    const params = new URLSearchParams(window.location.search);
+    params.delete("nature");
+    if (topicSearch.value.trim()) {
+      params.set("q", topicSearch.value.trim());
+    } else {
+      params.delete("q");
+    }
+
+    topicFilters.forEach(function (filter) {
+      const key = filter.dataset.param;
+      if (filter.value) {
+        params.set(key, filter.value);
+      } else {
+        params.delete(key);
+      }
+    });
+
+    const nextUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "") + window.location.hash;
+    window.history.replaceState(null, "", nextUrl);
+  }
+
+  function applyTopicFilters() {
+    const query = topicSearch.value.trim().toLowerCase();
+    let visible = 0;
+
+    topicRows.forEach(function (row) {
+      const searchableText = row.innerText + " " + (row.dataset.searchTerms || "");
+      const matchesSearch = !query || searchableText.toLowerCase().includes(query);
+      const matchesFilters = topicFilters.every(function (filter) {
+        const expected = filter.value.trim().toLowerCase();
+        const cell = row.cells[Number(filter.dataset.col)];
+        const actual = cell && (cell.dataset.filterValue || cell.innerText).trim().toLowerCase();
+        return !expected || actual === expected;
+      });
+      const show = matchesSearch && matchesFilters;
+      row.hidden = !show;
+      if (show) {
+        visible += 1;
+      }
+    });
+
+    visibleTopicCount.textContent = String(visible);
+    topicEmptyState.classList.toggle("is-visible", visible === 0);
+    updateSearchParams();
+  }
+
+  if (topicTable && topicSearch && clearFilters) {
+    topicSearch.value = searchParams.get("q") || "";
+    topicFilters.forEach(function (filter) {
+      const value = searchParams.get(filter.dataset.param);
+      if (value && Array.from(filter.options).some(function (option) { return option.value === value; })) {
+        filter.value = value;
+      }
+      filter.addEventListener("change", applyTopicFilters);
+    });
+    topicSearch.addEventListener("input", applyTopicFilters);
+    clearFilters.addEventListener("click", function () {
+      topicSearch.value = "";
+      topicFilters.forEach(function (filter) {
+        filter.value = "";
+      });
+      applyTopicFilters();
+      topicSearch.focus();
+    });
+    applyTopicFilters();
+  }
+
+  document.querySelectorAll("[data-column-toggle]").forEach(function (toggle) {
+    toggle.addEventListener("change", function () {
+      if (!topicTable) {
+        return;
+      }
+      const columnIndex = Number(toggle.dataset.columnToggle);
+      topicTable.querySelectorAll("tr").forEach(function (row) {
+        const cell = row.cells[columnIndex];
+        if (cell) {
+          cell.classList.toggle("is-column-hidden", !toggle.checked);
+        }
+      });
+    });
+  });
+
+  const enumDialog = document.getElementById("enum-dialog");
+  const enumDialogTitle = document.getElementById("enum-dialog-title");
+  const enumDialogBody = document.getElementById("enum-dialog-body");
+  const enumDialogClose = document.getElementById("enum-dialog-close");
+
+  if (enumDialog && enumDialogClose) {
+    enumDialogClose.addEventListener("click", function () {
+      enumDialog.close();
+    });
+    enumDialog.addEventListener("click", function (event) {
+      if (event.target === enumDialog) {
+        enumDialog.close();
+      }
+    });
+  }
+
+  document.addEventListener("click", async function (event) {
+    const enumValuesButton = event.target.closest(".enum-values-button");
+    if (enumValuesButton) {
+      const enumTemplate = document.getElementById(enumValuesButton.dataset.enumTemplate);
+      if (!enumDialog || !enumDialogTitle || !enumDialogBody || !enumTemplate) {
+        console.error("Unable to open enum values.", {
+          enumName: enumValuesButton.dataset.enumName,
+          templateId: enumValuesButton.dataset.enumTemplate
+        });
+        return;
+      }
+      enumDialogTitle.textContent = enumValuesButton.dataset.enumName;
+      enumDialogBody.replaceChildren(enumTemplate.content.cloneNode(true));
+      if (typeof enumDialog.showModal === "function") {
+        enumDialog.showModal();
+      } else {
+        enumDialog.setAttribute("open", "");
+      }
+      enumDialogClose.focus();
+      return;
+    }
+
+    const copyButton = event.target.closest(".copy-topic");
+    if (copyButton) {
+      const originalText = copyButton.textContent;
+      copyButton.textContent = "Copying...";
+      try {
+        let copied = false;
+        if (navigator.clipboard && window.isSecureContext) {
+          try {
+            await Promise.race([
+              navigator.clipboard.writeText(copyButton.dataset.copy),
+              new Promise(function (_, reject) {
+                window.setTimeout(function () {
+                  reject(new Error("Clipboard API timed out."));
+                }, 500);
+              })
+            ]);
+            copied = true;
+          } catch (clipboardError) {
+            console.warn("Clipboard API unavailable; trying the browser fallback.", clipboardError);
+          }
+        }
+
+        if (!copied) {
+          const textArea = document.createElement("textarea");
+          textArea.value = copyButton.dataset.copy;
+          textArea.setAttribute("readonly", "");
+          textArea.style.position = "fixed";
+          textArea.style.opacity = "0";
+          document.body.appendChild(textArea);
+          textArea.select();
+          const fallbackCopied = document.execCommand("copy");
+          textArea.remove();
+          if (!fallbackCopied) {
+            throw new Error("The browser rejected the copy command.");
+          }
+        }
+        copyButton.textContent = "Copied";
+      } catch (error) {
+        console.error("Unable to copy MQTT topic.", error);
+        copyButton.textContent = "Copy failed";
+      }
+      window.setTimeout(function () {
+        copyButton.textContent = originalText;
+      }, 1600);
+      return;
+    }
+
+    const detailsButton = event.target.closest(".row-details-toggle");
+    if (detailsButton) {
+      const row = detailsButton.closest(".topic-row");
+      const expanded = row.classList.toggle("is-expanded");
+      detailsButton.setAttribute("aria-expanded", String(expanded));
+      detailsButton.textContent = expanded ? "Less" : "Details";
+    }
+  });
+
+  const enumSearch = document.getElementById("enum-search");
+  const enumCards = Array.from(document.querySelectorAll(".enum-card"));
+  const visibleEnumCount = document.getElementById("visible-enum-count");
+  const enumEmptyState = document.getElementById("enum-empty-state");
+
+  if (enumSearch) {
+    enumSearch.addEventListener("input", function () {
+      const query = enumSearch.value.trim().toLowerCase();
+      let visible = 0;
+      enumCards.forEach(function (card) {
+        const show = !query || card.dataset.enumName.includes(query);
+        card.hidden = !show;
+        if (show) {
+          visible += 1;
+        }
+      });
+      visibleEnumCount.textContent = String(visible);
+      enumEmptyState.classList.toggle("is-visible", visible === 0);
+    });
+  }
+
+  if (window.location.hash.startsWith("#enum-")) {
+    const selectedEnum = document.querySelector(window.location.hash);
+    if (selectedEnum && selectedEnum.tagName === "DETAILS") {
+      selectedEnum.open = true;
+    }
+  }
+
+  const themeToggle = document.getElementById("theme-toggle");
+  if (themeToggle) {
+    function updateThemeLabel() {
+      const currentTheme = document.documentElement.getAttribute("data-theme");
+      themeToggle.textContent = currentTheme === "dark" ? "Light theme" : "Dark theme";
+      themeToggle.setAttribute("aria-label", "Switch to " + (currentTheme === "dark" ? "light" : "dark") + " theme");
+    }
+
+    themeToggle.addEventListener("click", function () {
+      const nextTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", nextTheme);
+      const params = new URLSearchParams(window.location.search);
+      params.set("theme", nextTheme);
+      const nextUrl = window.location.pathname + "?" + params.toString() + window.location.hash;
+      window.history.replaceState(null, "", nextUrl);
+      updateThemeLabel();
+    });
+    updateThemeLabel();
+  }
+});
+</script>
