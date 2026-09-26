@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.9.13 (2026-09-26)
+
+### Changes
+
+- Polish documentation layout
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.9.12 (2026-09-26)
 
 ### Changes
