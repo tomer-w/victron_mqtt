@@ -349,7 +349,6 @@ code {
 
 .info-card,
 .device-panel,
-.examples-panel,
 .catalogue-panel,
 .enum-card {
   border: 1px solid var(--cp-border);
@@ -433,35 +432,6 @@ code {
 .device-list strong {
   display: block;
   color: var(--cp-text);
-}
-
-.examples-panel {
-  display: grid;
-  margin-top: 1rem;
-  padding: 1rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.topic-example {
-  padding: 1rem;
-  border-radius: 0.625rem;
-  background: var(--cp-surface-soft);
-}
-
-.topic-example code {
-  display: block;
-  padding: 0;
-  border: 0;
-  background: var(--cp-surface-soft);
-  overflow-wrap: anywhere;
-}
-
-.topic-example span {
-  display: block;
-  margin-top: 0.35rem;
-  color: var(--cp-text-muted);
-  font-size: 0.85rem;
 }
 
 .catalogue-panel {
@@ -868,6 +838,7 @@ code {
 }
 
 .enum-table-wrap {
+  padding: 1rem;
   overflow-x: auto;
 }
 
@@ -1058,7 +1029,6 @@ code {
 
   .overview-grid,
   .device-list,
-  .examples-panel,
   .filter-grid {
     grid-template-columns: 1fr;
   }
@@ -1305,24 +1275,6 @@ code {
       </div>
     </details>
 
-    <div class="examples-panel" aria-label="Common MQTT topic examples">
-      <div class="topic-example">
-        <code>victron/+/Dc/0/Voltage</code>
-        <span>DC voltage readings</span>
-      </div>
-      <div class="topic-example">
-        <code>victron/+/Ac/ActiveIn/L1/Power</code>
-        <span>AC input power</span>
-      </div>
-      <div class="topic-example">
-        <code>victron/+/Soc</code>
-        <span>Battery state of charge</span>
-      </div>
-      <div class="topic-example">
-        <code>victron/+/Alarms/LowVoltage</code>
-        <span>Low voltage alarm status</span>
-      </div>
-    </div>
   </section>
 
   <section class="section" id="topics" aria-labelledby="topics-title">
