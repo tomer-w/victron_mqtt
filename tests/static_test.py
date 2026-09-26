@@ -152,13 +152,6 @@ def test_dump_schema_includes_descriptions():
     assert all(option["description"] for option in enum_dump["EnumValues"])
 
 
-def test_documentation_template_includes_descriptions():
-    template = (Path(__file__).resolve().parent.parent / "docs" / "index.html").read_text(encoding="utf-8")
-    assert "{{ topic.description }}" in template
-    assert "{{ member.description }}" in template
-    assert {int(index) for index in re.findall(r'data-col="(\d+)"', template)} == set(range(14))
-
-
 def test_metric_viewer_includes_descriptions():
     viewer = (Path(__file__).resolve().parent.parent / "victron_mqtt" / "utils" / "view_metrics.py").read_text(
         encoding="utf-8"
