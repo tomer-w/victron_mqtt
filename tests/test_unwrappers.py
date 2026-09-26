@@ -348,7 +348,14 @@ class TestVictronEnumFunctions:
         assert member.code == 1
         assert member.id == "on"
         assert member.string == "On"
+        assert member.description == "The option is enabled."
         assert member.value == (1, "On")
+
+    def test_explicit_description(self):
+        class DescribedEnum(VictronEnum):
+            ENABLED = (1, "enabled", "Enabled", "Enables the documented behavior.")
+
+        assert DescribedEnum.ENABLED.description == "Enables the documented behavior."
 
     def test_repr_contains_core_fields(self):
         member = GenericOnOff.ON

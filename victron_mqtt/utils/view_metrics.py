@@ -161,18 +161,48 @@ class AttributeViewerDialog(simpledialog.Dialog):
                 ttk.Label(props_frame, text=f"{name}:", font=("", 9, "bold")).grid(
                     row=row, column=0, sticky=tk.W, padx=5, pady=2
                 )
-                value_label = ttk.Label(props_frame, text=str(prop_value))
+                value_label = ttk.Label(
+                    props_frame,
+                    text=str(prop_value),
+                    wraplength=700 if name == "description" else 0,
+                    justify=tk.LEFT,
+                )
                 value_label.grid(row=row, column=1, sticky=tk.W, padx=5, pady=2)
                 row += 1
             except AttributeError:
                 continue
+
+        next_row = 1
+        if isinstance(self.instance, Metric) and self.instance._descriptor.enum is not None:
+            enum_cls = self.instance._descriptor.enum
+            enum_frame = ttk.LabelFrame(master, text="Enum values", padding=5)
+            enum_frame.grid(row=next_row, column=0, sticky="nsew", padx=5, pady=5)
+            enum_tree = ttk.Treeview(
+                enum_frame,
+                columns=("value", "name", "description"),
+                show="headings",
+                height=min(8, len(enum_cls)),
+            )
+            enum_tree.heading("value", text="Value", anchor=tk.W)
+            enum_tree.heading("name", text="Display name", anchor=tk.W)
+            enum_tree.heading("description", text="Description", anchor=tk.W)
+            enum_tree.column("value", width=80, minwidth=60)
+            enum_tree.column("name", width=180, minwidth=100)
+            enum_tree.column("description", width=520, minwidth=240)
+            for member in enum_cls:
+                enum_tree.insert("", "end", values=(member.code, member.string, member.description))
+            enum_scrollbar = ttk.Scrollbar(enum_frame, orient="vertical", command=enum_tree.yview)
+            enum_tree.configure(yscrollcommand=enum_scrollbar.set)
+            enum_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            enum_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            next_row += 1
 
         if not isinstance(self.instance, WritableMetric):
             return master
 
         # Control section for writable metrics
         control_frame = ttk.LabelFrame(master, text="Control (changes apply immediately)", padding=5)
-        control_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        control_frame.grid(row=next_row, column=0, sticky="nsew", padx=5, pady=5)
 
         descriptor = self.instance._descriptor
         kind = self.instance.metric_kind
@@ -376,6 +406,7 @@ class MetricContainer:
                     formatted,
                     self._metric.metric_kind.value,
                     self._metric.unit_of_measurement or "",
+                    self._metric.description,
                 ),
             )
 
@@ -387,7 +418,7 @@ class App:
         self._log_topic = log_topic
         self.root = tk.Tk()
         self.root.resizable(True, True)
-        self.root.geometry("1200x800")
+        self.root.geometry("1400x800")
         self.root.title("Victron Venus Metric Viewer")
 
         # --- Toolbar ---
@@ -458,7 +489,11 @@ class App:
         ttk.Label(metrics_frame, textvariable=self._metrics_title_var, font=("", 10, "bold")).grid(
             row=0, column=0, sticky=tk.W, padx=2, pady=(0, 4)
         )
-        self.metric_tree = ttk.Treeview(metrics_frame, selectmode="browse", columns=("value", "kind", "unit"))
+        self.metric_tree = ttk.Treeview(
+            metrics_frame,
+            selectmode="browse",
+            columns=("value", "kind", "unit", "description"),
+        )
         self.metric_tree.bind("<<TreeviewSelect>>", self._on_metric_select)
         self.metric_tree.bind("<Double-1>", self._on_metric_double_click)
 
@@ -466,10 +501,12 @@ class App:
         self.metric_tree.heading("value", text="Value", anchor=tk.W)
         self.metric_tree.heading("kind", text="Kind", anchor=tk.W)
         self.metric_tree.heading("unit", text="Unit", anchor=tk.W)
+        self.metric_tree.heading("description", text="Description", anchor=tk.W)
         self.metric_tree.column("#0", width=350, minwidth=180)
         self.metric_tree.column("value", width=220, minwidth=100)
         self.metric_tree.column("kind", width=120, minwidth=80)
         self.metric_tree.column("unit", width=80, minwidth=50)
+        self.metric_tree.column("description", width=500, minwidth=240)
 
         metric_vsb = ttk.Scrollbar(metrics_frame, orient="vertical", command=self.metric_tree.yview)
         metric_hsb = ttk.Scrollbar(metrics_frame, orient="horizontal", command=self.metric_tree.xview)
@@ -565,6 +602,7 @@ class App:
                         metric.formatted_value,
                         metric.metric_kind.value,
                         metric.unit_of_measurement or "",
+                        metric.description,
                     ),
                 )
 
@@ -646,7 +684,7 @@ class App:
             return True
         # Check metrics
         for metric in device.metrics:
-            metric_text = f"{metric.name} {metric.short_id} {metric.formatted_value}".lower()
+            metric_text = f"{metric.name} {metric.short_id} {metric.formatted_value} {metric.description}".lower()
             if query in metric_text:
                 return True
         # Check children
@@ -709,6 +747,7 @@ class App:
                     metric.formatted_value,
                     metric.metric_kind.value,
                     metric.unit_of_measurement or "",
+                    metric.description,
                 ),
                 iid=metric_iid,
                 tags=tuple(tags),

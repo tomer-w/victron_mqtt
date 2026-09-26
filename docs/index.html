@@ -138,6 +138,11 @@ th.name-col, td.name-col {
   max-width: 250px;
   text-align: left;
 }
+th.description-col, td.description-col {
+  width: 380px;
+  max-width: 380px;
+  text-align: left;
+}
 th.precision-col, td.precision-col {
   width: 90px;
   max-width: 90px;
@@ -222,6 +227,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
         <th class="device-type-col">Device Type</th>
         <th class="short-id-col">Short ID</th>
         <th class="name-col">Name</th>
+        <th class="description-col">Description</th>
         <th class="unit-col">Unit</th>
         <th class="message-type-col">Message Type</th>
         <th class="metric-type-col">Metric Type</th>
@@ -252,9 +258,10 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
         </td>
         <td class="short-id-col"><input type="text" class="col-filter" data-col="2" placeholder="Short ID" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
         <td class="name-col"><input type="text" class="col-filter" data-col="3" placeholder="Name" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="unit-col"><input type="text" class="col-filter" data-col="4" placeholder="Unit" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="description-col"><input type="text" class="col-filter" data-col="4" placeholder="Description" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="unit-col"><input type="text" class="col-filter" data-col="5" placeholder="Unit" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
         <td class="message-type-col">
-          <select class="col-filter" data-col="5" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+          <select class="col-filter" data-col="6" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
             <option value="">&lt;ALL&gt;</option>
             {% assign message_type_values = site.data.victron_mqtt.topics | map: 'message_type' | compact | uniq | sort %}
             {% for val in message_type_values %}
@@ -264,7 +271,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
           </select>
         </td>
         <td class="metric-type-col">
-          <select class="col-filter" data-col="6" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+          <select class="col-filter" data-col="7" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
             <option value="">&lt;ALL&gt;</option>
             {% assign metric_type_values = site.data.victron_mqtt.topics | map: 'metric_type' | compact | uniq | sort %}
             {% for val in metric_type_values %}
@@ -274,7 +281,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
           </select>
         </td>
         <td class="metric-nature-col">
-          <select class="col-filter" data-col="7" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+          <select class="col-filter" data-col="8" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
             <option value="">&lt;ALL&gt;</option>
             {% assign metric_nature_values = site.data.victron_mqtt.topics | map: 'metric_nature' | compact | uniq | sort %}
             {% for val in metric_nature_values %}
@@ -284,7 +291,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
           </select>
         </td>
         <td class="value-type-col">
-          <select class="col-filter" data-col="8" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+          <select class="col-filter" data-col="9" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
             <option value="">&lt;ALL&gt;</option>
             {% assign value_type_values = site.data.victron_mqtt.topics | map: 'value_type' | compact | uniq | sort %}
             {% for val in value_type_values %}
@@ -293,9 +300,9 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
             {% endfor %}
           </select>
         </td>
-        <td class="precision-col"><input type="text" class="col-filter" data-col="9" placeholder="Precision" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="precision-col"><input type="text" class="col-filter" data-col="10" placeholder="Precision" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
         <td class="enum-col">
-          <select class="col-filter" data-col="10" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
+          <select class="col-filter" data-col="11" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;">
             <option value="">&lt;ALL&gt;</option>
             {% assign enum_values = site.data.victron_mqtt.topics | map: 'enum' | compact | uniq | sort %}
             {% for val in enum_values %}
@@ -304,8 +311,8 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
             {% endfor %}
           </select>
         </td>
-        <td class="min-col"><input type="text" class="col-filter" data-col="11" placeholder="Min" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
-        <td class="max-col"><input type="text" class="col-filter" data-col="12" placeholder="Max" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="min-col"><input type="text" class="col-filter" data-col="12" placeholder="Min" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
+        <td class="max-col"><input type="text" class="col-filter" data-col="13" placeholder="Max" style="padding:0.5em; width:100%; font-size:1em; border:1px solid #ccc; border-radius:4px;"></td>
       </tr>
     </thead>
   <tbody>
@@ -315,6 +322,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
       <td class="device-type-col">{{ topic.short_id | split: '_' | first }}</td>
       <td class="short-id-col">{{ topic.short_id }}</td>
       <td class="name-col">{{ topic.name }}</td>
+      <td class="description-col">{{ topic.description }}</td>
       <td class="unit-col">{{ topic.unit_of_measurement }}</td>
       <td class="message-type-col">{% if topic.message_type %}{{ topic.message_type | split: '.' | last }}{% endif %}</td>
       <td class="metric-type-col">{% if topic.metric_type %}{{ topic.metric_type | split: '.' | last }}{% endif %}</td>
@@ -366,7 +374,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
     <div style="overflow-x:auto; margin-bottom:1.5em;">
       <table>
         <thead>
-          <tr><th>Id</th><th>Value</th><th>Display Name</th></tr>
+          <tr><th>Id</th><th>Value</th><th>Display Name</th><th>Description</th></tr>
         </thead>
         <tbody>
         {% for member in enum.EnumValues %}
@@ -374,6 +382,7 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
             <td>{{ member.id }}</td>
             <td>{{ member.value }}</td>
             <td>{{ member.name }}</td>
+            <td>{{ member.description }}</td>
           </tr>
         {% endfor %}
         </tbody>
@@ -384,5 +393,4 @@ th.value-type-col, td.value-type-col, th.enum-col, td.enum-col  {
 <div class="footer">Generated by <a href="https://github.com/tomer-w/victron_mqtt" target="_blank">victron-mqtt project</a> &copy; {{ site.time | date: '%Y' }}<br>
   <span style="font-size:0.9em;">This project is not affiliated with Victron Energy. For official documentation, visit <a href="https://www.victronenergy.com/live/" target="_blank">Victron Energy Live</a>.</span>
 </div>
-
 

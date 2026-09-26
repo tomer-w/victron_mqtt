@@ -24,6 +24,7 @@ class EnumValueDump(TypedDict):
     id: str
     name: str
     value: int | str
+    description: str
 
 
 class EnumDump(TypedDict):
@@ -34,11 +35,11 @@ class EnumDump(TypedDict):
 
 
 METADATA: dict[str, str] = {
-    "SchemaVersion": "1.0.0",
+    "SchemaVersion": "1.1.0",
     "Comment": "See https://github.com/tomer-w/victron_mqtt for the full source code",
     "CreatorCode": "dump_victron_mqtt.py",
     "License": "Apache License Version 2.0",
-    "Version": "1.0.0",
+    "Version": "1.1.0",
     "Copyright": "victron_mqtt (C) 2026, Tomer-w (https://github.com/tomer-w).\n"
     "For more information see https://github.com/tomer-w/victron_mqtt\n\n"
     "This file is part of victron_mqtt.\n\n"
@@ -60,6 +61,7 @@ def enum_to_dict(enum_cls: type[VictronEnum]) -> EnumDump:
             "id": member.id,
             "name": member.string,
             "value": member.code,
+            "description": member.description,
         }
         for member in enum_cls
     ]

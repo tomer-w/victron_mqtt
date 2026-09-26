@@ -327,6 +327,8 @@ python -m victron_mqtt.utils.dumb_mqtt_listener --host venus.local. --seed_victr
 Browse all supported MQTT topic definitions on the [documentation page](https://tomer-w.github.io/victron_mqtt/).
 
 The machine-readable topic definitions JSON is available [here](https://raw.githubusercontent.com/tomer-w/victron_mqtt/refs/heads/main/victron_mqtt.json).
+Each topic includes a concise `description`; enum options expose their own `description` without duplicating possible
+values in the topic description.
 
 ## Contributing
 

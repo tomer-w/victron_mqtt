@@ -8,12 +8,14 @@ from types import SimpleNamespace
 
 import pytest
 
+import victron_mqtt._victron_enums as victron_enums
 import victron_mqtt._victron_formulas as formulas
 from victron_mqtt import __all__ as victron_all
 from victron_mqtt._victron_enums import DeviceType, GenericOnOff
 from victron_mqtt._victron_topics import topics
 from victron_mqtt.constants import MetricKind, MetricNature, MetricType, ValueType, VictronEnum
 from victron_mqtt.data_classes import TopicDescriptor, topic_to_device_type
+from victron_mqtt.utils.dump_victron_mqtt import METADATA, enum_to_dict, topic_dict_with_enum_name
 from victron_mqtt.writable_metric import WritableMetric
 
 
@@ -96,6 +98,73 @@ def test_required_fields_for_sensor():
             errors.append(f"Topic '{descriptor.topic}' has 'enum' field but value_type is not ENUM")
     if errors:
         pytest.fail("\n".join(errors))
+
+
+def test_all_topics_have_descriptions():
+    missing = [descriptor.topic for descriptor in topics if not descriptor.description]
+    if missing:
+        pytest.fail(f"Found {len(missing)} topics without descriptions:\n" + "\n".join(missing))
+
+
+def test_topic_descriptions_do_not_contain_placeholders():
+    offenders = [
+        descriptor.topic
+        for descriptor in topics
+        if descriptor.description is not None and ("{" in descriptor.description or "}" in descriptor.description)
+    ]
+    if offenders:
+        pytest.fail("Topic descriptions must be static text without placeholders:\n" + "\n".join(offenders))
+
+
+def test_enum_topic_descriptions_do_not_list_values():
+    value_mapping = re.compile(r"(?:^|[.;]\s+)-?\d+\s*(?:=|:)")
+    offenders = [
+        descriptor.topic
+        for descriptor in topics
+        if descriptor.enum is not None
+        and descriptor.description is not None
+        and value_mapping.search(descriptor.description)
+    ]
+    if offenders:
+        pytest.fail("Enum topic descriptions must not list possible values:\n" + "\n".join(offenders))
+
+
+def test_all_enum_values_have_meaningful_descriptions():
+    missing = [
+        f"{enum_cls.__name__}.{member.name}"
+        for enum_cls in (getattr(victron_enums, name) for name in dir(victron_enums))
+        if isinstance(enum_cls, type) and issubclass(enum_cls, VictronEnum) and enum_cls is not VictronEnum
+        for member in enum_cls
+        if not member.description
+        or member.description.casefold().rstrip(".") == member.string.casefold().rstrip(".")
+        or len(member.description.split()) < 4
+    ]
+    if missing:
+        pytest.fail(f"Found {len(missing)} enum values without meaningful descriptions:\n" + "\n".join(missing))
+
+
+def test_dump_schema_includes_descriptions():
+    assert METADATA["SchemaVersion"] == "1.1.0"
+    topic_dump = topic_dict_with_enum_name(topics[11])
+    assert topic_dump["description"] == topics[11].description
+
+    enum_dump = enum_to_dict(GenericOnOff)
+    assert all(option["description"] for option in enum_dump["EnumValues"])
+
+
+def test_documentation_template_includes_descriptions():
+    template = (Path(__file__).resolve().parent.parent / "docs" / "index.html").read_text(encoding="utf-8")
+    assert "{{ topic.description }}" in template
+    assert "{{ member.description }}" in template
+    assert {int(index) for index in re.findall(r'data-col="(\d+)"', template)} == set(range(14))
+
+
+def test_metric_viewer_includes_descriptions():
+    viewer = (Path(__file__).resolve().parent.parent / "victron_mqtt" / "utils" / "view_metrics.py").read_text(
+        encoding="utf-8"
+    )
+    assert 'self.metric_tree.heading("description"' in viewer
+    assert "member.description" in viewer
 
 
 # def test_unit_of_measurement_is_not_none():

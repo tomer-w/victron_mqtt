@@ -2828,6 +2828,7 @@ def _make_descriptor(**overrides: Any) -> TopicDescriptor:
         "message_type": MetricKind.SENSOR,
         "short_id": "test_metric",
         "name": "Test Metric",
+        "description": "Describes the test metric.",
         "value_type": ValueType.FLOAT,
         "metric_type": MetricType.ELECTRIC_STORAGE_PERCENTAGE,
     }
@@ -2851,7 +2852,8 @@ def _make_metric(
     m = Metric.__new__(Metric)
     m._descriptor = descriptor
     m._short_id = descriptor.short_id
-    m._generic_short_id = descriptor.short_id
+    assert descriptor.name is not None
+    m._name = descriptor.name
     m._unique_id = f"device_0_{descriptor.short_id}"
     m._value = None
     m._available = False
@@ -3169,6 +3171,15 @@ class TestMetricProperties:
         m = _make_metric()
         assert m.metric_kind == MetricKind.SENSOR
 
+    def test_description(self):
+        m = _make_metric()
+        assert m.description == "Describes the test metric."
+
+    def test_generic_metadata_comes_from_descriptor(self):
+        m = _make_metric()
+        assert m.generic_short_id == "test_metric"
+        assert m.generic_name == "Test Metric"
+
     def test_precision(self):
         desc = _make_descriptor(precision=2)
         m = _make_metric(descriptor=desc)
@@ -3418,7 +3429,6 @@ class TestWritableFormulaMetricKeepalive:
         wfm = WritableFormulaMetric.__new__(WritableFormulaMetric)
         wfm._descriptor = desc
         wfm._short_id = desc.short_id
-        wfm._generic_short_id = desc.short_id
         wfm._unique_id = "dev_test_metric"
         wfm._value = None
         wfm._hub = hub
@@ -3451,7 +3461,6 @@ class TestWritableFormulaMetricSet:
         wfm = WritableFormulaMetric.__new__(WritableFormulaMetric)
         wfm._descriptor = desc
         wfm._short_id = desc.short_id
-        wfm._generic_short_id = desc.short_id
         wfm._unique_id = "dev_test_metric"
         wfm._value = 42
         wfm._available = True
@@ -3496,7 +3505,6 @@ class TestFormulaMetricNoneReturn:
         fm = FormulaMetric.__new__(FormulaMetric)
         fm._descriptor = desc
         fm._short_id = desc.short_id
-        fm._generic_short_id = desc.short_id
         fm._unique_id = "dev_test_metric"
         fm._value = None
         fm._available = False
