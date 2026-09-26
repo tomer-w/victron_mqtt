@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.9.14 (2026-09-26)
+
+### Changes
+
+- Improve html title
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.9.13 (2026-09-26)
 
 ### Changes
