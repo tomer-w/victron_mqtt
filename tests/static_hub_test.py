@@ -1058,13 +1058,16 @@ async def test_float_precision_none():
 
 
 @pytest.mark.asyncio
-async def test_new_metric():
+async def test_new_metric(caplog: pytest.LogCaptureFixture):
     """Test that the Hub correctly triggers the on_new_metric callback."""
     hub: Hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
+    discovered_snapshots: dict[str, tuple[MetricValue, bool]] = {}
+    caplog.set_level(logging.DEBUG, logger="victron_mqtt.hub")
 
     # Mock the on_new_metric callback
     def on_new_metric_mock(hub: Hub, device: object, metric: Metric) -> None:
         logger.debug("New metric added: Hub=%s, Device=%s, Metric=%s", hub, device, repr(metric))
+        discovered_snapshots[metric.unique_id] = (metric.value, metric.available)
 
     mock_on_new_metric = MagicMock(side_effect=on_new_metric_mock)
     hub.on_new_metric = mock_on_new_metric
@@ -1108,6 +1111,11 @@ async def test_new_metric():
     metric = device.get_metric("system_dc_consumption")
     assert metric is not None, "Metric should exist in the device"
     assert metric.value == 1.1, f"Expected metric value to be 1.1, got {metric.value}"
+    assert discovered_snapshots[metric.unique_id] == (1.1, True)
+    assert (
+        "Scheduling on_new_metric callback for system_170_system_dc_consumption: value=1.1, available=True"
+        in caplog.text
+    )
     await hub_disconnect(hub)
 
 
@@ -3186,6 +3194,60 @@ class TestMetricProperties:
         assert m.precision == 2
 
 
+class TestMetricOnUpdate:
+    """Test update callback scheduling."""
+
+    def test_missing_callback_logs_why_update_was_not_scheduled(self):
+        metric = _make_metric()
+        log = MagicMock()
+
+        with patch("victron_mqtt.metric.time.monotonic", return_value=10.0):
+            metric._handle_message(70.0, log)
+
+        log.assert_any_call(
+            "Metric %s update not scheduled: %s (value=%r, available=%s, last_seen=%.2f, last_notified=%.2f)",
+            metric.unique_id,
+            "on_update callback is not registered",
+            70.0,
+            True,
+            10.0,
+            0.0,
+        )
+
+    def test_stopped_loop_logs_why_update_was_not_scheduled(self):
+        metric = _make_metric()
+        metric.on_update = MagicMock()
+        log = MagicMock()
+
+        with patch("victron_mqtt.metric.time.monotonic", return_value=10.0):
+            metric._handle_message(70.0, log)
+
+        log.assert_any_call(
+            "Metric %s update not scheduled: %s (value=%r, available=%s, last_seen=%.2f, last_notified=%.2f)",
+            metric.unique_id,
+            "event loop is not running",
+            70.0,
+            True,
+            10.0,
+            0.0,
+        )
+
+    def test_scheduling_failure_leaves_value_pending(self):
+        hub = MagicMock()
+        hub._update_frequency_seconds = 0
+        hub._loop = MagicMock()
+        hub._loop.is_running.return_value = True
+        hub._loop.call_soon_threadsafe.side_effect = RuntimeError("loop closed")
+        metric = _make_metric(hub=hub)
+        metric.on_update = MagicMock()
+
+        with patch("victron_mqtt.metric.time.monotonic", return_value=10.0):
+            metric._handle_message(70.0, MagicMock())
+
+        assert metric._last_seen == 10.0
+        assert metric._last_notified == 0.0
+
+
 class TestMetricKeepalive:
     """Test _keepalive method paths (lines 201-205)."""
 
@@ -3199,7 +3261,12 @@ class TestMetricKeepalive:
         log = MagicMock()
         m._keepalive(force_invalidate=False, log_debug=log)
         # Should have re-published (called _handle_message)
-        log.assert_called()
+        log.assert_any_call(
+            "Metric %s was last seen at %.2f but last notified at %.2f, re-publishing",
+            m.unique_id,
+            10.0,
+            5.0,
+        )
 
     def test_keepalive_up_to_date(self):
         """Line 204: Metric is current."""

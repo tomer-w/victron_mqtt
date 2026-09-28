@@ -829,7 +829,20 @@ class Hub:
                 continue
             try:
                 if callable(self._on_new_metric):
+                    _LOGGER.debug(
+                        "Scheduling on_new_metric callback for %s: value=%r, available=%s",
+                        metric.unique_id,
+                        metric.value,
+                        metric.available,
+                    )
                     self._schedule_threadsafe(self._on_new_metric, self, device, metric)
+                else:
+                    _LOGGER.debug(
+                        "Skipping on_new_metric callback for %s: callback is not registered, value=%r, available=%s",
+                        metric.unique_id,
+                        metric.value,
+                        metric.available,
+                    )
             except Exception as exc:
                 _LOGGER.exception("Error calling _on_new_metric callback %s", exc)
         # Trace the version once
