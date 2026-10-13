@@ -151,6 +151,7 @@ class DeviceType(VictronDeviceEnum):
         "DC/DC charger",
         "Identifies the DC/DC charger MQTT and D-Bus service type.",
     )  # Orion XS 1400 in battery to battery charging mode.
+    DCGENSET = ("dcgenset", "dcgenset", "DC genset", "Identifies the DC genset MQTT and D-Bus service type.")
 
 
 class VictronProductId(VictronEnum):
@@ -440,6 +441,22 @@ class GenericOnOffInverted(VictronEnum):
 
     ON = (0, "on", "On", "The option is enabled.")
     OFF = (1, "off", "Off", "The option is disabled.")
+
+
+class GensetStatus(VictronEnum):
+    """Genset status code"""
+
+    STANDBY = (0, "standby", "Standby", "The genset is stopped and ready to start.")
+    STARTUP_1 = (1, "startup_1", "Startup 1", "The genset is in startup phase 1.")
+    STARTUP_2 = (2, "startup_2", "Startup 2", "The genset is in startup phase 2.")
+    STARTUP_3 = (3, "startup_3", "Startup 3", "The genset is in startup phase 3.")
+    STARTUP_4 = (4, "startup_4", "Startup 4", "The genset is in startup phase 4.")
+    STARTUP_5 = (5, "startup_5", "Startup 5", "The genset is in startup phase 5.")
+    STARTUP_6 = (6, "startup_6", "Startup 6", "The genset is in startup phase 6.")
+    STARTUP_7 = (7, "startup_7", "Startup 7", "The genset is in startup phase 7.")
+    RUNNING = (8, "running", "Running", "The genset is running.")
+    STOPPING = (9, "stopping", "Stopping", "The genset is shutting down.")
+    ERROR = (10, "error", "Error", "The genset has stopped because of an error.")
 
 
 class FirmwareUpdateState(VictronEnum):
