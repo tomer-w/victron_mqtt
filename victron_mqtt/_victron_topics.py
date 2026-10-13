@@ -384,6 +384,16 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.PROBLEM,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Alarms/HighStarterVoltage",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_high_starter_voltage",
+        name="High starter voltage",
+        description="High starter battery voltage alarm",
+        metric_type=MetricType.PROBLEM,
+        value_type=ValueType.ENUM,
+        enum=GenericAlarmEnum,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Alarms/HighTemperature",
         message_type=MetricKind.SENSOR,
         short_id="battery_high_temperature",
@@ -442,6 +452,16 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericAlarmEnum,
         metric_type=MetricType.PROBLEM,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Alarms/LowStarterVoltage",
+        message_type=MetricKind.SENSOR,
+        short_id="battery_low_starter_voltage",
+        name="Low starter voltage",
+        description="Low starter battery voltage alarm",
+        metric_type=MetricType.PROBLEM,
+        value_type=ValueType.ENUM,
+        enum=GenericAlarmEnum,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Alarms/LowTemperature",
