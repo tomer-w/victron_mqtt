@@ -3551,7 +3551,7 @@
       "topic": "N/{installation_id}/dcgenset/{device_id}/NrOfPhases",
       "message_type": "MetricKind.NUMBER",
       "short_id": "dcgenset_nr_of_phases",
-      "name": "Nr of phases",
+      "name": "Number of phases",
       "unit_of_measurement": null,
       "metric_type": "MetricType.NONE",
       "metric_nature": "MetricNature.NONE",
@@ -3569,12 +3569,12 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [],
-      "generic_name": "Nr of phases",
+      "generic_name": "Number of phases",
       "is_formula": false,
       "main_topic": false,
       "hidden": false,
       "sub_device_key": null,
-      "description": "Reports nr of phases for the DC genset."
+      "description": "Reports number of phases for the DC genset."
     },
     {
       "topic": "N/{installation_id}/dcgenset/{device_id}/RemoteStartModeEnabled",

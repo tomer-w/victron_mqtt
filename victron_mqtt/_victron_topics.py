@@ -1228,8 +1228,8 @@ topics: list[TopicDescriptor] = [
         topic="N/{installation_id}/dcgenset/{device_id}/NrOfPhases",
         message_type=MetricKind.NUMBER,
         short_id="dcgenset_nr_of_phases",
-        name="Nr of phases",
-        description="Reports nr of phases for the DC genset.",
+        name="Number of phases",
+        description="Reports number of phases for the DC genset.",
         value_type=ValueType.INT,
     ),
     TopicDescriptor(
