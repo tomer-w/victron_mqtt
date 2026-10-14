@@ -5,6 +5,7 @@ Defines the TopicDescriptor mappings for Victron MQTT topics and derived formula
 from ._victron_enums import (
     ACActiveInputSource,
     AcInputTypeEnum,
+    AcPosition,
     ACSystemMode,
     ActiveInputEnum,
     BatteryState,
@@ -57,6 +58,16 @@ from .data_classes import ProductCapabilityRef, TopicDependency, TopicDescriptor
 # https://github.com/victronenergy/dbus-digitalinputs
 
 topics: list[TopicDescriptor] = [
+    # AC load topics
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/IsGenericEnergyMeter",
+        message_type=MetricKind.ATTRIBUTE,
+        short_id="acload_is_generic_energy_meter",
+        name="Is generic energy meter",
+        description="The device measuring is a generic energy meter.",
+        metric_nature=MetricNature.NONE,
+        value_type=ValueType.INT,
+    ),
     # generic device attributes
     TopicDescriptor(
         topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/Name",
@@ -158,6 +169,14 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/Energy/Reverse",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_energy_reverse",
+        name="Feed-in",
+        description="Energy recorded as feed-in for the AC load.",
+        metric_type=MetricType.ENERGY,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/acload/{device_id}/Ac/Frequency",
         message_type=MetricKind.SENSOR,
         short_id="acload_frequency",
@@ -172,6 +191,16 @@ topics: list[TopicDescriptor] = [
         name="Power",
         description="Measured power for the AC load.",
         metric_type=MetricType.POWER,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/PowerFactor",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_power_factor",
+        name="Power factor",
+        description="Measured power factor for the AC load.",
+        metric_type=MetricType.POWER_FACTOR,
+        metric_nature=MetricNature.MEASUREMENT,
+        value_type=ValueType.FLOAT,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/acload/{device_id}/Ac/Voltage",
@@ -198,6 +227,14 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.ENERGY,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/{phase}/Energy/Reverse",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_energy_reverse_{phase}",
+        name="Feed-in on {phase}",
+        description="Energy recorded as feed-in on an AC phase for the AC load.",
+        metric_type=MetricType.ENERGY,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/acload/{device_id}/Ac/{phase}/Power",
         message_type=MetricKind.SENSOR,
         short_id="acload_power_{phase}",
@@ -206,12 +243,52 @@ topics: list[TopicDescriptor] = [
         metric_type=MetricType.POWER,
     ),
     TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Ac/{phase}/PowerFactor",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_power_factor_{phase}",
+        name="Power factor on {phase}",
+        description="Measured power factor on an AC phase for the AC load.",
+        metric_type=MetricType.POWER_FACTOR,
+        metric_nature=MetricNature.MEASUREMENT,
+        value_type=ValueType.FLOAT,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/acload/{device_id}/Ac/{phase}/Voltage",
         message_type=MetricKind.SENSOR,
         short_id="acload_voltage_{phase}",
         name="Voltage on {phase}",
         description="Measured voltage on an AC phase for the AC load.",
         metric_type=MetricType.VOLTAGE,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/ErrorCode",
+        message_type=MetricKind.SENSOR,
+        short_id="acload_error_code",
+        name="Error code",
+        description="Error reported by the energy meter: 0 = no error. Error values are meter specific",
+        metric_nature=MetricNature.NONE,
+        value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/PhaseSetting",
+        message_type=MetricKind.NUMBER,
+        short_id="acload_phase_setting",
+        name="Phase",
+        description="Used phase (1-3) (only valid for acload and heatpump)",
+        metric_nature=MetricNature.NONE,
+        value_type=ValueType.INT,
+        min=1,
+        max=3,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/Position",
+        message_type=MetricKind.SELECT,
+        short_id="acload_position",
+        name="Position",
+        description="Position of the acload. (only valid for acload and heatpump)",
+        metric_nature=MetricNature.NONE,
+        value_type=ValueType.ENUM,
+        enum=AcPosition,
     ),
     # ACSYSTEM topics
     TopicDescriptor(
