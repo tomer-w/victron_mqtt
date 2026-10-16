@@ -61,12 +61,13 @@ topics: list[TopicDescriptor] = [
     # AC load topics
     TopicDescriptor(
         topic="N/{installation_id}/acload/{device_id}/IsGenericEnergyMeter",
-        message_type=MetricKind.ATTRIBUTE,
+        message_type=MetricKind.BINARY_SENSOR,
         short_id="acload_is_generic_energy_meter",
         name="Is generic energy meter",
         description="The device measuring is a generic energy meter.",
         metric_nature=MetricNature.NONE,
-        value_type=ValueType.INT,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
     ),
     # generic device attributes
     TopicDescriptor(
