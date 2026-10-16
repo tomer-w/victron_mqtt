@@ -58,17 +58,6 @@ from .data_classes import ProductCapabilityRef, TopicDependency, TopicDescriptor
 # https://github.com/victronenergy/dbus-digitalinputs
 
 topics: list[TopicDescriptor] = [
-    # AC load topics
-    TopicDescriptor(
-        topic="N/{installation_id}/acload/{device_id}/IsGenericEnergyMeter",
-        message_type=MetricKind.BINARY_SENSOR,
-        short_id="acload_is_generic_energy_meter",
-        name="Is generic energy meter",
-        description="The device measuring is a generic energy meter.",
-        metric_nature=MetricNature.NONE,
-        value_type=ValueType.ENUM,
-        enum=GenericOnOff,
-    ),
     # generic device attributes
     TopicDescriptor(
         topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/Name",
@@ -269,6 +258,16 @@ topics: list[TopicDescriptor] = [
         description="Error reported by the energy meter: 0 = no error. Error values are meter specific",
         metric_nature=MetricNature.NONE,
         value_type=ValueType.INT,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/acload/{device_id}/IsGenericEnergyMeter",
+        message_type=MetricKind.BINARY_SENSOR,
+        short_id="acload_is_generic_energy_meter",
+        name="Is generic energy meter",
+        description="The device measuring is a generic energy meter.",
+        metric_nature=MetricNature.NONE,
+        value_type=ValueType.ENUM,
+        enum=GenericOnOff,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/acload/{device_id}/PhaseSetting",
