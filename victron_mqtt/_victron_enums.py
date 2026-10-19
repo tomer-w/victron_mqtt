@@ -737,6 +737,13 @@ class EvChargingState(VictronEnum):
     )
 
 
+class AcPosition(VictronEnum):
+    """Where an AC load or heat pump is connected relative to the inverter/charger"""
+
+    AC_OUTPUT = (0, "ac_output", "AC output", "The device is connected to the inverter/charger AC output.")
+    AC_INPUT = (1, "ac_input", "AC input", "The device is connected on the AC input side of the inverter/charger.")
+
+
 class EvChargerPosition(VictronEnum):
     """EVCharger Position Enum"""
 

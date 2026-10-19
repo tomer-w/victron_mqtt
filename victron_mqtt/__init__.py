@@ -6,6 +6,7 @@ from ._firmware import FirmwareUpdateError, FirmwareUpdateErrorReason, FirmwareU
 from ._victron_enums import (
     ACActiveInputSource,
     AcInputTypeEnum,
+    AcPosition,
     ACSystemMode,
     ActiveInputEnum,
     BatteryState,
@@ -86,6 +87,7 @@ __all__ = [
     "ACActiveInputSource",
     "ACSystemMode",
     "AcInputTypeEnum",
+    "AcPosition",
     "ActiveInputEnum",
     "AuthenticationError",
     "BMSMode",
