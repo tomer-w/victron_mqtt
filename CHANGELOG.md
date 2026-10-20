@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026.10.0 (2026-10-20)
+
+### Changes
+
+- Add acload topics @ReinvdZee (#137)
+- Add dcgenset topics @ReinvdZee (#136)
+- Add battery topics @ReinvdZee (#135)
+- Improve keepalive logic when firmware version is unknown: https://github.com/tomer-w/victron_mqtt/issues/139
+- Add support for default value for float metrics: https://github.com/tomer-w/ha-victron-mqtt/issues/526
+- Improve metric callback diagnostics
+
+### 🧰 Maintenance
+
+- Bump release-drafter/release-drafter from 7.9.0 to 7.10.0 @[dependabot[bot]](https://github.com/apps/dependabot) (#138)
+- Bump release-drafter/release-drafter from 7.7.0 to 7.9.0 @[dependabot[bot]](https://github.com/apps/dependabot) (#133)
+
+### Contributors
+
+@ReinvdZee, [@dependabot[bot]](https://github.com/apps/dependabot) and GitHub Copilot
+
+
 ## 2026.9.14 (2026-09-26)
 
 ### Changes
