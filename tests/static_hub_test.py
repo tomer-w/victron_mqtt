@@ -2138,16 +2138,79 @@ async def test_reconnect_replaces_incomplete_subscription_setup():
 
 
 @pytest.mark.asyncio
-async def test_null_message():
+@pytest.mark.parametrize(
+    "topic",
+    [
+        "N/123/evcharger/170/SetCurrent",
+        "N/123/multi/0/Ac/Out/1/L1/P",
+    ],
+)
+async def test_null_message(topic: str) -> None:
     """Test that the Hub correctly filters MQTT messages with null value."""
     hub: Hub = await create_mocked_hub()
 
     # Inject messages after the event is set
-    await inject_message(hub, "N/123/evcharger/170/SetCurrent", '{"value": null}')
+    await inject_message(hub, topic, '{"value": null}')
     await finalize_injection(hub)
 
     # Validate the Hub's state - only system device exists, evcharger message was filtered
     assert len(hub.devices) == 0, f"Expected no devices, got {len(hub.devices)}"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("topic_suffix", "device_id", "short_id", "precision", "expected_value"),
+    [
+        ("system/0/Ac/Consumption/L3/Power", "system_0", "system_consumption_power_l3", 1, 31.2),
+        ("multi/0/Ac/Out/L3/P", "multi_0", "multi_acout_power_l3", 1, 31.2),
+        ("multi/0/Pv/1/V", "multi_0", "multi_mppt_1_voltage", 3, 31.235),
+        ("solarcharger/0/Pv/V", "solarcharger_0", "solarcharger_voltage", 3, 31.235),
+    ],
+)
+async def test_null_to_zero_metrics(
+    topic_suffix: str, device_id: str, short_id: str, precision: int | None, expected_value: float | int
+) -> None:
+    """Null readings create zero-valued metrics and keep existing metrics fresh."""
+    hub = await create_mocked_hub()
+    topic = f"N/123/{topic_suffix}"
+    await inject_message(hub, topic, '{"value": null}')
+    await finalize_injection(hub, disconnect=False)
+
+    assert device_id in hub.devices
+    metric = hub.devices[device_id].get_metric(short_id)
+    assert metric is not None
+    assert metric.value == 0.0
+    assert type(metric.value) is type(expected_value)
+    assert metric.available is True
+    assert metric.nullable is False
+    assert metric.precision == precision
+
+    await inject_message(hub, topic, '{"value": 31.23456}')
+    assert metric.value == expected_value
+
+    for payload in ("not json", "{}", '{"value": "invalid"}'):
+        last_seen = metric._last_seen
+        await inject_message(hub, topic, payload)
+        assert metric.value == expected_value
+        assert metric._last_seen == last_seen
+
+    on_update = MagicMock()
+    metric.on_update = on_update
+    for _ in range(2):
+        metric._last_seen -= STALE_METRIC_TIMEOUT_SECONDS + 1
+        last_seen = metric._last_seen
+        await inject_message(hub, topic, '{"value": null}')
+        assert metric.value == 0.0
+        assert metric._last_seen > last_seen
+        metric._keepalive(force_invalidate=False, log_debug=logger.debug, stale_timeout=STALE_METRIC_TIMEOUT_SECONDS)
+        assert metric.available is True
+    on_update.assert_called_with(metric, 0.0)
+
+    metric._last_seen -= STALE_METRIC_TIMEOUT_SECONDS + 1
+    metric._keepalive(force_invalidate=False, log_debug=logger.debug, stale_timeout=STALE_METRIC_TIMEOUT_SECONDS)
+    assert metric.value == 0.0
+    assert metric.available is False
+    await hub_disconnect(hub)
 
 
 @pytest.mark.asyncio

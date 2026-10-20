@@ -215,6 +215,15 @@ topics: list[TopicDescriptor] = [
     ),
     # ACSYSTEM topics
     TopicDescriptor(
+        topic="N/{installation_id}/acsystem/{device_id}/Ac/Out/{phase}/P",
+        message_type=MetricKind.SENSOR,
+        short_id="acsystem_output_power_{phase}",
+        name="AC system output power {phase}",
+        description="Measured output power for an AC phase of the AC system. Null readings are reported as 0 W.",
+        metric_type=MetricType.POWER,
+        value_type=ValueType.FLOAT_DEFAULT_0,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/acsystem/{device_id}/Mode",
         message_type=MetricKind.SELECT,
         short_id="acsystem_mode",
@@ -2530,8 +2539,9 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="multi_acout_power_{phase}",
         name="Output power on {phase}",
-        description="Measured output power on an AC phase for the Multi RS inverter/charger.",
+        description="Measured output power on an AC phase for the Multi RS inverter/charger. Null readings are reported as 0 W.",
         metric_type=MetricType.POWER,
+        value_type=ValueType.FLOAT_DEFAULT_0,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/multi/{device_id}/Ac/Out/{phase}/V",
@@ -2735,8 +2745,9 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="multi_mppt_{mpptnumber}_voltage",
         name="MPPT {mpptnumber} PV voltage",
-        description="Measured PV voltage for an MPPT tracker of the Multi RS inverter/charger.",
+        description="Measured PV voltage for an MPPT tracker of the Multi RS inverter/charger. Null readings are reported as 0 V.",
         metric_type=MetricType.VOLTAGE,
+        value_type=ValueType.FLOAT_DEFAULT_0,
     ),
     TopicDescriptor(
         topic="$$func/multi/pv_current",
@@ -3670,8 +3681,9 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="solarcharger_voltage",
         name="PV bus voltage",
-        description="Measured PV bus voltage for the solar charger. Not available if multiple VE.Can chargers are combined.",
+        description="Measured PV bus voltage for the solar charger. Not available if multiple VE.Can chargers are combined. Null readings are reported as 0 V.",
         metric_type=MetricType.VOLTAGE,
+        value_type=ValueType.FLOAT_DEFAULT_0,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/solarcharger/{device_id}/Pv/{tracker}/MppOperationMode",
@@ -3901,8 +3913,9 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="system_consumption_power_{phase}",
         name="Consumption power {phase}",
-        description="Measured consumption power for an AC phase of the system. Power supplied by system to loads.",
+        description="Measured consumption power for an AC phase of the system. Power supplied by system to loads. Null readings are reported as 0 W.",
         metric_type=MetricType.POWER,
+        value_type=ValueType.FLOAT_DEFAULT_0,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/system/{device_id}/Ac/ConsumptionOnInput/{phase}/Power",

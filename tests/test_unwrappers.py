@@ -14,6 +14,7 @@ from victron_mqtt._unwrappers import (
     unwrap_epoch,
     unwrap_epoch_default_na,
     unwrap_float,
+    unwrap_float_default_0,
     unwrap_float_m3_to_liters,
     unwrap_int,
     unwrap_int_default_0,
@@ -53,7 +54,34 @@ def test_unwrap_int_and_default():
 
     assert unwrap_int_default_0('{"value": 3}') == 3
     assert unwrap_int_default_0('{"value": null}') == 0
-    assert unwrap_int_default_0("bad") == 0
+    assert unwrap_int_default_0("bad") is None
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected"),
+    [
+        ('{"value": null}', 0),
+        ('{"value": 0}', 0),
+        ('{"value": 31}', 31),
+        ('{"value": -31}', -31),
+        ('{"value": "31"}', 31),
+        ("not json", None),
+        ("{}", None),
+        ('{"value": "invalid"}', None),
+        ("null", None),
+        ("[]", None),
+    ],
+)
+def test_unwrap_int_default_0(payload: str, expected: int | None) -> None:
+    """Only explicit null readings default to zero; invalid payloads are rejected."""
+    assert unwrap_int_default_0(payload) == expected
+
+
+def test_int_default_0_mappings() -> None:
+    """Zero-default integers support both parsing and normal integer serialization."""
+    assert VALUE_TYPE_UNWRAPPER[ValueType.INT_DEFAULT_0] is unwrap_int_default_0
+    assert VALUE_TYPE_WRAPPER[ValueType.INT_DEFAULT_0] is wrap_int_default_0
+    assert json.loads(VALUE_TYPE_WRAPPER[ValueType.INT_DEFAULT_0](31)) == {"value": 31}
 
 
 def test_unwrap_float_variants():
@@ -71,6 +99,34 @@ def test_unwrap_float_variants():
     assert unwrap_float('{"value": null}', None) is None
     # malformed
     assert unwrap_float("not json", None) is None
+
+
+@pytest.mark.parametrize(
+    ("payload", "precision", "expected"),
+    [
+        ('{"value": null}', None, 0.0),
+        ('{"value": null}', 3, 0.0),
+        ('{"value": 0}', 1, 0.0),
+        ('{"value": 31.23456}', 3, 31.235),
+        ('{"value": -31.23456}', 1, -31.2),
+        ('{"value": "31.23456"}', None, 31.23456),
+        ("not json", 3, None),
+        ("{}", 3, None),
+        ('{"value": "invalid"}', 3, None),
+        ("null", 3, None),
+        ("[]", 3, None),
+    ],
+)
+def test_unwrap_float_default_0(payload: str, precision: int | None, expected: float | None) -> None:
+    """Only explicit null readings default to zero; precision and invalid-input handling are preserved."""
+    assert unwrap_float_default_0(payload, precision) == expected
+
+
+def test_float_default_0_mappings() -> None:
+    """Zero-default floats support both parsing and normal float serialization."""
+    assert VALUE_TYPE_UNWRAPPER[ValueType.FLOAT_DEFAULT_0] is unwrap_float_default_0
+    assert VALUE_TYPE_WRAPPER[ValueType.FLOAT_DEFAULT_0] is wrap_float
+    assert json.loads(VALUE_TYPE_WRAPPER[ValueType.FLOAT_DEFAULT_0](31.23456)) == {"value": 31.23456}
 
 
 def test_unwrap_string():
