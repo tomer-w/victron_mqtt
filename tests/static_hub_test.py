@@ -7,7 +7,7 @@ import json
 import logging
 import ssl
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 from paho.mqtt.client import Client, ConnectFlags, DisconnectFlags, PayloadType
@@ -37,6 +37,7 @@ from victron_mqtt.formula_common import LRSLastReading
 from victron_mqtt.formula_metric import FormulaMetric
 from victron_mqtt.hub import (
     CONNECT_MAX_FAILED_ATTEMPTS,
+    FULL_REPUBLISH_STALENESS_INTERVAL_CYCLES,
     MINIMUM_FULLY_SUPPORTED_VERSION,
     STALE_METRIC_TIMEOUT_SECONDS,
     AuthenticationError,
@@ -903,6 +904,95 @@ async def test_metric_keepalive_update_frequency_none(mock_time: MagicMock) -> N
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("initial_version", [None, "invalid", "vnot-a-version"])
+@pytest.mark.parametrize(
+    ("resolved_version", "expected_version"),
+    [("v3.81", (3, 81)), ("v3.70~15", (3, 70)), ("v3.40", (3, 40))],
+)
+async def test_firmware_version_retried_until_resolved(
+    initial_version: str | None, resolved_version: str, expected_version: tuple[int, ...]
+) -> None:
+    """Issue #139: an early full publish must not permanently consume firmware detection."""
+    hub = Hub("localhost", 1883, None, None, False, installation_id="123")
+    hub._loop = asyncio.get_running_loop()
+    version_topic = "N/123/platform/0/Firmware/Installed/Version"
+    if initial_version is not None:
+        hub._handle_normal_message(version_topic, json.dumps({"value": initial_version}), logger.debug)
+
+    hub._handle_full_publish_message(skip_validation=True)
+    assert hub._first_full_publish is False
+    assert hub._firmware_version == ()
+
+    hub._handle_normal_message(version_topic, json.dumps({"value": resolved_version}), logger.debug)
+    hub._handle_full_publish_message(json.dumps({"full-publish-completed-echo": hub._client_id}))
+    assert hub._firmware_version == expected_version
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("firmware_version", "maintenance_enabled"),
+    [(None, True), ("v3.40", False), ("v3.50", True), ("v3.81", True)],
+)
+@pytest.mark.parametrize("refresh_on_republish", [False, True])
+async def test_keepalive_loop_firmware_staleness_policy(
+    firmware_version: str | None, maintenance_enabled: bool, refresh_on_republish: bool
+) -> None:
+    """Unknown firmware keeps the safety net active; only known old firmware disables it."""
+    hub = Hub("localhost", 1883, None, None, False, installation_id="123")
+    hub._loop = asyncio.get_running_loop()
+    metric_topic = "N/123/grid/30/Ac/L1/Energy/Forward"
+    metric_payload = '{"value": 10}'
+
+    with patch("victron_mqtt.hub.time.monotonic", return_value=100.0) as mock_time:
+        hub._handle_normal_message(metric_topic, metric_payload, logger.debug)
+        if firmware_version is not None:
+            hub._handle_normal_message(
+                "N/123/platform/0/Firmware/Installed/Version",
+                json.dumps({"value": firmware_version}),
+                logger.debug,
+            )
+        hub._handle_full_publish_message(skip_validation=True)
+        metric = hub._all_metrics["grid_30_grid_energy_forward_l1"]
+        assert metric.available is True
+        if firmware_version is None:
+            assert hub._firmware_version == ()
+        else:
+            assert bool(hub._firmware_version) is True
+
+        ticks = 0
+        total_ticks = (STALE_METRIC_TIMEOUT_SECONDS // 60 + 1) * 2
+
+        async def advance_time(delay: float) -> None:
+            nonlocal ticks
+            assert delay == 30
+            if ticks * 30 <= STALE_METRIC_TIMEOUT_SECONDS:
+                assert metric.available is True
+            if ticks == total_ticks:
+                raise asyncio.CancelledError
+            ticks += 1
+            mock_time.return_value += delay
+
+        def send_keepalive(force: bool = False) -> None:
+            if force and refresh_on_republish:
+                hub._handle_normal_message(metric_topic, metric_payload, logger.debug)
+
+        with (
+            patch.object(hub, "_keepalive", side_effect=send_keepalive) as keepalive,
+            patch.object(hub, "_keepalive_metrics", wraps=hub._keepalive_metrics) as maintenance,
+            patch("victron_mqtt.hub.asyncio.sleep", side_effect=advance_time),
+            pytest.raises(asyncio.CancelledError),
+        ):
+            await hub._keepalive_loop()
+
+        maintenance_calls = total_ticks // 2 if maintenance_enabled else 0
+        assert maintenance.call_args_list == [call(stale_timeout=STALE_METRIC_TIMEOUT_SECONDS)] * maintenance_calls
+        forced_calls = total_ticks // FULL_REPUBLISH_STALENESS_INTERVAL_CYCLES if maintenance_enabled else 0
+        assert keepalive.call_args_list.count(call(force=True)) == forced_calls
+        assert metric.available is (not maintenance_enabled or refresh_on_republish)
+        assert metric.value == 10
+
+
+@pytest.mark.asyncio
 @patch("victron_mqtt.metric.time.monotonic")
 async def test_metric_goes_unavailable_when_source_stops_publishing(mock_time: MagicMock) -> None:
     """Issue #454: a metric that stops being published while the broker stays connected
@@ -913,7 +1003,7 @@ async def test_metric_goes_unavailable_when_source_stops_publishing(mock_time: M
     mock_time.return_value = 10
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 10}', mock_time)
     await finalize_injection(hub, disconnect=False, mock_time=mock_time)
-    # Staleness detection is only enabled on fully supported firmware.
+    # Use a known supported version for this direct metric-maintenance test.
     hub._firmware_version = MINIMUM_FULLY_SUPPORTED_VERSION
 
     device = hub.devices["grid_30"]

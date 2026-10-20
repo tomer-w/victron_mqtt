@@ -122,6 +122,19 @@ print(metric.unit_of_measurement)  # "kWh"
 
 **Metric kinds:** `SENSOR`, `BINARY_SENSOR`, `SWITCH`, `SELECT`, `NUMBER`, `TIME`, `BUTTON`, `DEVICE_TRACKER`
 
+**Metric availability:** On Venus OS v3.50 or newer, the hub requests a full republish
+every 180 seconds so constant values stay fresh. Every 60 seconds, it checks for
+metrics that have not been received for more than 360 seconds and marks them
+unavailable, retaining their last values. This also detects delivery stalls while
+the MQTT connection remains active.
+
+Firmware detection is retried at full-publish processing boundaries until a valid
+version is available. While the version is missing or unparseable, stale detection
+and periodic full republishes remain enabled as a fail-safe. They are disabled
+once a version below v3.50 is detected. Older firmware whose version cannot be
+detected may therefore have constant metrics marked unavailable if it cannot
+refresh those values.
+
 ### Writable Metrics
 
 Switches, numbers, selects, and time metrics can be written back to the device:
