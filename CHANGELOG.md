@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.10.1 (2026-10-22)
+
+### Changes
+
+- Add couple of input power per phase topics: https://github.com/tomer-w/ha-victron-mqtt/issues/526
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.10.0 (2026-10-20)
 
 ### Changes
