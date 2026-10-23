@@ -3696,7 +3696,7 @@
       "topic": "N/{installation_id}/dcgenset/{device_id}/Error/{index}/Id",
       "message_type": "MetricKind.SENSOR",
       "short_id": "dcgenset_error_id_{index}",
-      "name": "Id",
+      "name": "ID",
       "unit_of_measurement": null,
       "metric_type": "MetricType.NONE",
       "metric_nature": "MetricNature.NONE",
@@ -3714,7 +3714,7 @@
       "key_values": {},
       "experimental": false,
       "depends_on": [],
-      "generic_name": "Id",
+      "generic_name": "ID",
       "is_formula": false,
       "main_topic": false,
       "hidden": false,
@@ -3835,7 +3835,7 @@
       "main_topic": false,
       "hidden": false,
       "sub_device_key": null,
-      "description": "Reports module id for the DC genset."
+      "description": "Reports module ID for the DC genset."
     },
     {
       "topic": "N/{installation_id}/dcgenset/{device_id}/NrOfPhases",
