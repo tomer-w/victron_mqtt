@@ -374,7 +374,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="alternator_emergency_charge_blocked_countdown",
         name="Emergency charge blocked countdown",
-        description="Seconds remaining in the blocked cooldown after emergency reverse charging.",
+        description="Seconds remaining in the blocked period after emergency reverse charging, during which reverse charging cannot occur.",
         metric_type=MetricType.DURATION,
     ),
     TopicDescriptor(
@@ -382,7 +382,7 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SENSOR,
         short_id="alternator_emergency_charge_charging_countdown",
         name="Emergency charge charging countdown",
-        description="Seconds remaining in the emergency reverse charging session.",
+        description="Seconds remaining in the active emergency reverse charging state.",
         metric_type=MetricType.DURATION,
     ),
     TopicDescriptor(
@@ -390,7 +390,12 @@ topics: list[TopicDescriptor] = [
         message_type=MetricKind.SELECT,
         short_id="alternator_emergency_charge_control",
         name="Emergency charge control",
-        description="Reports availability and starts or stops emergency reverse charging on the alternator charger.",
+        description=(
+            "Reports whether emergency reverse charging is possible and has been started, and allows starting or stopping it. "
+            "Writing 1 or 3 has the same effect: requesting a start. Writing 0 or 2 stops charging. "
+            "The start command (1) is not a persistent state; it is immediately replaced by 3 if emergency charging is allowed or 0 otherwise. "
+            "The started state (3) remains during the blocked period, when reverse charging cannot occur."
+        ),
         value_type=ValueType.ENUM,
         enum=EmergencyChargeControl,
     ),

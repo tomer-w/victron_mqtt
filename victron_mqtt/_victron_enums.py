@@ -562,19 +562,25 @@ class EmergencyChargeControl(VictronEnum):
         0,
         "not_possible",
         "Not possible",
-        "Emergency reverse charging is unavailable under the current operating conditions.",
+        "Emergency reverse charging is not possible; start commands are ignored in this state, and writing this value stops charging.",
+    )
+    START = (
+        1,
+        "start",
+        "Start",
+        "Requests emergency reverse charging, with the same effect as writing the started value. This command does not persist; the charger reports started if charging is allowed or not possible otherwise.",
     )
     NOT_STARTED = (
         2,
         "not_started",
         "Not started",
-        "Emergency reverse charging is available but has not been started; writing this value stops it.",
+        "Emergency reverse charging is possible but has not been started; writing this value stops charging.",
     )
     STARTED = (
         3,
         "started",
         "Started",
-        "Emergency reverse charging has been requested, including during the blocked cooldown; writing this value starts it.",
+        "Emergency reverse charging is possible and has been started. This state remains during the blocked period when reverse charging cannot occur; writing this value requests a start.",
     )
 
 

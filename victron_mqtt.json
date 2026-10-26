@@ -787,7 +787,7 @@
       "main_topic": false,
       "hidden": false,
       "sub_device_key": null,
-      "description": "Seconds remaining in the blocked cooldown after emergency reverse charging."
+      "description": "Seconds remaining in the blocked period after emergency reverse charging, during which reverse charging cannot occur."
     },
     {
       "topic": "N/{installation_id}/alternator/{device_id}/EmergencyCharge/ChargingCountdown",
@@ -816,7 +816,7 @@
       "main_topic": false,
       "hidden": false,
       "sub_device_key": null,
-      "description": "Seconds remaining in the emergency reverse charging session."
+      "description": "Seconds remaining in the active emergency reverse charging state."
     },
     {
       "topic": "N/{installation_id}/alternator/{device_id}/EmergencyCharge/Control",
@@ -845,7 +845,7 @@
       "main_topic": false,
       "hidden": false,
       "sub_device_key": null,
-      "description": "Reports availability and starts or stops emergency reverse charging on the alternator charger."
+      "description": "Reports whether emergency reverse charging is possible and has been started, and allows starting or stopping it. Writing 1 or 3 has the same effect: requesting a start. Writing 0 or 2 stops charging. The start command (1) is not a persistent state; it is immediately replaced by 3 if emergency charging is allowed or 0 otherwise. The started state (3) remains during the blocked period, when reverse charging cannot occur."
     },
     {
       "topic": "N/{installation_id}/alternator/{device_id}/Mode",
@@ -17045,19 +17045,25 @@
           "id": "not_possible",
           "name": "Not possible",
           "value": 0,
-          "description": "Emergency reverse charging is unavailable under the current operating conditions."
+          "description": "Emergency reverse charging is not possible; start commands are ignored in this state, and writing this value stops charging."
+        },
+        {
+          "id": "start",
+          "name": "Start",
+          "value": 1,
+          "description": "Requests emergency reverse charging, with the same effect as writing the started value. This command does not persist; the charger reports started if charging is allowed or not possible otherwise."
         },
         {
           "id": "not_started",
           "name": "Not started",
           "value": 2,
-          "description": "Emergency reverse charging is available but has not been started; writing this value stops it."
+          "description": "Emergency reverse charging is possible but has not been started; writing this value stops charging."
         },
         {
           "id": "started",
           "name": "Started",
           "value": 3,
-          "description": "Emergency reverse charging has been requested, including during the blocked cooldown; writing this value starts it."
+          "description": "Emergency reverse charging is possible and has been started. This state remains during the blocked period when reverse charging cannot occur; writing this value requests a start."
         }
       ]
     },
