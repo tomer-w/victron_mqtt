@@ -158,6 +158,26 @@ if isinstance(metric, WritableMetric):
     metric.set("optimized")
 ```
 
+#### Publish failures
+
+`WritableMetric.set()` (including formula-backed writes), `Hub.publish()`, and
+firmware installation propagate transport failures:
+
+- `NotConnectedError` when MQTT is disconnected. `Hub.publish()` also raises it
+  before the installation ID is known.
+- `PublishError` for other unsuccessful MQTT publish return codes.
+- Existing validation errors remain `ValueError`, including out-of-range numbers
+  and unavailable dropdown options.
+
+Both transport exceptions are exported from `victron_mqtt`. Successful publication
+means only that the MQTT client accepted the message for sending, not that the
+device received or applied it. Publishing remains non-blocking with the existing
+QoS. Periodic firmware checks log transport failures and retry at their next
+scheduled interval rather than stopping.
+
+Hub exceptions remain importable from both `victron_mqtt` and `victron_mqtt.hub`.
+The unused `ProgrammingError` exception has been removed.
+
 ### Callbacks
 
 Register callbacks to be notified when new devices or metrics are discovered:

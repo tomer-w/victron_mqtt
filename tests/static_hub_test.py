@@ -10,10 +10,15 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
-from paho.mqtt.client import Client, ConnectFlags, DisconnectFlags, PayloadType
+from paho.mqtt.client import Client, ConnectFlags, DisconnectFlags, MQTTMessageInfo, PayloadType, error_string
+from paho.mqtt.enums import MQTTErrorCode
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.reasoncodes import ReasonCode
 
+import victron_mqtt
+from victron_mqtt import NotConnectedError, PublishError
+from victron_mqtt import _exceptions as exceptions_module
+from victron_mqtt import hub as hub_module
 from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, DVCCMode, GenericOnOff
 from victron_mqtt._victron_formulas import (
     left_riemann_sum,
@@ -59,6 +64,28 @@ from victron_mqtt.writable_metric import WritableMetric
 # Configure logging for the test
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "AuthenticationError",
+        "CannotConnectError",
+        "InvalidInstallationIdError",
+        "NotConnectedError",
+        "PublishError",
+        "TopicNotFoundError",
+    ],
+)
+def test_hub_exception_import_compatibility(name: str) -> None:
+    exception_type = getattr(exceptions_module, name)
+
+    assert getattr(victron_mqtt, name) is exception_type
+    assert getattr(hub_module, name) is exception_type
+    assert name in victron_mqtt.__all__
+    assert issubclass(exception_type, Exception)
+    if name in {"AuthenticationError", "InvalidInstallationIdError"}:
+        assert issubclass(exception_type, CannotConnectError)
 
 
 @pytest.mark.asyncio
@@ -1755,6 +1782,96 @@ async def test_publish_topic_not_found():
     await finalize_injection(hub)
 
 
+@pytest.mark.parametrize("installation_id", [None, "123"])
+def test_publish_disconnected(installation_id: str | None) -> None:
+    hub = Hub("localhost", 1883, None, None, False)
+    hub._installation_id = installation_id
+
+    with pytest.raises(NotConnectedError):
+        hub.publish("platform_service_venus_firmware_check", "0", 1)
+
+
+@pytest.mark.parametrize("topic_prefix", [None, "bridge"])
+def test_publish_success_preserves_topic_prefix(topic_prefix: str | None) -> None:
+    hub = Hub("localhost", 1883, None, None, False, topic_prefix=topic_prefix)
+    hub._installation_id = "123"
+    result = MQTTMessageInfo(1)
+    result.rc = MQTTErrorCode.MQTT_ERR_SUCCESS
+
+    with patch.object(hub._client, "publish", return_value=result) as publish:
+        assert hub.publish("platform_service_venus_firmware_check", "0", 1) is None
+
+    expected_topic = "W/123/platform/0/Firmware/Online/Check"
+    if topic_prefix is not None:
+        expected_topic = f"{topic_prefix}/{expected_topic}"
+    publish.assert_called_once_with(expected_topic, '{"value": 1}')
+
+
+@pytest.mark.parametrize("rc", [code for code in MQTTErrorCode if code != MQTTErrorCode.MQTT_ERR_SUCCESS])
+def test_publish_rejects_unsuccessful_return_codes(rc: MQTTErrorCode) -> None:
+    hub = Hub("localhost", 1883, None, None, False)
+    hub._installation_id = "123"
+    result = MQTTMessageInfo(1)
+    result.rc = rc
+    error_type = NotConnectedError if rc == MQTTErrorCode.MQTT_ERR_NO_CONN else PublishError
+
+    with (
+        patch.object(hub._client, "is_connected", return_value=True),
+        patch.object(hub._client, "publish", return_value=result) as publish,
+        pytest.raises(error_type) as raised,
+    ):
+        hub.publish("platform_service_venus_firmware_check", "0", 1)
+
+    publish.assert_called_once_with("W/123/platform/0/Firmware/Online/Check", '{"value": 1}')
+    if rc != MQTTErrorCode.MQTT_ERR_NO_CONN:
+        assert error_string(rc) in str(raised.value)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("rc", [MQTTErrorCode.MQTT_ERR_NO_CONN, MQTTErrorCode.MQTT_ERR_QUEUE_SIZE])
+@pytest.mark.parametrize(
+    ("topic", "unique_id", "initial_value", "requested_value"),
+    [
+        ("evcharger/170/SetCurrent", "evcharger_170_evcharger_set_current", 10, 16),
+        ("settings/0/Settings/Services/Bol", "system_0_system_dvcc", 0, "on"),
+    ],
+)
+async def test_writable_metric_propagates_publish_failure_without_state_change(
+    rc: MQTTErrorCode,
+    topic: str,
+    unique_id: str,
+    initial_value: int,
+    requested_value: int | str,
+) -> None:
+    hub = await create_mocked_hub()
+    try:
+        await inject_message(hub, f"N/123/{topic}", json.dumps({"value": initial_value}))
+        await finalize_injection(hub, disconnect=False)
+        metric = hub.get_metric(unique_id)
+        assert isinstance(metric, WritableMetric)
+        if unique_id == "system_0_system_dvcc":
+            assert isinstance(metric, WritableFormulaMetric)
+        previous_value = metric.value
+        previous_transient_state = metric.transient_state if isinstance(metric, WritableFormulaMetric) else None
+        result = MQTTMessageInfo(1)
+        result.rc = rc
+        error_type = NotConnectedError if rc == MQTTErrorCode.MQTT_ERR_NO_CONN else PublishError
+
+        with (
+            patch.object(hub._client, "publish", return_value=result) as publish,
+            pytest.raises(error_type),
+        ):
+            metric.set(requested_value)
+
+        await sleep_short()
+        publish.assert_called_once()
+        assert metric.value == previous_value
+        if isinstance(metric, WritableFormulaMetric):
+            assert metric.transient_state == previous_transient_state
+    finally:
+        await hub.disconnect()
+
+
 @pytest.mark.asyncio
 async def test_filtered_message():
     """Test that the Hub correctly filters MQTT messages for EVCHARGER device type."""
@@ -1991,6 +2108,7 @@ async def test_on_connect_sets_up_subscriptions():
     # Create a MagicMock instance with proper method mocks
     mocked_client: MagicMock = MagicMock(spec=Client)
     mocked_client.is_connected.return_value = True
+    mocked_client.publish.return_value = MQTTMessageInfo(1)
     subscribed_requests: list[tuple[int, list[tuple[str, int]]]] = []
 
     def subscribe_without_ack(topics: list[tuple[str, int]]) -> tuple[int, int]:
