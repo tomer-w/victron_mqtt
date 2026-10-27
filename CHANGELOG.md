@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026.10.2 (2026-10-27)
+
+### Changes
+
+- Add device custom name writing
+- Add writable text metrics and honor read-only formula controls
+- Raise transport errors for failed MQTT publishes
+- Improve the description of emergency start command: https://github.com/tomer-w/ha-victron-mqtt/issues/530
+- Orion XS Emergency Charging control: https://github.com/tomer-w/ha-victron-mqtt/issues/530
+- Capitalize ID
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.10.1 (2026-10-22)
 
 ### Changes
