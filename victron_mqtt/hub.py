@@ -1316,7 +1316,7 @@ class Hub:
                     _LOGGER.info(
                         "Creating parent device: unique_id=%s, parsed_topic=%s", parent_unique_id, parsed_topic
                     )
-                    parent_device = Device(parent_unique_id, parsed_topic, desc)
+                    parent_device = Device(parent_unique_id, parsed_topic, desc, hub=self)
                     self._devices[parent_unique_id] = parent_device
                 sub_device_unique_id = f"{parent_unique_id}_{desc.sub_device_key}_{sub_key_value}".lower()
                 device = self._devices.get(sub_device_unique_id)
@@ -1327,7 +1327,7 @@ class Hub:
                         parent_unique_id,
                         parsed_topic,
                     )
-                    device = Device(sub_device_unique_id, parsed_topic, desc, parent_device=parent_device)
+                    device = Device(sub_device_unique_id, parsed_topic, desc, parent_device=parent_device, hub=self)
                     self._devices[sub_device_unique_id] = device
                 return device
 
@@ -1339,6 +1339,7 @@ class Hub:
                 device_unique_id,
                 parsed_topic,
                 desc,
+                hub=self,
             )
             self._devices[device_unique_id] = device
         return device

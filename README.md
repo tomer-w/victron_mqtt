@@ -106,6 +106,24 @@ print(device.parent_device)   # parent Device or None
 
 **Device hierarchy:** Sub-devices (like SwitchableOutput channels) have a `parent_device` reference pointing to their parent. Top-level devices are parented to the system device (`system_0`).
 
+**Custom names:** Once a device has reported a non-null custom name (including an
+empty string), you can write a new name:
+
+```python
+if device.can_set_custom_name:
+    device.set_custom_name("House battery")
+    # device.set_custom_name("")  # Clear the custom name
+```
+
+This also supports SwitchableOutput sub-devices, using their own
+`Settings/CustomName` topic. Names are preserved exactly, without trimming.
+`device.custom_name` and `device.name` update only when the device reports the
+new value over MQTT; successful publishing does not confirm that it was applied.
+`can_set_custom_name` is false in `OperationMode.READ_ONLY`, without an associated
+hub, or before a custom name topic is discovered. It does not indicate connection
+status. Unsupported writes raise `ValueError`, non-string names raise `TypeError`,
+and transport failures propagate as `NotConnectedError` or `PublishError`.
+
 ### Metrics
 
 Metrics represent individual data points on a device. Each metric has a kind, type, value, and optional unit.
