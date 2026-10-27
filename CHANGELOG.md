@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.10.3 (2026-10-27)
+
+### Changes
+
+- Small text fix
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.10.2 (2026-10-27)
 
 ### Changes
