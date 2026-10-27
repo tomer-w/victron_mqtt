@@ -3737,6 +3737,134 @@ class TestWritableMetricBitmask:
         assert data["value"] == 0
 
 
+@pytest.fixture
+def text_descriptor(monkeypatch: pytest.MonkeyPatch) -> TopicDescriptor:
+    descriptor = TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Text",
+        message_type=MetricKind.TEXT,
+        short_id="battery_text",
+        name="Text",
+        description="Writable text for testing.",
+        value_type=ValueType.STRING,
+    )
+    monkeypatch.setattr(hub_module, "topics", [*topics, descriptor])
+    return descriptor
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("value", ["Updated text", "", "  text  ", "00123", 'Line 1\n"Line 2"\\', "\u00e9\u4f60\u597d"])
+@pytest.mark.parametrize("use_value_setter", [False, True])
+async def test_text_metric_writes_strings(text_descriptor: TopicDescriptor, value: str, use_value_setter: bool) -> None:
+    assert victron_mqtt.MetricKind.TEXT.value == "text"
+    hub = await create_mocked_hub()
+    try:
+        await inject_message(hub, "N/123/battery/0/Text", '{"value": "Initial"}')
+        await finalize_injection(hub, disconnect=False)
+        metric = hub.get_metric("battery_0_battery_text")
+        assert isinstance(metric, WritableMetric)
+        assert metric.metric_kind == MetricKind.TEXT
+        assert metric.value == "Initial"
+        assert metric.formatted_value == "Initial"
+        assert metric._descriptor.value_type == text_descriptor.value_type
+
+        with patch.object(hub._client, "publish", wraps=hub._client.publish) as publish:
+            if use_value_setter:
+                metric.value = value
+            else:
+                metric.set(value)
+            publish.assert_called_once_with("W/123/battery/0/Text", json.dumps({"value": value}))
+
+        await sleep_short()
+        assert metric.value == value
+        assert isinstance(metric.value, str)
+        assert metric.formatted_value == value
+    finally:
+        await hub.disconnect()
+
+
+@pytest.mark.asyncio
+async def test_text_metric_is_read_only_sensor(text_descriptor: TopicDescriptor) -> None:
+    hub = await create_mocked_hub(operation_mode=OperationMode.READ_ONLY)
+    try:
+        await inject_message(hub, "N/123/battery/0/Text", '{"value": "Initial"}')
+        await finalize_injection(hub, disconnect=False)
+        metric = hub.get_metric("battery_0_battery_text")
+        assert isinstance(metric, Metric)
+        assert not isinstance(metric, WritableMetric)
+        assert metric.metric_kind == MetricKind.SENSOR
+        assert metric.value == "Initial"
+        assert text_descriptor.message_type == MetricKind.TEXT
+
+        await inject_message(hub, "N/123/battery/0/Text", '{"value": ""}')
+        assert metric.value == ""
+    finally:
+        await hub.disconnect()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("kind", "writable"),
+    [
+        (MetricKind.SWITCH, True),
+        (MetricKind.NUMBER, True),
+        (MetricKind.SELECT, True),
+        (MetricKind.BUTTON, True),
+        (MetricKind.TIME, True),
+        (MetricKind.TEXT, True),
+        (MetricKind.DYNAMIC, False),
+        (MetricKind.SENSOR, False),
+    ],
+)
+@pytest.mark.parametrize("operation_mode", [OperationMode.FULL, OperationMode.READ_ONLY, OperationMode.EXPERIMENTAL])
+async def test_formula_metric_writability(
+    text_descriptor: TopicDescriptor, kind: MetricKind, writable: bool, operation_mode: OperationMode
+) -> None:
+    hub = await create_mocked_hub(operation_mode=operation_mode)
+    try:
+        await inject_message(hub, "N/123/battery/0/Text", '{"value": "Initial"}')
+        await finalize_injection(hub, disconnect=False)
+        descriptor = TopicDescriptor(
+            topic="$$func/battery/test_text_read:test_text_write",
+            message_type=kind,
+            short_id="battery_formula_text",
+            name="Formula text",
+            description="Writable formula text for testing.",
+            value_type=text_descriptor.value_type,
+            output_type="output_type:0" if kind == MetricKind.DYNAMIC else None,
+            labels="labels:[]" if kind == MetricKind.DYNAMIC else None,
+        )
+        with (
+            patch("victron_mqtt._victron_formulas.test_text_read", return_value=("Initial", None), create=True) as read,
+            patch(
+                "victron_mqtt._victron_formulas.test_text_write",
+                return_value=("Updated text", None),
+                create=True,
+            ) as write,
+        ):
+            metric = hub.devices["battery_0"]._add_formula_metric(descriptor, hub, {})
+            read_only = writable and operation_mode == OperationMode.READ_ONLY
+            expected_kind = (
+                (MetricKind.BINARY_SENSOR if kind == MetricKind.SWITCH else MetricKind.SENSOR) if read_only else kind
+            )
+            assert isinstance(metric, WritableFormulaMetric) is (writable and not read_only)
+            assert metric.metric_kind == expected_kind
+            assert descriptor.message_type == kind
+            metric.init({}, logger.debug)
+            if isinstance(metric, WritableFormulaMetric):
+                metric.set("Updated text")
+                write.assert_called_once_with("Updated text", {}, None)
+                assert metric.value == "Updated text"
+            else:
+                assert not hasattr(metric, "set")
+                write.assert_not_called()
+                assert metric.value == "Initial"
+                read.return_value = ("Refreshed text", None)
+                metric._handle_formula(logger.debug)
+                assert metric.value == "Refreshed text"
+    finally:
+        await hub.disconnect()
+
+
 def test_writable_metric_wraps_epoch_datetime():
     """Test EPOCH values are writable through the generic payload dispatcher."""
     desc = _make_descriptor(

@@ -34,6 +34,16 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+_WRITABLE_METRIC_KINDS = (
+    MetricKind.SWITCH,
+    MetricKind.NUMBER,
+    MetricKind.SELECT,
+    MetricKind.BUTTON,
+    MetricKind.TIME,
+    MetricKind.TEXT,
+    MetricKind.DYNAMIC,
+)
+
 
 class Device:
     """Class to represent a Victron device."""
@@ -213,14 +223,7 @@ class Device:
                 new_topic_desc.message_type = MetricKind.SENSOR
 
         # Handle READ_ONLY mode: resolve writable types to read-only equivalents
-        if hub._operation_mode == OperationMode.READ_ONLY and new_topic_desc.message_type in [
-            MetricKind.SWITCH,
-            MetricKind.NUMBER,
-            MetricKind.SELECT,
-            MetricKind.BUTTON,
-            MetricKind.TIME,
-            MetricKind.DYNAMIC,
-        ]:
+        if hub._operation_mode == OperationMode.READ_ONLY and new_topic_desc.message_type in _WRITABLE_METRIC_KINDS:
             if new_topic_desc.message_type == MetricKind.DYNAMIC:
                 # DYNAMIC resolves based on output_type:
                 # DROPDOWN → SENSOR (read-only SELECT), DIMMABLE → SENSOR (read-only NUMBER), else → BINARY_SENSOR
@@ -262,14 +265,7 @@ class Device:
         assert metric_placeholder.parsed_topic.device_type is not None, "device_type must be set for metric"
 
         metric: Metric
-        if new_topic_desc.message_type in [
-            MetricKind.SWITCH,
-            MetricKind.NUMBER,
-            MetricKind.SELECT,
-            MetricKind.BUTTON,
-            MetricKind.TIME,
-            MetricKind.DYNAMIC,
-        ]:
+        if new_topic_desc.message_type in _WRITABLE_METRIC_KINDS:
             metric = WritableMetric(
                 device=self,
                 name=name,
@@ -300,13 +296,17 @@ class Device:
         short_id = ParsedTopic.replace_ids(topic_desc.short_id, key_values)
         unique_id = ParsedTopic.make_unique_id(self.unique_id, short_id)
         metric: FormulaMetric
-        if topic_desc.message_type in [
-            MetricKind.SWITCH,
-            MetricKind.NUMBER,
-            MetricKind.SELECT,
-            MetricKind.BUTTON,
-            MetricKind.TIME,
-        ]:
+        # DYNAMIC resolution is only supported for MQTT-backed metrics.
+        is_writable = (
+            topic_desc.message_type in _WRITABLE_METRIC_KINDS and topic_desc.message_type != MetricKind.DYNAMIC
+        )
+        if is_writable and hub._operation_mode == OperationMode.READ_ONLY:
+            topic_desc = copy.deepcopy(topic_desc)
+            topic_desc.message_type = (
+                MetricKind.BINARY_SENSOR if topic_desc.message_type == MetricKind.SWITCH else MetricKind.SENSOR
+            )
+            is_writable = False
+        if is_writable:
             metric = WritableFormulaMetric(
                 device=self,
                 name=name,

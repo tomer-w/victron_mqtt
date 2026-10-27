@@ -14,7 +14,7 @@ This package is the backend for the Home Assistant [Victron GX](https://github.c
 - **Asynchronous** — non-blocking MQTT communication built on `paho-mqtt`
 - **Typed device & metric model** — devices, metrics, enums, and values are fully typed Python objects
 - **Live updates** — metrics update in real-time via callbacks as MQTT messages arrive
-- **Writable metrics** — control switches, numbers, selects, and time values on your Victron system
+- **Writable metrics** — control switches, numbers, selects, time values, and text on your Victron system
 - **Device hierarchy** — parent/child device relationships (e.g., switch → SwitchableOutput sub-devices)
 - **Formula metrics** — computed metrics derived from other metrics (e.g., GPS location, energy calculations)
 - **Hidden metrics** — source metrics consumed by formulas are hidden from public APIs
@@ -120,7 +120,7 @@ print(metric.metric_type)       # MetricType.ENERGY
 print(metric.unit_of_measurement)  # "kWh"
 ```
 
-**Metric kinds:** `SENSOR`, `BINARY_SENSOR`, `SWITCH`, `SELECT`, `NUMBER`, `TIME`, `BUTTON`, `DEVICE_TRACKER`
+**Metric kinds:** `SENSOR`, `BINARY_SENSOR`, `SWITCH`, `SELECT`, `NUMBER`, `TIME`, `TEXT`, `BUTTON`, `DEVICE_TRACKER`
 
 **Metric availability:** On Venus OS v3.50 or newer, the hub requests a full republish
 every 180 seconds so constant values stay fresh. Every 60 seconds, it checks for
@@ -137,7 +137,7 @@ refresh those values.
 
 ### Writable Metrics
 
-Switches, numbers, selects, and time metrics can be written back to the device:
+Switches, numbers, selects, time, and text metrics can be written back to the device:
 
 ```python
 from victron_mqtt import WritableMetric
@@ -156,7 +156,20 @@ if isinstance(metric, WritableMetric):
 metric = device.get_metric("system_ess_mode")
 if isinstance(metric, WritableMetric):
     metric.set("optimized")
+
+# Text metrics accept strings, including an empty string
+if isinstance(metric, WritableMetric) and metric.metric_kind == victron_mqtt.MetricKind.TEXT:
+    metric.set("New text")
+    metric.value = ""  # The value setter also publishes
 ```
+
+Define writable string topics with `message_type=MetricKind.TEXT` and
+`value_type=ValueType.STRING` in their `TopicDescriptor`. Text is published as a
+JSON string value without trimming whitespace or converting numeric-looking
+strings. In `OperationMode.READ_ONLY`, text topics become read-only sensors.
+Read-only mode also applies to formula-backed controls: switches become binary
+sensors, and other writable kinds become sensors.
+The metric viewer provides a text entry with an Apply button.
 
 #### Publish failures
 
