@@ -2,6 +2,7 @@
 
 import ast
 import inspect
+import logging
 import re
 from pathlib import Path
 from types import SimpleNamespace
@@ -14,9 +15,32 @@ from victron_mqtt import __all__ as victron_all
 from victron_mqtt._victron_enums import DeviceType, GenericOnOff
 from victron_mqtt._victron_topics import topics
 from victron_mqtt.constants import MetricKind, MetricNature, MetricType, ValueType, VictronEnum
-from victron_mqtt.data_classes import TopicDescriptor, topic_to_device_type
+from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor, topic_to_device_type
+from victron_mqtt.device import Device
 from victron_mqtt.utils.dump_victron_mqtt import METADATA, enum_to_dict, topic_dict_with_enum_name
 from victron_mqtt.writable_metric import WritableMetric
+
+
+def test_attribute_topics_have_device_property_support(caplog: pytest.LogCaptureFixture):
+    errors = []
+    parsed_topic = ParsedTopic.from_topic("N/test/battery/0/Soc")
+    assert parsed_topic is not None
+    with caplog.at_level(logging.WARNING, logger="victron_mqtt.device"):
+        for descriptor in topics:
+            if descriptor.message_type == MetricKind.ATTRIBUTE:
+                device = Device(unique_id="test_device", parsed_topic=parsed_topic, descriptor=descriptor)
+                caplog.clear()
+                device._set_device_property_from_topic(descriptor, '{"value": 1}')
+                if "Unhandled device property" in caplog.text:
+                    errors.append(
+                        f"ATTRIBUTE topic '{descriptor.topic}' uses unsupported short_id '{descriptor.short_id}'"
+                    )
+    if errors:
+        pytest.fail(
+            "\n".join(errors) + "\nATTRIBUTE topics do not create metrics. Reuse a supported device-property short_id "
+            "or add handling in Device._set_device_property_from_topic. "
+            "Use MetricKind.SENSOR for a standalone metric."
+        )
 
 
 def test_no_duplicate_short_ids():

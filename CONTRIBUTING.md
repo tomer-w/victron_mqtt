@@ -260,6 +260,30 @@ TopicDescriptor(
 
 ---
 
+## Device Attributes
+
+`MetricKind.ATTRIBUTE` updates device metadata; it does **not** create a metric.
+Its `short_id` must be handled by `Device._set_device_property_from_topic`
+in `victron_mqtt/device.py`:
+
+| `short_id` | Device property | `value_type` |
+|-----------|-----------------|--------------|
+| `custom_name` | `custom_name` | `ValueType.STRING` |
+| `firmware_version` | `firmware_version` | `ValueType.STRING` |
+| `manufacturer` | `manufacturer` | `ValueType.STRING` |
+| `model` | `model` | `ValueType.STRING` |
+| `serial_number` | `serial_number` | `ValueType.STRING` |
+| `victron_productid` | `product_id` | `ValueType.INT` |
+
+A device-specific topic can reuse these short IDs to populate the same metadata.
+Adding a new attribute short ID requires handling in `Device._set_device_property_from_topic`,
+the corresponding device field and public property, and device-property unit tests.
+Otherwise, use `MetricKind.SENSOR` to expose the value as a standalone metric.
+The static test iterates over all attribute topics, calls the device-property
+handler, and reports any that log an "Unhandled device property" warning.
+
+---
+
 ## Sub-Device Topics
 
 Some devices contain sub-devices (e.g., switch SwitchableOutputs). Use `sub_device_key` to create separate child devices:
@@ -306,6 +330,7 @@ python -m pytest tests/
 - No duplicate `short_id` values
 - No duplicate device type + name combinations
 - Required fields present for sensors
+- No ATTRIBUTE topic triggers an "Unhandled device property" warning
 - Names start with capital letters
 - Enum consistency (SWITCH topics must have on/off enum)
 - Topics sorted alphabetically
