@@ -59,63 +59,6 @@ from .data_classes import ProductCapabilityRef, TopicDependency, TopicDescriptor
 # https://github.com/victronenergy/dbus-digitalinputs
 
 topics: list[TopicDescriptor] = [
-    # GX device topics
-    TopicDescriptor(
-        topic="N/{installation_id}/platform/{device_id}/Device/HQSerialNumber",
-        message_type=MetricKind.ATTRIBUTE,
-        short_id="platform_device_hq_serial_number",
-        name="Hq serial number",
-        description="Reports GX device serial number.",
-        value_type=ValueType.STRING,
-    ),
-    TopicDescriptor(
-        topic="N/{installation_id}/platform/{device_id}/Device/Model",
-        message_type=MetricKind.ATTRIBUTE,
-        short_id="platform_device_model",
-        name="Model",
-        description="Reports GX device model.",
-        value_type=ValueType.STRING,
-    ),
-    TopicDescriptor(
-        topic="N/{installation_id}/platform/{device_id}/Device/ProductId",
-        message_type=MetricKind.ATTRIBUTE,
-        short_id="platform_device_product_id",
-        name="Product id",
-        description="Reports GX device product id.",
-        value_type=ValueType.STRING,
-    ),
-    TopicDescriptor(
-        topic="N/{installation_id}/platform/{device_id}/Device/UniqueId",
-        message_type=MetricKind.ATTRIBUTE,
-        short_id="platform_device_unique_id",
-        name="Unique id",
-        description="Reports GX device unique ID. This is the same as the VRM ID.",
-        value_type=ValueType.STRING,
-    ),
-    TopicDescriptor(
-        topic="N/{installation_id}/platform/{device_id}/Firmware/Installed/Build",
-        message_type=MetricKind.ATTRIBUTE,
-        short_id="platform_firmware_installed_build",
-        name="Build",
-        description="Reports GX device installed firmware build datetime.",
-        value_type=ValueType.STRING,
-    ),
-    TopicDescriptor(
-        topic="N/{installation_id}/platform/{device_id}/Firmware/Installed/ImageType",
-        message_type=MetricKind.ATTRIBUTE,
-        short_id="platform_firmware_installed_image_type",
-        name="Image type",
-        description="Reports GX device image type. 'normal' or 'large'",
-        value_type=ValueType.STRING,
-    ),
-    TopicDescriptor(
-        topic="N/{installation_id}/platform/{device_id}/Firmware/Online/AvailableBuild",
-        message_type=MetricKind.ATTRIBUTE,
-        short_id="platform_firmware_online_available_build",
-        name="Available build",
-        description="Reports build datetime of available online image for the GX device.",
-        value_type=ValueType.STRING,
-    ),
     # generic device attributes
     TopicDescriptor(
         topic="N/{installation_id}/switch/{device_id}/SwitchableOutput/{output}/Name",
@@ -2996,6 +2939,30 @@ topics: list[TopicDescriptor] = [
     ),
     # Platform topics
     TopicDescriptor(
+        topic="N/{installation_id}/platform/{device_id}/Device/HQSerialNumber",
+        message_type=MetricKind.SENSOR,
+        short_id="platform_device_hq_serial_number",
+        name="Hq serial number",
+        description="Reports GX device serial number.",
+        value_type=ValueType.STRING,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/platform/{device_id}/Device/Model",
+        message_type=MetricKind.SENSOR,
+        short_id="platform_device_model",
+        name="Model",
+        description="Reports GX device model.",
+        value_type=ValueType.STRING,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/platform/{device_id}/Device/ProductId",
+        message_type=MetricKind.SENSOR,
+        short_id="platform_device_product_id",
+        name="Product id",
+        description="Reports GX device product id.",
+        value_type=ValueType.STRING,
+    ),
+    TopicDescriptor(
         topic="N/{installation_id}/platform/{device_id}/Device/Reboot",
         message_type=MetricKind.BUTTON,
         short_id="platform_device_reboot",
@@ -3004,6 +2971,30 @@ topics: list[TopicDescriptor] = [
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
         metric_type=MetricType.RESTART,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/platform/{device_id}/Device/UniqueId",
+        message_type=MetricKind.SENSOR,
+        short_id="platform_device_unique_id",
+        name="Unique id",
+        description="Reports GX device unique ID. This is the same as the VRM ID.",
+        value_type=ValueType.STRING,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/platform/{device_id}/Firmware/Installed/Build",
+        message_type=MetricKind.SENSOR,
+        short_id="platform_firmware_installed_build",
+        name="Build",
+        description="Reports GX device installed firmware build datetime.",
+        value_type=ValueType.STRING,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/platform/{device_id}/Firmware/Installed/ImageType",
+        message_type=MetricKind.SENSOR,
+        short_id="platform_firmware_installed_image_type",
+        name="Image type",
+        description="Reports GX device image type. 'normal' or 'large'",
+        value_type=ValueType.STRING,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/platform/{device_id}/Firmware/Installed/Version",
@@ -3022,6 +3013,14 @@ topics: list[TopicDescriptor] = [
         metric_nature=MetricNature.NONE,
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+    ),
+    TopicDescriptor(
+        topic="N/{installation_id}/platform/{device_id}/Firmware/Online/AvailableBuild",
+        message_type=MetricKind.SENSOR,
+        short_id="platform_firmware_online_available_build",
+        name="Available build",
+        description="Reports build datetime of available online image for the GX device.",
+        value_type=ValueType.STRING,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/platform/{device_id}/Firmware/Online/AvailableVersion",
