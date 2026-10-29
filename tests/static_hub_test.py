@@ -3627,6 +3627,17 @@ class TestDeviceProperties:
         dev._set_device_property_from_topic(desc, '{"value": "Victron Energy"}')
         assert dev.manufacturer == "Victron Energy"
 
+    def test_set_serial_number_property(self):
+        dev = _make_device()
+        desc = _make_descriptor(
+            short_id="serial_number",
+            message_type=MetricKind.ATTRIBUTE,
+            value_type=ValueType.STRING,
+            metric_type=MetricType.NONE,
+        )
+        dev._set_device_property_from_topic(desc, '{"value": "HQ123456789"}')
+        assert dev.serial_number == "HQ123456789"
+
     def test_set_firmware_version_property(self):
         dev = _make_device()
         desc = _make_descriptor(
@@ -3663,6 +3674,31 @@ class TestDeviceProperties:
     def test_product_id_unknown_when_absent(self):
         dev = _make_device()
         assert dev.product_id is None
+
+    def test_product_id_requires_int(self):
+        dev = _make_device()
+        desc = _make_descriptor(
+            short_id="victron_productid",
+            message_type=MetricKind.ATTRIBUTE,
+            value_type=ValueType.STRING,
+            metric_type=MetricType.NONE,
+        )
+        with pytest.raises(AssertionError, match="ProductId must be an int"):
+            dev._set_device_property_from_topic(desc, '{"value": "4660"}')
+        assert dev.product_id is None
+
+    def test_unknown_property_logs_warning(self, caplog: pytest.LogCaptureFixture):
+        dev = _make_device()
+        desc = _make_descriptor(
+            short_id="unsupported_property",
+            message_type=MetricKind.ATTRIBUTE,
+            value_type=ValueType.STRING,
+            metric_type=MetricType.NONE,
+        )
+        with caplog.at_level(logging.WARNING):
+            dev._set_device_property_from_topic(desc, '{"value": "Ignored"}')
+        assert "Unhandled device property unsupported_property" in caplog.text
+        assert not hasattr(dev, "_unsupported_property")
 
     def test_none_payload_ignored(self):
         dev = _make_device()
