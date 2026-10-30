@@ -49,6 +49,7 @@ from victron_mqtt.hub import (
     CannotConnectError,
     Hub,
     TopicNotFoundError,
+    _parse_firmware_version,
 )
 from victron_mqtt.metric import Metric
 from victron_mqtt.testing import (
@@ -930,11 +931,70 @@ async def test_metric_keepalive_update_frequency_none(mock_time: MagicMock) -> N
     await hub_disconnect(hub, mock_time)
 
 
+@pytest.mark.parametrize(
+    ("version", "expected_version"),
+    [
+        ("v3.90", (3, 90)),
+        ("v3.90.1", (3, 90)),
+        ("v3.90.1.2", (3, 90)),
+        ("v3.90.custom", (3, 90)),
+        ("v3.90-beta9", (3, 90)),
+        ("v3.90.1-beta9", (3, 90)),
+        ("v3.90-rc1", (3, 90)),
+        ("v3.70~15", (3, 70)),
+        ("v3.40-beta1", (3, 40)),
+        ("v3.50-beta1", (3, 50)),
+    ],
+)
+def test_parse_firmware_version(version: str, expected_version: tuple[int, int]) -> None:
+    assert _parse_firmware_version(version) == expected_version
+
+
+@pytest.mark.parametrize("version", ["", "invalid", "vnot-a-version", "3.90", "v3", "v3.", "v3..90", "v3.unknown"])
+def test_parse_firmware_version_invalid(version: str) -> None:
+    with pytest.raises(ValueError, match="Firmware version format not recognized"):
+        _parse_firmware_version(version)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("version", "expected_version"),
+    [("v3.90-beta9", (3, 90)), ("v3.40-beta1", (3, 40))],
+)
+async def test_firmware_version_parsing(
+    version: str, expected_version: tuple[int, ...], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Firmware suffixes must not cause repeated detection errors on full publishes."""
+    hub = Hub("localhost", 1883, None, None, False, installation_id="123")
+    hub._loop = asyncio.get_running_loop()
+    caplog.set_level(logging.INFO, logger="victron_mqtt.hub")
+    hub._handle_normal_message(
+        "N/123/platform/0/Firmware/Installed/Version",
+        json.dumps({"value": version}),
+        logger.debug,
+    )
+
+    hub._handle_full_publish_message(skip_validation=True)
+    assert hub._firmware_version == expected_version
+    hub._handle_full_publish_message(json.dumps({"full-publish-completed-echo": hub._client_id}))
+    assert hub._firmware_version == expected_version
+
+    version_records = [
+        record
+        for record in caplog.records
+        if record.name == "victron_mqtt.hub" and record.getMessage().startswith("Firmware version")
+    ]
+    assert len(version_records) == 1
+    expected_level = logging.WARNING if expected_version < MINIMUM_FULLY_SUPPORTED_VERSION else logging.INFO
+    assert version_records[0].levelno == expected_level
+    assert version in version_records[0].getMessage()
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("initial_version", [None, "invalid", "vnot-a-version"])
 @pytest.mark.parametrize(
     ("resolved_version", "expected_version"),
-    [("v3.81", (3, 81)), ("v3.70~15", (3, 70)), ("v3.40", (3, 40))],
+    [("v3.81", (3, 81)), ("v3.70~15", (3, 70)), ("v3.40", (3, 40)), ("v3.90-beta9", (3, 90))],
 )
 async def test_firmware_version_retried_until_resolved(
     initial_version: str | None, resolved_version: str, expected_version: tuple[int, ...]
@@ -958,7 +1018,14 @@ async def test_firmware_version_retried_until_resolved(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("firmware_version", "maintenance_enabled"),
-    [(None, True), ("v3.40", False), ("v3.50", True), ("v3.81", True)],
+    [
+        (None, True),
+        ("v3.40", False),
+        ("v3.50", True),
+        ("v3.81", True),
+        ("v3.40-beta1", False),
+        ("v3.90-beta9", True),
+    ],
 )
 @pytest.mark.parametrize("refresh_on_republish", [False, True])
 async def test_keepalive_loop_firmware_staleness_policy(
