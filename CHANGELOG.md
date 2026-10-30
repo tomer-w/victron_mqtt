@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.10.6 (2026-10-30)
+
+### Changes
+
+- Expose ValueType
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.10.5 (2026-10-30)
 
 ### Changes
