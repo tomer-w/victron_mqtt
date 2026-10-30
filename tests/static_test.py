@@ -2,8 +2,11 @@
 
 import ast
 import inspect
+import json
 import logging
 import re
+import runpy
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -100,7 +103,7 @@ def test_required_fields_for_sensor():
             if descriptor.value_type is None:
                 errors.append(f"SENSOR topic '{descriptor.topic}' missing required 'value_type' field")
         if (
-            descriptor.value_type in [ValueType.STRING, ValueType.ENUM, ValueType.BITMASK]
+            descriptor.value_type in [ValueType.STRING, ValueType.JSON, ValueType.ENUM, ValueType.BITMASK]
             and descriptor.precision is not None
         ):
             errors.append(
@@ -174,6 +177,48 @@ def test_dump_schema_includes_descriptions():
 
     enum_dump = enum_to_dict(GenericOnOff)
     assert all(option["description"] for option in enum_dump["EnumValues"])
+
+
+@pytest.mark.parametrize(
+    ("message_type", "adjustable_suffix"),
+    [(MetricKind.SENSOR, None), (MetricKind.TEXT, "IsAdjustable"), (MetricKind.DYNAMIC, None)],
+)
+def test_translation_generation_skips_json_metrics(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, message_type: MetricKind, adjustable_suffix: str | None
+) -> None:
+    """JSON metrics are omitted, including existing entries and platform expansions."""
+    descriptor = next(topic for topic in topics if topic.short_id == "platform_network_services")
+    json_topic = topic_dict_with_enum_name(descriptor)
+    json_topic.update(message_type=message_type, is_adjustable_suffix=adjustable_suffix)
+    string_topic = TopicDescriptor(
+        topic="N/{installation_id}/platform/{device_id}/Reading",
+        message_type=MetricKind.SENSOR,
+        short_id="plain_reading",
+        name="Plain reading",
+        value_type=ValueType.STRING,
+    )
+    topics_path = tmp_path / "topics.json"
+    topics_path.write_text(
+        json.dumps({"topics": [json_topic, topic_dict_with_enum_name(string_topic)]}, default=str), encoding="utf-8"
+    )
+    strings_path = tmp_path / "strings.json"
+    strings_path.write_text(
+        json.dumps({"title": "Victron GX", "entity": {"sensor": {descriptor.short_id: {"name": "Old services"}}}}),
+        encoding="utf-8",
+    )
+    common_path = tmp_path / "common.json"
+    common_path.write_text("{}", encoding="utf-8")
+    script = Path(__file__).resolve().parent.parent / ".github" / "scripts" / "merge_topics.py"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [str(script), "--topics", str(topics_path), "--strings", str(strings_path), "--common", str(common_path)],
+    )
+
+    runpy.run_path(str(script), run_name="__main__")
+
+    result = json.loads(strings_path.read_text(encoding="utf-8"))
+    assert result == {"title": "Victron GX", "entity": {"sensor": {"plain_reading": {"name": "Plain reading"}}}}
 
 
 def test_metric_viewer_includes_descriptions():

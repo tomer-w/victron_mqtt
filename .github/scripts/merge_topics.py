@@ -129,7 +129,7 @@ def main():
         is_main_topic = topic.get("main_topic", False)
         is_hidden = topic.get("hidden", False)
 
-        if is_hidden:
+        if is_hidden or topic.get("value_type") == "ValueType.JSON":
             continue
 
         # Extract the part after the dot and make it lower case

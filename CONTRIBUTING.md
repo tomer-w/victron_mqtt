@@ -85,7 +85,7 @@ TopicDescriptor(
 
 | Field | Description | Default |
 |---|---|---|
-| `value_type` | `INT`, `FLOAT`, `STRING`, `ENUM`, `BITMASK`, `EPOCH` | Auto-set by metric_type |
+| `value_type` | `INT`, `FLOAT`, `STRING`, `JSON`, `ENUM`, `BITMASK`, `EPOCH` | Auto-set by metric_type |
 | `metric_type` | `VOLTAGE`, `POWER`, `ENERGY`, `CURRENT`, `TEMPERATURE`, `FREQUENCY`, `PERCENTAGE`, etc. | `NONE` |
 | `metric_nature` | `MEASUREMENT`, `TOTAL`, `TOTAL_INCREASING` | Auto-set by metric_type |
 | `unit_of_measurement` | Physical unit (`V`, `A`, `W`, `kWh`, `°C`, etc.) | Auto-set by metric_type |
@@ -98,6 +98,11 @@ TopicDescriptor(
 | `hidden` | `True` to hide from public APIs (used by formula source metrics) | `False` |
 | `sub_device_key` | Placeholder name that creates sub-devices (e.g., `"output"`) | `None` |
 | `depends_on` | List of metric short_ids this formula depends on | `[]` |
+
+`ValueType.JSON` marks JSON text but handles values exactly like `ValueType.STRING`.
+The inner JSON string is preserved without parsing, validation, or reformatting;
+writes send it as a string inside the MQTT `{"value": ...}` envelope.
+Translation generation skips JSON metrics because integrations do not expose them as entities.
 
 #### MetricType Defaults
 

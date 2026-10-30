@@ -2433,6 +2433,36 @@ async def test_null_message(topic: str) -> None:
 
 
 @pytest.mark.asyncio
+async def test_platform_network_services_json_string() -> None:
+    """Services JSON remains a string when creating and updating the metric."""
+    hub = await create_mocked_hub()
+    topic = "N/123/platform/0/Network/Services"
+    initial = '{"ethernet": {"Wired": {"Connected": true, "Address": null}}, "wifi": {}}'
+    updated = ' { "ethernet": {}, "wifi": {"Access point": {"Connected": false}} } '
+    try:
+        await inject_message(hub, topic, json.dumps({"value": initial}))
+        await finalize_injection(hub, disconnect=False)
+        metric = hub.get_metric("system_0_platform_network_services")
+        assert metric is not None
+        assert metric._descriptor.value_type == ValueType.JSON
+        assert isinstance(metric.value, str)
+        assert metric.value == initial
+        assert metric.formatted_value == initial
+        assert metric.available is True
+        assert metric.precision is None
+
+        await inject_message(hub, topic, json.dumps({"value": updated}))
+        assert metric.value == updated
+        assert metric.formatted_value == updated
+
+        for payload in ('{"value": null}', "not json", "{}"):
+            await inject_message(hub, topic, payload)
+            assert metric.value == updated
+    finally:
+        await hub.disconnect()
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("topic_suffix", "device_id", "short_id", "precision", "expected_value"),
     [
@@ -3840,15 +3870,15 @@ class TestWritableMetricBitmask:
         assert data["value"] == 0
 
 
-@pytest.fixture
-def text_descriptor(monkeypatch: pytest.MonkeyPatch) -> TopicDescriptor:
+@pytest.fixture(params=[ValueType.STRING, ValueType.JSON])
+def text_descriptor(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest) -> TopicDescriptor:
     descriptor = TopicDescriptor(
         topic="N/{installation_id}/battery/{device_id}/Text",
         message_type=MetricKind.TEXT,
         short_id="battery_text",
         name="Text",
         description="Writable text for testing.",
-        value_type=ValueType.STRING,
+        value_type=request.param,
     )
     monkeypatch.setattr(hub_module, "topics", [*topics, descriptor])
     return descriptor

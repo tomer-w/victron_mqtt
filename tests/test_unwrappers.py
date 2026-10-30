@@ -137,6 +137,32 @@ def test_unwrap_string():
     assert unwrap_string("bad") is None
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        '{"ethernet": {"Wired": {"Connected": true, "Address": null}}, "wifi": {}}',
+        ' [ "00123", false, null ] ',
+        "",
+        None,
+    ],
+)
+def test_json_string_round_trip(value: str | None) -> None:
+    """JSON values retain string serialization without parsing the inner JSON."""
+    wrapper = VALUE_TYPE_WRAPPER[ValueType.JSON]
+    unwrapper = VALUE_TYPE_UNWRAPPER[ValueType.JSON]
+    assert wrapper is wrap_string
+    assert unwrapper is unwrap_string
+    payload = wrapper(value)
+    assert json.loads(payload) == {"value": value}
+    assert unwrapper(payload) == value
+
+
+@pytest.mark.parametrize("payload", ["not json", "{}", "null", "[]"])
+def test_json_invalid_payload(payload: str) -> None:
+    """JSON values preserve the string handler's invalid-envelope behavior."""
+    assert VALUE_TYPE_UNWRAPPER[ValueType.JSON](payload) is None
+
+
 def test_unwrap_enum_and_epoch():
     """Test the unwrap_enum and unwrap_epoch functions with various inputs."""
     # GenericOnOff: Off=0, On=1
