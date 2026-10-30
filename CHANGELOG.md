@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.10.5 (2026-10-30)
+
+### Changes
+
+- Support JSON string values and skip JSON metric translations
+
+### Contributors
+
+@tomer-w
+
+
 ## 2026.10.4 (2026-10-30)
 
 ### Changes
