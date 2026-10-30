@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026.10.4 (2026-10-30)
+
+### Changes
+
+- Add platform topics @ReinvdZee (#140)
+- Fix Venus OS firmware version parsing
+- Test attribute topics for unhandled device properties
+
+### Contributors
+
+@ReinvdZee and @tomer-w 
+
+
 ## 2026.10.3 (2026-10-27)
 
 ### Changes
