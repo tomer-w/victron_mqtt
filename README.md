@@ -132,6 +132,7 @@ Metrics represent individual data points on a device. Each metric has a kind, ty
 metric = device.get_metric("solarcharger_yield_today")
 print(metric.name)              # "Yield today"
 print(metric.value)             # 3.45
+print(metric.value_type)        # ValueType.FLOAT
 print(metric.formatted_value)   # "3.45 kWh"
 print(metric.metric_kind)       # MetricKind.SENSOR
 print(metric.metric_type)       # MetricType.ENERGY
@@ -139,6 +140,11 @@ print(metric.unit_of_measurement)  # "kWh"
 ```
 
 **Metric kinds:** `SENSOR`, `BINARY_SENSOR`, `SWITCH`, `SELECT`, `NUMBER`, `TIME`, `TEXT`, `BUTTON`, `DEVICE_TRACKER`
+
+**Value types:** The read-only `metric.value_type` property returns a `ValueType`
+enum, available via `from victron_mqtt import ValueType`. Consumers can check
+`metric.value_type is ValueType.JSON` to identify JSON text; its value remains
+a string, not a parsed JSON object.
 
 **Metric availability:** On Venus OS v3.50 or newer, the hub requests a full republish
 every 180 seconds so constant values stay fresh. Every 60 seconds, it checks for

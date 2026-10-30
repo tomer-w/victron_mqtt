@@ -2444,7 +2444,7 @@ async def test_platform_network_services_json_string() -> None:
         await finalize_injection(hub, disconnect=False)
         metric = hub.get_metric("system_0_platform_network_services")
         assert metric is not None
-        assert metric._descriptor.value_type == ValueType.JSON
+        assert metric.value_type is ValueType.JSON
         assert isinstance(metric.value, str)
         assert metric.value == initial
         assert metric.formatted_value == initial
@@ -3535,6 +3535,16 @@ class TestMetricFormattedValue:
 class TestMetricProperties:
     """Test metric property accessors (lines 158, 163, 168, 173)."""
 
+    @pytest.mark.parametrize("value_type", list(ValueType))
+    def test_value_type(self, value_type: ValueType) -> None:
+        metric = _make_metric(value_type=value_type)
+        assert metric.value_type is value_type
+        assert Metric.value_type.fset is None
+
+    def test_value_type_public_export(self) -> None:
+        assert victron_mqtt.ValueType is ValueType
+        assert "ValueType" in victron_mqtt.__all__
+
     def test_metric_type(self):
         m = _make_metric()
         assert m.metric_type == MetricType.ELECTRIC_STORAGE_PERCENTAGE
@@ -3898,7 +3908,7 @@ async def test_text_metric_writes_strings(text_descriptor: TopicDescriptor, valu
         assert metric.metric_kind == MetricKind.TEXT
         assert metric.value == "Initial"
         assert metric.formatted_value == "Initial"
-        assert metric._descriptor.value_type == text_descriptor.value_type
+        assert metric.value_type is text_descriptor.value_type
 
         with patch.object(hub._client, "publish", wraps=hub._client.publish) as publish:
             if use_value_setter:
@@ -3925,6 +3935,7 @@ async def test_text_metric_is_read_only_sensor(text_descriptor: TopicDescriptor)
         assert isinstance(metric, Metric)
         assert not isinstance(metric, WritableMetric)
         assert metric.metric_kind == MetricKind.SENSOR
+        assert metric.value_type is text_descriptor.value_type
         assert metric.value == "Initial"
         assert text_descriptor.message_type == MetricKind.TEXT
 
@@ -3981,6 +3992,7 @@ async def test_formula_metric_writability(
             )
             assert isinstance(metric, WritableFormulaMetric) is (writable and not read_only)
             assert metric.metric_kind == expected_kind
+            assert metric.value_type is text_descriptor.value_type
             assert descriptor.message_type == kind
             metric.init({}, logger.debug)
             if isinstance(metric, WritableFormulaMetric):
