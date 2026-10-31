@@ -18525,6 +18525,18 @@
           "description": "The charger is operating as a regulated DC power supply."
         },
         {
+          "id": "reverse_charging_blocked",
+          "name": "Reverse charging blocked",
+          "value": 242,
+          "description": "Emergency reverse charging is blocked during the cooldown period."
+        },
+        {
+          "id": "reverse_charging",
+          "name": "Reverse charging",
+          "value": 243,
+          "description": "The charger is actively performing emergency reverse charging."
+        },
+        {
           "id": "sustain",
           "name": "Sustain",
           "value": 244,

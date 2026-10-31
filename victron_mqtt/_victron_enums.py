@@ -654,6 +654,18 @@ class State(VictronEnum):
         "The inverter is supplementing the AC input with battery power.",
     )
     POWER_SUPPLY = (11, "power_supply", "Power supply", "The charger is operating as a regulated DC power supply.")
+    REVERSE_CHARGING_BLOCKED = (
+        242,
+        "reverse_charging_blocked",
+        "Reverse charging blocked",
+        "Emergency reverse charging is blocked during the cooldown period.",
+    )
+    REVERSE_CHARGING = (
+        243,
+        "reverse_charging",
+        "Reverse charging",
+        "The charger is actively performing emergency reverse charging.",
+    )
     SUSTAIN = (
         244,
         "sustain",
