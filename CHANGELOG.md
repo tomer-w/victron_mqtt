@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.10.7 (2026-10-31)
+
+### Changes
+
+- Fix platform spelling and emergency charge state label
+- Add reverse charging operating states
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.10.6 (2026-10-30)
 
 ### Changes
