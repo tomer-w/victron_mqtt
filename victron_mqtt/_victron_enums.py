@@ -566,8 +566,8 @@ class EmergencyChargeControl(VictronEnum):
     )
     START = (
         1,
-        "start",
-        "Start",
+        "starting",
+        "Starting",
         "Requests emergency reverse charging, with the same effect as writing the started value. This command does not persist; the charger reports started if charging is allowed or not possible otherwise.",
     )
     NOT_STARTED = (
