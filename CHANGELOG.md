@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.11.0 (2026-11-06)
+
+### Changes
+
+- Allow scheduled charge SoC in 1% increments @tomer-w (#141)
+
+### Contributors
+
+@tomer-w 
+
+
 ## 2026.10.7 (2026-10-31)
 
 ### Changes
