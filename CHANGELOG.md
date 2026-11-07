@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.11.1 (2026-11-07)
+
+### Changes
+
+- Allow 1% increments for ESS minimum SoC @[copilot-swe-agent[bot]](https://github.com/apps/copilot-swe-agent) (#143)
+
+### Contributors
+
+[@copilot-swe-agent[bot]](https://github.com/apps/copilot-swe-agent), @Copilot and @tomer-w
+
+
 ## 2026.11.0 (2026-11-06)
 
 ### Changes
