@@ -7,14 +7,19 @@ import json
 import logging
 import ssl
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
-from paho.mqtt.client import Client, ConnectFlags, DisconnectFlags, PayloadType
+from paho.mqtt.client import Client, ConnectFlags, DisconnectFlags, MQTTMessageInfo, PayloadType, error_string
+from paho.mqtt.enums import MQTTErrorCode
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.reasoncodes import ReasonCode
 
-from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, DVCCMode, GenericOnOff
+import victron_mqtt
+from victron_mqtt import NotConnectedError, PublishError
+from victron_mqtt import _exceptions as exceptions_module
+from victron_mqtt import hub as hub_module
+from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, DVCCMode, GenericOnOff, GridOperationType
 from victron_mqtt._victron_formulas import (
     left_riemann_sum,
     schedule_charge_enabled,
@@ -37,12 +42,14 @@ from victron_mqtt.formula_common import LRSLastReading
 from victron_mqtt.formula_metric import FormulaMetric
 from victron_mqtt.hub import (
     CONNECT_MAX_FAILED_ATTEMPTS,
+    FULL_REPUBLISH_STALENESS_INTERVAL_CYCLES,
     MINIMUM_FULLY_SUPPORTED_VERSION,
     STALE_METRIC_TIMEOUT_SECONDS,
     AuthenticationError,
     CannotConnectError,
     Hub,
     TopicNotFoundError,
+    _parse_firmware_version,
 )
 from victron_mqtt.metric import Metric
 from victron_mqtt.testing import (
@@ -58,6 +65,28 @@ from victron_mqtt.writable_metric import WritableMetric
 # Configure logging for the test
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "AuthenticationError",
+        "CannotConnectError",
+        "InvalidInstallationIdError",
+        "NotConnectedError",
+        "PublishError",
+        "TopicNotFoundError",
+    ],
+)
+def test_hub_exception_import_compatibility(name: str) -> None:
+    exception_type = getattr(exceptions_module, name)
+
+    assert getattr(victron_mqtt, name) is exception_type
+    assert getattr(hub_module, name) is exception_type
+    assert name in victron_mqtt.__all__
+    assert issubclass(exception_type, Exception)
+    if name in {"AuthenticationError", "InvalidInstallationIdError"}:
+        assert issubclass(exception_type, CannotConnectError)
 
 
 @pytest.mark.asyncio
@@ -356,6 +385,32 @@ async def test_number_message():
     hub._publish = orig__publish
 
     await hub_disconnect(hub)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("adjustable", [0, 1])
+@pytest.mark.parametrize("flag_first", [False, True])
+async def test_microgrid_operation_respects_adjustability(adjustable: int, flag_first: bool) -> None:
+    hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
+    prefix = "N/123/vebus/170/MicroGrid/OperationSwitcher"
+    messages = [
+        (f"{prefix}/Operation", '{"value": 1}'),
+        (f"{prefix}/OperationIsAdjustable", json.dumps({"value": adjustable})),
+    ]
+    if flag_first:
+        messages.reverse()
+    try:
+        for topic, payload in messages:
+            await inject_message(hub, topic, payload)
+        await finalize_injection(hub)
+
+        metric = hub.devices["vebus_170"].get_metric("vebus_microgrid_operation")
+        assert metric is not None
+        assert metric.value == GridOperationType.MICROGRID
+        assert isinstance(metric, WritableMetric) == bool(adjustable)
+        assert metric.metric_kind == (MetricKind.SELECT if adjustable else MetricKind.SENSOR)
+    finally:
+        await hub_disconnect(hub)
 
 
 @pytest.mark.asyncio
@@ -902,6 +957,161 @@ async def test_metric_keepalive_update_frequency_none(mock_time: MagicMock) -> N
     await hub_disconnect(hub, mock_time)
 
 
+@pytest.mark.parametrize(
+    ("version", "expected_version"),
+    [
+        ("v3.90", (3, 90)),
+        ("v3.90.1", (3, 90)),
+        ("v3.90.1.2", (3, 90)),
+        ("v3.90.custom", (3, 90)),
+        ("v3.90-beta9", (3, 90)),
+        ("v3.90.1-beta9", (3, 90)),
+        ("v3.90-rc1", (3, 90)),
+        ("v3.70~15", (3, 70)),
+        ("v3.40-beta1", (3, 40)),
+        ("v3.50-beta1", (3, 50)),
+    ],
+)
+def test_parse_firmware_version(version: str, expected_version: tuple[int, int]) -> None:
+    assert _parse_firmware_version(version) == expected_version
+
+
+@pytest.mark.parametrize("version", ["", "invalid", "vnot-a-version", "3.90", "v3", "v3.", "v3..90", "v3.unknown"])
+def test_parse_firmware_version_invalid(version: str) -> None:
+    with pytest.raises(ValueError, match="Firmware version format not recognized"):
+        _parse_firmware_version(version)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("version", "expected_version"),
+    [("v3.90-beta9", (3, 90)), ("v3.40-beta1", (3, 40))],
+)
+async def test_firmware_version_parsing(
+    version: str, expected_version: tuple[int, ...], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Firmware suffixes must not cause repeated detection errors on full publishes."""
+    hub = Hub("localhost", 1883, None, None, False, installation_id="123")
+    hub._loop = asyncio.get_running_loop()
+    caplog.set_level(logging.INFO, logger="victron_mqtt.hub")
+    hub._handle_normal_message(
+        "N/123/platform/0/Firmware/Installed/Version",
+        json.dumps({"value": version}),
+        logger.debug,
+    )
+
+    hub._handle_full_publish_message(skip_validation=True)
+    assert hub._firmware_version == expected_version
+    hub._handle_full_publish_message(json.dumps({"full-publish-completed-echo": hub._client_id}))
+    assert hub._firmware_version == expected_version
+
+    version_records = [
+        record
+        for record in caplog.records
+        if record.name == "victron_mqtt.hub" and record.getMessage().startswith("Firmware version")
+    ]
+    assert len(version_records) == 1
+    expected_level = logging.WARNING if expected_version < MINIMUM_FULLY_SUPPORTED_VERSION else logging.INFO
+    assert version_records[0].levelno == expected_level
+    assert version in version_records[0].getMessage()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("initial_version", [None, "invalid", "vnot-a-version"])
+@pytest.mark.parametrize(
+    ("resolved_version", "expected_version"),
+    [("v3.81", (3, 81)), ("v3.70~15", (3, 70)), ("v3.40", (3, 40)), ("v3.90-beta9", (3, 90))],
+)
+async def test_firmware_version_retried_until_resolved(
+    initial_version: str | None, resolved_version: str, expected_version: tuple[int, ...]
+) -> None:
+    """Issue #139: an early full publish must not permanently consume firmware detection."""
+    hub = Hub("localhost", 1883, None, None, False, installation_id="123")
+    hub._loop = asyncio.get_running_loop()
+    version_topic = "N/123/platform/0/Firmware/Installed/Version"
+    if initial_version is not None:
+        hub._handle_normal_message(version_topic, json.dumps({"value": initial_version}), logger.debug)
+
+    hub._handle_full_publish_message(skip_validation=True)
+    assert hub._first_full_publish is False
+    assert hub._firmware_version == ()
+
+    hub._handle_normal_message(version_topic, json.dumps({"value": resolved_version}), logger.debug)
+    hub._handle_full_publish_message(json.dumps({"full-publish-completed-echo": hub._client_id}))
+    assert hub._firmware_version == expected_version
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("firmware_version", "maintenance_enabled"),
+    [
+        (None, True),
+        ("v3.40", False),
+        ("v3.50", True),
+        ("v3.81", True),
+        ("v3.40-beta1", False),
+        ("v3.90-beta9", True),
+    ],
+)
+@pytest.mark.parametrize("refresh_on_republish", [False, True])
+async def test_keepalive_loop_firmware_staleness_policy(
+    firmware_version: str | None, maintenance_enabled: bool, refresh_on_republish: bool
+) -> None:
+    """Unknown firmware keeps the safety net active; only known old firmware disables it."""
+    hub = Hub("localhost", 1883, None, None, False, installation_id="123")
+    hub._loop = asyncio.get_running_loop()
+    metric_topic = "N/123/grid/30/Ac/L1/Energy/Forward"
+    metric_payload = '{"value": 10}'
+
+    with patch("victron_mqtt.hub.time.monotonic", return_value=100.0) as mock_time:
+        hub._handle_normal_message(metric_topic, metric_payload, logger.debug)
+        if firmware_version is not None:
+            hub._handle_normal_message(
+                "N/123/platform/0/Firmware/Installed/Version",
+                json.dumps({"value": firmware_version}),
+                logger.debug,
+            )
+        hub._handle_full_publish_message(skip_validation=True)
+        metric = hub._all_metrics["grid_30_grid_energy_forward_l1"]
+        assert metric.available is True
+        if firmware_version is None:
+            assert hub._firmware_version == ()
+        else:
+            assert bool(hub._firmware_version) is True
+
+        ticks = 0
+        total_ticks = (STALE_METRIC_TIMEOUT_SECONDS // 60 + 1) * 2
+
+        async def advance_time(delay: float) -> None:
+            nonlocal ticks
+            assert delay == 30
+            if ticks * 30 <= STALE_METRIC_TIMEOUT_SECONDS:
+                assert metric.available is True
+            if ticks == total_ticks:
+                raise asyncio.CancelledError
+            ticks += 1
+            mock_time.return_value += delay
+
+        def send_keepalive(force: bool = False) -> None:
+            if force and refresh_on_republish:
+                hub._handle_normal_message(metric_topic, metric_payload, logger.debug)
+
+        with (
+            patch.object(hub, "_keepalive", side_effect=send_keepalive) as keepalive,
+            patch.object(hub, "_keepalive_metrics", wraps=hub._keepalive_metrics) as maintenance,
+            patch("victron_mqtt.hub.asyncio.sleep", side_effect=advance_time),
+            pytest.raises(asyncio.CancelledError),
+        ):
+            await hub._keepalive_loop()
+
+        maintenance_calls = total_ticks // 2 if maintenance_enabled else 0
+        assert maintenance.call_args_list == [call(stale_timeout=STALE_METRIC_TIMEOUT_SECONDS)] * maintenance_calls
+        forced_calls = total_ticks // FULL_REPUBLISH_STALENESS_INTERVAL_CYCLES if maintenance_enabled else 0
+        assert keepalive.call_args_list.count(call(force=True)) == forced_calls
+        assert metric.available is (not maintenance_enabled or refresh_on_republish)
+        assert metric.value == 10
+
+
 @pytest.mark.asyncio
 @patch("victron_mqtt.metric.time.monotonic")
 async def test_metric_goes_unavailable_when_source_stops_publishing(mock_time: MagicMock) -> None:
@@ -913,7 +1123,7 @@ async def test_metric_goes_unavailable_when_source_stops_publishing(mock_time: M
     mock_time.return_value = 10
     await inject_message(hub, "N/123/grid/30/Ac/L1/Energy/Forward", '{"value": 10}', mock_time)
     await finalize_injection(hub, disconnect=False, mock_time=mock_time)
-    # Staleness detection is only enabled on fully supported firmware.
+    # Use a known supported version for this direct metric-maintenance test.
     hub._firmware_version = MINIMUM_FULLY_SUPPORTED_VERSION
 
     device = hub.devices["grid_30"]
@@ -1665,6 +1875,96 @@ async def test_publish_topic_not_found():
     await finalize_injection(hub)
 
 
+@pytest.mark.parametrize("installation_id", [None, "123"])
+def test_publish_disconnected(installation_id: str | None) -> None:
+    hub = Hub("localhost", 1883, None, None, False)
+    hub._installation_id = installation_id
+
+    with pytest.raises(NotConnectedError):
+        hub.publish("platform_service_venus_firmware_check", "0", 1)
+
+
+@pytest.mark.parametrize("topic_prefix", [None, "bridge"])
+def test_publish_success_preserves_topic_prefix(topic_prefix: str | None) -> None:
+    hub = Hub("localhost", 1883, None, None, False, topic_prefix=topic_prefix)
+    hub._installation_id = "123"
+    result = MQTTMessageInfo(1)
+    result.rc = MQTTErrorCode.MQTT_ERR_SUCCESS
+
+    with patch.object(hub._client, "publish", return_value=result) as publish:
+        assert hub.publish("platform_service_venus_firmware_check", "0", 1) is None
+
+    expected_topic = "W/123/platform/0/Firmware/Online/Check"
+    if topic_prefix is not None:
+        expected_topic = f"{topic_prefix}/{expected_topic}"
+    publish.assert_called_once_with(expected_topic, '{"value": 1}')
+
+
+@pytest.mark.parametrize("rc", [code for code in MQTTErrorCode if code != MQTTErrorCode.MQTT_ERR_SUCCESS])
+def test_publish_rejects_unsuccessful_return_codes(rc: MQTTErrorCode) -> None:
+    hub = Hub("localhost", 1883, None, None, False)
+    hub._installation_id = "123"
+    result = MQTTMessageInfo(1)
+    result.rc = rc
+    error_type = NotConnectedError if rc == MQTTErrorCode.MQTT_ERR_NO_CONN else PublishError
+
+    with (
+        patch.object(hub._client, "is_connected", return_value=True),
+        patch.object(hub._client, "publish", return_value=result) as publish,
+        pytest.raises(error_type) as raised,
+    ):
+        hub.publish("platform_service_venus_firmware_check", "0", 1)
+
+    publish.assert_called_once_with("W/123/platform/0/Firmware/Online/Check", '{"value": 1}')
+    if rc != MQTTErrorCode.MQTT_ERR_NO_CONN:
+        assert error_string(rc) in str(raised.value)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("rc", [MQTTErrorCode.MQTT_ERR_NO_CONN, MQTTErrorCode.MQTT_ERR_QUEUE_SIZE])
+@pytest.mark.parametrize(
+    ("topic", "unique_id", "initial_value", "requested_value"),
+    [
+        ("evcharger/170/SetCurrent", "evcharger_170_evcharger_set_current", 10, 16),
+        ("settings/0/Settings/Services/Bol", "system_0_system_dvcc", 0, "on"),
+    ],
+)
+async def test_writable_metric_propagates_publish_failure_without_state_change(
+    rc: MQTTErrorCode,
+    topic: str,
+    unique_id: str,
+    initial_value: int,
+    requested_value: int | str,
+) -> None:
+    hub = await create_mocked_hub()
+    try:
+        await inject_message(hub, f"N/123/{topic}", json.dumps({"value": initial_value}))
+        await finalize_injection(hub, disconnect=False)
+        metric = hub.get_metric(unique_id)
+        assert isinstance(metric, WritableMetric)
+        if unique_id == "system_0_system_dvcc":
+            assert isinstance(metric, WritableFormulaMetric)
+        previous_value = metric.value
+        previous_transient_state = metric.transient_state if isinstance(metric, WritableFormulaMetric) else None
+        result = MQTTMessageInfo(1)
+        result.rc = rc
+        error_type = NotConnectedError if rc == MQTTErrorCode.MQTT_ERR_NO_CONN else PublishError
+
+        with (
+            patch.object(hub._client, "publish", return_value=result) as publish,
+            pytest.raises(error_type),
+        ):
+            metric.set(requested_value)
+
+        await sleep_short()
+        publish.assert_called_once()
+        assert metric.value == previous_value
+        if isinstance(metric, WritableFormulaMetric):
+            assert metric.transient_state == previous_transient_state
+    finally:
+        await hub.disconnect()
+
+
 @pytest.mark.asyncio
 async def test_filtered_message():
     """Test that the Hub correctly filters MQTT messages for EVCHARGER device type."""
@@ -1901,6 +2201,7 @@ async def test_on_connect_sets_up_subscriptions():
     # Create a MagicMock instance with proper method mocks
     mocked_client: MagicMock = MagicMock(spec=Client)
     mocked_client.is_connected.return_value = True
+    mocked_client.publish.return_value = MQTTMessageInfo(1)
     subscribed_requests: list[tuple[int, list[tuple[str, int]]]] = []
 
     def subscribe_without_ack(topics: list[tuple[str, int]]) -> tuple[int, int]:
@@ -2138,16 +2439,109 @@ async def test_reconnect_replaces_incomplete_subscription_setup():
 
 
 @pytest.mark.asyncio
-async def test_null_message():
+@pytest.mark.parametrize(
+    "topic",
+    [
+        "N/123/evcharger/170/SetCurrent",
+        "N/123/multi/0/Ac/Out/1/L1/P",
+    ],
+)
+async def test_null_message(topic: str) -> None:
     """Test that the Hub correctly filters MQTT messages with null value."""
     hub: Hub = await create_mocked_hub()
 
     # Inject messages after the event is set
-    await inject_message(hub, "N/123/evcharger/170/SetCurrent", '{"value": null}')
+    await inject_message(hub, topic, '{"value": null}')
     await finalize_injection(hub)
 
     # Validate the Hub's state - only system device exists, evcharger message was filtered
     assert len(hub.devices) == 0, f"Expected no devices, got {len(hub.devices)}"
+
+
+@pytest.mark.asyncio
+async def test_platform_network_services_json_string() -> None:
+    """Services JSON remains a string when creating and updating the metric."""
+    hub = await create_mocked_hub()
+    topic = "N/123/platform/0/Network/Services"
+    initial = '{"ethernet": {"Wired": {"Connected": true, "Address": null}}, "wifi": {}}'
+    updated = ' { "ethernet": {}, "wifi": {"Access point": {"Connected": false}} } '
+    try:
+        await inject_message(hub, topic, json.dumps({"value": initial}))
+        await finalize_injection(hub, disconnect=False)
+        metric = hub.get_metric("system_0_platform_network_services")
+        assert metric is not None
+        assert metric.value_type is ValueType.JSON
+        assert isinstance(metric.value, str)
+        assert metric.value == initial
+        assert metric.formatted_value == initial
+        assert metric.available is True
+        assert metric.precision is None
+
+        await inject_message(hub, topic, json.dumps({"value": updated}))
+        assert metric.value == updated
+        assert metric.formatted_value == updated
+
+        for payload in ('{"value": null}', "not json", "{}"):
+            await inject_message(hub, topic, payload)
+            assert metric.value == updated
+    finally:
+        await hub.disconnect()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("topic_suffix", "device_id", "short_id", "precision", "expected_value"),
+    [
+        ("system/0/Ac/Consumption/L3/Power", "system_0", "system_consumption_power_l3", 1, 31.2),
+        ("multi/0/Ac/Out/L3/P", "multi_0", "multi_acout_power_l3", 1, 31.2),
+        ("multi/0/Pv/1/V", "multi_0", "multi_mppt_1_voltage", 3, 31.235),
+        ("solarcharger/0/Pv/V", "solarcharger_0", "solarcharger_voltage", 3, 31.235),
+    ],
+)
+async def test_null_to_zero_metrics(
+    topic_suffix: str, device_id: str, short_id: str, precision: int | None, expected_value: float | int
+) -> None:
+    """Null readings create zero-valued metrics and keep existing metrics fresh."""
+    hub = await create_mocked_hub()
+    topic = f"N/123/{topic_suffix}"
+    await inject_message(hub, topic, '{"value": null}')
+    await finalize_injection(hub, disconnect=False)
+
+    assert device_id in hub.devices
+    metric = hub.devices[device_id].get_metric(short_id)
+    assert metric is not None
+    assert metric.value == 0.0
+    assert type(metric.value) is type(expected_value)
+    assert metric.available is True
+    assert metric.nullable is False
+    assert metric.precision == precision
+
+    await inject_message(hub, topic, '{"value": 31.23456}')
+    assert metric.value == expected_value
+
+    for payload in ("not json", "{}", '{"value": "invalid"}'):
+        last_seen = metric._last_seen
+        await inject_message(hub, topic, payload)
+        assert metric.value == expected_value
+        assert metric._last_seen == last_seen
+
+    on_update = MagicMock()
+    metric.on_update = on_update
+    for _ in range(2):
+        metric._last_seen -= STALE_METRIC_TIMEOUT_SECONDS + 1
+        last_seen = metric._last_seen
+        await inject_message(hub, topic, '{"value": null}')
+        assert metric.value == 0.0
+        assert metric._last_seen > last_seen
+        metric._keepalive(force_invalidate=False, log_debug=logger.debug, stale_timeout=STALE_METRIC_TIMEOUT_SECONDS)
+        assert metric.available is True
+    on_update.assert_called_with(metric, 0.0)
+
+    metric._last_seen -= STALE_METRIC_TIMEOUT_SECONDS + 1
+    metric._keepalive(force_invalidate=False, log_debug=logger.debug, stale_timeout=STALE_METRIC_TIMEOUT_SECONDS)
+    assert metric.value == 0.0
+    assert metric.available is False
+    await hub_disconnect(hub)
 
 
 @pytest.mark.asyncio
@@ -3167,6 +3561,16 @@ class TestMetricFormattedValue:
 class TestMetricProperties:
     """Test metric property accessors (lines 158, 163, 168, 173)."""
 
+    @pytest.mark.parametrize("value_type", list(ValueType))
+    def test_value_type(self, value_type: ValueType) -> None:
+        metric = _make_metric(value_type=value_type)
+        assert metric.value_type is value_type
+        assert Metric.value_type.fset is None
+
+    def test_value_type_public_export(self) -> None:
+        assert victron_mqtt.ValueType is ValueType
+        assert "ValueType" in victron_mqtt.__all__
+
     def test_metric_type(self):
         m = _make_metric()
         assert m.metric_type == MetricType.ELECTRIC_STORAGE_PERCENTAGE
@@ -3356,6 +3760,17 @@ class TestDeviceProperties:
         dev._set_device_property_from_topic(desc, '{"value": "Victron Energy"}')
         assert dev.manufacturer == "Victron Energy"
 
+    def test_set_serial_number_property(self):
+        dev = _make_device()
+        desc = _make_descriptor(
+            short_id="serial_number",
+            message_type=MetricKind.ATTRIBUTE,
+            value_type=ValueType.STRING,
+            metric_type=MetricType.NONE,
+        )
+        dev._set_device_property_from_topic(desc, '{"value": "HQ123456789"}')
+        assert dev.serial_number == "HQ123456789"
+
     def test_set_firmware_version_property(self):
         dev = _make_device()
         desc = _make_descriptor(
@@ -3392,6 +3807,31 @@ class TestDeviceProperties:
     def test_product_id_unknown_when_absent(self):
         dev = _make_device()
         assert dev.product_id is None
+
+    def test_product_id_requires_int(self):
+        dev = _make_device()
+        desc = _make_descriptor(
+            short_id="victron_productid",
+            message_type=MetricKind.ATTRIBUTE,
+            value_type=ValueType.STRING,
+            metric_type=MetricType.NONE,
+        )
+        with pytest.raises(AssertionError, match="ProductId must be an int"):
+            dev._set_device_property_from_topic(desc, '{"value": "4660"}')
+        assert dev.product_id is None
+
+    def test_unknown_property_logs_warning(self, caplog: pytest.LogCaptureFixture):
+        dev = _make_device()
+        desc = _make_descriptor(
+            short_id="unsupported_property",
+            message_type=MetricKind.ATTRIBUTE,
+            value_type=ValueType.STRING,
+            metric_type=MetricType.NONE,
+        )
+        with caplog.at_level(logging.WARNING):
+            dev._set_device_property_from_topic(desc, '{"value": "Ignored"}')
+        assert "Unhandled device property unsupported_property" in caplog.text
+        assert not hasattr(dev, "_unsupported_property")
 
     def test_none_payload_ignored(self):
         dev = _make_device()
@@ -3464,6 +3904,136 @@ class TestWritableMetricBitmask:
         payload = WritableMetric._wrap_payload(desc, GenericOnOff.OFF)
         data = json.loads(payload)
         assert data["value"] == 0
+
+
+@pytest.fixture(params=[ValueType.STRING, ValueType.JSON])
+def text_descriptor(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest) -> TopicDescriptor:
+    descriptor = TopicDescriptor(
+        topic="N/{installation_id}/battery/{device_id}/Text",
+        message_type=MetricKind.TEXT,
+        short_id="battery_text",
+        name="Text",
+        description="Writable text for testing.",
+        value_type=request.param,
+    )
+    monkeypatch.setattr(hub_module, "topics", [*topics, descriptor])
+    return descriptor
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("value", ["Updated text", "", "  text  ", "00123", 'Line 1\n"Line 2"\\', "\u00e9\u4f60\u597d"])
+@pytest.mark.parametrize("use_value_setter", [False, True])
+async def test_text_metric_writes_strings(text_descriptor: TopicDescriptor, value: str, use_value_setter: bool) -> None:
+    assert victron_mqtt.MetricKind.TEXT.value == "text"
+    hub = await create_mocked_hub()
+    try:
+        await inject_message(hub, "N/123/battery/0/Text", '{"value": "Initial"}')
+        await finalize_injection(hub, disconnect=False)
+        metric = hub.get_metric("battery_0_battery_text")
+        assert isinstance(metric, WritableMetric)
+        assert metric.metric_kind == MetricKind.TEXT
+        assert metric.value == "Initial"
+        assert metric.formatted_value == "Initial"
+        assert metric.value_type is text_descriptor.value_type
+
+        with patch.object(hub._client, "publish", wraps=hub._client.publish) as publish:
+            if use_value_setter:
+                metric.value = value
+            else:
+                metric.set(value)
+            publish.assert_called_once_with("W/123/battery/0/Text", json.dumps({"value": value}))
+
+        await sleep_short()
+        assert metric.value == value
+        assert isinstance(metric.value, str)
+        assert metric.formatted_value == value
+    finally:
+        await hub.disconnect()
+
+
+@pytest.mark.asyncio
+async def test_text_metric_is_read_only_sensor(text_descriptor: TopicDescriptor) -> None:
+    hub = await create_mocked_hub(operation_mode=OperationMode.READ_ONLY)
+    try:
+        await inject_message(hub, "N/123/battery/0/Text", '{"value": "Initial"}')
+        await finalize_injection(hub, disconnect=False)
+        metric = hub.get_metric("battery_0_battery_text")
+        assert isinstance(metric, Metric)
+        assert not isinstance(metric, WritableMetric)
+        assert metric.metric_kind == MetricKind.SENSOR
+        assert metric.value_type is text_descriptor.value_type
+        assert metric.value == "Initial"
+        assert text_descriptor.message_type == MetricKind.TEXT
+
+        await inject_message(hub, "N/123/battery/0/Text", '{"value": ""}')
+        assert metric.value == ""
+    finally:
+        await hub.disconnect()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("kind", "writable"),
+    [
+        (MetricKind.SWITCH, True),
+        (MetricKind.NUMBER, True),
+        (MetricKind.SELECT, True),
+        (MetricKind.BUTTON, True),
+        (MetricKind.TIME, True),
+        (MetricKind.TEXT, True),
+        (MetricKind.DYNAMIC, False),
+        (MetricKind.SENSOR, False),
+    ],
+)
+@pytest.mark.parametrize("operation_mode", [OperationMode.FULL, OperationMode.READ_ONLY, OperationMode.EXPERIMENTAL])
+async def test_formula_metric_writability(
+    text_descriptor: TopicDescriptor, kind: MetricKind, writable: bool, operation_mode: OperationMode
+) -> None:
+    hub = await create_mocked_hub(operation_mode=operation_mode)
+    try:
+        await inject_message(hub, "N/123/battery/0/Text", '{"value": "Initial"}')
+        await finalize_injection(hub, disconnect=False)
+        descriptor = TopicDescriptor(
+            topic="$$func/battery/test_text_read:test_text_write",
+            message_type=kind,
+            short_id="battery_formula_text",
+            name="Formula text",
+            description="Writable formula text for testing.",
+            value_type=text_descriptor.value_type,
+            output_type="output_type:0" if kind == MetricKind.DYNAMIC else None,
+            labels="labels:[]" if kind == MetricKind.DYNAMIC else None,
+        )
+        with (
+            patch("victron_mqtt._victron_formulas.test_text_read", return_value=("Initial", None), create=True) as read,
+            patch(
+                "victron_mqtt._victron_formulas.test_text_write",
+                return_value=("Updated text", None),
+                create=True,
+            ) as write,
+        ):
+            metric = hub.devices["battery_0"]._add_formula_metric(descriptor, hub, {})
+            read_only = writable and operation_mode == OperationMode.READ_ONLY
+            expected_kind = (
+                (MetricKind.BINARY_SENSOR if kind == MetricKind.SWITCH else MetricKind.SENSOR) if read_only else kind
+            )
+            assert isinstance(metric, WritableFormulaMetric) is (writable and not read_only)
+            assert metric.metric_kind == expected_kind
+            assert metric.value_type is text_descriptor.value_type
+            assert descriptor.message_type == kind
+            metric.init({}, logger.debug)
+            if isinstance(metric, WritableFormulaMetric):
+                metric.set("Updated text")
+                write.assert_called_once_with("Updated text", {}, None)
+                assert metric.value == "Updated text"
+            else:
+                assert not hasattr(metric, "set")
+                write.assert_not_called()
+                assert metric.value == "Initial"
+                read.return_value = ("Refreshed text", None)
+                metric._handle_formula(logger.debug)
+                assert metric.value == "Refreshed text"
+    finally:
+        await hub.disconnect()
 
 
 def test_writable_metric_wraps_epoch_datetime():

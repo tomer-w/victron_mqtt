@@ -60,6 +60,8 @@ class DeviceType(VictronDeviceEnum):
 
 ## Adding New Topics
 
+Do not update `README.md` just to document newly added topics unless the user explicitly requests it.
+
 Add topic descriptors to the `topics` list in `victron_mqtt/_victron_topics.py`:
 
 ```python
@@ -109,6 +111,8 @@ For battery alarm topics from issue #35:
 - Result: BatteryAlarmEnum + 7 topic descriptors for different alarm types
 
 ## Testing
+
+Do not add new tests for topic-only additions. Add tests when implementing new functionality. Continue running existing relevant tests to validate topic additions.
 
 Ensure changes pass static tests:
 - No duplicate short_ids

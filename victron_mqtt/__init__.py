@@ -2,10 +2,19 @@
 A Asynchronous Python API client for the Victron Venus OS.
 """
 
+from ._exceptions import (
+    AuthenticationError,
+    CannotConnectError,
+    InvalidInstallationIdError,
+    NotConnectedError,
+    PublishError,
+    TopicNotFoundError,
+)
 from ._firmware import FirmwareUpdateError, FirmwareUpdateErrorReason, FirmwareUpdateInfo
 from ._victron_enums import (
     ACActiveInputSource,
     AcInputTypeEnum,
+    AcPosition,
     ACSystemMode,
     ActiveInputEnum,
     BatteryState,
@@ -22,6 +31,7 @@ from ._victron_enums import (
     DigitalInputState,
     DigitalInputType,
     DVCCMode,
+    EmergencyChargeControl,
     ErrorCode,
     ESSMode,
     ESSModeHub4,
@@ -37,8 +47,9 @@ from ._victron_enums import (
     GenericAlarmEnum,
     GenericOnOff,
     GenericOnOffInverted,
+    GensetStatus,
+    GridOperationType,
     InverterMode,
-    MicroGridOperation,
     MppOperationMode,
     PhoenixInverterMode,
     PreferRenewableEnergyEnum,
@@ -47,7 +58,7 @@ from ._victron_enums import (
     SwitchableOutputType,
     TemperatureStatus,
     TemperatureType,
-    VebusWeakAcInput,
+    VebusACInputType,
     VictronProductId,
     VrmPortalMode,
 )
@@ -61,21 +72,14 @@ from .constants import (
     MetricType,
     OperationMode,
     RangeType,
+    ValueType,
     VictronDeviceEnum,
     VictronEnum,
 )
 from .data_classes import GpsLocation, MetricValue, ProductCapabilityRef
 from .device import Device
 from .formula_metric import FormulaMetric
-from .hub import (
-    AuthenticationError,
-    CannotConnectError,
-    Hub,
-    InvalidInstallationIdError,
-    NotConnectedError,
-    ProgrammingError,
-    TopicNotFoundError,
-)
+from .hub import Hub
 from .metric import Metric
 from .pairing import PairingError, PairingToken, request_pairing_token
 from .writable_metric import WritableMetric
@@ -87,6 +91,7 @@ __all__ = [
     "ACActiveInputSource",
     "ACSystemMode",
     "AcInputTypeEnum",
+    "AcPosition",
     "ActiveInputEnum",
     "AuthenticationError",
     "BMSMode",
@@ -109,6 +114,7 @@ __all__ = [
     "ESSModeHub4",
     "ESSState",
     "ESSUserMode",
+    "EmergencyChargeControl",
     "ErrorCode",
     "EvChargerMode",
     "EvChargerPosition",
@@ -124,7 +130,9 @@ __all__ = [
     "GenericAlarmEnum",
     "GenericOnOff",
     "GenericOnOffInverted",
+    "GensetStatus",
     "GpsLocation",
+    "GridOperationType",
     "Hub",
     "InvalidInstallationIdError",
     "InverterMode",
@@ -133,7 +141,6 @@ __all__ = [
     "MetricNature",
     "MetricType",
     "MetricValue",
-    "MicroGridOperation",
     "MppOperationMode",
     "NotConnectedError",
     "OperationMode",
@@ -143,7 +150,7 @@ __all__ = [
     "PreferRenewableEnergyEnum",
     "ProductCapabilities",
     "ProductCapabilityRef",
-    "ProgrammingError",
+    "PublishError",
     "RangeType",
     "SolarChargerDeviceOffReason",
     "State",
@@ -151,7 +158,8 @@ __all__ = [
     "TemperatureStatus",
     "TemperatureType",
     "TopicNotFoundError",
-    "VebusWeakAcInput",
+    "ValueType",
+    "VebusACInputType",
     "VictronDeviceEnum",
     "VictronEnum",
     "VictronProductId",

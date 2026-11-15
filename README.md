@@ -14,7 +14,7 @@ This package is the backend for the Home Assistant [Victron GX](https://github.c
 - **Asynchronous** — non-blocking MQTT communication built on `paho-mqtt`
 - **Typed device & metric model** — devices, metrics, enums, and values are fully typed Python objects
 - **Live updates** — metrics update in real-time via callbacks as MQTT messages arrive
-- **Writable metrics** — control switches, numbers, selects, and time values on your Victron system
+- **Writable metrics** — control switches, numbers, selects, time values, and text on your Victron system
 - **Device hierarchy** — parent/child device relationships (e.g., switch → SwitchableOutput sub-devices)
 - **Formula metrics** — computed metrics derived from other metrics (e.g., GPS location, energy calculations)
 - **Hidden metrics** — source metrics consumed by formulas are hidden from public APIs
@@ -106,6 +106,24 @@ print(device.parent_device)   # parent Device or None
 
 **Device hierarchy:** Sub-devices (like SwitchableOutput channels) have a `parent_device` reference pointing to their parent. Top-level devices are parented to the system device (`system_0`).
 
+**Custom names:** Once a device has reported a non-null custom name (including an
+empty string), you can write a new name:
+
+```python
+if device.can_set_custom_name:
+    device.set_custom_name("House battery")
+    # device.set_custom_name("")  # Clear the custom name
+```
+
+This also supports SwitchableOutput sub-devices, using their own
+`Settings/CustomName` topic. Names are preserved exactly, without trimming.
+`device.custom_name` and `device.name` update only when the device reports the
+new value over MQTT; successful publishing does not confirm that it was applied.
+`can_set_custom_name` is false in `OperationMode.READ_ONLY`, without an associated
+hub, or before a custom name topic is discovered. It does not indicate connection
+status. Unsupported writes raise `ValueError`, non-string names raise `TypeError`,
+and transport failures propagate as `NotConnectedError` or `PublishError`.
+
 ### Metrics
 
 Metrics represent individual data points on a device. Each metric has a kind, type, value, and optional unit.
@@ -114,17 +132,36 @@ Metrics represent individual data points on a device. Each metric has a kind, ty
 metric = device.get_metric("solarcharger_yield_today")
 print(metric.name)              # "Yield today"
 print(metric.value)             # 3.45
+print(metric.value_type)        # ValueType.FLOAT
 print(metric.formatted_value)   # "3.45 kWh"
 print(metric.metric_kind)       # MetricKind.SENSOR
 print(metric.metric_type)       # MetricType.ENERGY
 print(metric.unit_of_measurement)  # "kWh"
 ```
 
-**Metric kinds:** `SENSOR`, `BINARY_SENSOR`, `SWITCH`, `SELECT`, `NUMBER`, `TIME`, `BUTTON`, `DEVICE_TRACKER`
+**Metric kinds:** `SENSOR`, `BINARY_SENSOR`, `SWITCH`, `SELECT`, `NUMBER`, `TIME`, `TEXT`, `BUTTON`, `DEVICE_TRACKER`
+
+**Value types:** The read-only `metric.value_type` property returns a `ValueType`
+enum, available via `from victron_mqtt import ValueType`. Consumers can check
+`metric.value_type is ValueType.JSON` to identify JSON text; its value remains
+a string, not a parsed JSON object.
+
+**Metric availability:** On Venus OS v3.50 or newer, the hub requests a full republish
+every 180 seconds so constant values stay fresh. Every 60 seconds, it checks for
+metrics that have not been received for more than 360 seconds and marks them
+unavailable, retaining their last values. This also detects delivery stalls while
+the MQTT connection remains active.
+
+Firmware detection is retried at full-publish processing boundaries until a valid
+version is available. While the version is missing or unparseable, stale detection
+and periodic full republishes remain enabled as a fail-safe. They are disabled
+once a version below v3.50 is detected. Older firmware whose version cannot be
+detected may therefore have constant metrics marked unavailable if it cannot
+refresh those values.
 
 ### Writable Metrics
 
-Switches, numbers, selects, and time metrics can be written back to the device:
+Switches, numbers, selects, time, and text metrics can be written back to the device:
 
 ```python
 from victron_mqtt import WritableMetric
@@ -143,7 +180,40 @@ if isinstance(metric, WritableMetric):
 metric = device.get_metric("system_ess_mode")
 if isinstance(metric, WritableMetric):
     metric.set("optimized")
+
+# Text metrics accept strings, including an empty string
+if isinstance(metric, WritableMetric) and metric.metric_kind == victron_mqtt.MetricKind.TEXT:
+    metric.set("New text")
+    metric.value = ""  # The value setter also publishes
 ```
+
+Define writable string topics with `message_type=MetricKind.TEXT` and
+`value_type=ValueType.STRING` in their `TopicDescriptor`. Text is published as a
+JSON string value without trimming whitespace or converting numeric-looking
+strings. In `OperationMode.READ_ONLY`, text topics become read-only sensors.
+Read-only mode also applies to formula-backed controls: switches become binary
+sensors, and other writable kinds become sensors.
+The metric viewer provides a text entry with an Apply button.
+
+#### Publish failures
+
+`WritableMetric.set()` (including formula-backed writes), `Hub.publish()`, and
+firmware installation propagate transport failures:
+
+- `NotConnectedError` when MQTT is disconnected. `Hub.publish()` also raises it
+  before the installation ID is known.
+- `PublishError` for other unsuccessful MQTT publish return codes.
+- Existing validation errors remain `ValueError`, including out-of-range numbers
+  and unavailable dropdown options.
+
+Both transport exceptions are exported from `victron_mqtt`. Successful publication
+means only that the MQTT client accepted the message for sending, not that the
+device received or applied it. Publishing remains non-blocking with the existing
+QoS. Periodic firmware checks log transport failures and retry at their next
+scheduled interval rather than stopping.
+
+Hub exceptions remain importable from both `victron_mqtt` and `victron_mqtt.hub`.
+The unused `ProgrammingError` exception has been removed.
 
 ### Callbacks
 

@@ -21,6 +21,7 @@ class MetricKind(Enum):
     SERVICE = "service"
     BUTTON = "button"
     TIME = "time"
+    TEXT = "text"
     DEVICE_TRACKER = "device_tracker"
     DYNAMIC = "dynamic"
 
@@ -105,6 +106,7 @@ class ValueType(Enum):
     INT = "int"
     INT_DEFAULT_0 = "int_0"
     FLOAT = "float"
+    FLOAT_DEFAULT_0 = "float_0"
     STRING = "str"
     ENUM = "enum"
     BITMASK = "bitmask"
@@ -114,6 +116,7 @@ class ValueType(Enum):
     INT_SECONDS_TO_MINUTES = "int_seconds_to_minutes"
     FLOAT_M3_TO_LITERS = "float_m3_to_liters"
     GPS_LOCATION = "gps_location"
+    JSON = "json"
 
 
 class RangeType(Enum):

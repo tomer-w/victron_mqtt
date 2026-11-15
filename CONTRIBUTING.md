@@ -85,7 +85,7 @@ TopicDescriptor(
 
 | Field | Description | Default |
 |---|---|---|
-| `value_type` | `INT`, `FLOAT`, `STRING`, `ENUM`, `BITMASK`, `EPOCH` | Auto-set by metric_type |
+| `value_type` | `INT`, `FLOAT`, `STRING`, `JSON`, `ENUM`, `BITMASK`, `EPOCH` | Auto-set by metric_type |
 | `metric_type` | `VOLTAGE`, `POWER`, `ENERGY`, `CURRENT`, `TEMPERATURE`, `FREQUENCY`, `PERCENTAGE`, etc. | `NONE` |
 | `metric_nature` | `MEASUREMENT`, `TOTAL`, `TOTAL_INCREASING` | Auto-set by metric_type |
 | `unit_of_measurement` | Physical unit (`V`, `A`, `W`, `kWh`, `°C`, etc.) | Auto-set by metric_type |
@@ -98,6 +98,11 @@ TopicDescriptor(
 | `hidden` | `True` to hide from public APIs (used by formula source metrics) | `False` |
 | `sub_device_key` | Placeholder name that creates sub-devices (e.g., `"output"`) | `None` |
 | `depends_on` | List of metric short_ids this formula depends on | `[]` |
+
+`ValueType.JSON` marks JSON text but handles values exactly like `ValueType.STRING`.
+The inner JSON string is preserved without parsing, validation, or reformatting;
+writes send it as a string inside the MQTT `{"value": ...}` envelope.
+Translation generation skips JSON metrics because integrations do not expose them as entities.
 
 #### MetricType Defaults
 
@@ -260,6 +265,30 @@ TopicDescriptor(
 
 ---
 
+## Device Attributes
+
+`MetricKind.ATTRIBUTE` updates device metadata; it does **not** create a metric.
+Its `short_id` must be handled by `Device._set_device_property_from_topic`
+in `victron_mqtt/device.py`:
+
+| `short_id` | Device property | `value_type` |
+|-----------|-----------------|--------------|
+| `custom_name` | `custom_name` | `ValueType.STRING` |
+| `firmware_version` | `firmware_version` | `ValueType.STRING` |
+| `manufacturer` | `manufacturer` | `ValueType.STRING` |
+| `model` | `model` | `ValueType.STRING` |
+| `serial_number` | `serial_number` | `ValueType.STRING` |
+| `victron_productid` | `product_id` | `ValueType.INT` |
+
+A device-specific topic can reuse these short IDs to populate the same metadata.
+Adding a new attribute short ID requires handling in `Device._set_device_property_from_topic`,
+the corresponding device field and public property, and device-property unit tests.
+Otherwise, use `MetricKind.SENSOR` to expose the value as a standalone metric.
+The static test iterates over all attribute topics, calls the device-property
+handler, and reports any that log an "Unhandled device property" warning.
+
+---
+
 ## Sub-Device Topics
 
 Some devices contain sub-devices (e.g., switch SwitchableOutputs). Use `sub_device_key` to create separate child devices:
@@ -306,6 +335,7 @@ python -m pytest tests/
 - No duplicate `short_id` values
 - No duplicate device type + name combinations
 - Required fields present for sensors
+- No ATTRIBUTE topic triggers an "Unhandled device property" warning
 - Names start with capital letters
 - Enum consistency (SWITCH topics must have on/off enum)
 - Topics sorted alphabetically

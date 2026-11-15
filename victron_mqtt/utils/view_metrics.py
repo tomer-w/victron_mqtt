@@ -52,6 +52,7 @@ METRIC_KIND_COLORS = {
     MetricKind.NUMBER: "#4CAF50",
     MetricKind.BUTTON: "#795548",
     MetricKind.TIME: "#607D8B",
+    MetricKind.TEXT: "#009688",
     MetricKind.DEVICE_TRACKER: "#E91E63",
 }
 
@@ -213,6 +214,8 @@ class AttributeViewerDialog(simpledialog.Dialog):
             self._build_select_control(control_frame, self.instance)
         elif kind in (MetricKind.NUMBER, MetricKind.TIME):
             self._build_number_control(control_frame, self.instance, descriptor)
+        elif kind == MetricKind.TEXT:
+            self._build_text_control(control_frame, self.instance)
 
         return master
 
@@ -306,6 +309,14 @@ class AttributeViewerDialog(simpledialog.Dialog):
         display = self._writable_var.get()
         enum_id = self._select_string_to_id.get(display, display)
         self._apply_value(enum_id)
+
+    def _build_text_control(self, parent: tk.Misc, metric: WritableMetric) -> None:
+        self._writable_var = tk.StringVar(value="" if metric.value is None else str(metric.value))
+        ttk.Label(parent, text="Set:", font=("", 9, "bold")).grid(row=0, column=0, sticky=tk.W, padx=5, pady=3)
+        ttk.Entry(parent, textvariable=self._writable_var, width=35).grid(row=0, column=1, sticky="ew", padx=5, pady=3)
+        ttk.Button(parent, text="Apply", command=lambda: self._apply_value(self._writable_var.get())).grid(
+            row=0, column=2, padx=5, pady=3
+        )
 
     def _build_number_control(self, parent: tk.Misc, metric: WritableMetric, descriptor: TopicDescriptor) -> None:
         """Build a slider + entry for number metrics with min/max/step."""

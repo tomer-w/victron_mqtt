@@ -1,5 +1,133 @@
 # Changelog
 
+## 2026.11.1 (2026-11-07)
+
+### Changes
+
+- Allow 1% increments for ESS minimum SoC @[copilot-swe-agent[bot]](https://github.com/apps/copilot-swe-agent) (#143)
+
+### Contributors
+
+[@copilot-swe-agent[bot]](https://github.com/apps/copilot-swe-agent), @Copilot and @tomer-w
+
+
+## 2026.11.0 (2026-11-06)
+
+### Changes
+
+- Allow scheduled charge SoC in 1% increments @tomer-w (#141)
+
+### Contributors
+
+@tomer-w 
+
+
+## 2026.10.7 (2026-10-31)
+
+### Changes
+
+- Fix platform spelling and emergency charge state label
+- Add reverse charging operating states
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
+## 2026.10.6 (2026-10-30)
+
+### Changes
+
+- Expose ValueType
+
+### Contributors
+
+@tomer-w
+
+
+## 2026.10.5 (2026-10-30)
+
+### Changes
+
+- Support JSON string values and skip JSON metric translations
+
+### Contributors
+
+@tomer-w
+
+
+## 2026.10.4 (2026-10-30)
+
+### Changes
+
+- Add platform topics @ReinvdZee (#140)
+- Fix Venus OS firmware version parsing
+- Test attribute topics for unhandled device properties
+
+### Contributors
+
+@ReinvdZee and @tomer-w 
+
+
+## 2026.10.3 (2026-10-27)
+
+### Changes
+
+- Small text fix
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
+## 2026.10.2 (2026-10-27)
+
+### Changes
+
+- Add device custom name writing
+- Add writable text metrics and honor read-only formula controls
+- Raise transport errors for failed MQTT publishes
+- Improve the description of emergency start command: https://github.com/tomer-w/ha-victron-mqtt/issues/530
+- Orion XS Emergency Charging control: https://github.com/tomer-w/ha-victron-mqtt/issues/530
+- Capitalize ID
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
+## 2026.10.1 (2026-10-22)
+
+### Changes
+
+- Add couple of input power per phase topics: https://github.com/tomer-w/ha-victron-mqtt/issues/526
+
+### Contributors
+
+@tomer-w
+
+
+## 2026.10.0 (2026-10-20)
+
+### Changes
+
+- Add acload topics @ReinvdZee (#137)
+- Add dcgenset topics @ReinvdZee (#136)
+- Add battery topics @ReinvdZee (#135)
+- Improve keepalive logic when firmware version is unknown: https://github.com/tomer-w/victron_mqtt/issues/139
+- Add support for default value for float metrics: https://github.com/tomer-w/ha-victron-mqtt/issues/526
+- Improve metric callback diagnostics
+
+### 🧰 Maintenance
+
+- Bump release-drafter/release-drafter from 7.9.0 to 7.10.0 @[dependabot[bot]](https://github.com/apps/dependabot) (#138)
+- Bump release-drafter/release-drafter from 7.7.0 to 7.9.0 @[dependabot[bot]](https://github.com/apps/dependabot) (#133)
+
+### Contributors
+
+@ReinvdZee, [@dependabot[bot]](https://github.com/apps/dependabot) and GitHub Copilot
+
+
 ## 2026.9.14 (2026-09-26)
 
 ### Changes

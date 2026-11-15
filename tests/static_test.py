@@ -2,7 +2,11 @@
 
 import ast
 import inspect
+import json
+import logging
 import re
+import runpy
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -14,9 +18,32 @@ from victron_mqtt import __all__ as victron_all
 from victron_mqtt._victron_enums import DeviceType, GenericOnOff
 from victron_mqtt._victron_topics import topics
 from victron_mqtt.constants import MetricKind, MetricNature, MetricType, ValueType, VictronEnum
-from victron_mqtt.data_classes import TopicDescriptor, topic_to_device_type
+from victron_mqtt.data_classes import ParsedTopic, TopicDescriptor, topic_to_device_type
+from victron_mqtt.device import Device
 from victron_mqtt.utils.dump_victron_mqtt import METADATA, enum_to_dict, topic_dict_with_enum_name
 from victron_mqtt.writable_metric import WritableMetric
+
+
+def test_attribute_topics_have_device_property_support(caplog: pytest.LogCaptureFixture):
+    errors = []
+    parsed_topic = ParsedTopic.from_topic("N/test/battery/0/Soc")
+    assert parsed_topic is not None
+    with caplog.at_level(logging.WARNING, logger="victron_mqtt.device"):
+        for descriptor in topics:
+            if descriptor.message_type == MetricKind.ATTRIBUTE:
+                device = Device(unique_id="test_device", parsed_topic=parsed_topic, descriptor=descriptor)
+                caplog.clear()
+                device._set_device_property_from_topic(descriptor, '{"value": 1}')
+                if "Unhandled device property" in caplog.text:
+                    errors.append(
+                        f"ATTRIBUTE topic '{descriptor.topic}' uses unsupported short_id '{descriptor.short_id}'"
+                    )
+    if errors:
+        pytest.fail(
+            "\n".join(errors) + "\nATTRIBUTE topics do not create metrics. Reuse a supported device-property short_id "
+            "or add handling in Device._set_device_property_from_topic. "
+            "Use MetricKind.SENSOR for a standalone metric."
+        )
 
 
 def test_no_duplicate_short_ids():
@@ -76,7 +103,7 @@ def test_required_fields_for_sensor():
             if descriptor.value_type is None:
                 errors.append(f"SENSOR topic '{descriptor.topic}' missing required 'value_type' field")
         if (
-            descriptor.value_type in [ValueType.STRING, ValueType.ENUM, ValueType.BITMASK]
+            descriptor.value_type in [ValueType.STRING, ValueType.JSON, ValueType.ENUM, ValueType.BITMASK]
             and descriptor.precision is not None
         ):
             errors.append(
@@ -150,6 +177,48 @@ def test_dump_schema_includes_descriptions():
 
     enum_dump = enum_to_dict(GenericOnOff)
     assert all(option["description"] for option in enum_dump["EnumValues"])
+
+
+@pytest.mark.parametrize(
+    ("message_type", "adjustable_suffix"),
+    [(MetricKind.SENSOR, None), (MetricKind.TEXT, "IsAdjustable"), (MetricKind.DYNAMIC, None)],
+)
+def test_translation_generation_skips_json_metrics(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, message_type: MetricKind, adjustable_suffix: str | None
+) -> None:
+    """JSON metrics are omitted, including existing entries and platform expansions."""
+    descriptor = next(topic for topic in topics if topic.short_id == "platform_network_services")
+    json_topic = topic_dict_with_enum_name(descriptor)
+    json_topic.update(message_type=message_type, is_adjustable_suffix=adjustable_suffix)
+    string_topic = TopicDescriptor(
+        topic="N/{installation_id}/platform/{device_id}/Reading",
+        message_type=MetricKind.SENSOR,
+        short_id="plain_reading",
+        name="Plain reading",
+        value_type=ValueType.STRING,
+    )
+    topics_path = tmp_path / "topics.json"
+    topics_path.write_text(
+        json.dumps({"topics": [json_topic, topic_dict_with_enum_name(string_topic)]}, default=str), encoding="utf-8"
+    )
+    strings_path = tmp_path / "strings.json"
+    strings_path.write_text(
+        json.dumps({"title": "Victron GX", "entity": {"sensor": {descriptor.short_id: {"name": "Old services"}}}}),
+        encoding="utf-8",
+    )
+    common_path = tmp_path / "common.json"
+    common_path.write_text("{}", encoding="utf-8")
+    script = Path(__file__).resolve().parent.parent / ".github" / "scripts" / "merge_topics.py"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [str(script), "--topics", str(topics_path), "--strings", str(strings_path), "--common", str(common_path)],
+    )
+
+    runpy.run_path(str(script), run_name="__main__")
+
+    result = json.loads(strings_path.read_text(encoding="utf-8"))
+    assert result == {"title": "Victron GX", "entity": {"sensor": {"plain_reading": {"name": "Plain reading"}}}}
 
 
 def test_metric_viewer_includes_descriptions():
@@ -651,6 +720,9 @@ _ALLOWED_CAPITALIZED = frozenset(
         "GX",
         "LOM",
         "BatteryLife",
+        "Bluetooth",
+        "Ethernet",
+        "Wi-Fi",
         "Node-RED",
         "Hub4",
         "Multi/Quattro",

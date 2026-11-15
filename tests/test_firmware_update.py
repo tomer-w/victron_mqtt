@@ -2,11 +2,23 @@
 
 import asyncio
 import json
+import logging
 from typing import TYPE_CHECKING, cast
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
+from paho.mqtt.client import MQTTMessageInfo
+from paho.mqtt.enums import MQTTErrorCode
 
-from victron_mqtt import FirmwareUpdateError, FirmwareUpdateErrorReason, FirmwareUpdateInfo, FirmwareUpdateState, Hub
+from victron_mqtt import (
+    FirmwareUpdateError,
+    FirmwareUpdateErrorReason,
+    FirmwareUpdateInfo,
+    FirmwareUpdateState,
+    Hub,
+    NotConnectedError,
+    PublishError,
+)
 from victron_mqtt.testing import create_mocked_hub, inject_message
 
 if TYPE_CHECKING:
@@ -224,6 +236,79 @@ async def test_check_firmware_update_publishes_immediately() -> None:
     assert any(
         call.args[0].endswith(CHECK_TOPIC_SUFFIX) and call.args[1] == '{"value": 1}' for call in publish.call_args_list
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("rc", [MQTTErrorCode.MQTT_ERR_NO_CONN, MQTTErrorCode.MQTT_ERR_QUEUE_SIZE])
+async def test_check_firmware_update_recovers_from_publish_failure(
+    rc: MQTTErrorCode, caplog: pytest.LogCaptureFixture
+) -> None:
+    hub = await create_mocked_hub(installation_id="123")
+    failed_result = MQTTMessageInfo(1)
+    failed_result.rc = rc
+    try:
+        with (
+            patch.object(hub._client, "publish", side_effect=[failed_result, MQTTMessageInfo(2)]) as publish,
+            patch(
+                "victron_mqtt._firmware.asyncio.sleep",
+                new=AsyncMock(side_effect=[None, asyncio.CancelledError]),
+            ) as sleep,
+            caplog.at_level(logging.WARNING, logger="victron_mqtt._firmware"),
+        ):
+            hub.check_firmware_update(poll_interval=60)
+            task = hub._firmware_check_task
+            assert task is not None
+            with pytest.raises(asyncio.CancelledError):
+                await task
+
+        assert publish.call_args_list == [
+            call("W/123/platform/0/Firmware/Online/Check", '{"value": 1}'),
+            call("W/123/platform/0/Firmware/Online/Check", '{"value": 1}'),
+        ]
+        assert sleep.await_args_list == [call(60), call(60)]
+        assert "Cannot check for firmware updates:" in caplog.text
+    finally:
+        await hub.disconnect()
+
+
+@pytest.mark.asyncio
+async def test_check_firmware_update_does_not_hide_unexpected_errors() -> None:
+    hub = await create_mocked_hub(installation_id="123")
+    try:
+        with patch.object(hub, "publish", side_effect=ValueError("invalid command")):
+            hub.check_firmware_update()
+            task = hub._firmware_check_task
+            assert task is not None
+            with pytest.raises(ValueError, match="invalid command"):
+                await task
+    finally:
+        await hub.disconnect()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("rc", [MQTTErrorCode.MQTT_ERR_NO_CONN, MQTTErrorCode.MQTT_ERR_QUEUE_SIZE])
+async def test_install_firmware_update_releases_lock_on_publish_failure(rc: MQTTErrorCode) -> None:
+    hub = await create_mocked_hub(installation_id="123")
+    try:
+        await _inject_firmware_info(hub)
+        result = MQTTMessageInfo(1)
+        result.rc = rc
+        error_type = NotConnectedError if rc == MQTTErrorCode.MQTT_ERR_NO_CONN else PublishError
+        progress: list[int] = []
+
+        with patch.object(hub._client, "publish", return_value=result) as publish:
+            for _ in range(2):
+                with pytest.raises(error_type):
+                    await hub.install_firmware_update(progress.append)
+                assert not hub._firmware_update_lock.locked()
+
+        assert publish.call_count == 2
+        assert progress == []
+        info = hub.firmware_update_info
+        assert info is not None
+        assert not info.in_progress
+    finally:
+        await hub.disconnect()
 
 
 @pytest.mark.asyncio

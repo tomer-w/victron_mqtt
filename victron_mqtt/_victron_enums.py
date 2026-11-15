@@ -151,6 +151,7 @@ class DeviceType(VictronDeviceEnum):
         "DC/DC charger",
         "Identifies the DC/DC charger MQTT and D-Bus service type.",
     )  # Orion XS 1400 in battery to battery charging mode.
+    DCGENSET = ("dcgenset", "dcgenset", "DC genset", "Identifies the DC genset MQTT and D-Bus service type.")
 
 
 class VictronProductId(VictronEnum):
@@ -442,6 +443,22 @@ class GenericOnOffInverted(VictronEnum):
     OFF = (1, "off", "Off", "The option is disabled.")
 
 
+class GensetStatus(VictronEnum):
+    """Genset status code"""
+
+    STANDBY = (0, "standby", "Standby", "The genset is stopped and ready to start.")
+    STARTUP_1 = (1, "startup_1", "Startup 1", "The genset is in startup phase 1.")
+    STARTUP_2 = (2, "startup_2", "Startup 2", "The genset is in startup phase 2.")
+    STARTUP_3 = (3, "startup_3", "Startup 3", "The genset is in startup phase 3.")
+    STARTUP_4 = (4, "startup_4", "Startup 4", "The genset is in startup phase 4.")
+    STARTUP_5 = (5, "startup_5", "Startup 5", "The genset is in startup phase 5.")
+    STARTUP_6 = (6, "startup_6", "Startup 6", "The genset is in startup phase 6.")
+    STARTUP_7 = (7, "startup_7", "Startup 7", "The genset is in startup phase 7.")
+    RUNNING = (8, "running", "Running", "The genset is running.")
+    STOPPING = (9, "stopping", "Stopping", "The genset is shutting down.")
+    ERROR = (10, "error", "Error", "The genset has stopped because of an error.")
+
+
 class FirmwareUpdateState(VictronEnum):
     """GX firmware update state."""
 
@@ -538,6 +555,35 @@ class ChargerMode(VictronEnum):
     OFF = (4, "off", "Off", "The charger is disabled.")
 
 
+class EmergencyChargeControl(VictronEnum):
+    """Orion XS emergency reverse charging status and control."""
+
+    NOT_POSSIBLE = (
+        0,
+        "not_possible",
+        "Not possible",
+        "Emergency reverse charging is not possible; start commands are ignored in this state, and writing this value stops charging.",
+    )
+    START = (
+        1,
+        "starting",
+        "Starting",
+        "Requests emergency reverse charging, with the same effect as writing the started value. This command does not persist; the charger reports started if charging is allowed or not possible otherwise.",
+    )
+    NOT_STARTED = (
+        2,
+        "not_started",
+        "Not started",
+        "Emergency reverse charging is possible but has not been started; writing this value stops charging.",
+    )
+    STARTED = (
+        3,
+        "started",
+        "Started",
+        "Emergency reverse charging is possible and has been started. This state remains during the blocked period when reverse charging cannot occur; writing this value requests a start.",
+    )
+
+
 class BMSMode(VictronEnum):
     """BMS contactor mode enum."""
 
@@ -608,6 +654,18 @@ class State(VictronEnum):
         "The inverter is supplementing the AC input with battery power.",
     )
     POWER_SUPPLY = (11, "power_supply", "Power supply", "The charger is operating as a regulated DC power supply.")
+    REVERSE_CHARGING_BLOCKED = (
+        242,
+        "reverse_charging_blocked",
+        "Reverse charging blocked",
+        "Emergency reverse charging is blocked during the cooldown period.",
+    )
+    REVERSE_CHARGING = (
+        243,
+        "reverse_charging",
+        "Reverse charging",
+        "The charger is actively performing emergency reverse charging.",
+    )
     SUSTAIN = (
         244,
         "sustain",
@@ -720,18 +778,25 @@ class EvChargingState(VictronEnum):
     )
 
 
-class VebusWeakAcInput(VictronEnum):
-    """VE.Bus Weak AC input setting Enum"""
+class VebusACInputType(VictronEnum):
+    """VE.Bus AC input strength setting Enum"""
 
     STRONG = (0, "strong", "Strong AC input", "The AC input is treated as a strong (stable) supply.")
     WEAK = (1, "weak", "Weak AC input", "The AC input is treated as a weak supply, such as a small generator.")
 
 
-class MicroGridOperation(VictronEnum):
-    """VE.Bus MicroGrid operation Enum"""
+class GridOperationType(VictronEnum):
+    """VE.Bus standard or microgrid operation Enum"""
 
     STANDARD = (0, "standard", "Standard operation", "The inverter/charger runs in standard operation.")
     MICROGRID = (1, "microgrid", "Microgrid operation", "The inverter/charger runs in microgrid operation.")
+
+
+class AcPosition(VictronEnum):
+    """Where an AC load or heat pump is connected relative to the inverter/charger"""
+
+    AC_OUTPUT = (0, "ac_output", "AC output", "The device is connected to the inverter/charger AC output.")
+    AC_INPUT = (1, "ac_input", "AC input", "The device is connected on the AC input side of the inverter/charger.")
 
 
 class EvChargerPosition(VictronEnum):
