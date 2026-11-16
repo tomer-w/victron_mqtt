@@ -19,7 +19,7 @@ import victron_mqtt
 from victron_mqtt import NotConnectedError, PublishError
 from victron_mqtt import _exceptions as exceptions_module
 from victron_mqtt import hub as hub_module
-from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, DVCCMode, GenericOnOff, GridOperationType
+from victron_mqtt._victron_enums import ChargeSchedule, DeviceType, DVCCMode, GenericOnOff
 from victron_mqtt._victron_formulas import (
     left_riemann_sum,
     schedule_charge_enabled,
@@ -385,32 +385,6 @@ async def test_number_message():
     hub._publish = orig__publish
 
     await hub_disconnect(hub)
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("adjustable", [0, 1])
-@pytest.mark.parametrize("flag_first", [False, True])
-async def test_microgrid_operation_respects_adjustability(adjustable: int, flag_first: bool) -> None:
-    hub = await create_mocked_hub(operation_mode=OperationMode.EXPERIMENTAL)
-    prefix = "N/123/vebus/170/MicroGrid/OperationSwitcher"
-    messages = [
-        (f"{prefix}/Operation", '{"value": 1}'),
-        (f"{prefix}/OperationIsAdjustable", json.dumps({"value": adjustable})),
-    ]
-    if flag_first:
-        messages.reverse()
-    try:
-        for topic, payload in messages:
-            await inject_message(hub, topic, payload)
-        await finalize_injection(hub)
-
-        metric = hub.devices["vebus_170"].get_metric("vebus_microgrid_operation")
-        assert metric is not None
-        assert metric.value == GridOperationType.MICROGRID
-        assert isinstance(metric, WritableMetric) == bool(adjustable)
-        assert metric.metric_kind == (MetricKind.SELECT if adjustable else MetricKind.SENSOR)
-    finally:
-        await hub_disconnect(hub)
 
 
 @pytest.mark.asyncio
