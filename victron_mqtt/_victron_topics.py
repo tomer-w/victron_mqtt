@@ -5382,6 +5382,7 @@ topics: list[TopicDescriptor] = [
         description="Indicates whether the system needs a reset to apply the microgrid operation change.",
         value_type=ValueType.ENUM,
         enum=GenericOnOff,
+        experimental=True,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Mode",

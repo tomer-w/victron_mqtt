@@ -16742,7 +16742,7 @@
       "labels": null,
       "nullable": false,
       "key_values": {},
-      "experimental": false,
+      "experimental": true,
       "depends_on": [],
       "generic_name": "Microgrid operation change pending reset",
       "is_formula": false,
