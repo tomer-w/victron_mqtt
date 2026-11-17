@@ -6,6 +6,7 @@ import datetime
 import json
 import logging
 import ssl
+import threading
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
@@ -2332,6 +2333,206 @@ async def test_subscription_timeout_cleans_up_request():
 
     assert mocked_client.subscribe.call_count == 1
     assert hub._pending_subscription is None
+
+
+@pytest.mark.asyncio
+async def test_runtime_subscription_retry_backoff_is_capped() -> None:
+    hub = Hub("localhost", 1883, None, None, False)
+    setup = AsyncMock(side_effect=[hub_module._RetryableSubscriptionError("missing SUBACK")] * 8 + [None])
+    with (
+        patch.object(hub, "_setup_subscriptions", new=setup),
+        patch("victron_mqtt.hub.asyncio.sleep", new_callable=AsyncMock) as sleep,
+    ):
+        await hub._setup_runtime_subscriptions()
+
+    assert sleep.await_args_list == [call(delay) for delay in (1, 2, 4, 8, 16, 30, 30, 30)]
+    assert setup.await_count == 9
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("connected", [False, True])
+async def test_runtime_transport_loss_does_not_stop_reconnect(connected: bool) -> None:
+    """Transport loss before its disconnect callback is not a terminal setup error."""
+    hub = Hub("localhost", 1883, None, None, False, installation_id="test123")
+    client = MagicMock(spec=Client)
+    client.is_connected.side_effect = [connected, True]
+    client.subscribe.side_effect = [(MQTTErrorCode.MQTT_ERR_NO_CONN, None), (MQTTErrorCode.MQTT_ERR_SUCCESS, 1)]
+    hub._client = client
+    hub._installation_id = "test123"
+    hub._keepalive = MagicMock()
+
+    async def restore_transport(_delay: float) -> None:
+        client.subscribe.side_effect = None
+        client.subscribe.return_value = (MQTTErrorCode.MQTT_ERR_SUCCESS, 1)
+
+    with (
+        patch("victron_mqtt.hub.asyncio.sleep", side_effect=restore_transport),
+        patch.object(hub, "_wait_for_subscription_ack", new_callable=AsyncMock) as ack,
+    ):
+        hub._start_subscription_setup()
+        task = hub._subscription_task
+        assert task is not None
+        await task
+    ack.assert_awaited_once()
+    hub._keepalive.assert_called_once_with(True)
+    client.disconnect.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("stop", ["disconnect", "transport_loss"])
+async def test_runtime_subscription_backoff_is_cancelled(stop: str, caplog: pytest.LogCaptureFixture) -> None:
+    hub = Hub("localhost", 1883, None, None, False, installation_id="test123")
+    client = MagicMock(spec=Client)
+    client.is_connected.return_value = True
+    client.subscribe.side_effect = [(0, 1), (0, 2)]
+    hub._client = client
+    hub._loop = asyncio.get_running_loop()
+    hub._installation_id = "test123"
+    hub._first_connect = False
+    hub._keepalive = MagicMock()
+
+    with patch("victron_mqtt.hub.SUBSCRIPTION_ACK_TIMEOUT_SECONDS", 0.01):
+        hub._start_subscription_setup()
+        task = hub._subscription_task
+        assert task is not None
+        async with asyncio.timeout(1):
+            while "retrying in 1 seconds" not in caplog.text:
+                await asyncio.sleep(0)
+        assert hub._pending_subscription is None
+
+        if stop == "disconnect":
+            await hub.disconnect()
+            hub._start_subscription_setup()  # A queued connect callback cannot restart shutdown.
+            assert hub._subscription_task is None
+            client.disconnect.assert_called_once_with()
+            client.loop_stop.assert_called_once_with()
+            assert client.subscribe.call_count == 1
+        else:
+            hub._on_disconnect(client, None, DisconnectFlags(False), ReasonCode(PacketTypes.DISCONNECT), None)
+            hub._on_connect_internal(client, None, ConnectFlags(False), ReasonCode(PacketTypes.CONNACK), None)
+            async with asyncio.timeout(1):
+                while client.subscribe.call_count < 2:
+                    await asyncio.sleep(0)
+            replacement = hub._subscription_task
+            assert replacement is not None
+            assert replacement is not task
+            hub._handle_subscription_ack(
+                1, [ReasonCode(PacketTypes.SUBACK, identifier=0)]
+            )  # Late ACK from the lost connection.
+            assert hub._pending_subscription is not None
+            assert not hub._pending_subscription[1].done()
+            hub._handle_subscription_ack(2, [ReasonCode(PacketTypes.SUBACK, identifier=0)])
+            await replacement
+            hub._keepalive.assert_called_once_with(True)
+            client.disconnect.assert_not_called()
+        assert task.cancelled()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "failure", [CannotConnectError("subscription rejected"), AuthenticationError("not authorized")]
+)
+async def test_runtime_subscription_rejection_does_not_retry(failure: CannotConnectError) -> None:
+    hub = Hub("localhost", 1883, None, None, False)
+    client = MagicMock(spec=Client)
+    hub._client = client
+    with patch.object(hub, "_setup_subscriptions", new=AsyncMock(side_effect=failure)) as setup:
+        hub._start_subscription_setup()
+        task = hub._subscription_task
+        assert task is not None
+        await task
+        setup.assert_awaited_once_with()
+        client.disconnect.assert_called_once_with()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("state", ["replaced", "shutdown"])
+async def test_runtime_subscription_failure_ignores_inactive_task(state: str) -> None:
+    hub = Hub("localhost", 1883, None, None, False)
+    client = MagicMock(spec=Client)
+    hub._client = client
+    started = asyncio.Event()
+
+    async def fail_after_lifecycle_change() -> None:
+        if started.is_set():
+            return
+        started.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            raise CannotConnectError("stale subscription failure") from None
+
+    with patch.object(hub, "_setup_subscriptions", side_effect=fail_after_lifecycle_change):
+        hub._start_subscription_setup()
+        task = hub._subscription_task
+        assert task is not None
+        await started.wait()
+        if state == "replaced":
+            hub._start_subscription_setup()
+            replacement = hub._subscription_task
+            assert replacement is not None
+            assert replacement is not task
+            await replacement
+        else:
+            await hub.disconnect()
+        await task
+
+    if state == "replaced":
+        client.disconnect.assert_not_called()
+    else:
+        client.disconnect.assert_called_once_with()
+        client.loop_stop.assert_called_once_with()
+
+
+@pytest.mark.asyncio
+async def test_disconnect_cleans_up_failed_subscription_task(caplog: pytest.LogCaptureFixture) -> None:
+    hub = Hub("localhost", 1883, None, None, False)
+    client = MagicMock(spec=Client)
+    hub._client = client
+    loop_thread = threading.get_ident()
+    cleanup_threads: list[int] = []
+    client.loop_stop.side_effect = lambda: cleanup_threads.append(threading.get_ident())
+
+    async def fail() -> None:
+        raise CannotConnectError("stored subscription failure")
+
+    task = asyncio.create_task(fail())
+    await asyncio.gather(task, return_exceptions=True)
+    hub._subscription_task = task
+    await hub.disconnect()
+
+    assert hub._subscription_task is None
+    client.disconnect.assert_called_once_with()
+    client.loop_stop.assert_called_once_with()
+    assert len(cleanup_threads) == 1
+    assert cleanup_threads[0] != loop_thread
+    assert "stored subscription failure" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_disconnect_cancellation_still_stops_network_thread() -> None:
+    hub = Hub("localhost", 1883, None, None, False)
+    client = MagicMock(spec=Client)
+    hub._client = client
+    cancelling = asyncio.Event()
+    finish = asyncio.Event()
+
+    async def subscription() -> None:
+        try:
+            await asyncio.Event().wait()
+        finally:
+            cancelling.set()
+            await finish.wait()
+
+    hub._subscription_task = asyncio.create_task(subscription())
+    await asyncio.sleep(0)
+    disconnect = asyncio.create_task(hub.disconnect())
+    await cancelling.wait()
+    disconnect.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await disconnect
+    client.disconnect.assert_called_once_with()
+    client.loop_stop.assert_called_once_with()
 
 
 @pytest.mark.asyncio
