@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026.11.2 (2026-11-17)
+
+### Changes
+
+- Add verified VE.Bus, battery, EV charger and PV control topics @EricVer (#132)
+- Add VE.Bus MultiPlus II LED binary sensors @tomer-w (#145)
+- Fix runtime subscription recovery and disconnect cleanup
+
+### Contributors
+
+@EricVer, @tomer-w and @Copilot
+
+
 ## 2026.11.1 (2026-11-07)
 
 ### Changes
