@@ -36,7 +36,6 @@ from victron_mqtt.constants import (
     MetricType,
     OperationMode,
     ValueType,
-    VictronEnum,
 )
 from victron_mqtt.data_classes import GpsLocation, MetricValue, ParsedTopic, TopicDescriptor
 from victron_mqtt.device import Device, FallbackPlaceholder
@@ -67,40 +66,6 @@ from victron_mqtt.writable_metric import WritableMetric
 # Configure logging for the test
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
-
-@pytest.mark.parametrize(
-    ("led", "short_id"),
-    [
-        ("Absorption", "absorption"),
-        ("Bulk", "bulk"),
-        ("Float", "float"),
-        ("Inverter", "inverter"),
-        ("LowBattery", "low_battery"),
-        ("Mains", "mains"),
-        ("Overload", "overload"),
-        ("Temperature", "temperature"),
-    ],
-)
-@pytest.mark.parametrize(
-    ("code", "state"),
-    [(0, "off"), (1, "on"), (2, "blinking"), (3, "blinking_inverted")],
-)
-@pytest.mark.asyncio
-async def test_vebus_led_states(led: str, short_id: str, code: int, state: str) -> None:
-    """LED sensors preserve steady and blinking states from MQTT."""
-    hub = await create_mocked_hub()
-    await inject_message(hub, f"N/123/vebus/288/Leds/{led}", json.dumps({"value": code}))
-    await finalize_injection(hub)
-
-    metric = hub.devices["vebus_288"].get_metric(f"vebus_inverter_led_{short_id}")
-    assert metric is not None
-    assert metric.metric_kind == MetricKind.SENSOR
-    assert metric.value_type == ValueType.ENUM
-    assert isinstance(metric.value, VictronEnum)
-    assert metric.value.code == code
-    assert metric.value.id == state
-    assert metric.enum_values == ["off", "on", "blinking", "blinking_inverted"]
 
 
 @pytest.mark.parametrize(

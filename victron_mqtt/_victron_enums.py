@@ -443,8 +443,8 @@ class GenericOnOffInverted(VictronEnum):
     OFF = (1, "off", "Off", "The option is disabled.")
 
 
-class VebusLedState(VictronEnum):
-    """Front-panel LED state of a VE.Bus inverter/charger.
+class LedState(VictronEnum):
+    """LED state, including opposite-phase blinking.
 
     See https://github.com/victronenergy/gui-v2/blob/main/components/Led.qml.
     """

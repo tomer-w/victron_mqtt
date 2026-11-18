@@ -40,6 +40,7 @@ from ._victron_enums import (
     GensetStatus,
     GridOperationType,
     InverterMode,
+    LedState,
     MppOperationMode,
     PhoenixInverterMode,
     PreferRenewableEnergyEnum,
@@ -49,7 +50,6 @@ from ._victron_enums import (
     TemperatureStatus,
     TemperatureType,
     VebusACInputType,
-    VebusLedState,
     VrmPortalMode,
 )
 from .constants import MetricKind, MetricNature, MetricType, RangeType, ValueType
@@ -5258,7 +5258,7 @@ topics: list[TopicDescriptor] = [
         name="Absorption LED",
         description="Reports the absorption LED state on the VE.Bus inverter/charger.",
         value_type=ValueType.ENUM,
-        enum=VebusLedState,
+        enum=LedState,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Leds/Bulk",
@@ -5267,7 +5267,7 @@ topics: list[TopicDescriptor] = [
         name="Bulk LED",
         description="Reports the bulk LED state on the VE.Bus inverter/charger.",
         value_type=ValueType.ENUM,
-        enum=VebusLedState,
+        enum=LedState,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Leds/Float",
@@ -5276,7 +5276,7 @@ topics: list[TopicDescriptor] = [
         name="Float LED",
         description="Reports the float LED state on the VE.Bus inverter/charger.",
         value_type=ValueType.ENUM,
-        enum=VebusLedState,
+        enum=LedState,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Leds/Inverter",
@@ -5285,7 +5285,7 @@ topics: list[TopicDescriptor] = [
         name="Inverter LED",
         description="Reports the inverter LED state on the VE.Bus inverter/charger.",
         value_type=ValueType.ENUM,
-        enum=VebusLedState,
+        enum=LedState,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Leds/LowBattery",
@@ -5294,7 +5294,7 @@ topics: list[TopicDescriptor] = [
         name="Low battery LED",
         description="Reports the low battery LED state on the VE.Bus inverter/charger.",
         value_type=ValueType.ENUM,
-        enum=VebusLedState,
+        enum=LedState,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Leds/Mains",
@@ -5303,7 +5303,7 @@ topics: list[TopicDescriptor] = [
         name="Mains LED",
         description="Reports the mains LED state on the VE.Bus inverter/charger.",
         value_type=ValueType.ENUM,
-        enum=VebusLedState,
+        enum=LedState,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Leds/Overload",
@@ -5312,7 +5312,7 @@ topics: list[TopicDescriptor] = [
         name="Overload LED",
         description="Reports the overload LED state on the VE.Bus inverter/charger.",
         value_type=ValueType.ENUM,
-        enum=VebusLedState,
+        enum=LedState,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/Leds/Temperature",
@@ -5321,7 +5321,7 @@ topics: list[TopicDescriptor] = [
         name="Temperature LED",
         description="Reports the temperature LED state on the VE.Bus inverter/charger.",
         value_type=ValueType.ENUM,
-        enum=VebusLedState,
+        enum=LedState,
     ),
     TopicDescriptor(
         topic="N/{installation_id}/vebus/{device_id}/MicroGrid/AllowBlackStart",

@@ -16326,7 +16326,7 @@
       "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.ENUM",
       "precision": null,
-      "enum": "VebusLedState",
+      "enum": "LedState",
       "min_max_range": "RangeType.STATIC",
       "min": null,
       "max": null,
@@ -16355,7 +16355,7 @@
       "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.ENUM",
       "precision": null,
-      "enum": "VebusLedState",
+      "enum": "LedState",
       "min_max_range": "RangeType.STATIC",
       "min": null,
       "max": null,
@@ -16384,7 +16384,7 @@
       "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.ENUM",
       "precision": null,
-      "enum": "VebusLedState",
+      "enum": "LedState",
       "min_max_range": "RangeType.STATIC",
       "min": null,
       "max": null,
@@ -16413,7 +16413,7 @@
       "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.ENUM",
       "precision": null,
-      "enum": "VebusLedState",
+      "enum": "LedState",
       "min_max_range": "RangeType.STATIC",
       "min": null,
       "max": null,
@@ -16442,7 +16442,7 @@
       "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.ENUM",
       "precision": null,
-      "enum": "VebusLedState",
+      "enum": "LedState",
       "min_max_range": "RangeType.STATIC",
       "min": null,
       "max": null,
@@ -16471,7 +16471,7 @@
       "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.ENUM",
       "precision": null,
-      "enum": "VebusLedState",
+      "enum": "LedState",
       "min_max_range": "RangeType.STATIC",
       "min": null,
       "max": null,
@@ -16500,7 +16500,7 @@
       "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.ENUM",
       "precision": null,
-      "enum": "VebusLedState",
+      "enum": "LedState",
       "min_max_range": "RangeType.STATIC",
       "min": null,
       "max": null,
@@ -16529,7 +16529,7 @@
       "metric_nature": "MetricNature.NONE",
       "value_type": "ValueType.ENUM",
       "precision": null,
-      "enum": "VebusLedState",
+      "enum": "LedState",
       "min_max_range": "RangeType.STATIC",
       "min": null,
       "max": null,
@@ -19028,6 +19028,35 @@
       ]
     },
     {
+      "name": "LedState",
+      "EnumValues": [
+        {
+          "id": "off",
+          "name": "Off",
+          "value": 0,
+          "description": "The LED is off."
+        },
+        {
+          "id": "on",
+          "name": "On",
+          "value": 1,
+          "description": "The LED is continuously lit."
+        },
+        {
+          "id": "blinking",
+          "name": "Blinking",
+          "value": 2,
+          "description": "The LED is blinking."
+        },
+        {
+          "id": "blinking_inverted",
+          "name": "Blinking inverted",
+          "value": 3,
+          "description": "The LED is blinking in the opposite phase to the blinking state."
+        }
+      ]
+    },
+    {
       "name": "MppOperationMode",
       "EnumValues": [
         {
@@ -19525,35 +19554,6 @@
           "name": "Weak AC input",
           "value": 1,
           "description": "The AC input is treated as a weak supply, such as a small generator."
-        }
-      ]
-    },
-    {
-      "name": "VebusLedState",
-      "EnumValues": [
-        {
-          "id": "off",
-          "name": "Off",
-          "value": 0,
-          "description": "The LED is off."
-        },
-        {
-          "id": "on",
-          "name": "On",
-          "value": 1,
-          "description": "The LED is continuously lit."
-        },
-        {
-          "id": "blinking",
-          "name": "Blinking",
-          "value": 2,
-          "description": "The LED is blinking."
-        },
-        {
-          "id": "blinking_inverted",
-          "name": "Blinking inverted",
-          "value": 3,
-          "description": "The LED is blinking in the opposite phase to the blinking state."
         }
       ]
     },
