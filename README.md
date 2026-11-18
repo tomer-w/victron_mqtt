@@ -271,6 +271,12 @@ print(state.string)  # "Float"
 print(state)         # "Float"
 ```
 
+VE.Bus front-panel LED metrics (`vebus_inverter_led_*`) are enum sensors using
+`VebusLedState`: `0` = `off`, `1` = `on`, `2` = `blinking`, and `3` =
+`blinking_inverted` (opposite phase to `blinking`). They are not binary sensors;
+Home Assistant dashboards and automations using the previous `binary_sensor`
+entities must use the corresponding `sensor` entities instead.
+
 ### Operation Modes
 
 - `OperationMode.FULL` — all metrics, writable controls enabled

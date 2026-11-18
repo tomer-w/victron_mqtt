@@ -59,6 +59,7 @@ from ._victron_enums import (
     TemperatureStatus,
     TemperatureType,
     VebusACInputType,
+    VebusLedState,
     VictronProductId,
     VrmPortalMode,
 )
@@ -160,6 +161,7 @@ __all__ = [
     "TopicNotFoundError",
     "ValueType",
     "VebusACInputType",
+    "VebusLedState",
     "VictronDeviceEnum",
     "VictronEnum",
     "VictronProductId",
