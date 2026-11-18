@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026.11.3 (2026-11-18)
+
+### ⚠️ Breaking Changes
+
+The following changes may break existing automations. Please review and update your automations accordingly.
+
+- Entity `vebus_inverter_led_absorption` changed enum from `GenericOnOff` to `LedState` — values are remapped (0=Off, 1=On → 0=Off, 1=On, 2=Blinking, 3=Blinking inverted). Check automations using this entity.
+- Entity `vebus_inverter_led_bulk` changed enum from `GenericOnOff` to `LedState` — values are remapped (0=Off, 1=On → 0=Off, 1=On, 2=Blinking, 3=Blinking inverted). Check automations using this entity.
+- Entity `vebus_inverter_led_float` changed enum from `GenericOnOff` to `LedState` — values are remapped (0=Off, 1=On → 0=Off, 1=On, 2=Blinking, 3=Blinking inverted). Check automations using this entity.
+- Entity `vebus_inverter_led_inverter` changed enum from `GenericOnOff` to `LedState` — values are remapped (0=Off, 1=On → 0=Off, 1=On, 2=Blinking, 3=Blinking inverted). Check automations using this entity.
+- Entity `vebus_inverter_led_low_battery` changed enum from `GenericOnOff` to `LedState` — values are remapped (0=Off, 1=On → 0=Off, 1=On, 2=Blinking, 3=Blinking inverted). Check automations using this entity.
+- Entity `vebus_inverter_led_mains` changed enum from `GenericOnOff` to `LedState` — values are remapped (0=Off, 1=On → 0=Off, 1=On, 2=Blinking, 3=Blinking inverted). Check automations using this entity.
+- Entity `vebus_inverter_led_overload` changed enum from `GenericOnOff` to `LedState` — values are remapped (0=Off, 1=On → 0=Off, 1=On, 2=Blinking, 3=Blinking inverted). Check automations using this entity.
+- Entity `vebus_inverter_led_temperature` changed enum from `GenericOnOff` to `LedState` — values are remapped (0=Off, 1=On → 0=Off, 1=On, 2=Blinking, 3=Blinking inverted). Check automations using this entity.
+
+### Changes
+
+- Preserve all VE.Bus LED states as enum sensors
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.11.2 (2026-11-17)
 
 ### Changes
