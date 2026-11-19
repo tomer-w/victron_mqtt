@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.11.4 (2026-11-19)
+
+### Changes
+
+- Fix dark theme table readability
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.11.3 (2026-11-18)
 
 ### ⚠️ Breaking Changes
