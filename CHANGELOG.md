@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.11.5 (2026-11-19)
+
+### Changes
+
+- Improve dark theme metadata text contrast
+
+### Contributors
+
+@github-actions[bot], @tomer-w
+
+
 ## 2026.11.4 (2026-11-19)
 
 ### Changes
