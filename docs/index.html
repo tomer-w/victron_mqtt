@@ -590,6 +590,11 @@ code {
   border-spacing: 0;
 }
 
+/* Override the Jekyll theme's white and striped table rows in dark mode. */
+html[data-theme="dark"] :is(.topic-table, .enum-table, .enum-options-table) tr {
+  background: var(--cp-surface);
+}
+
 .topic-table {
   min-width: 88rem;
   table-layout: fixed;
