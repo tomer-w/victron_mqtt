@@ -19545,13 +19545,13 @@
       "EnumValues": [
         {
           "id": "strong",
-          "name": "Strong AC input",
+          "name": "Strong",
           "value": 0,
           "description": "The AC input is treated as a strong (stable) supply."
         },
         {
           "id": "weak",
-          "name": "Weak AC input",
+          "name": "Weak",
           "value": 1,
           "description": "The AC input is treated as a weak supply, such as a small generator."
         }
