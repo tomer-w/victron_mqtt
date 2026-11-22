@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026.11.6 (2026-11-22)
+
+### Changes
+
+- Support battery cells through 24 (https://github.com/tomer-w/ha-victron-mqtt/issues/546)
+- Bump release-drafter/release-drafter from 7.10.0 to 7.11.0 (#148)
+- Shorten VE.Bus AC input strength labels
+
+### 🧰 Maintenance
+
+- Bump release-drafter/release-drafter from 7.10.0 to 7.11.0 @[dependabot[bot]](https://github.com/apps/dependabot) (#148)
+
+### Contributors
+
+[@dependabot[bot]](https://github.com/apps/dependabot)
+
+
 ## 2026.11.5 (2026-11-19)
 
 ### Changes
